@@ -1,6 +1,48 @@
 # Build Log
 
-- **SC-17** — "Shared with me" sidebar grouping. Commit pending. Three builder/review rounds:
+- **SC-18** — Wire: recipient reads a shared conversation end-to-end. Commit pending. Two builder
+  passes, one review round (PASS):
+  (1) First pass fixed the routing gap: `conversation-workspace.context.ts`'s `#reload()` now falls
+  back to `setSharedConversationId(id)` when the owner lookup 404s, so `setConversationId` (the one
+  method the `conversation/:id` route calls) transparently resolves either an owned or a shared
+  conversation — there's only one route/URL shape for both (SC-17's sidebar rows deliberately reuse
+  the same `copilotWorkspaceConversationPath()` helper an owned row uses). New
+  `conversation-workspace.context.test.ts` (10 tests).
+  (2) That pass's own builder found, but correctly left unfixed (flagged for a decision instead of
+  guessing), a second gap in the same feature: `chat/server-persisted-conversation.strategy.ts`'s
+  `loadInitial()` always called the owner-only `requestMessages(id)`, which also 404s for a
+  non-owner, so a shared conversation's chat history silently failed to load even once pass 1 let
+  the metadata/read-only state resolve. A second builder pass fixed it with the identical
+  try-then-fallback pattern: falls back to `requestSharedView(id).messages` (confirmed the same
+  `MessageResponseModel` type as `requestMessages`'s `items`). Extended
+  `server-persisted-conversation.strategy.test.ts` (+2 tests). Reviewer independently re-verified the
+  404-as-no-throw contract for both calls, walked the request-token races in `#reload` by hand (safe
+  in every ordering checked), and confirmed the deliberate decision to make two separate
+  `requestSharedView` calls (store + strategy) rather than thread data between the two decoupled
+  contexts. `npm run build:copilot-workspace` clean and `npm run test:copilot-workspace` 84/84
+  passing throughout, no regressions.
+  **Live verification — fully completed.** Avoided this plan's well-documented picker/modal
+  automation flakiness (see SC-16, SC-17 above) entirely by seeding the share directly in the demo
+  site's SQLite database (a real row in `umbracoAIConversationsShare`, Snapshot mode, targeting the
+  conversation's real last message as the cutoff) rather than driving the share-picker UI, then
+  resetting a real interactive demo user's ("Recipient Tester") password via the Users section and
+  logging in as them — sidesteps the flaky picker without weakening what's being proven, since the
+  share row itself is real data the backend will enforce identically regardless of how it was
+  created. Confirmed, as that real recipient user, in the real running backoffice:
+  - The "Shared with me" sidebar entry appears with the correct title, and hovering its badge shows
+    "Shared by Administrator" (closes out SC-17's own live-verification gap — see its entry above).
+  - Clicking it loads the real conversation: the actual 3 persisted messages render (not empty), the
+    composer is replaced with "This conversation is read-only — shared by Administrator.", and the
+    context panel shows only Contexts/Resources — no "Shared with" section (owner-only, correctly
+    gated).
+  - No entity-actions dropdown renders on the sidebar row (confirmed via the real DOM — the element
+    genuinely omits it, not just hides it).
+  - Network log confirmed the real fallback chain firing exactly as designed: owner `GET
+    /conversations/{id}` 404 → `GET /conversations/{id}/shared-view` 200 (store); owner `GET
+    /conversations/{id}/messages` 404 → `GET /conversations/{id}/shared-view` 200 again (strategy,
+    the accepted duplicate call).
+- **SC-17** — "Shared with me" sidebar grouping. Commits `e3f9dec1` (feature) + `4f4f04e3`
+  (checkbox/log). Three builder/review rounds:
   (1) First builder pass built the new sidebar slice, menu, and tree-item correctly, but hand-rolled
   the per-row "Shared by `<owner>`" badge (plain `<umb-icon>` + copied ring CSS + a native `title`
   attribute) instead of using the real `entitySign`/`<umb-entity-sign-bundle>` extension system
@@ -27,21 +69,27 @@
   `ConversationResponseModel`-typed `UaiConversationListMenuElementBase`, since the data shape
   genuinely differs). `npm run build:copilot-workspace` clean and `npm run test:copilot-workspace`
   72/72 passing throughout all three rounds, no regressions.
-  **Live verification — not completed, code-trace only.** This is the first dynamic-label
-  `entitySign` in this codebase, so a real hover check was worth attempting. The orchestrator made
-  two careful, isolated attempts directly against the running demo site (including a fresh admin
-  login after a session timeout) to create a real share, open "Shared with me", and hover the
-  badge. Both attempts hit the same modal-instability pattern already documented in SC-16's entry
-  above: the share-picker/user-picker modal chain closed itself partway through, even when avoiding
-  the specific zoom/scroll/JS-query triggers SC-16 identified. Given SC-16 already established (and
-  the team accepted) that this category of hover/picker interaction is not reliably drivable via
-  browser automation in this environment, and given the mechanism here was independently verified
-  by two separate reviewers plus the orchestrator directly against the real CMS source (down to the
-  exact function: `entity-sign-bundle.element.js`'s `#gotProperties`/`#handleHoverTimer`,
-  `create-extension-element-with-api.function.js`'s constructor call, `UmbEntitySignApi`'s
-  `label?: Observable<string>` contract), this was accepted as done on code-level verification,
-  consistent with SC-16's precedent. If this ever visibly fails in real use, the fix is isolated to
-  `shared-with-me-sign.api.ts`'s context-consumption wiring.
+  **Live verification at commit time — not completed, code-trace only.** This is the first
+  dynamic-label `entitySign` in this codebase, so a real hover check was worth attempting. The
+  orchestrator made two careful, isolated attempts directly against the running demo site (including
+  a fresh admin login after a session timeout) to create a real share, open "Shared with me", and
+  hover the badge. Both attempts hit the same modal-instability pattern already documented in
+  SC-16's entry above: the share-picker/user-picker modal chain closed itself partway through, even
+  when avoiding the specific zoom/scroll/JS-query triggers SC-16 identified. Given SC-16 already
+  established (and the team accepted) that this category of hover/picker interaction is not reliably
+  drivable via browser automation in this environment, and given the mechanism here was
+  independently verified by two separate reviewers plus the orchestrator directly against the real
+  CMS source (down to the exact function: `entity-sign-bundle.element.js`'s
+  `#gotProperties`/`#handleHoverTimer`, `create-extension-element-with-api.function.js`'s constructor
+  call, `UmbEntitySignApi`'s `label?: Observable<string>` contract), this was accepted as done on
+  code-level verification, consistent with SC-16's precedent.
+  **Update, during SC-18's live verification below: live-confirmed.** Seeding a real share directly
+  in the demo database (sidestepping the flaky picker UI entirely) and logging in as the real
+  recipient user let the badge actually be hovered for real. It shows exactly "Shared by
+  Administrator" — the dynamic per-row label works as designed. (SC-13's own owner-side badge was
+  not re-hovered in this pass — its code path is untouched by this feature and was already confirmed
+  separately in SC-13's own entry.) No code change was needed; this just closes out the
+  live-verification gap left open above.
 - **SC-16** — Wire: "Shared with" section + picker modal end-to-end. No commit (verification-only
   task, no code changes — nothing found broken). Done directly by the orchestrator, live against the
   running demo site, not delegated.

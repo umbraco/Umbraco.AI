@@ -183,7 +183,7 @@ first (`US1`+`US2`), then recipient-side (`US3`+`US4`).
   rows show. Independent files from SC-12, SC-13, SC-14, SC-15 — safe to run in parallel with all
   of them.
 
-- [ ] **SC-18** — Wire: recipient reads a shared conversation end-to-end
+- [x] **SC-18** — Wire: recipient reads a shared conversation end-to-end
   story: US3, US4 (frontend acceptance)
   depends-on: SC-12, SC-17
   Opening an entry from the "Shared with me" sidebar grouping loads via

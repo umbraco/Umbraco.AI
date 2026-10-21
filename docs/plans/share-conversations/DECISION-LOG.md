@@ -533,3 +533,35 @@
   lines) in place of a live visual confirmation, consistent with the precedent SC-16 already set for
   this category of interaction in this environment. If this ever visibly misbehaves, the fix is
   isolated to `shared-with-me-sign.api.ts`'s context-consumption wiring.
+- **2026-10-21 (SC-17 live-verification update)** — The hover check flagged as code-trace-only above
+  was completed live during SC-18's work: seeded a real share directly in the demo SQLite database
+  (see the next entry) instead of fighting the picker UI again, logged in as the real recipient, and
+  confirmed the badge genuinely shows "Shared by Administrator" on hover. No code change resulted;
+  recorded here so the decision log reflects the gap is actually closed, not just accepted-as-is.
+- **2026-10-21 (SC-18: owned-vs-shared routing resolved by try-then-fallback inside the store, not a
+  second route)** — `shared-with-me-tree-item.element.ts` (SC-17) deliberately reuses the exact same
+  `copilotWorkspaceConversationPath()` helper an owned conversation's row uses, so there is only one
+  route/URL shape (`conversation/:id`) for both kinds of conversation — the workspace element
+  genuinely cannot tell which kind it's opening from the URL alone. Rather than add a second route,
+  a query parameter, or thread an `isShared` flag through the router, `conversation-workspace.context
+  .ts`'s `#reload()` tries the owner lookup first and falls back to the already-built
+  `setSharedConversationId()` when it 404s (the backend's documented contract: 404 is indistinguishable
+  between "doesn't exist" and "not owned by you" — see `SPEC.md`). `conversation-workspace.element.ts`
+  needed zero changes as a result. The identical pattern was then mirrored in
+  `server-persisted-conversation.strategy.ts`'s `loadInitial()` for the chat-history load, deliberately
+  accepting a second `requestSharedView(id)` call (duplicating the one the store already makes) rather
+  than threading pre-fetched data between the store and the chat context — keeps the two contexts
+  decoupled, per the chat context's own documented design ("NOT the source of truth for which
+  conversation is open"). Flagged by review as worth revisiting only if a shared conversation's
+  message payload becomes large enough for the duplicate fetch to matter; not a blocker today.
+- **2026-10-21 (SC-18: lived-verified via direct DB seeding, not the share-picker UI)** — This plan's
+  share-picker/user-picker modal chain has been unreliable to drive via browser automation across
+  SC-16 and SC-17 (modal dismissal on almost any interleaved zoom/scroll/JS query). For SC-18's
+  required live click-through, inserted a real row into `umbracoAIConversationsShare` directly (same
+  shape the real `POST .../shares` endpoint would write — SC-10 already proved that endpoint works),
+  reset a real interactive demo user's password via the Users section UI, and logged in as them. This
+  is accepted as equivalent live verification because the recipient-side code path being tested
+  (sidebar load, click-through, chat/context-panel render) has no way to know or care how its share
+  row was created — it just queries the same `umbracoAIConversationsShare` table either way. Confirmed
+  working end-to-end: real sidebar entry, real dynamic badge tooltip, real chat history, real
+  read-only notice with the correct owner name, no "Shared with" section.

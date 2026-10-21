@@ -19,7 +19,7 @@ before the code lands. Spec headers list names the spec writer guessed; rename f
 
 ## Setup
 
-- [ ] **T0** - story: none (setup). Create the worktree `v18/feature/extraction-capability` from
+- [x] **T0** - story: none (setup). Create the worktree `v18/feature/extraction-capability` from
   `v18/dev` and commit this plan folder to it as the first commit.
   Acceptance: `dotnet build Umbraco.AI/Umbraco.AI.slnx` passes on the new branch.
   depends-on: none.

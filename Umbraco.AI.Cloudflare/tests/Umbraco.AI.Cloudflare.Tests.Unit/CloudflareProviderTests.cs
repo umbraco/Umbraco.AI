@@ -6,6 +6,7 @@ using System.Reflection;
 using Umbraco.AI.Cloudflare.Tests.Unit.Fakes;
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Providers;
 
 namespace Umbraco.AI.Cloudflare.Tests.Unit;
 
@@ -19,19 +20,19 @@ public class CloudflareProviderTests
     {
         private readonly CloudflareProvider _provider = CloudflareTestHost.CreateProvider();
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void HasTheCloudflareProviderId()
         {
             _provider.Id.ShouldBe("cloudflare");
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void HasTheCloudflareDisplayName()
         {
             _provider.Name.ShouldBe("Cloudflare");
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void ExposesOnlyTheExtractionCapability()
         {
             _provider.GetCapabilities().Select(c => c.Kind).ShouldBe([AICapability.Extraction]);
@@ -40,7 +41,7 @@ public class CloudflareProviderTests
 
     public class GivenTheConnectionSettings
     {
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void AreAccountIdApiTokenAndEndpoint()
         {
             typeof(CloudflareProviderSettings)
@@ -50,19 +51,19 @@ public class CloudflareProviderTests
                 .ShouldBe(["AccountId", "ApiToken", "Endpoint"], ignoreOrder: true);
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void MarksTheAccountIdAsRequired()
         {
             Property("AccountId").GetCustomAttribute<RequiredAttribute>().ShouldNotBeNull();
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void MarksTheApiTokenAsRequired()
         {
             Property("ApiToken").GetCustomAttribute<RequiredAttribute>().ShouldNotBeNull();
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void MarksTheApiTokenAsSensitiveSoItIsMaskedAndEncrypted()
         {
             // AC4: masking on read-back and encryption at rest are the generic sensitive-field handling
@@ -70,7 +71,7 @@ public class CloudflareProviderTests
             Property("ApiToken").GetCustomAttribute<AIFieldAttribute>()!.IsSensitive.ShouldBeTrue();
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void DoesNotMarkTheAccountIdAsSensitive()
         {
             Property("AccountId").GetCustomAttribute<AIFieldAttribute>()!.IsSensitive.ShouldBeFalse();
@@ -79,7 +80,7 @@ public class CloudflareProviderTests
 
     public class GivenSettingsWithNoEndpoint
     {
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void DefaultsTheEndpointToTheCloudflareApi()
         {
             new CloudflareProviderSettings().Endpoint.ShouldBe("https://api.cloudflare.com/client/v4");
@@ -88,7 +89,7 @@ public class CloudflareProviderTests
 
     public class GivenAValidConnection
     {
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task ListsClairicAsItsOnlyModel()
         {
             var handler = new ScriptedHttpMessageHandler(ScriptedHttpMessageHandler.Json(CloudflareTestHost.ModelSearchAnswer));
@@ -112,7 +113,7 @@ public class CloudflareProviderTests
         public GivenSettingsWithNoAccountId()
             => _capability = CloudflareTestHost.CreateCapability(_handler);
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public void IsRejectedAsARequiredFieldOnSave()
         {
             // Saving a connection validates settings with DataAnnotations (AIEditableModelResolver).
@@ -124,14 +125,14 @@ public class CloudflareProviderTests
             results.ShouldContain(r => r.MemberNames.Contains("AccountId"));
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task CreatingAClientFailsBeforeAnyNetworkCall()
         {
             await Should.ThrowAsync<InvalidOperationException>(
                 () => _capability.CreateClientAsync(new CloudflareProviderSettings { ApiToken = CloudflareTestHost.ApiToken }, null, default));
         }
 
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task NeverReachesTheHandler()
         {
             await Record.ExceptionAsync(
@@ -143,7 +144,7 @@ public class CloudflareProviderTests
 
     public class GivenSettingsWithNoApiToken
     {
-        [Fact(Skip = "Pending")]
+        [Fact]
         public async Task CreatingAClientFailsBeforeAnyNetworkCall()
         {
             var capability = CloudflareTestHost.CreateCapability();

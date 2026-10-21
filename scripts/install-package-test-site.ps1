@@ -193,6 +193,7 @@ Install-Package "Umbraco.AI.OpenRouter"
 Install-Package "Umbraco.AI.TogetherAI"
 Install-Package "Umbraco.AI.ZAI"
 Install-Package "Umbraco.AI.TypeSafe"
+Install-Package "Umbraco.AI.Cloudflare"
 
 # Add-on packages (includes Startup + Web.StaticAssets)
 Install-Package "Umbraco.AI.Prompt"

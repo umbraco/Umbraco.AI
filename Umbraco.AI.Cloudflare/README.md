@@ -12,8 +12,8 @@ free text, without prompting a chat model and parsing the reply.
 
 ### Requirements
 
-- Umbraco CMS 18.0.0+
-- Umbraco.AI 18.0.0+
+- Umbraco CMS 17.0.0+
+- Umbraco.AI 17.0.0+
 - .NET 10.0
 - Cloudflare account ID and API token
 - The `Umbraco:AI:Experimental:Extraction` feature flag enabled

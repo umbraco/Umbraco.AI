@@ -48,6 +48,13 @@ public sealed class AIConversation
     /// <summary>Whether the conversation is archived.</summary>
     public bool IsArchived { get; set; }
 
+    /// <summary>
+    /// Whether at least one active (non-revoked) share exists for this conversation. Read-only and
+    /// server-computed — only populated by the paged list query (<see cref="IAIConversationRepository.GetPagedAsync"/>);
+    /// never set by a caller, the same posture as <see cref="UserKey"/>.
+    /// </summary>
+    public bool HasActiveShares { get; set; }
+
     /// <summary>Creation timestamp.</summary>
     public DateTime DateCreated { get; set; }
 

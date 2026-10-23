@@ -34,6 +34,14 @@ public sealed class ConversationResponseModel
     /// <summary>Whether the conversation is archived.</summary>
     public bool IsArchived { get; set; }
 
+    /// <summary>
+    /// Whether at least one active (non-revoked) share exists for this conversation.
+    /// Only accurate when returned from the paged list endpoint (<c>GET /conversations</c>); always
+    /// <c>false</c> from <c>GET /conversations/{id}</c> or the create/update endpoints, which don't
+    /// compute it.
+    /// </summary>
+    public bool HasActiveShares { get; set; }
+
     /// <summary>Creation timestamp.</summary>
     public DateTime DateCreated { get; set; }
 

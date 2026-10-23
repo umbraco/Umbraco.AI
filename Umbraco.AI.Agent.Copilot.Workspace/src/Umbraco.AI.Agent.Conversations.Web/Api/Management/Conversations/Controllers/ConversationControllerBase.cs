@@ -36,4 +36,32 @@ public abstract class ConversationControllerBase : ConversationsManagementContro
             Detail = exception.Reason,
             Status = StatusCodes.Status400BadRequest,
         });
+
+    /// <summary>
+    /// Returns a 400 Bad Request response for a Snapshot share that couldn't be anchored to a message.
+    /// This is a deliberate rejection of the share request — distinct from <see cref="ConversationNotFound"/>,
+    /// which covers "not owned"/"doesn't exist" — so it must be caught ahead of (not instead of) the
+    /// general <see cref="InvalidOperationException"/> catch a caller also has for the ownership check,
+    /// since <see cref="AIConversationShareCutoffUnresolvableException"/> derives from it.
+    /// </summary>
+    /// <param name="exception">The cutoff-resolution failure raised by the share service.</param>
+    private protected IActionResult ConversationShareCutoffUnresolvable(AIConversationShareCutoffUnresolvableException exception)
+        => BadRequest(new ProblemDetails
+        {
+            Type = "Error",
+            Title = "Conversation share cutoff unresolvable",
+            Detail = exception.Message,
+            Status = StatusCodes.Status400BadRequest,
+        });
+
+    /// <summary>Returns a 400 Bad Request response for a share request naming an unrecognized scope mode.</summary>
+    /// <param name="scopeMode">The unrecognized value the caller sent.</param>
+    private protected IActionResult ConversationShareScopeModeInvalid(string scopeMode)
+        => BadRequest(new ProblemDetails
+        {
+            Type = "Error",
+            Title = "Invalid scope mode",
+            Detail = $"'{scopeMode}' is not a recognized conversation share scope mode. Use 'Snapshot' or 'Live'.",
+            Status = StatusCodes.Status400BadRequest,
+        });
 }

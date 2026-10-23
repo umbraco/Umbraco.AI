@@ -15,6 +15,13 @@ public static class CopilotWorkspaceConstants
         /// admin section ("ai") so end-users can be granted the Workspace without AI configuration access.
         /// </summary>
         public const string CopilotWorkspace = "Uai.Section.CopilotWorkspace";
+
+        /// <summary>
+        /// The URL path segment for the Copilot Workspace section (distinct from the section alias above —
+        /// this is what actually appears in backoffice URLs, e.g. <c>/section/copilot-workspace</c>). Must
+        /// match the frontend's <c>UAI_COPILOT_WORKSPACE_SECTION_PATHNAME</c> in <c>constants.ts</c>.
+        /// </summary>
+        public const string CopilotWorkspacePathname = "copilot-workspace";
     }
 
     /// <summary>

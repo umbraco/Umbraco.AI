@@ -4,6 +4,7 @@ import { ConversationsService } from "../../api/sdk.gen.js";
 import { copilotWorkspaceClientReady } from "../../app.js";
 import type {
     CreateConversationRequestModel,
+    ShareConversationRequestModel,
     UaiConversationCollectionFilter,
     UpdateConversationRequestModel,
 } from "../types.js";
@@ -68,5 +69,30 @@ export class UaiConversationServerDataSource {
             this.#host,
             ConversationsService.getMessages({ path: { id }, query: { skip, take } }),
         );
+    }
+
+    async share(id: string, request: ShareConversationRequestModel) {
+        await copilotWorkspaceClientReady;
+        return tryExecute(this.#host, ConversationsService.share({ path: { id }, body: request }));
+    }
+
+    async getShares(id: string) {
+        await copilotWorkspaceClientReady;
+        return tryExecute(this.#host, ConversationsService.getShares({ path: { id } }));
+    }
+
+    async revokeShare(id: string, userKey: string) {
+        await copilotWorkspaceClientReady;
+        return tryExecute(this.#host, ConversationsService.revoke({ path: { id, userKey } }));
+    }
+
+    async getSharedWithMe(skip = 0, take = 200, search?: string) {
+        await copilotWorkspaceClientReady;
+        return tryExecute(this.#host, ConversationsService.getSharedWithMe({ query: { skip, take, search } }));
+    }
+
+    async getSharedView(id: string) {
+        await copilotWorkspaceClientReady;
+        return tryExecute(this.#host, ConversationsService.getSharedView({ path: { id } }));
     }
 }

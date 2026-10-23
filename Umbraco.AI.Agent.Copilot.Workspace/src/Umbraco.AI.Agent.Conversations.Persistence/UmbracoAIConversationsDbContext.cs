@@ -26,6 +26,9 @@ public class UmbracoAIConversationsDbContext : DbContext
     /// <summary>Messages table.</summary>
     internal DbSet<AIMessageEntity> Messages { get; set; } = null!;
 
+    /// <summary>Conversation share grants table.</summary>
+    internal DbSet<AIConversationShareEntity> ConversationShares { get; set; } = null!;
+
     /// <summary>
     /// Creates a new instance of the DbContext.
     /// </summary>
@@ -195,6 +198,38 @@ public class UmbracoAIConversationsDbContext : DbContext
             entity.HasIndex(e => new { e.ConversationId, e.Sequence }).IsUnique();
 
             // Conversation delete cascades to its messages.
+            entity.HasOne<AIConversationEntity>()
+                .WithMany()
+                .HasForeignKey(e => e.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AIConversationShareEntity>(entity =>
+        {
+            entity.ToTable("umbracoAIConversationsShare");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.ConversationId).IsRequired();
+            entity.Property(e => e.SharedWithUserKey).IsRequired();
+            entity.Property(e => e.SharedByUserKey).IsRequired();
+            entity.Property(e => e.ScopeMode).IsRequired();
+            entity.Property(e => e.CutoffMessageId).IsRequired(false);
+            entity.Property(e => e.DateShared).IsRequired();
+            entity.Property(e => e.DateRevoked).IsRequired(false);
+
+            // Uniqueness holds only among active (non-revoked) shares, so a recipient can be
+            // re-shared with after a revoke without resurrecting the old row — a revoked share stays
+            // in place as untouched history, and re-sharing inserts a fresh row instead of colliding
+            // with it.
+            entity.HasIndex(e => new { e.ConversationId, e.SharedWithUserKey })
+                .IsUnique()
+                .HasFilter("DateRevoked IS NULL");
+
+            // Non-unique: backs the recipient's cross-conversation "everything shared with me" query
+            // (GetSharedWithUserPagedAsync), which is not scoped to a single conversation.
+            entity.HasIndex(e => e.SharedWithUserKey);
+
+            // Conversation delete cascades to its shares.
             entity.HasOne<AIConversationEntity>()
                 .WithMany()
                 .HasForeignKey(e => e.ConversationId)

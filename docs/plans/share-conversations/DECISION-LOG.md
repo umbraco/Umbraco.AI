@@ -615,3 +615,14 @@
   conversations`, and that same code was already live-verified as a real recipient login on v18's
   own demo site (see the SC-18 decision-log entries above). Consistent with the SC-16 precedent for
   this category of browser-automation friction.
+- **2026-10-23 (resolved via PR review: sharing a zero-message conversation stays
+  Snapshot-blocked/Live-allowed, permanently, not a product question to revisit)** — Resolved on the
+  `v18` PR; ported here unchanged since it's a plan-doc decision, not code. `ARCHITECTURE.md`
+  decision 8 left this as an open TODO. The user confirmed closing it as-is: in the normal product
+  flow, a conversation is never visible anywhere (including to its own owner's sidebar) until its
+  first message has actually persisted, so a zero-message conversation existing at all is already an
+  edge case — reachable only if a draft's first message is created but then never finishes sending.
+  Given how rarely that's reachable, the existing asymmetry (a `Snapshot` share throws since there's
+  no message to anchor a cutoff to; a `Live` share succeeds and just shows an empty read-only chat,
+  which discloses nothing since there's nothing there) is accepted as the permanent behavior on both
+  lines. No code change made on either branch.

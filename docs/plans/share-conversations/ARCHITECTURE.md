@@ -371,10 +371,19 @@ falling back to `null`/Live. This is the same "never reveal more than intended" 
 model's graceful-degradation rule already applies at *read* time (a cutoff message deleted by
 regenerate falls back to a `DateShared` time bound, never to "everything, unbounded") — applied here
 at *share* time instead, where the safe failure mode is "reject the share," not "silently widen it."
-`feature-plan`/`feature-build` TODO, not resolved here: whether "Snapshot an empty conversation"
-should be a supported case at all (it would need its own sentinel, since there's no message to
-reference) is a real product question, not a bug to patch around — until decided, failing the share
-is the only safe default.
+
+**Sharing a conversation with zero messages:** a `Snapshot` share of one fails outright for the same
+reason (no message to anchor the cutoff to) — the share-picker modal doesn't disable the Snapshot
+option for this case client-side, so the owner sees the service's rejection rather than a disabled
+control, which is an acceptable rough edge given how rarely this is actually reachable (see below). A
+`Live` share has no cutoff to resolve, so it's unaffected and succeeds — the recipient would just see
+an empty read-only chat, which is harmless since there's nothing to disclose either way. Confirmed
+with the user this asymmetry (Snapshot blocked, Live allowed) is fine as the permanent behavior, not
+a gap to close: in the normal product flow a conversation is never visible anywhere (including to its
+own owner) until its first message has actually persisted, so a zero-message conversation sitting in
+the owner's own list to go and share is already an edge case — reachable only if a draft's first
+message is created but then never finishes sending (e.g. the tab closes mid-send), not something
+either the UI or a reasonable user would hit in ordinary use.
 
 ### 9. A Snapshot share's `dateModified`/`lastMessageAt` freeze at the cutoff — they don't leak the conversation's live state
 

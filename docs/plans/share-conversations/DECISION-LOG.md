@@ -590,3 +590,15 @@
   rather than a fresh v17 login check) are logged in full on `v17/feature/share-conversations`'s own
   `DECISION-LOG.md`, per this repo's convention that plan-folder docs are branch-specific. This entry
   is just the pointer.
+- **2026-10-23 (resolved via PR review: sharing a zero-message conversation stays
+  Snapshot-blocked/Live-allowed, permanently, not a product question to revisit)** — `ARCHITECTURE.md`
+  decision 8 left this as an open TODO. The user confirmed closing it as-is: in the normal product
+  flow, a conversation is never visible anywhere (including to its own owner's sidebar) until its
+  first message has actually persisted, so a zero-message conversation existing at all is already an
+  edge case — reachable only if a draft's first message is created but then never finishes sending.
+  Given how rarely that's reachable, the existing asymmetry (a `Snapshot` share throws since there's
+  no message to anchor a cutoff to; a `Live` share succeeds and just shows an empty read-only chat,
+  which discloses nothing since there's nothing there) is accepted as the permanent behavior. No code
+  change made — the share-picker modal still doesn't disable the Snapshot option client-side for this
+  case, so the rough edge is the owner seeing the service's rejection rather than a disabled control,
+  which was explicitly judged not worth polishing for how rarely it's hit.

@@ -24,6 +24,7 @@ public class ContentPropertyValueOperationHelperTests
     private readonly Mock<IDataEditor> _editorMock = new();
     private readonly Mock<IDataValueEditor> _valueEditorMock = new();
     private readonly Mock<IJsonSerializer> _jsonSerializerMock = new();
+    private readonly Mock<ITemplateService> _templateServiceMock = new();
     private readonly List<IDataEditor> _editors = [];
 
     public ContentPropertyValueOperationHelperTests()
@@ -104,6 +105,7 @@ public class ContentPropertyValueOperationHelperTests
             new ContentEditorValueReader(
                 new PropertyEditorCollection(new DataEditorCollection(() => _editors)),
                 _jsonSerializerMock.Object),
+            _templateServiceMock.Object,
             key,
             path,
             operation,
@@ -304,6 +306,39 @@ public class ContentPropertyValueOperationHelperTests
         result.Success.ShouldBeTrue();
         captured.ShouldNotBeNull();
         captured!.RootValue!.GetValue<string>().ShouldBe("Hello World");
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ContentHasTemplate_KeepsItSoThePageStillRenders()
+    {
+        var key = Guid.NewGuid();
+        var userKey = Guid.NewGuid();
+        var templateKey = Guid.NewGuid();
+        _authorizerMock
+            .Setup(x => x.AuthorizeContentAsync(ActionUpdate.ActionLetter, key, null))
+            .ReturnsAsync(UmbracoWriteAuthorizationResult.Allowed(userKey));
+        var contentMock = CreateContentMock(Guid.NewGuid(), "Hello World");
+        contentMock.Setup(x => x.TemplateId).Returns(1234);
+        _contentEditingServiceMock.Setup(x => x.GetAsync(key)).ReturnsAsync(contentMock.Object);
+        var templateMock = new Mock<ITemplate>();
+        templateMock.Setup(x => x.Key).Returns(templateKey);
+        _templateServiceMock.Setup(x => x.GetAsync(1234)).ReturnsAsync(templateMock.Object);
+        _dispatcherMock
+            .Setup(x => x.DispatchAsync(It.IsAny<AIPropertyValueDispatchRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AIPropertyValueDispatchResult.Ok(JsonValue.Create("Updated")));
+
+        ContentUpdateModel? capturedModel = null;
+        _contentEditingServiceMock
+            .Setup(x => x.UpdateAsync(key, It.IsAny<ContentUpdateModel>(), userKey))
+            .Callback<Guid, ContentUpdateModel, Guid>((_, model, _) => capturedModel = model)
+            .ReturnsAsync(Attempt<ContentUpdateResult, ContentEditingOperationStatus>.Succeed(
+                ContentEditingOperationStatus.Success, new ContentUpdateResult()));
+
+        var result = await ExecuteAsync(key, [RootSegment]);
+
+        result.Success.ShouldBeTrue();
+        capturedModel.ShouldNotBeNull();
+        capturedModel!.TemplateKey.ShouldBe(templateKey);
     }
 
     [Fact]

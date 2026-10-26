@@ -196,6 +196,15 @@ internal static class ContentToolHelpers
     }
 
     /// <summary>
+    /// Gets the item's current name for the edited culture, to send back on a save that isn't renaming it.
+    /// On a culture-variant item <see cref="IContentBase.Name"/> holds the default language's name, so
+    /// sending that for another culture would rename it. A culture with no name yet falls back to the
+    /// default language's name, since the CMS needs one to create the variant.
+    /// </summary>
+    public static string GetCurrentName(IContentBase item, string? culture)
+        => (culture is null ? item.Name : item.GetCultureName(culture) ?? item.Name) ?? string.Empty;
+
+    /// <summary>
     /// Gets the key of the content item's current template. ContentEditingService treats a null
     /// <see cref="Umbraco.Cms.Core.Models.ContentEditing.ContentUpdateModel.TemplateKey"/> as "no template"
     /// and clears it on every save, so an update that leaves it out silently unassigns the template and

@@ -148,29 +148,9 @@ internal static class ContentPropertyValueOperationHelper
             },
         };
 
-        // ContentEditingServiceBase.RemoveMissingProperties clears every property alias NOT present in
-        // Properties on every save, so — like UpdateUmbracoContentTool — this must resubmit every other
-        // property's current value or an operation touching only the root alias would silently wipe the
-        // rest of the content item. The values must be resubmitted in editor format, not the stored
-        // format, or editors such as pickers and dropdowns can't read them back (see ContentEditorValueReader).
-        // Segment-varying properties are skipped: there's no per-property segment to read/write them
-        // correctly here, so they're left with the pre-existing (removed-if-omitted) behavior rather
-        // than risk a NotSupportedException from guessing a segment.
-        foreach (var property in content.Properties)
-        {
-            if (property.Alias == rootAlias || property.PropertyType.VariesBySegment())
-            {
-                continue;
-            }
-
-            var propertyCulture = property.PropertyType.VariesByCulture() ? culture : null;
-            properties.Add(new PropertyValueModel
-            {
-                Alias = property.Alias,
-                Value = valueReader.GetEditorValue(property, propertyCulture, null),
-                Culture = propertyCulture,
-            });
-        }
+        // Like UpdateUmbracoContentTool, send back every other property's current value, or the CMS
+        // clears them (see ContentEditorValueReader.GetUnchangedValues).
+        properties.AddRange(valueReader.GetUnchangedValues(content, new HashSet<string> { rootAlias }, culture));
 
         var updateModel = new ContentUpdateModel
         {
@@ -179,7 +159,7 @@ internal static class ContentPropertyValueOperationHelper
             // matching the content type's own variance — an invariant type demands one with
             // Culture/Segment both null, otherwise it fails with ContentTypeCultureVarianceMismatch even
             // though nothing here is actually changing the name. Reuse the current name unchanged.
-            Variants = [new VariantModel { Name = content.Name ?? string.Empty, Culture = culture, Segment = segment }],
+            Variants = [new VariantModel { Name = ContentToolHelpers.GetCurrentName(content, culture), Culture = culture, Segment = segment }],
             TemplateKey = await ContentToolHelpers.GetTemplateKeyAsync(templateService, content),
         };
 

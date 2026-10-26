@@ -12,8 +12,6 @@ namespace Umbraco.AI.Core.Extraction;
 
 internal sealed class AIExtractionService : IAIExtractionService
 {
-    private const string DefaultInlineAlias = "extraction";
-
     private readonly IAIProfileService _profileService;
     private readonly IAIExtractionClientFactory _clientFactory;
     private readonly IEventAggregator _eventAggregator;
@@ -188,6 +186,7 @@ internal sealed class AIExtractionService : IAIExtractionService
 
     private static void ConfigureFromProfileOverload(AIExtractionBuilder builder, Guid? profileId, string? profileAlias, AIExtractionOptions? options)
     {
+        builder.WithAlias("extraction");
         if (profileId.HasValue)
         {
             builder.WithProfile(profileId.Value);
@@ -268,8 +267,7 @@ internal sealed class AIExtractionService : IAIExtractionService
 
     private static AIExtractionBuilder BuildExtraction(Action<AIExtractionBuilder> configure)
     {
-        // Default alias so a bare WithProfile(...) builder works; the caller's WithAlias(...) replaces it.
-        var builder = new AIExtractionBuilder().WithAlias(DefaultInlineAlias);
+        var builder = new AIExtractionBuilder();
         configure(builder);
         builder.Validate();
         return builder;

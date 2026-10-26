@@ -117,7 +117,7 @@ public interface IAIExtractionService
     /// </summary>
     /// <remarks>
     /// This is the primary single-field entry point — the no-profile, <c>Guid</c>, and <c>string</c>
-    /// overloads all delegate to this overload internally. The builder's alias defaults to <c>"extraction"</c> when not set.
+    /// overloads all delegate to this overload internally. The builder must set an alias with <c>WithAlias(...)</c>.
     /// </remarks>
     /// <typeparam name="TAnswer">The answer type the field resolves to.</typeparam>
     /// <param name="configure">Action to configure the inline extraction via the builder.</param>
@@ -212,7 +212,7 @@ public interface IAIExtractionService
     /// </summary>
     /// <remarks>
     /// This is the primary entry point — the no-profile, <c>Guid</c>, and <c>string</c> overloads all
-    /// delegate to this overload internally. The builder's alias defaults to <c>"extraction"</c> when not set.
+    /// delegate to this overload internally. The builder must set an alias with <c>WithAlias(...)</c>.
     /// </remarks>
     /// <param name="configure">Action to configure the inline extraction via the builder.</param>
     /// <param name="request">The shared text and fields to extract.</param>

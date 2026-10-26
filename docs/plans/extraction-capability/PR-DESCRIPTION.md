@@ -58,8 +58,10 @@ Automate workspace for the Extract Values step.
 - The Cloudflare client leaves a missing answer out and lets Core's checker reject it (clearer
   message), passes unasked answers through for Core to reject, masks the API token before cutting
   error text to 500 characters, and escapes `AccountId` in every URL.
-- `AIExtractionService` checks the experimental flag itself; Decision's service doesn't. The
-  builder overloads default the alias to `"extraction"` (Decision's throws without one).
+- `AIExtractionService` checks the experimental flag itself, before any profile lookup, event or
+  provider call (#660 adds the same check to Decision and Image Generation). Like every other
+  inline builder, the builder overloads require `WithAlias(...)` so each call is uniquely named in
+  the logs.
 - The extract endpoint reuses the shared `UsageModel` (`inputTokens`…) and now accepts duration
   units and list item types with surrounding spaces (shared parser with Automate). Numbers and comma
   lists are still a 400.

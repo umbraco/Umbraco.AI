@@ -56,6 +56,7 @@ internal static class ContentPropertyValueOperationHelper
         IContentEditingService contentEditingService,
         IAIPropertyValueDispatcher dispatcher,
         ContentEditorValueReader valueReader,
+        ITemplateService templateService,
         Guid contentKey,
         IReadOnlyList<UmbracoPropertyPathSegmentArg>? path,
         AIPropertyOperation operation,
@@ -179,6 +180,7 @@ internal static class ContentPropertyValueOperationHelper
             // Culture/Segment both null, otherwise it fails with ContentTypeCultureVarianceMismatch even
             // though nothing here is actually changing the name. Reuse the current name unchanged.
             Variants = [new VariantModel { Name = content.Name ?? string.Empty, Culture = culture, Segment = segment }],
+            TemplateKey = await ContentToolHelpers.GetTemplateKeyAsync(templateService, content),
         };
 
         var updateAttempt = await contentEditingService.UpdateAsync(contentKey, updateModel, authResult.UserKey!.Value);

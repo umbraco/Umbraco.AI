@@ -180,8 +180,11 @@ public class CreateUmbracoContentToolTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ContentTypeHasDefaultTemplate_AssignsIt()
+    public async Task ExecuteAsync_ContentTypeHasDefaultTemplate_LeavesTemplateToTheCms()
     {
+        // The CMS assigns the content type's default template when a new item is first saved with no
+        // template (PublishableContentRepositoryBase.PersistNewItem). Sending a key here would instead run
+        // ContentEditingService's allowed-template check, which the CMS's own fallback skips.
         var userKey = Guid.NewGuid();
         var templateKey = Guid.NewGuid();
         var args = new CreateUmbracoContentArgs(null, "blogPost", "Home", null);
@@ -206,7 +209,7 @@ public class CreateUmbracoContentToolTests
         await _tool.ExecuteAsync(args, CancellationToken.None);
 
         capturedModel.ShouldNotBeNull();
-        capturedModel!.TemplateKey.ShouldBe(templateKey);
+        capturedModel!.TemplateKey.ShouldBeNull();
     }
 
     [Fact]

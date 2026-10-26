@@ -4,6 +4,7 @@ using Umbraco.AI.Core.Decision;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Tests.Common.Builders;
 using Umbraco.AI.Tests.Common.Fakes;
 using Umbraco.Cms.Core.Events;
@@ -31,6 +32,12 @@ public class AIDecisionServiceTests
     private readonly Mock<IEventAggregator> _eventAggregatorMock = new();
     private readonly Mock<IAIRuntimeContextAccessor> _contextAccessorMock = new();
     private readonly Mock<IAIRuntimeContextScopeProvider> _scopeProviderMock = new();
+    private readonly Mock<IAIExperimentalFeatures> _experimentalFeaturesMock = new();
+
+    public AIDecisionServiceTests()
+    {
+        _experimentalFeaturesMock.Setup(x => x.IsCapabilityEnabled(AICapability.Decision)).Returns(true);
+    }
 
     private AIDecisionService CreateService()
     {
@@ -59,7 +66,34 @@ public class AIDecisionServiceTests
             _eventAggregatorMock.Object,
             _contextAccessorMock.Object,
             _scopeProviderMock.Object,
-            contributors);
+            contributors,
+            _experimentalFeaturesMock.Object);
+    }
+
+    [Fact]
+    public async Task AskAsync_FlagOff_RefusesBeforeProfileLookup()
+    {
+        _experimentalFeaturesMock.Setup(x => x.IsCapabilityEnabled(AICapability.Decision)).Returns(false);
+        var service = CreateService();
+
+        var ex = await Should.ThrowAsync<InvalidOperationException>(
+            () => service.AskAsync("spam-check", new AIBinaryDecisionQuestion { Instructions = "is this spam?" }));
+
+        ex.Message.ShouldContain("Umbraco:AI:Experimental:Decision");
+        _profileServiceMock.VerifyNoOtherCalls();
+        _clientFactoryMock.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task GetDecisionResponseAsync_FlagOff_RefusesBeforeProfileLookup()
+    {
+        _experimentalFeaturesMock.Setup(x => x.IsCapabilityEnabled(AICapability.Decision)).Returns(false);
+        var service = CreateService();
+
+        await Should.ThrowAsync<InvalidOperationException>(
+            () => service.GetDecisionResponseAsync(b => b.WithAlias("spam").WithProfile("spam-check"), new AIDecisionRequest { Questions = [] }));
+
+        _profileServiceMock.VerifyNoOtherCalls();
     }
 
     [Fact]

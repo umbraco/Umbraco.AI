@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.Events;
 
@@ -17,6 +18,7 @@ internal sealed class AIDecisionService : IAIDecisionService
     private readonly IAIRuntimeContextAccessor _contextAccessor;
     private readonly IAIRuntimeContextScopeProvider _scopeProvider;
     private readonly AIRuntimeContextContributorCollection _contributors;
+    private readonly IAIExperimentalFeatures _experimentalFeatures;
 
     public AIDecisionService(
         IAIProfileService profileService,
@@ -24,7 +26,8 @@ internal sealed class AIDecisionService : IAIDecisionService
         IEventAggregator eventAggregator,
         IAIRuntimeContextAccessor contextAccessor,
         IAIRuntimeContextScopeProvider scopeProvider,
-        AIRuntimeContextContributorCollection contributors)
+        AIRuntimeContextContributorCollection contributors,
+        IAIExperimentalFeatures experimentalFeatures)
     {
         _profileService = profileService;
         _clientFactory = clientFactory;
@@ -32,6 +35,7 @@ internal sealed class AIDecisionService : IAIDecisionService
         _contextAccessor = contextAccessor;
         _scopeProvider = scopeProvider;
         _contributors = contributors;
+        _experimentalFeatures = experimentalFeatures;
     }
 
     public Task<AIDecisionResponse<TAnswer>> AskAsync<TAnswer>(
@@ -78,6 +82,7 @@ internal sealed class AIDecisionService : IAIDecisionService
         where TAnswer : AIDecisionAnswer
     {
         ArgumentNullException.ThrowIfNull(question);
+        EnsureEnabled();
 
         var questionWithId = EnsureId(question);
         var request = new AIDecisionRequest { State = state, Questions = [questionWithId] };
@@ -124,6 +129,7 @@ internal sealed class AIDecisionService : IAIDecisionService
     {
         ArgumentNullException.ThrowIfNull(configure);
         ArgumentNullException.ThrowIfNull(request);
+        EnsureEnabled();
 
         var builder = BuildDecision(configure);
 
@@ -241,6 +247,20 @@ internal sealed class AIDecisionService : IAIDecisionService
         }
 
         return (AIDecisionQuestion<TAnswer>)question.WithId(Guid.NewGuid().ToString("N"));
+    }
+
+    /// <summary>
+    /// The service is registered unconditionally (the experimental gate lives only in
+    /// <see cref="IAIExperimentalFeatures"/>), so every public path refuses here while the flag is off —
+    /// before any profile lookup, notification or provider call.
+    /// </summary>
+    private void EnsureEnabled()
+    {
+        if (!_experimentalFeatures.IsCapabilityEnabled(AICapability.Decision))
+        {
+            throw new InvalidOperationException(
+                "Decision is turned off. Set Umbraco:AI:Experimental:Decision to true to use it.");
+        }
     }
 
     private static AIDecisionBuilder BuildDecision(Action<AIDecisionBuilder> configure)

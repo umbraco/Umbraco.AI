@@ -16,6 +16,7 @@ using Umbraco.AI.Core.Observability;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Tests.Common.Builders;
 using Umbraco.AI.Tests.Common.Fakes;
 using Umbraco.Cms.Core.Events;
@@ -35,10 +36,12 @@ public class AIImageGenerationServiceTests
     private readonly Mock<IAIAuditLogFactory> _auditLogFactoryMock = new();
     private readonly Mock<IAIUsageRecordingService> _usageRecordingServiceMock = new();
     private readonly Mock<IAIUsageRecordFactory> _usageRecordFactoryMock = new();
+    private readonly Mock<IAIExperimentalFeatures> _experimentalFeaturesMock = new();
     private readonly AIImageGenerationService _service;
 
     public AIImageGenerationServiceTests()
     {
+        _experimentalFeaturesMock.Setup(x => x.IsCapabilityEnabled(AICapability.ImageGeneration)).Returns(true);
         _eventAggregatorMock
             .Setup(x => x.PublishAsync(It.IsAny<INotification>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -83,7 +86,8 @@ public class AIImageGenerationServiceTests
             _contextAccessorMock.Object,
             _scopeProviderMock.Object,
             contributors,
-            tracker);
+            tracker,
+            _experimentalFeaturesMock.Object);
     }
 
     private AIProfile SetupDefaultImageProfile(IImageGenerator generator)
@@ -101,6 +105,39 @@ public class AIImageGenerationServiceTests
             .ReturnsAsync(generator);
 
         return profile;
+    }
+
+    [Fact]
+    public async Task GenerateImagesAsync_FlagOff_RefusesBeforeProfileLookup()
+    {
+        _experimentalFeaturesMock.Setup(x => x.IsCapabilityEnabled(AICapability.ImageGeneration)).Returns(false);
+
+        var ex = await Should.ThrowAsync<InvalidOperationException>(
+            () => _service.GenerateImagesAsync(b => b.WithAlias("test"), "a cat"));
+
+        ex.Message.ShouldContain("Umbraco:AI:Experimental:ImageGeneration");
+        _profileServiceMock.VerifyNoOtherCalls();
+        _factoryMock.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task CreateImageGeneratorAsync_FlagOff_RefusesBeforeProfileLookup()
+    {
+        _experimentalFeaturesMock.Setup(x => x.IsCapabilityEnabled(AICapability.ImageGeneration)).Returns(false);
+
+        await Should.ThrowAsync<InvalidOperationException>(() => _service.CreateImageGeneratorAsync(_ => { }));
+
+        _profileServiceMock.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task GetSupportedModelsAsync_FlagOff_RefusesBeforeProfileLookup()
+    {
+        _experimentalFeaturesMock.Setup(x => x.IsCapabilityEnabled(AICapability.ImageGeneration)).Returns(false);
+
+        await Should.ThrowAsync<InvalidOperationException>(() => _service.GetSupportedModelsAsync(_ => { }));
+
+        _profileServiceMock.VerifyNoOtherCalls();
     }
 
     [Fact]

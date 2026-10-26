@@ -20,13 +20,15 @@ public class UpdateUmbracoContentToolTests
 {
     private readonly Mock<IContentEditingService> _contentEditingServiceMock;
     private readonly Mock<IUmbracoWriteAuthorizer> _authorizerMock;
+    private readonly Mock<ITemplateService> _templateServiceMock;
     private readonly IAITool _tool;
 
     public UpdateUmbracoContentToolTests()
     {
         _contentEditingServiceMock = new Mock<IContentEditingService>();
         _authorizerMock = new Mock<IUmbracoWriteAuthorizer>();
-        _tool = new UpdateUmbracoContentTool(_contentEditingServiceMock.Object, _authorizerMock.Object, new PropertyEditorCollection(new DataEditorCollection(() => [])), Mock.Of<IJsonSerializer>());
+        _templateServiceMock = new Mock<ITemplateService>();
+        _tool = new UpdateUmbracoContentTool(_contentEditingServiceMock.Object, _authorizerMock.Object, new PropertyEditorCollection(new DataEditorCollection(() => [])), Mock.Of<IJsonSerializer>(), _templateServiceMock.Object);
     }
 
     private static Mock<IContent> CreateContentMock(Guid key, string name, string contentTypeAlias, IEnumerable<IProperty>? properties = null)
@@ -192,6 +194,35 @@ public class UpdateUmbracoContentToolTests
         capturedModel!.Variants.Single().Name.ShouldBe("New Name");
         capturedModel.Variants.Single().Culture.ShouldBe("en-US");
         capturedModel.Properties.Single().Alias.ShouldBe("summary");
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ContentHasTemplate_KeepsItSoThePageStillRenders()
+    {
+        var userKey = Guid.NewGuid();
+        var key = Guid.NewGuid();
+        var templateKey = Guid.NewGuid();
+        _authorizerMock
+            .Setup(x => x.AuthorizeContentAsync(ActionUpdate.ActionLetter, key, null))
+            .ReturnsAsync(UmbracoWriteAuthorizationResult.Allowed(userKey));
+        var existingMock = CreateContentMock(key, "Home", "homePage");
+        existingMock.Setup(x => x.TemplateId).Returns(1234);
+        _contentEditingServiceMock.Setup(x => x.GetAsync(key)).ReturnsAsync(existingMock.Object);
+        var templateMock = new Mock<ITemplate>();
+        templateMock.Setup(x => x.Key).Returns(templateKey);
+        _templateServiceMock.Setup(x => x.GetAsync(1234)).ReturnsAsync(templateMock.Object);
+
+        ContentUpdateModel? capturedModel = null;
+        _contentEditingServiceMock
+            .Setup(x => x.UpdateAsync(key, It.IsAny<ContentUpdateModel>(), userKey))
+            .Callback<Guid, ContentUpdateModel, Guid>((_, model, _) => capturedModel = model)
+            .ReturnsAsync(Attempt<ContentUpdateResult, ContentEditingOperationStatus>.Succeed(
+                ContentEditingOperationStatus.Success, new ContentUpdateResult { Content = existingMock.Object }));
+
+        await _tool.ExecuteAsync(new UpdateUmbracoContentArgs(key, "New Name", null), CancellationToken.None);
+
+        capturedModel.ShouldNotBeNull();
+        capturedModel!.TemplateKey.ShouldBe(templateKey);
     }
 
     [Fact]

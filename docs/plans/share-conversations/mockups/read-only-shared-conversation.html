@@ -1,0 +1,160 @@
+<!doctype html>
+<!--
+  share-conversations: the recipient's read-only view of a shared conversation (SPEC.md's "Chat
+  detail view and context panel: read-only mode" — reuses the existing archived-conversation
+  readonly mechanism, per ARCHITECTURE.md). Built from docs/mockups/starters/copilot-workspace.html.
+-->
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Mockup: Read-only shared conversation</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@umbraco-ui/uui@2/dist/themes/light.css">
+	<link rel="stylesheet" href="_mockup.css">
+	<script type="module" src="_mockup.js"></script>
+	<style>
+		.cw-sidebar { display: flex; flex-direction: column; height: 100%; }
+		.cw-sidebar-header { display: flex; flex-direction: column; gap: var(--uui-size-space-3); padding: var(--uui-size-space-4) var(--uui-size-space-5); border-bottom: 1px solid var(--uui-color-border); }
+		.cw-sidebar-header uui-button-group, .cw-sidebar-header uui-button-group uui-button:first-child, .cw-sidebar-header > uui-button { width: 100%; }
+		.cw-sidebar-header uui-input { width: 100%; }
+		.cw-sidebar-groups { flex: 1; overflow: auto; padding: var(--uui-size-space-3) 0; }
+		.cw-group-label { margin: 0; padding: var(--uui-size-space-4) var(--uui-size-space-5) var(--uui-size-space-2); font-size: 12px !important; font-weight: 700 !important; text-transform: uppercase; letter-spacing: 0.04em; color: var(--uui-color-text-alt); }
+		/* Entity-sign badge approximation -- same treatment as sidebar-shared-indicator.html, so a
+		   "shared with me" row looks like any other shared tree item: icon + badge, one line. */
+		.cw-icon-badge { position: relative; display: inline-flex; width: 1em; height: 1em; }
+		.cw-icon-badge > uui-icon:first-child { width: 1em; height: 1em; }
+		.cw-entity-sign {
+			position: absolute;
+			bottom: -4px;
+			right: -5px;
+			width: 11px;
+			height: 11px;
+			border-radius: 50%;
+			background: var(--uui-color-surface);
+			border: 1.5px solid var(--uui-color-surface);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			box-shadow: 0 0 0 1px var(--uui-color-border);
+		}
+		.cw-entity-sign uui-icon {
+			width: 8px;
+			height: 8px;
+			color: var(--uui-color-positive, #3a8148);
+		}
+		.cw-main-area { display: grid; grid-template-columns: minmax(0, 1fr) 340px; height: 100%; }
+		.cw-chat { display: flex; flex-direction: column; height: 100%; min-width: 0; }
+		.cw-readonly-notice { flex: none; display: flex; align-items: center; gap: var(--uui-size-space-3); padding: var(--uui-size-space-4) var(--uui-size-layout-1); background: var(--uui-color-surface-alt); border-bottom: 1px solid var(--uui-color-border); color: var(--uui-color-text-alt); font-size: var(--uui-type-small-size); }
+		.cw-chat-messages { flex: 1; overflow: auto; padding: var(--uui-size-layout-1); display: flex; flex-direction: column; gap: var(--uui-size-space-5); max-width: 860px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+		.cw-msg { display: flex; flex-direction: column; gap: var(--uui-size-space-2); }
+		.cw-msg.user { align-items: flex-end; }
+		.cw-bubble { max-width: 70%; padding: var(--uui-size-space-4) var(--uui-size-space-5); border-radius: var(--uui-border-radius-3, 12px); line-height: 1.5; }
+		.cw-msg.user .cw-bubble { background: var(--uui-color-selected); color: var(--uui-color-selected-contrast); border-radius: var(--uui-border-radius); display: inline-block; max-width: 70%; }
+		.cw-msg.assistant .cw-bubble { background: var(--uai-chat-surface-alt, var(--uui-color-surface-alt)); border-radius: var(--uui-border-radius); }
+		/* No composer in read-only mode -- this replaces it. */
+		.cw-no-composer { flex: none; padding: var(--uui-size-space-5) var(--uui-size-layout-1); border-top: 1px solid var(--uui-color-border); max-width: 860px; margin: 0 auto; width: 100%; box-sizing: border-box; color: var(--uui-color-text-alt); font-size: var(--uui-type-small-size); text-align: center; }
+		.cw-context-panel { height: 100%; border-left: 1px solid var(--uui-color-border); background: var(--uui-color-surface); display: flex; flex-direction: column; }
+		.cw-context-panel .header { flex: none; box-sizing: border-box; height: 70px; display: flex; align-items: center; padding: 0 2.5rem 0 var(--uui-size-space-4); border-bottom: 1px solid var(--uui-color-border); }
+		.cw-context-panel .header h3 { margin: 0; font-size: 16px; font-weight: 700; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+		.cw-context-panel .main { flex: 1; overflow: auto; padding: 0; }
+		.cw-context-block { border-bottom: 1px solid var(--uui-color-divider); }
+		.cw-context-block > summary { display: flex; align-items: center; gap: var(--uui-size-space-2); padding: var(--uui-size-space-3) var(--uui-size-space-4); cursor: pointer; list-style: none; user-select: none; font-weight: 700; color: var(--uui-color-text-alt); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.04em; }
+		.cw-context-block > summary::-webkit-details-marker { display: none; }
+		.cw-context-block-body { padding: 0 var(--uui-size-space-4) var(--uui-size-space-4); }
+		.cw-context-block-body > .muted { color: var(--uui-color-text-alt); }
+		.cw-context-section h4 { margin: 0 0 var(--uui-size-space-3); font-size: var(--uui-type-small-size); text-transform: uppercase; letter-spacing: 0.04em; color: var(--uui-color-text-alt); }
+	</style>
+</head>
+<body class="uui-font uui-text">
+	<header class="app-header">
+		<span class="logo">Umbraco</span>
+		<uui-tab-group class="sections">
+			<uui-tab label="Content">Content</uui-tab>
+			<uui-tab label="Media">Media</uui-tab>
+			<uui-tab label="Copilot" active>Copilot</uui-tab>
+			<uui-tab label="Settings">Settings</uui-tab>
+		</uui-tab-group>
+		<div class="apps">
+			<uui-button look="primary" compact label="User"><uui-avatar name="Anders Kristensen"></uui-avatar></uui-button>
+		</div>
+	</header>
+
+	<div class="section">
+		<nav class="section-sidebar" style="flex-basis: 300px;">
+			<div class="cw-sidebar">
+				<div class="cw-sidebar-header">
+					<uui-button-group>
+						<uui-button look="primary" color="default" label="New chat">
+							<uui-icon slot="icon" name="icon-add"></uui-icon>
+							New chat
+						</uui-button>
+						<uui-button compact look="primary" color="default" label="More new-chat options">
+							<uui-symbol-expand></uui-symbol-expand>
+						</uui-button>
+					</uui-button-group>
+					<uui-button look="default" label="New project">New project</uui-button>
+					<uui-input type="search" placeholder="Search conversations" label="Search conversations"></uui-input>
+				</div>
+				<div class="cw-sidebar-groups">
+					<h4 class="cw-group-label">Recent</h4>
+					<uui-menu-item label="VAT rate copy for the pricing page">
+						<uui-icon slot="icon" name="icon-chat"></uui-icon>
+						<umb-entity-actions-dropdown slot="actions" compact label="VAT rate copy for the pricing page">
+							<uui-symbol-more slot="label"></uui-symbol-more>
+						</umb-entity-actions-dropdown>
+					</uui-menu-item>
+
+					<h4 class="cw-group-label">Shared with me</h4>
+					<uui-menu-item label="Debugging the checkout redirect" active>
+						<span slot="icon" class="cw-icon-badge">
+							<uui-icon name="icon-chat"></uui-icon>
+							<span class="cw-entity-sign" title="Shared by Matt Brailsford"><uui-icon name="icon-share"></uui-icon></span>
+						</span>
+					</uui-menu-item>
+				</div>
+			</div>
+		</nav>
+
+		<main class="section-main">
+			<div class="cw-main-area">
+				<div class="cw-chat">
+					<div class="cw-readonly-notice">
+						<uui-icon name="icon-lock"></uui-icon>
+						Read-only — shared by Matt Brailsford
+					</div>
+					<div class="cw-chat-messages">
+						<div class="cw-msg user"><div class="cw-bubble">Why does the checkout page redirect to /cart instead of /checkout/confirm after payment?</div></div>
+						<div class="cw-msg assistant"><div class="cw-bubble">It looks like the redirect URL is hard-coded in the payment webhook handler. I can show you the file if you'd like.</div></div>
+						<div class="cw-msg user"><div class="cw-bubble">Yes please, and check if it's the same on staging.</div></div>
+					</div>
+					<div class="cw-no-composer">This conversation is read-only — you can't send messages here.</div>
+				</div>
+				<aside class="cw-context-panel">
+					<div class="header"><h3>Context</h3></div>
+					<div class="main">
+						<!-- Real pattern: two collapsible blocks (Contexts, Resources), not one "Attached"
+						     list. Same (unfiltered) attachment list the owner sees, per ARCHITECTURE.md
+						     decision 2 -- just no "+ Add" control anywhere, since the panel is read-only. -->
+						<details class="cw-context-block" open>
+							<summary><uui-icon name="icon-navigation-right"></uui-icon>Contexts</summary>
+							<div class="cw-context-block-body">
+								<p class="muted">No contexts attached.</p>
+							</div>
+						</details>
+						<details class="cw-context-block" open>
+							<summary><uui-icon name="icon-navigation-right"></uui-icon>Resources</summary>
+							<div class="cw-context-block-body">
+								<uui-ref-node name="Checkout flow docs" detail="Project resource" readonly>
+									<uui-icon slot="icon" name="icon-document"></uui-icon>
+								</uui-ref-node>
+								<uui-ref-node name="Payment webhook handler.cs" detail="Conversation resource" readonly>
+									<uui-icon slot="icon" name="icon-code"></uui-icon>
+								</uui-ref-node>
+							</div>
+						</details>
+					</div>
+				</aside>
+			</div>
+		</main>
+	</div>
+</body>
+</html>

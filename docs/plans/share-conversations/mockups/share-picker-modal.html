@@ -1,0 +1,106 @@
+<!doctype html>
+<!--
+  share-conversations: the share-picker modal (UAI_SHARE_PICKER_MODAL, per ARCHITECTURE.md
+  decision 7) -- opened directly by the "Choose" button in the context panel's "Shared with"
+  section (see sidebar-shared-indicator.html). One person + one mode per invocation, repeatable --
+  mirrors a content-picker property editor's single-item field, not a multi-recipient form.
+-->
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Mockup: Share picker modal</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@umbraco-ui/uui@2/dist/themes/light.css">
+	<link rel="stylesheet" href="_mockup.css">
+	<script type="module" src="_mockup.js"></script>
+	<style>
+		.main > uui-box + uui-box { margin-top: var(--uui-size-layout-1); }
+		.headline, .main h3 { font-size: 16px; font-weight: 700; line-height: 1.3; }
+		/* .group's default padding (from _mockup.css) is "0 18px" -- built for stacked .property rows
+		   that supply their own vertical padding. This box has none of those, so without an override
+		   its first/last field sit flush against the top/bottom edge. */
+		.main > uui-box.group {
+			--uui-box-default-padding: var(--uui-size-layout-1) var(--uui-size-space-5);
+		}
+		.share-field + .share-field { margin-top: var(--uui-size-layout-1); }
+		.share-field > uui-label { display: block; margin-bottom: var(--uui-size-space-2); }
+		.share-field .description { color: var(--uui-color-text-alt); margin-bottom: var(--uui-size-space-4); }
+		.share-field uui-select { width: 100%; }
+		/* --uui-color-warning-standalone (checked live: #a17700) is a dark mustard meant for solid
+		   buttons/tags, not a banner background -- default text on it read as black-on-brown and was
+		   hard to read. --uui-color-warning-emphasis (#fbe065, a light tint) is the lighter background
+		   companion token; the icon keeps the darker standalone color so it still reads against it. */
+		.share-disclosure { display: flex; gap: var(--uui-size-space-3); padding: var(--uui-size-space-4); background: var(--uui-color-warning-emphasis, #fbe065); border-radius: var(--uui-border-radius); }
+		.share-disclosure uui-icon { flex: none; color: var(--uui-color-warning-standalone, #a17700); margin-top: 2px; }
+	</style>
+</head>
+<body class="uui-font uui-text">
+	<header class="app-header">
+		<span class="logo">Umbraco</span>
+		<uui-tab-group class="sections">
+			<uui-tab label="Content">Content</uui-tab>
+			<uui-tab label="Copilot" active>Copilot</uui-tab>
+			<uui-tab label="Settings">Settings</uui-tab>
+		</uui-tab-group>
+		<div class="apps">
+			<uui-button look="primary" compact label="User"><uui-avatar name="Matt Brailsford"></uui-avatar></uui-button>
+		</div>
+	</header>
+	<div class="section">
+		<nav class="section-sidebar"><h3>Copilot</h3></nav>
+		<main class="section-main"></main>
+	</div>
+
+	<div class="modal-backdrop"></div>
+	<aside class="modal-sidebar small">
+		<div class="body-layout">
+			<div class="header">
+				<h3 class="headline">Share "Debugging the checkout redirect"</h3>
+			</div>
+
+			<div class="main">
+				<uui-box class="group">
+					<div class="share-field">
+						<uui-label>Person</uui-label>
+						<div class="description">Pick one colleague — not a link anyone can open.</div>
+						<!-- Content-picker-style field: once chosen, the picked person shows as a single
+						     ref-node (re-pickable by clicking it again), reusing the real
+						     UMB_USER_PICKER_MODAL rather than a stand-in search box. -->
+						<uui-ref-node name="Bodil Kjær" detail="Pick a different person" border>
+							<uui-icon slot="icon" name="icon-user"></uui-icon>
+						</uui-ref-node>
+					</div>
+					<div class="share-field">
+						<uui-label>Mode</uui-label>
+						<!-- uui-select reads its `.options` JS property, not light-DOM <option> children
+						     (same as the real usage in agent-details-workspace-view.element.ts) -- set
+						     below once the element upgrades. -->
+						<uui-select id="mode-select"></uui-select>
+					</div>
+					<div class="share-field share-disclosure">
+						<uui-icon name="icon-alert"></uui-icon>
+						<div>
+							The person you share with will see everything referenced in this conversation,
+							including pages or files they might not otherwise have permission to open.
+						</div>
+					</div>
+				</uui-box>
+			</div>
+
+			<div class="footer">
+				<div class="actions">
+					<uui-button label="Cancel">Cancel</uui-button>
+					<uui-button look="primary" color="positive" label="Share">Share</uui-button>
+				</div>
+			</div>
+		</div>
+	</aside>
+	<script type="module">
+		customElements.whenDefined('uui-select').then(() => {
+			document.getElementById('mode-select').options = [
+				{ name: "Snapshot — frozen at today's messages", value: 'snapshot', selected: true },
+				{ name: 'Live — keeps including new messages', value: 'live' },
+			];
+		});
+	</script>
+</body>
+</html>

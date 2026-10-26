@@ -1,0 +1,15 @@
+{
+  "name": "Umbraco AI Cloudflare Provider",
+  "$schema": "../umbraco-package-schema.json",
+  "extensions": [
+    {
+      "type": "localization",
+      "alias": "Uai.Cloudflare.Localization.En",
+      "weight": -100,
+      "name": "English",
+      "meta": { "culture": "en" },
+      "js": "/App_Plugins/UmbracoAICloudflare/lang/en.js"
+    }
+  ],
+  "version": "1.0.0"
+}

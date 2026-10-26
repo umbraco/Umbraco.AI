@@ -6,3 +6,4 @@ export * from "./embedding-profile-settings.element.js";
 export * from "./speech-to-text-profile-settings.element.js";
 export * from "./image-generation-profile-settings.element.js";
 export * from "./decision-profile-settings.element.js";
+export * from "./extraction-profile-settings.element.js";

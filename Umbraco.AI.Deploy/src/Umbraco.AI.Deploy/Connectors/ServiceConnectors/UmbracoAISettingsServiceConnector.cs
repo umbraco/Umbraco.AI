@@ -110,6 +110,13 @@ public class UmbracoAISettingsServiceConnector(
             dependencies.Add(new UmbracoAIArtifactDependency(decisionProfileUdi, ArtifactDependencyMode.Match));
         }
 
+        GuidUdi? extractionProfileUdi = null;
+        if (entity.DefaultExtractionProfileId.HasValue)
+        {
+            extractionProfileUdi = new GuidUdi(UmbracoAIConstants.UdiEntityType.Profile, entity.DefaultExtractionProfileId.Value);
+            dependencies.Add(new UmbracoAIArtifactDependency(extractionProfileUdi, ArtifactDependencyMode.Match));
+        }
+
         GuidUdi? classifierChatProfileUdi = null;
         if (entity.ClassifierChatProfileId.HasValue)
         {
@@ -124,6 +131,7 @@ public class UmbracoAISettingsServiceConnector(
             DefaultSpeechToTextProfileUdi = speechToTextProfileUdi,
             DefaultImageGenerationProfileUdi = imageGenerationProfileUdi,
             DefaultDecisionProfileUdi = decisionProfileUdi,
+            DefaultExtractionProfileUdi = extractionProfileUdi,
             ClassifierChatProfileUdi = classifierChatProfileUdi,
             DisclosureNoticeMode = entity.DisclosureNoticeMode.ToString()
         };
@@ -165,6 +173,7 @@ public class UmbracoAISettingsServiceConnector(
         settings.DefaultSpeechToTextProfileId = await ResolveDefaultProfileIdAsync(state.Artifact.DefaultSpeechToTextProfileUdi, AICapability.SpeechToText, ct);
         settings.DefaultImageGenerationProfileId = await ResolveDefaultProfileIdAsync(state.Artifact.DefaultImageGenerationProfileUdi, AICapability.ImageGeneration, ct);
         settings.DefaultDecisionProfileId = await ResolveDefaultProfileIdAsync(state.Artifact.DefaultDecisionProfileUdi, AICapability.Decision, ct);
+        settings.DefaultExtractionProfileId = await ResolveDefaultProfileIdAsync(state.Artifact.DefaultExtractionProfileUdi, AICapability.Extraction, ct);
         settings.ClassifierChatProfileId = await ResolveDefaultProfileIdAsync(state.Artifact.ClassifierChatProfileUdi, AICapability.Chat, ct);
 
         // Artifacts written before this setting existed carry no value, so keep the target's own.

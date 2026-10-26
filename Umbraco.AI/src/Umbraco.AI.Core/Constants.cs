@@ -87,6 +87,11 @@ public static class Constants
         /// Feature type for inline decision executions via <see cref="Decision.IAIDecisionClientFactory"/>-built clients.
         /// </summary>
         public const string InlineDecision = "inline-decision";
+
+        /// <summary>
+        /// Feature type for inline extraction executions via <see cref="Extraction.IAIExtractionClientFactory"/>-built clients.
+        /// </summary>
+        public const string InlineExtraction = "inline-extraction";
     }
 
     /// <summary>

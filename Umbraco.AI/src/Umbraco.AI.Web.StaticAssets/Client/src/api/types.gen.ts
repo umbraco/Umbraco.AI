@@ -261,7 +261,7 @@ export type CreateProfileRequestModel = {
     capability: string;
     model: ModelRefModel;
     connectionId: string;
-    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | DecisionProfileSettingsModel | null;
+    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | DecisionProfileSettingsModel | ExtractionProfileSettingsModel | null;
     capabilitySettings?: unknown;
     tags: Array<string>;
 };
@@ -279,6 +279,24 @@ export type CreateTestRequestModel = {
     variations?: Array<TestVariationModel> | null;
     runCount: number;
     tags: Array<string>;
+};
+
+export type DateExtractionAnswerModel = ExtractionAnswerModel & {
+    $type: 'date';
+    value?: string | null;
+};
+
+export type DateExtractionFieldModel = ExtractionFieldModel & {
+    $type: 'date';
+};
+
+export type DateTimeExtractionAnswerModel = ExtractionAnswerModel & {
+    $type: 'datetime';
+    value?: string | null;
+};
+
+export type DateTimeExtractionFieldModel = ExtractionFieldModel & {
+    $type: 'datetime';
 };
 
 export type DecisionOptionModel = {
@@ -305,6 +323,19 @@ export type DecisionScoreLevelModel = {
 
 export type DisclosureSettingsResponseModel = {
     noticeMode: string;
+};
+
+export type DurationExtractionAnswerModel = ExtractionAnswerModel & {
+    $type: 'duration';
+    value?: number | null;
+    unit: string;
+};
+
+export type DurationExtractionFieldModel = ExtractionFieldModel & {
+    $type: 'duration';
+    unit: string;
+    decimals?: number | null;
+    integer: boolean;
 };
 
 export type EditableModelFieldModel = {
@@ -360,6 +391,41 @@ export type EntityVersionResponseModel = {
     dateAuthored: string;
     authoredByUserId?: string | null;
     changeDescription?: string | null;
+};
+
+export type ExtractRequestModel = {
+    profileIdOrAlias?: string | null;
+    state?: string | null;
+    referenceDate?: string | null;
+    fields: Array<TextExtractionFieldModel | NumberExtractionFieldModel | DateExtractionFieldModel | TimeExtractionFieldModel | DateTimeExtractionFieldModel | DurationExtractionFieldModel | ListExtractionFieldModel>;
+};
+
+export type ExtractResponseModel = {
+    answers: {
+        [key: string]: TextExtractionAnswerModel | NumberExtractionAnswerModel | DateExtractionAnswerModel | TimeExtractionAnswerModel | DateTimeExtractionAnswerModel | DurationExtractionAnswerModel | ListExtractionAnswerModel;
+    };
+    modelId?: string | null;
+    usage?: UsageModel | null;
+};
+
+export type ExtractionAnswerModel = {
+    confidence?: number | null;
+    nullProbability?: number | null;
+    isFound: boolean;
+};
+
+export type ExtractionFieldModel = {
+    id: string;
+    instructions: string;
+};
+
+export type ExtractionProfileSettingsModel = ProfileSettingsModel & {
+    $type: 'extraction';
+};
+
+export type ExtractionSpanModel = {
+    start: number;
+    end: number;
 };
 
 export type GenerateEmbeddingRequestModel = {
@@ -484,6 +550,17 @@ export type KnowledgeSetResponseModel = {
     itemCount: number;
 };
 
+export type ListExtractionAnswerModel = ExtractionAnswerModel & {
+    $type: 'list';
+    values: Array<string>;
+    spans: Array<ExtractionSpanModel>;
+};
+
+export type ListExtractionFieldModel = ExtractionFieldModel & {
+    $type: 'list';
+    itemType?: string | null;
+};
+
 export type ModelDescriptorResponseModel = {
     model: ModelRefModel;
     name: string;
@@ -495,6 +572,18 @@ export type ModelDescriptorResponseModel = {
 export type ModelRefModel = {
     providerId: string;
     modelId: string;
+};
+
+export type NumberExtractionAnswerModel = ExtractionAnswerModel & {
+    $type: 'number';
+    value?: number | null;
+};
+
+export type NumberExtractionFieldModel = ExtractionFieldModel & {
+    $type: 'number';
+    decimals?: number | null;
+    integer: boolean;
+    unit?: string | null;
 };
 
 export type PagedAuditLogItemResponseModel = {
@@ -558,7 +647,7 @@ export type ProfileResponseModel = {
     capability: string;
     model?: ModelRefModel | null;
     connectionId: string;
-    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | DecisionProfileSettingsModel | null;
+    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | DecisionProfileSettingsModel | ExtractionProfileSettingsModel | null;
     capabilitySettings?: unknown;
     tags: Array<string>;
     dateCreated: string;
@@ -576,7 +665,7 @@ export type PropertyValueOperationRequestModel = {
     args?: JsonNode | null;
     rootValue?: JsonNode | null;
     documentMetadata: AiDocumentMetadataModel;
-    variant?: null | AiVariantIdModel;
+    variant?: AiVariantIdModel | null;
 };
 
 export type PropertyValueOperationResponseModel = {
@@ -643,6 +732,7 @@ export type SettingsResponseModel = {
     defaultSpeechToTextProfileId?: string | null;
     defaultImageGenerationProfileId?: string | null;
     defaultDecisionProfileId?: string | null;
+    defaultExtractionProfileId?: string | null;
     disclosureNoticeMode: string;
 };
 
@@ -811,7 +901,7 @@ export type TestRunComparisonResponseModel = {
     isImprovement: boolean;
     durationChangeMs: number;
     graderComparisons: Array<TestGraderComparisonResponseModel>;
-    usageComparison?: null | TestUsageComparisonResponseModel;
+    usageComparison?: TestUsageComparisonResponseModel | null;
 };
 
 export type TestRunErrorResponseModel = {
@@ -872,15 +962,15 @@ export type TestUsageComparisonResponseModel = {
 
 export type TestUsageEntryComparisonResponseModel = {
     capability: string;
-    providerId?: null | string;
-    modelId?: null | string;
-    profileId?: null | string;
-    profileAlias?: null | string;
-    featureType?: null | string;
-    featureId?: null | string;
-    featureAlias?: null | string;
-    baselineEntry?: null | TestUsageEntryResponseModel;
-    comparisonEntry?: null | TestUsageEntryResponseModel;
+    providerId?: string | null;
+    modelId?: string | null;
+    profileId?: string | null;
+    profileAlias?: string | null;
+    featureType?: string | null;
+    featureId?: string | null;
+    featureAlias?: string | null;
+    baselineEntry?: TestUsageEntryResponseModel | null;
+    comparisonEntry?: TestUsageEntryResponseModel | null;
     totalTokensChange: number;
     callDurationChangeMs: number;
     failedCallCountChange: number;
@@ -947,6 +1037,25 @@ export type TextChatContentPartModel = ChatContentPartModel & {
     text: string;
 };
 
+export type TextExtractionAnswerModel = ExtractionAnswerModel & {
+    $type: 'text';
+    value?: string | null;
+    span?: ExtractionSpanModel | null;
+};
+
+export type TextExtractionFieldModel = ExtractionFieldModel & {
+    $type: 'text';
+};
+
+export type TimeExtractionAnswerModel = ExtractionAnswerModel & {
+    $type: 'time';
+    value?: string | null;
+};
+
+export type TimeExtractionFieldModel = ExtractionFieldModel & {
+    $type: 'time';
+};
+
 export type ToolItemResponseModel = {
     id: string;
     name: string;
@@ -987,7 +1096,7 @@ export type UpdateProfileRequestModel = {
     name: string;
     model: ModelRefModel;
     connectionId: string;
-    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | DecisionProfileSettingsModel | null;
+    settings?: ChatProfileSettingsModel | EmbeddingProfileSettingsModel | SpeechToTextProfileSettingsModel | ImageGenerationProfileSettingsModel | DecisionProfileSettingsModel | ExtractionProfileSettingsModel | null;
     capabilitySettings?: unknown;
     tags: Array<string>;
 };
@@ -999,6 +1108,7 @@ export type UpdateSettingsRequestModel = {
     defaultSpeechToTextProfileId?: string | null;
     defaultImageGenerationProfileId?: string | null;
     defaultDecisionProfileId?: string | null;
+    defaultExtractionProfileId?: string | null;
     disclosureNoticeMode?: string | null;
 };
 
@@ -1091,6 +1201,7 @@ export type PropertyValueOperationRequestModelWritable = {
     args?: JsonNodeWritable | null;
     rootValue?: JsonNodeWritable | null;
     documentMetadata: AiDocumentMetadataModelWritable;
+    variant?: AiVariantIdModelWritable | null;
 };
 
 export type PropertyValueOperationResponseModelWritable = {
@@ -2064,6 +2175,39 @@ export type GenerateEmbeddingsResponses = {
 
 export type GenerateEmbeddingsResponse = GenerateEmbeddingsResponses[keyof GenerateEmbeddingsResponses];
 
+export type ExtractData = {
+    body?: ExtractRequestModel;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/extraction/extract';
+};
+
+export type ExtractErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type ExtractError = ExtractErrors[keyof ExtractErrors];
+
+export type ExtractResponses = {
+    /**
+     * OK
+     */
+    200: ExtractResponseModel;
+};
+
+export type ExtractResponse = ExtractResponses[keyof ExtractResponses];
+
 export type GetAllGuardrailEvaluatorsData = {
     body?: never;
     path?: never;
@@ -2676,10 +2820,16 @@ export type UpdateSettingsData = {
 
 export type UpdateSettingsErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * The resource is protected and requires an authentication token
      */
     401: unknown;
 };
+
+export type UpdateSettingsError = UpdateSettingsErrors[keyof UpdateSettingsErrors];
 
 export type UpdateSettingsResponses = {
     /**

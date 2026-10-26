@@ -284,12 +284,11 @@ public class UpdateUmbracoContentToolTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_UntouchedPropertyVariesBySegment_IsLeftOutOfThePatch()
+    public async Task ExecuteAsync_UntouchedPropertyVariesBySegment_IsSentForTheDefaultSegmentSoItSurvives()
     {
-        // This tool has no Segment argument, so a segment-varying property can't be safely read back and
-        // resubmitted (which segment would we even ask for?). It's left out of the patch fill-in rather
-        // than risk a NotSupportedException from guessing — the pre-existing removed-if-omitted behavior
-        // for this one, narrow, unsupported case.
+        // Leaving a segment-varying alias out of the update makes the CMS clear every value of it, in every
+        // culture and segment. Sending its default-segment value keeps the alias in the update; the CMS only
+        // sets the culture/segment pairs it's given, so the other segments stay as they are.
         var userKey = Guid.NewGuid();
         var key = Guid.NewGuid();
         var propertyValues = new Dictionary<string, JsonElement>
@@ -323,7 +322,36 @@ public class UpdateUmbracoContentToolTests
 
         result.ShouldBeOfType<UpdateUmbracoContentResult>().Success.ShouldBeTrue();
         capturedModel.ShouldNotBeNull();
-        capturedModel!.Properties.Select(p => p.Alias).ShouldBe(new[] { "summary" });
+        capturedModel!.Properties.Select(p => p.Alias).ShouldBe(new[] { "summary", "regionalNote" });
+        capturedModel.Properties.Single(p => p.Alias == "regionalNote").Segment.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_NoNameOnANonDefaultCulture_KeepsThatCulturesOwnName()
+    {
+        // IContentBase.Name is the default language's name on a culture-variant item, so sending it back
+        // for another culture would rename that culture.
+        var userKey = Guid.NewGuid();
+        var key = Guid.NewGuid();
+        _authorizerMock
+            .Setup(x => x.AuthorizeContentAsync(ActionUpdate.ActionLetter, key, null))
+            .ReturnsAsync(UmbracoWriteAuthorizationResult.Allowed(userKey));
+        var existingMock = CreateContentMock(key, "English name", "blogPost");
+        Mock.Get(existingMock.Object.ContentType).Setup(x => x.Variations).Returns(ContentVariation.Culture);
+        existingMock.Setup(x => x.GetCultureName("da-DK")).Returns("Dansk navn");
+        _contentEditingServiceMock.Setup(x => x.GetAsync(key)).ReturnsAsync(existingMock.Object);
+
+        ContentUpdateModel? capturedModel = null;
+        _contentEditingServiceMock
+            .Setup(x => x.UpdateAsync(key, It.IsAny<ContentUpdateModel>(), userKey))
+            .Callback<Guid, ContentUpdateModel, Guid>((_, model, _) => capturedModel = model)
+            .ReturnsAsync(Attempt<ContentUpdateResult, ContentEditingOperationStatus>.Succeed(
+                ContentEditingOperationStatus.Success, new ContentUpdateResult { Content = existingMock.Object }));
+
+        await _tool.ExecuteAsync(new UpdateUmbracoContentArgs(key, null, null, "da-DK"), CancellationToken.None);
+
+        capturedModel.ShouldNotBeNull();
+        capturedModel!.Variants.Single().Name.ShouldBe("Dansk navn");
     }
 
     [Fact]

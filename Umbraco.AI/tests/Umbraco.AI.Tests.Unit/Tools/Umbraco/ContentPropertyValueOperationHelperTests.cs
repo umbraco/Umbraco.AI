@@ -475,11 +475,10 @@ public class ContentPropertyValueOperationHelperTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_OtherPropertyVariesBySegment_IsLeftOutOfThePatch()
+    public async Task ExecuteAsync_OtherPropertyVariesBySegment_IsSentForTheDefaultSegmentSoItSurvives()
     {
-        // There's no per-property segment to read/write these correctly here, so — matching
-        // UpdateUmbracoContentTool — they're left out of the resubmitted set rather than risk a
-        // NotSupportedException from guessing a segment.
+        // Leaving a segment-varying alias out makes the CMS clear every value of it. Sending its
+        // default-segment value keeps the alias in the update without touching the other segments.
         var key = Guid.NewGuid();
         var userKey = Guid.NewGuid();
         var contentTypeKey = Guid.NewGuid();
@@ -510,7 +509,8 @@ public class ContentPropertyValueOperationHelperTests
 
         result.Success.ShouldBeTrue();
         capturedModel.ShouldNotBeNull();
-        capturedModel!.Properties.Select(p => p.Alias).ShouldBe(new[] { "contentBlocks", "title" });
+        capturedModel!.Properties.Select(p => p.Alias).ShouldBe(new[] { "contentBlocks", "title", "regionalNote" });
+        capturedModel.Properties.Single(p => p.Alias == "regionalNote").Segment.ShouldBeNull();
     }
 
     [Fact]

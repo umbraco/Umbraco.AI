@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Deploy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.3.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Deploy@18.3.0...Umbraco.AI.Deploy@18.3.1) (2026-10-26)
+
+### fix
+
+* **deploy:** Handle sensitive settings consistently on export and import ([2c9486e](https://github.com/umbraco/Umbraco.AI/commit/2c9486e028b25a191038b4746a1830ebaf5fac3e))
+
 ## [18.3.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Deploy@18.2.0...Umbraco.AI.Deploy@18.3.0) (2026-10-19)
 
 ### feat

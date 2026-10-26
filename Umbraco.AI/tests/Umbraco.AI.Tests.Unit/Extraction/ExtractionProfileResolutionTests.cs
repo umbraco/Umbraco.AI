@@ -58,7 +58,7 @@ public class ExtractionProfileResolutionTests
         [Fact]
         public async Task RunsAgainstThatProfile()
         {
-            await _harness.Service.ExtractAsync(b => b.WithProfile(ExtractionPipelineHarness.ProfileAlias), OrderNumber(), State);
+            await _harness.Service.ExtractAsync(b => b.WithAlias("order-extract").WithProfile(ExtractionPipelineHarness.ProfileAlias), OrderNumber(), State);
 
             _harness.ProfileServiceMock.Verify(
                 x => x.GetProfileByAliasAsync(ExtractionPipelineHarness.ProfileAlias, It.IsAny<CancellationToken>()),

@@ -20,6 +20,8 @@ Values step in Automate), in the v17 backoffice styling. Hidden unless
   issue; the 100-second Clairic timeout assumption.
 - **Port order:** opened while #655 is still in review, at the requester's call. Any change made
   on #655 during review needs copying here.
+- Copied from #655 during review: the builder overloads require `WithAlias(...)` like every other
+  inline builder (no `"extraction"` default), so each call is uniquely named in the logs.
 - How it was ported: the 20 source commits were cherry-picked with `-x` in order. Two commits were
   not: the v18 generated client (regenerated from the v17 demo site instead) and the v18 PR
   description.

@@ -29,8 +29,7 @@ public sealed class AIExtractionBuilder
     private AIExtractionOptions? _options;
 
     /// <summary>
-    /// Sets the alias for the inline extraction, used for auditing and telemetry. When not set,
-    /// <see cref="IAIExtractionService"/> defaults it to <c>"extraction"</c>.
+    /// Sets the alias for the inline extraction. Required for auditing and telemetry.
     /// </summary>
     /// <remarks>
     /// The alias is used to generate a deterministic ID, so the same alias always

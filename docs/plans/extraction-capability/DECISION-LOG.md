@@ -102,3 +102,7 @@
   parser in Core, and Automate uses Core's field id rule directly (both via InternalsVisibleTo,
   like Agent and Deploy). The parser trims surrounding spaces, so " Hours " is now accepted by the
   API too; numbers and comma lists are still a 400. (T20)
+- 26-10-2026: Reversed the 21-10 default alias. The builder overloads now require `WithAlias(...)`
+  like every other inline builder, because the alias is how calls stay uniquely named in the
+  logs and audit trail. The profile overloads still use "extraction", like Decision's "decision".
+  Decision and Image Generation gain the in-service flag check instead (#660).

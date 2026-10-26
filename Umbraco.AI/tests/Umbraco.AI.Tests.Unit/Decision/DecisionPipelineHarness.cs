@@ -12,6 +12,7 @@ using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Tests.Common.Builders;
 using Umbraco.AI.Tests.Common.Fakes;
 using Umbraco.Cms.Core.Events;
@@ -118,7 +119,8 @@ internal sealed class DecisionPipelineHarness
             EventAggregatorMock.Object,
             contextAccessorMock.Object,
             scopeProviderMock.Object,
-            contributors);
+            contributors,
+            Mock.Of<IAIExperimentalFeatures>(f => f.IsCapabilityEnabled(It.IsAny<AICapability>()) == true));
     }
 
     public AIDecisionService Service { get; }

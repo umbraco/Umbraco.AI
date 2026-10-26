@@ -8,6 +8,7 @@ using Umbraco.AI.Core.Observability;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.Events;
 
@@ -27,6 +28,7 @@ internal sealed class AIImageGenerationService : IAIImageGenerationService
     private readonly IAIRuntimeContextScopeProvider _scopeProvider;
     private readonly AIRuntimeContextContributorCollection _contributors;
     private readonly IAIOperationTracker _tracker;
+    private readonly IAIExperimentalFeatures _experimentalFeatures;
 
     public AIImageGenerationService(
         IAIImageGeneratorFactory generatorFactory,
@@ -37,7 +39,8 @@ internal sealed class AIImageGenerationService : IAIImageGenerationService
         IAIRuntimeContextAccessor contextAccessor,
         IAIRuntimeContextScopeProvider scopeProvider,
         AIRuntimeContextContributorCollection contributors,
-        IAIOperationTracker tracker)
+        IAIOperationTracker tracker,
+        IAIExperimentalFeatures experimentalFeatures)
     {
         _generatorFactory = generatorFactory;
         _profileService = profileService;
@@ -48,6 +51,7 @@ internal sealed class AIImageGenerationService : IAIImageGenerationService
         _scopeProvider = scopeProvider;
         _contributors = contributors;
         _tracker = tracker;
+        _experimentalFeatures = experimentalFeatures;
     }
 
     public Task<ImageGenerationResponse> GenerateImagesAsync(
@@ -64,6 +68,7 @@ internal sealed class AIImageGenerationService : IAIImageGenerationService
     {
         ArgumentNullException.ThrowIfNull(configure);
         ArgumentException.ThrowIfNullOrWhiteSpace(prompt);
+        EnsureEnabled();
 
         var builder = BuildGeneration(configure);
 
@@ -109,6 +114,7 @@ internal sealed class AIImageGenerationService : IAIImageGenerationService
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(configure);
+        EnsureEnabled();
 
         var builder = BuildGeneration(configure);
 
@@ -127,6 +133,7 @@ internal sealed class AIImageGenerationService : IAIImageGenerationService
     {
         ArgumentNullException.ThrowIfNull(configure);
         ArgumentNullException.ThrowIfNull(operation);
+        EnsureEnabled();
 
         var builder = BuildGeneration(configure);
 
@@ -198,6 +205,7 @@ internal sealed class AIImageGenerationService : IAIImageGenerationService
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(configure);
+        EnsureEnabled();
 
         // This is a read-only metadata lookup — it only uses the profile, never the alias (no ID
         // generation, notifications, telemetry or audit), so an alias isn't required here.
@@ -250,6 +258,20 @@ internal sealed class AIImageGenerationService : IAIImageGenerationService
         finally
         {
             createdScope?.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// The service is registered unconditionally (the experimental gate lives only in
+    /// <see cref="IAIExperimentalFeatures"/>), so every public path refuses here while the flag is off —
+    /// before any profile lookup, notification or provider call.
+    /// </summary>
+    private void EnsureEnabled()
+    {
+        if (!_experimentalFeatures.IsCapabilityEnabled(AICapability.ImageGeneration))
+        {
+            throw new InvalidOperationException(
+                "Image Generation is turned off. Set Umbraco:AI:Experimental:ImageGeneration to true to use it.");
         }
     }
 

@@ -5,6 +5,14 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.6.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.6.0...Umbraco.AI@17.6.1) (2026-10-26)
+
+### fix
+
+* **core:** Check section access before content and media tool operations ([26779fe](https://github.com/umbraco/Umbraco.AI/commit/26779feebb8b45e79e8745b97903c5ae6dcff84f))
+* **core:** Limit content and media read tools to what the acting user can access ([1855d38](https://github.com/umbraco/Umbraco.AI/commit/1855d3819e90bf270982a7e0c44173a7f724ea8a))
+* **core:** Limit search_umbraco to what the acting user can access ([8921731](https://github.com/umbraco/Umbraco.AI/commit/89217316e1f24a602416e41322d1d1557050cf77))
+
 ## [17.6.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.5.2...Umbraco.AI@17.6.0) (2026-10-19)
 
 ### feat

@@ -1,8 +1,13 @@
 using System.ComponentModel;
 using System.Text.Json;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using Umbraco.AI.Core.Tools.Scopes;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Models.ContentEditing;
+using Umbraco.Cms.Core.PropertyEditors;
+using Umbraco.Cms.Core.Serialization;
 using Umbraco.Cms.Core.Services;
 
 namespace Umbraco.AI.Core.Tools.Umbraco;
@@ -26,9 +31,28 @@ public record UpdateUmbracoMediaArgs(
 [AITool("update_umbraco_media", "Update Umbraco Media", ScopeId = MediaWriteScope.ScopeId, IsDestructive = true, RequiresApproval = false)]
 public class UpdateUmbracoMediaTool(
     IMediaEditingService mediaEditingService,
-    IUmbracoWriteAuthorizer authorizer)
+    IUmbracoWriteAuthorizer authorizer,
+    PropertyEditorCollection propertyEditors,
+    IJsonSerializer jsonSerializer)
     : AIToolBase<UpdateUmbracoMediaArgs>
 {
+    private readonly ContentEditorValueReader _valueReader = new(propertyEditors, jsonSerializer);
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UpdateUmbracoMediaTool"/> class.
+    /// </summary>
+    [Obsolete("Use the constructor that accepts a PropertyEditorCollection and an IJsonSerializer. Will be removed in v20")]
+    public UpdateUmbracoMediaTool(
+        IMediaEditingService mediaEditingService,
+        IUmbracoWriteAuthorizer authorizer)
+        : this(
+            mediaEditingService,
+            authorizer,
+            StaticServiceProvider.Instance.GetRequiredService<PropertyEditorCollection>(),
+            StaticServiceProvider.Instance.GetRequiredService<IJsonSerializer>())
+    {
+    }
+
     /// <inheritdoc />
     public override string Description =>
         "Updates an existing Umbraco media item's name and/or simple property values. Call " +
@@ -48,30 +72,26 @@ public class UpdateUmbracoMediaTool(
             return new UpdateUmbracoMediaResult(false, null, authResult.Message);
         }
 
+        var existing = await mediaEditingService.GetAsync(args.Key);
+        if (existing is null)
+        {
+            return new UpdateUmbracoMediaResult(false, null, $"Media with key '{args.Key}' was not found.");
+        }
+
         var properties = (args.PropertyValues ?? [])
             .Select(kvp => new PropertyValueModel { Alias = kvp.Key, Value = kvp.Value })
             .ToList();
+
+        // Send back every property this update isn't changing, or the CMS clears them, including the
+        // media file itself (see ContentEditorValueReader.GetUnchangedValues).
+        properties.AddRange(_valueReader.GetUnchangedValues(existing, (args.PropertyValues ?? []).Keys.ToHashSet(), culture: null));
 
         // ContentEditingServiceBase.TryGetAndValidateContentType (shared with media) requires at least
         // one Variants entry matching the media type's own variance regardless of what Properties
         // contains — an invariant type demands one with Culture/Segment both null, otherwise the whole
         // update fails with ContentTypeCultureVarianceMismatch even when Name isn't changing. When no new
-        // name was given, load the current one so the Variants entry is still present without altering it.
-        string variantName;
-        if (args.Name is not null)
-        {
-            variantName = args.Name;
-        }
-        else
-        {
-            var existing = await mediaEditingService.GetAsync(args.Key);
-            if (existing is null)
-            {
-                return new UpdateUmbracoMediaResult(false, null, $"Media with key '{args.Key}' was not found.");
-            }
-
-            variantName = existing.Name ?? string.Empty;
-        }
+        // name was given, reuse the current one so the Variants entry is present without altering it.
+        var variantName = args.Name ?? existing.Name ?? string.Empty;
 
         var updateModel = new MediaUpdateModel
         {

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <!-- Inherit the central package versions from the root Directory.Packages.props -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove(Directory.Packages.props, $(MSBuildThisFileDirectory)..))" />
+
+  <ItemGroup>
+    <!-- 18.6.1 is the first Umbraco.AI release with IUmbracoReadAuthorizer, which semantic_search uses to
+         limit results to what the acting user can access. -->
+    <PackageVersion Update="Umbraco.AI.Core" Version="[18.6.1, 18.999.999)" />
+    <PackageVersion Update="Umbraco.AI.Startup" Version="[18.6.1, 18.999.999)" />
+  </ItemGroup>
+</Project>

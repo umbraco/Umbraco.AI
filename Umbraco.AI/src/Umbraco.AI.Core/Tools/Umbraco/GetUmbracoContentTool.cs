@@ -1,6 +1,8 @@
 using System.ComponentModel;
 
+using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Core.Tools.Scopes;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Web;
 
@@ -29,9 +31,26 @@ public record GetUmbracoContentArgs(
 public class GetUmbracoContentTool(
     IContentEditingService contentEditingService,
     IContentService contentService,
-    IUmbracoContextFactory umbracoContextFactory)
+    IUmbracoContextFactory umbracoContextFactory,
+    IUmbracoReadAuthorizer readAuthorizer)
     : AIToolBase<GetUmbracoContentArgs>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GetUmbracoContentTool"/> class.
+    /// </summary>
+    [Obsolete("Use the constructor that accepts an IUmbracoReadAuthorizer. Will be removed in v20.")]
+    public GetUmbracoContentTool(
+        IContentEditingService contentEditingService,
+        IContentService contentService,
+        IUmbracoContextFactory umbracoContextFactory)
+        : this(
+            contentEditingService,
+            contentService,
+            umbracoContextFactory,
+            StaticServiceProvider.Instance.GetRequiredService<IUmbracoReadAuthorizer>())
+    {
+    }
+
     /// <inheritdoc />
     public override string Description =>
         "Retrieves a content item from Umbraco by its unique key (GUID), whether it's published or still " +
@@ -48,7 +67,10 @@ public class GetUmbracoContentTool(
             return new GetUmbracoContentResult(false, null, "Content key cannot be empty.");
         }
 
-        var content = await contentEditingService.GetAsync(args.Key);
+        // Not readable is reported the same as not found, so the tool doesn't reveal what exists.
+        var content = await readAuthorizer.CanReadContentAsync(args.Key)
+            ? await contentEditingService.GetAsync(args.Key)
+            : null;
         if (content is null)
         {
             return new GetUmbracoContentResult(false, null, $"Content with key '{args.Key}' was not found.");

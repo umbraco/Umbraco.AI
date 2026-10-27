@@ -1,11 +1,15 @@
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Deploy.Artifacts;
 using Umbraco.AI.Deploy.Configuration;
 using Umbraco.Cms.Core;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Deploy;
 
 namespace Umbraco.AI.Deploy.Connectors.ServiceConnectors;
@@ -17,12 +21,44 @@ namespace Umbraco.AI.Deploy.Connectors.ServiceConnectors;
 /// (e.g., Connections must be deployed before Profiles that depend on them).
 /// </summary>
 [UdiDefinition(UmbracoAIConstants.UdiEntityType.Profile, UdiType.GuidUdi)]
-public class UmbracoAIProfileServiceConnector(
-    IAIProfileService profileService,
-    IAIConnectionService connectionService,
-    UmbracoAIDeploySettingsAccessor settingsAccessor)
-    : UmbracoAIEntityServiceConnectorBase<AIProfileArtifact, AIProfile>(settingsAccessor)
+public class UmbracoAIProfileServiceConnector
+    : UmbracoAIEntityServiceConnectorBase<AIProfileArtifact, AIProfile>
 {
+    private readonly IAIProfileService _profileService;
+    private readonly IAIConnectionService _connectionService;
+    private readonly AIProviderCollection _providers;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UmbracoAIProfileServiceConnector"/> class.
+    /// </summary>
+    [Obsolete("Use the constructor that accepts an AIProviderCollection. Will be removed in v20.")]
+    public UmbracoAIProfileServiceConnector(
+        IAIProfileService profileService,
+        IAIConnectionService connectionService,
+        UmbracoAIDeploySettingsAccessor settingsAccessor)
+        : this(
+            profileService,
+            connectionService,
+            settingsAccessor,
+            StaticServiceProvider.Instance.GetRequiredService<AIProviderCollection>())
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UmbracoAIProfileServiceConnector"/> class.
+    /// </summary>
+    public UmbracoAIProfileServiceConnector(
+        IAIProfileService profileService,
+        IAIConnectionService connectionService,
+        UmbracoAIDeploySettingsAccessor settingsAccessor,
+        AIProviderCollection providers)
+        : base(settingsAccessor)
+    {
+        _profileService = profileService;
+        _connectionService = connectionService;
+        _providers = providers;
+    }
+
     /// <inheritdoc />
     protected override int[] ProcessPasses => [2];
 
@@ -37,12 +73,12 @@ public class UmbracoAIProfileServiceConnector(
 
     /// <inheritdoc />
     public override Task<AIProfile?> GetEntityAsync(Guid id, CancellationToken cancellationToken = default)
-        => profileService.GetProfileAsync(id, cancellationToken);
+        => _profileService.GetProfileAsync(id, cancellationToken);
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<AIProfile> GetEntitiesAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var profiles = await profileService.GetAllProfilesAsync(cancellationToken);
+        var profiles = await _profileService.GetAllProfilesAsync(cancellationToken);
         foreach (var profile in profiles)
         {
             yield return profile;
@@ -86,6 +122,10 @@ public class UmbracoAIProfileServiceConnector(
             }
         }
 
+        object? capabilitySettings = UmbracoAISensitiveSettingsFilter.RemoveSensitiveLiterals(
+            entity.CapabilitySettings,
+            GetCapabilitySettingsSchema(entity.Model.ProviderId, entity.Capability));
+
         var artifact = new AIProfileArtifact(udi, dependencies)
         {
             Alias = entity.Alias,
@@ -98,9 +138,10 @@ public class UmbracoAIProfileServiceConnector(
             // IAIProfileSettings, which would otherwise serialize as an empty object) using the
             // core serializer options so the artifact round-trips through AIProfileSettingsSerializer.
             // The provider-declared bag is already shaped by the provider's schema, so it round-trips as
-            // whatever it holds — a JsonElement read from storage, or the object the API supplied.
-            CapabilitySettings = entity.CapabilitySettings != null
-                ? JsonSerializer.SerializeToElement(entity.CapabilitySettings, entity.CapabilitySettings.GetType(), Umbraco.AI.Core.Constants.DefaultJsonSerializerOptions)
+            // whatever it holds — a JsonElement read from storage, or the object the API supplied —
+            // minus any sensitive literal, which never leaves this environment.
+            CapabilitySettings = capabilitySettings != null
+                ? JsonSerializer.SerializeToElement(capabilitySettings, capabilitySettings.GetType(), Umbraco.AI.Core.Constants.DefaultJsonSerializerOptions)
                 : null,
             Settings = entity.Settings != null
                 ? JsonSerializer.SerializeToElement(entity.Settings, entity.Settings.GetType(), Umbraco.AI.Core.Constants.DefaultJsonSerializerOptions)
@@ -138,7 +179,7 @@ public class UmbracoAIProfileServiceConnector(
         // Resolve ConnectionId from ConnectionUdi
         artifact.ConnectionUdi.EnsureType(UmbracoAIConstants.UdiEntityType.Connection);
 
-        var connection = await connectionService.GetConnectionAsync(artifact.ConnectionUdi.Guid, cancellationToken);
+        var connection = await _connectionService.GetConnectionAsync(artifact.ConnectionUdi.Guid, cancellationToken);
         if (connection == null)
         {
             throw new InvalidOperationException($"Connection with ID {artifact.ConnectionUdi.Guid} not found. Ensure the connection is deployed before the profile.");
@@ -173,9 +214,15 @@ public class UmbracoAIProfileServiceConnector(
         profile.ConnectionId = connection.Id;
         profile.Model = modelRef;
         profile.Settings = settings;
-        profile.CapabilitySettings = artifact.CapabilitySettings;
+        profile.CapabilitySettings = UmbracoAISensitiveSettingsFilter.ImportSettings(
+            artifact.CapabilitySettings,
+            state.Entity?.CapabilitySettings,
+            GetCapabilitySettingsSchema(artifact.ModelProviderId, (AICapability)artifact.Capability));
         profile.Tags = artifact.Tags.ToList();
 
-        state.Entity = await profileService.SaveProfileAsync(profile, cancellationToken);
+        state.Entity = await _profileService.SaveProfileAsync(profile, cancellationToken);
     }
+
+    private AIEditableModelSchema? GetCapabilitySettingsSchema(string providerId, AICapability capability)
+        => _providers.GetById(providerId)?.GetCapabilitySettingsSchema(capability);
 }

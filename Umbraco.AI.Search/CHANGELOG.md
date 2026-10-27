@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Search will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.0.5](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Search@18.0.4...Umbraco.AI.Search@18.0.5) (2026-10-26)
+
+### fix
+
+* **search:** Limit semantic search results to what the acting user can access ([3254523](https://github.com/umbraco/Umbraco.AI/commit/3254523b0509cf94eb22620e0e401242f229a6a2))
+
 ## [18.0.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Search@18.0.3...Umbraco.AI.Search@18.0.4) (2026-10-19)
 
 ### Internal

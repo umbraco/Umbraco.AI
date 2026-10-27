@@ -5,7 +5,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Moq;
 using Shouldly;
+using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Guardrails;
+using Umbraco.AI.Core.Guardrails.Evaluators;
 using Umbraco.AI.Deploy.Artifacts;
 using Umbraco.AI.Deploy.Configuration;
 using Umbraco.AI.Deploy.Connectors.ServiceConnectors;
@@ -32,7 +34,10 @@ public class UmbracoAIGuardrailServiceConnectorTests
                 _saved = g;
                 return Task.FromResult(g);
             });
-        _connector = new UmbracoAIGuardrailServiceConnector(_guardrailServiceMock.Object, settingsAccessorMock.Object);
+        _connector = new UmbracoAIGuardrailServiceConnector(
+            _guardrailServiceMock.Object,
+            settingsAccessorMock.Object,
+            new AIGuardrailEvaluatorCollection(() => []));
     }
 
     [Fact]
@@ -88,6 +93,73 @@ public class UmbracoAIGuardrailServiceConnectorTests
 
         _saved!.Rules.Single().Id.ShouldBe(Guid.Empty);
     }
+
+    [Fact]
+    public async Task Export_SensitiveConfigLiteral_IsNotWritten()
+    {
+        var connector = CreateConnectorWithSensitiveEvaluator();
+        var ruleId = Guid.NewGuid();
+        var source = new AIGuardrail(Guid.NewGuid())
+        {
+            Alias = "safety",
+            Name = "Safety",
+            Rules = [new AIGuardrailRule(ruleId) { EvaluatorId = "remote", Name = "Remote", Config = Json("""{"apiKey":"secret","threshold":0.5}""") }],
+        };
+
+        var artifact = await connector.GetArtifactAsync(new GuidUdi(UmbracoAIConstants.UdiEntityType.Guardrail, source.Id), source);
+
+        var config = artifact!.Rules!.Value[0].GetProperty("Config");
+        config.TryGetProperty("apiKey", out _).ShouldBeFalse();
+        config.GetProperty("threshold").GetDouble().ShouldBe(0.5);
+    }
+
+    [Fact]
+    public async Task Import_SensitiveConfigLiteral_IsNotImported_AndTargetValueIsKept()
+    {
+        var connector = CreateConnectorWithSensitiveEvaluator();
+        var guardrailId = Guid.NewGuid();
+        var ruleId = Guid.NewGuid();
+        var existing = new AIGuardrail(guardrailId)
+        {
+            Alias = "safety",
+            Name = "Safety",
+            Rules = [new AIGuardrailRule(ruleId) { EvaluatorId = "remote", Name = "Remote", Config = Json("""{"apiKey":"target-secret"}""") }],
+        };
+        var artifact = new AIGuardrailArtifact(new GuidUdi(UmbracoAIConstants.UdiEntityType.Guardrail, guardrailId))
+        {
+            Alias = "safety",
+            Name = "Safety",
+            Rules = Json($$$"""[{"Id":"{{{ruleId}}}","EvaluatorId":"remote","Name":"Remote","Config":{"apiKey":"leaked","threshold":0.7}}]"""),
+        };
+
+        var state = new ArtifactDeployState<AIGuardrailArtifact, AIGuardrail>(artifact, existing, connector, 2);
+        await connector.ProcessAsync(state, Mock.Of<IDeployContext>(), 2);
+
+        var config = _saved!.Rules.Single().Config!.Value;
+        config.GetProperty("apiKey").GetString().ShouldBe("target-secret");
+        config.GetProperty("threshold").GetDouble().ShouldBe(0.7);
+    }
+
+    private UmbracoAIGuardrailServiceConnector CreateConnectorWithSensitiveEvaluator()
+    {
+        var evaluator = new Mock<IAIGuardrailEvaluator>();
+        evaluator.SetupGet(x => x.Id).Returns("remote");
+        evaluator.Setup(x => x.GetConfigSchema()).Returns(new AIEditableModelSchema(typeof(object),
+        [
+            new AIEditableModelField { Key = "apiKey", Label = "API Key", IsSensitive = true },
+            new AIEditableModelField { Key = "threshold", Label = "Threshold" },
+        ]));
+
+        var settingsAccessorMock = new Mock<UmbracoAIDeploySettingsAccessor>(MockBehavior.Strict, null!);
+        settingsAccessorMock.Setup(x => x.Settings).Returns(new UmbracoAIDeploySettings());
+
+        return new UmbracoAIGuardrailServiceConnector(
+            _guardrailServiceMock.Object,
+            settingsAccessorMock.Object,
+            new AIGuardrailEvaluatorCollection(() => [evaluator.Object]));
+    }
+
+    private static JsonElement Json(string json) => JsonDocument.Parse(json).RootElement.Clone();
 
     private Task ImportAsync(AIGuardrailArtifact artifact)
     {

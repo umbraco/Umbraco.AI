@@ -262,6 +262,8 @@ stages:
     - template: devops/monorepo/stages/sbom.yml@build
       parameters:
           core_product: Umbraco.AI
+          tiers: ${{ parameters.tiers }}
+          policy_allow_file: .sbom-policy.json
           node_version: $(NODE_VERSION)
           depends_on: [Build]
           condition: |

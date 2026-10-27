@@ -38,6 +38,11 @@ public class SettingsResponseModel
     public Guid? DefaultDecisionProfileId { get; set; }
 
     /// <summary>
+    /// The ID of the default profile to use for extraction operations.
+    /// </summary>
+    public Guid? DefaultExtractionProfileId { get; set; }
+
+    /// <summary>
     /// How the AI-generated disclosure notice is shown (Always, Dismissible, Off).
     /// </summary>
     [Required]

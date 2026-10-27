@@ -93,6 +93,10 @@
     <Project Path="Umbraco.AI.Anthropic/src/Umbraco.AI.Anthropic/Umbraco.AI.Anthropic.csproj" />
     <Project Path="Umbraco.AI.Anthropic/tests/Umbraco.AI.Anthropic.Tests.Unit/Umbraco.AI.Anthropic.Tests.Unit.csproj" />
   </Folder>
+  <Folder Name="/Providers/Cloudflare/">
+    <Project Path="Umbraco.AI.Cloudflare/src/Umbraco.AI.Cloudflare/Umbraco.AI.Cloudflare.csproj" />
+    <Project Path="Umbraco.AI.Cloudflare/tests/Umbraco.AI.Cloudflare.Tests.Unit/Umbraco.AI.Cloudflare.Tests.Unit.csproj" />
+  </Folder>
   <Folder Name="/Providers/DeepSeek/">
     <Project Path="Umbraco.AI.DeepSeek/src/Umbraco.AI.DeepSeek/Umbraco.AI.DeepSeek.csproj" />
   </Folder>

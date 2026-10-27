@@ -42,7 +42,12 @@ public enum AICapability
     /// <summary>
     /// Decision capability
     /// </summary>
-    Decision = 8
+    Decision = 8,
+
+    /// <summary>
+    /// Extraction capability (typed values pulled out of text)
+    /// </summary>
+    Extraction = 9
 
     // Future: TextToSpeech = 6, SpeechToSpeech = 7
 }

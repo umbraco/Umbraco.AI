@@ -307,6 +307,9 @@ add_product_projects "Umbraco.AI.TogetherAI" "Providers/TogetherAI"
 echo "Adding Umbraco.AI.TypeSafe projects..."
 add_product_projects "Umbraco.AI.TypeSafe" "Providers/TypeSafe"
 
+echo "Adding Umbraco.AI.Cloudflare projects..."
+add_product_projects "Umbraco.AI.Cloudflare" "Providers/Cloudflare"
+
 echo "Adding Umbraco.AI.ZAI projects..."
 add_product_projects "Umbraco.AI.ZAI" "Providers/ZAI"
 
@@ -427,6 +430,11 @@ fi
 # TypeSafe provider
 if [ -f "Umbraco.AI.TypeSafe/src/Umbraco.AI.TypeSafe/Umbraco.AI.TypeSafe.csproj" ]; then
     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.TypeSafe/src/Umbraco.AI.TypeSafe/Umbraco.AI.TypeSafe.csproj"
+fi
+
+# Cloudflare provider
+if [ -f "Umbraco.AI.Cloudflare/src/Umbraco.AI.Cloudflare/Umbraco.AI.Cloudflare.csproj" ]; then
+    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Cloudflare/src/Umbraco.AI.Cloudflare/Umbraco.AI.Cloudflare.csproj"
 fi
 
 # Prompt add-on (Startup + Web.StaticAssets)

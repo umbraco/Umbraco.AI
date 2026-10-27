@@ -32,11 +32,64 @@ public class UmbracoWriteAuthorizerTests
         _backOfficeSecurityAccessorMock.Setup(x => x.BackOfficeSecurity).Returns(securityMock.Object);
     }
 
-    private static Mock<IUser> CreateUserMock(Guid key)
+    private static Mock<IUser> CreateUserMock(Guid key, params string[] sections)
     {
         var userMock = new Mock<IUser>();
         userMock.Setup(x => x.Key).Returns(key);
+        userMock.Setup(x => x.AllowedSections).Returns(sections.Length > 0 ? sections : ["content", "media"]);
         return userMock;
+    }
+
+    [Theory]
+    [InlineData("translation")]
+    [InlineData("media")]
+    [InlineData("settings")]
+    public async Task AuthorizeContentAsync_UserWithoutContentSection_ReturnsDenied(string section)
+    {
+        // The CMS's document controllers require the Content section before any per-item check;
+        // start nodes and permission letters alone don't grant content writes.
+        var user = CreateUserMock(Guid.NewGuid(), section);
+        SetCurrentUser(user.Object);
+        _contentPermissionAuthorizerMock
+            .Setup(x => x.IsDeniedAsync(It.IsAny<IUser>(), It.IsAny<Guid>(), It.IsAny<string>()))
+            .ReturnsAsync(false);
+
+        var result = await _authorizer.AuthorizeContentAsync("Umb.Document.Update", Guid.NewGuid());
+
+        result.IsAuthorized.ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData("content")]
+    [InlineData("settings")]
+    public async Task AuthorizeMediaAsync_UserWithoutMediaSection_ReturnsDenied(string section)
+    {
+        var user = CreateUserMock(Guid.NewGuid(), section);
+        SetCurrentUser(user.Object);
+        _mediaPermissionAuthorizerMock
+            .Setup(x => x.IsDeniedAsync(It.IsAny<IUser>(), It.IsAny<Guid>()))
+            .ReturnsAsync(false);
+        _mediaPermissionAuthorizerMock
+            .Setup(x => x.IsDeniedAtRootLevelAsync(It.IsAny<IUser>()))
+            .ReturnsAsync(false);
+
+        (await _authorizer.AuthorizeMediaAsync(Guid.NewGuid())).IsAuthorized.ShouldBeFalse();
+        (await _authorizer.AuthorizeMediaAsync(null)).IsAuthorized.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task AuthorizeContentAsync_UserWithContentSection_ButPermissionDenied_ReturnsDenied()
+    {
+        var user = CreateUserMock(Guid.NewGuid(), "content");
+        var contentKey = Guid.NewGuid();
+        SetCurrentUser(user.Object);
+        _contentPermissionAuthorizerMock
+            .Setup(x => x.IsDeniedAsync(user.Object, contentKey, "Umb.Document.Update"))
+            .ReturnsAsync(true);
+
+        var result = await _authorizer.AuthorizeContentAsync("Umb.Document.Update", contentKey);
+
+        result.IsAuthorized.ShouldBeFalse();
     }
 
     [Fact]

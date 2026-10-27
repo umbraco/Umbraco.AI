@@ -1,9 +1,13 @@
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Core.Contexts;
+using Umbraco.AI.Core.Contexts.ResourceTypes;
+using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Deploy.Artifacts;
 using Umbraco.AI.Deploy.Configuration;
 using Umbraco.Cms.Core;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Deploy;
 
 namespace Umbraco.AI.Deploy.Connectors.ServiceConnectors;
@@ -12,11 +16,39 @@ namespace Umbraco.AI.Deploy.Connectors.ServiceConnectors;
 /// Service connector for Umbraco AI Contexts, responsible for synchronizing AI Context entities during deploy operations.
 /// </summary>
 [UdiDefinition(UmbracoAIConstants.UdiEntityType.Context, UdiType.GuidUdi)]
-public class UmbracoAIContextServiceConnector(
-    IAIContextService contextService,
-    UmbracoAIDeploySettingsAccessor settingsAccessor)
-    : UmbracoAIEntityServiceConnectorBase<AIContextArtifact, AIContext>(settingsAccessor)
+public class UmbracoAIContextServiceConnector
+    : UmbracoAIEntityServiceConnectorBase<AIContextArtifact, AIContext>
 {
+    private readonly IAIContextService _contextService;
+    private readonly AIContextResourceTypeCollection _resourceTypes;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UmbracoAIContextServiceConnector"/> class.
+    /// </summary>
+    [Obsolete("Use the constructor that accepts an AIContextResourceTypeCollection. Will be removed in v20.")]
+    public UmbracoAIContextServiceConnector(
+        IAIContextService contextService,
+        UmbracoAIDeploySettingsAccessor settingsAccessor)
+        : this(
+            contextService,
+            settingsAccessor,
+            StaticServiceProvider.Instance.GetRequiredService<AIContextResourceTypeCollection>())
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UmbracoAIContextServiceConnector"/> class.
+    /// </summary>
+    public UmbracoAIContextServiceConnector(
+        IAIContextService contextService,
+        UmbracoAIDeploySettingsAccessor settingsAccessor,
+        AIContextResourceTypeCollection resourceTypes)
+        : base(settingsAccessor)
+    {
+        _contextService = contextService;
+        _resourceTypes = resourceTypes;
+    }
+
     /// <inheritdoc />
     protected override int[] ProcessPasses => [2];
 
@@ -31,12 +63,12 @@ public class UmbracoAIContextServiceConnector(
 
     /// <inheritdoc />
     public override Task<AIContext?> GetEntityAsync(Guid id, CancellationToken cancellationToken = default)
-        => contextService.GetContextAsync(id, cancellationToken);
+        => _contextService.GetContextAsync(id, cancellationToken);
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<AIContext> GetEntitiesAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var contexts = await contextService.GetContextsAsync(cancellationToken);
+        var contexts = await _contextService.GetContextsAsync(cancellationToken);
         foreach (var context in contexts)
         {
             yield return context;
@@ -62,7 +94,7 @@ public class UmbracoAIContextServiceConnector(
 
         // Serialize Resources as JSON (complex nested structure)
         var resources = entity.Resources.Count > 0
-            ? JsonSerializer.SerializeToElement(entity.Resources)
+            ? SerializeResources(entity.Resources)
             : (JsonElement?)null;
 
         var artifact = new AIContextArtifact(udi, dependencies)
@@ -98,6 +130,7 @@ public class UmbracoAIContextServiceConnector(
         CancellationToken cancellationToken)
     {
         var artifact = state.Artifact;
+        IList<AIContextResource> targetResources = state.Entity?.Resources ?? [];
 
         // Deserialize Resources from JsonElement
         List<AIContextResource>? resources = null;
@@ -106,6 +139,15 @@ public class UmbracoAIContextServiceConnector(
             resources = artifact.Resources.Value.Deserialize<List<AIContextResourceArtifactItem>>()
                 ?.Select(item => item.ToResource())
                 .ToList();
+        }
+
+        // Sensitive literals never cross environments; keep this environment's own values instead.
+        foreach (AIContextResource resource in resources ?? [])
+        {
+            resource.Settings = UmbracoAISensitiveSettingsFilter.ImportSettings(
+                resource.Settings,
+                targetResources.FirstOrDefault(r => r.Id == resource.Id)?.Settings,
+                GetSettingsSchema(resource.ResourceTypeId));
         }
 
         // Get or create AIContext entity
@@ -121,6 +163,28 @@ public class UmbracoAIContextServiceConnector(
         aiContext.Name = artifact.Name;
         aiContext.Resources = resources ?? [];
 
-        state.Entity = await contextService.SaveContextAsync(aiContext, cancellationToken);
+        state.Entity = await _contextService.SaveContextAsync(aiContext, cancellationToken);
     }
+
+    private JsonElement SerializeResources(IList<AIContextResource> resources)
+    {
+        var nodes = JsonSerializer.SerializeToNode(resources)!.AsArray();
+        for (var i = 0; i < resources.Count; i++)
+        {
+            object? original = resources[i].Settings;
+            object? settings = UmbracoAISensitiveSettingsFilter.RemoveSensitiveLiterals(
+                original,
+                GetSettingsSchema(resources[i].ResourceTypeId));
+
+            if (!ReferenceEquals(settings, original))
+            {
+                nodes[i]![nameof(AIContextResource.Settings)] = JsonSerializer.SerializeToNode(settings);
+            }
+        }
+
+        return JsonSerializer.SerializeToElement(nodes);
+    }
+
+    private AIEditableModelSchema? GetSettingsSchema(string resourceTypeId)
+        => _resourceTypes.GetById(resourceTypeId)?.GetSettingsSchema();
 }

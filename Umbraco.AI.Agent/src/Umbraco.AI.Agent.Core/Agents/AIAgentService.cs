@@ -1174,7 +1174,8 @@ internal sealed class AIAgentService : IAIAgentService
         var stopwatch = Stopwatch.StartNew();
 
         // Resolve allowed tool IDs for permission checking
-        var allowedToolIds = await GetAllowedToolIdsAsync(agent, options.UserGroupIds, cancellationToken);
+        var userGroupIds = options.UserGroupIds ?? await GetCurrentUserGroupIdsAsync(cancellationToken);
+        var allowedToolIds = await GetAllowedToolIdsAsync(agent, userGroupIds, cancellationToken);
         var allowedToolIdSet = new HashSet<string>(allowedToolIds, StringComparer.OrdinalIgnoreCase);
         var allowedScopeIds = agent.GetStandardConfig()?.AllowedToolScopeIds;
 
@@ -1192,9 +1193,11 @@ internal sealed class AIAgentService : IAIAgentService
                     frontendTool.IsDestructive,
                     _loggerFactory);
 
-                bool isPermitted = allowedToolIdSet.Contains(frontendTool.Tool.Name)
-                    || (frontendTool.Scope is not null
-                        && (allowedScopeIds?.Contains(frontendTool.Scope, StringComparer.OrdinalIgnoreCase) ?? false));
+                // Granted by name or by the agent's default scopes, unless one of the user's groups denies it.
+                bool isPermitted = (allowedToolIdSet.Contains(frontendTool.Tool.Name)
+                        || (frontendTool.Scope is not null
+                            && (allowedScopeIds?.Contains(frontendTool.Scope, StringComparer.OrdinalIgnoreCase) ?? false)))
+                    && !AIAgentToolHelper.IsFrontendToolDenied(agent, frontendTool.Tool.Name, frontendTool.Scope, userGroupIds);
 
                 if (isPermitted)
                 {

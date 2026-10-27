@@ -11,13 +11,14 @@ namespace Umbraco.AI.Tests.Unit.Tools.Umbraco;
 
 public class GetUmbracoContentChildrenToolTests
 {
+    private readonly Mock<IUmbracoReadAuthorizer> _readAuthorizerMock = TestReadAuthorizers.AllowAll();
     private readonly Mock<IUmbracoContextFactory> _umbracoContextFactoryMock;
     private readonly IAITool _tool;
 
     public GetUmbracoContentChildrenToolTests()
     {
         _umbracoContextFactoryMock = new Mock<IUmbracoContextFactory>();
-        _tool = new GetUmbracoContentChildrenTool(_umbracoContextFactoryMock.Object);
+        _tool = new GetUmbracoContentChildrenTool(_umbracoContextFactoryMock.Object, _readAuthorizerMock.Object);
     }
 
     /// <summary>
@@ -72,6 +73,33 @@ public class GetUmbracoContentChildrenToolTests
         result.ShouldBeOfType<GetUmbracoContentChildrenResult>();
         var childrenResult = (GetUmbracoContentChildrenResult)result;
         childrenResult.Success.ShouldBeFalse();
+        childrenResult.Message.ShouldContain("not found");
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ParentTheUserCannotSee_ReturnsNotFound()
+    {
+        // Arrange
+        var parentKey = Guid.NewGuid();
+        var parent = new Mock<IPublishedContent>();
+        parent.SetupGet(x => x.Key).Returns(parentKey);
+        parent.SetupGet(x => x.Path).Returns("-1,1200");
+
+        var contentCacheMock = new Mock<IPublishedContentCache>();
+        contentCacheMock.Setup(x => x.GetById(parentKey)).Returns(parent.Object);
+        var umbracoContextMock = new Mock<IUmbracoContext>();
+        umbracoContextMock.Setup(x => x.Content).Returns(contentCacheMock.Object);
+        SetUpUmbracoContext(umbracoContextMock.Object);
+
+        _readAuthorizerMock.Setup(x => x.CanSeeContentInTreeAsync(parentKey, "-1,1200")).ReturnsAsync(false);
+
+        // Act
+        var result = await _tool.ExecuteAsync(new GetUmbracoContentChildrenArgs(parentKey), CancellationToken.None);
+
+        // Assert
+        var childrenResult = result.ShouldBeOfType<GetUmbracoContentChildrenResult>();
+        childrenResult.Success.ShouldBeFalse();
+        childrenResult.Children.ShouldBeEmpty();
         childrenResult.Message.ShouldContain("not found");
     }
 

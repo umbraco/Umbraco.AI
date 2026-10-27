@@ -22,4 +22,10 @@
   <ItemGroup>
     <PackageReference Include="Umbraco.Deploy.Infrastructure" />
   </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>Umbraco.AI.Deploy.Tests.Unit</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
 </Project>

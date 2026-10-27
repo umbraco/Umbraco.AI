@@ -20,10 +20,11 @@ public sealed record UmbracoWriteAuthorizationResult(bool IsAuthorized, Guid? Us
 /// <remarks>
 /// <c>IContentEditingService</c>, <c>IContentPublishingService</c>, <c>IMediaEditingService</c>, and
 /// the property-value dispatcher behind the frontend's block-editing tools do NOT self-authorize —
-/// they trust the caller. The CMS's own controllers check permissions themselves, via
-/// <see cref="IContentPermissionAuthorizer"/>/<see cref="IMediaPermissionAuthorizer"/>, before ever
-/// calling those services. Every backend write tool in this folder must call this authorizer first,
-/// or it silently bypasses per-user start-node/permission restrictions.
+/// they trust the caller. The CMS's own controllers check permissions themselves in two steps — a
+/// section policy on the controller (Content for documents, Media for media), then
+/// <see cref="IContentPermissionAuthorizer"/>/<see cref="IMediaPermissionAuthorizer"/> for the item —
+/// before ever calling those services. This authorizer applies both. Every backend write tool in this
+/// folder must call it first, or it silently bypasses per-user section/start-node/permission restrictions.
 /// </remarks>
 public interface IUmbracoWriteAuthorizer
 {
@@ -57,6 +58,11 @@ public sealed class UmbracoWriteAuthorizer(
             return UmbracoWriteAuthorizationResult.Denied("No authenticated backoffice user context is available.");
         }
 
+        if (!UmbracoSectionAccess.CanAccessFullContent(user))
+        {
+            return UmbracoWriteAuthorizationResult.Denied("You do not have permission to perform this action on this content item.");
+        }
+
         var permissions = new HashSet<string> { actionLetter };
         var denied = contentKey is null
             ? await contentPermissionAuthorizer.IsDeniedAtRootLevelAsync(user, permissions)
@@ -85,6 +91,11 @@ public sealed class UmbracoWriteAuthorizer(
         if (user is null)
         {
             return UmbracoWriteAuthorizationResult.Denied("No authenticated backoffice user context is available.");
+        }
+
+        if (!UmbracoSectionAccess.CanWriteMedia(user))
+        {
+            return UmbracoWriteAuthorizationResult.Denied("You do not have permission to perform this action on this media item.");
         }
 
         var denied = mediaKey is null

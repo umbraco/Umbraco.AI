@@ -1,7 +1,9 @@
 ﻿using System.ComponentModel;
+using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Core.Media;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Core.Tools.Scopes;
+using Umbraco.Cms.Core.DependencyInjection;
 
 namespace Umbraco.AI.Core.Tools.Umbraco;
 
@@ -23,9 +25,22 @@ public sealed record GetUmbracoMediaItemArgs(
 /// </summary>
 /// <param name="runtimeContextAccessor"></param>
 /// <param name="mediaResolver"></param>
+/// <param name="readAuthorizer">Authorizes the read against the acting user's access.</param>
 [AITool("get_umbraco_media", "Retrieves a media item from Umbraco", ScopeId = MediaReadScope.ScopeId)]
-public class GetUmbracoMediaItem(IAIRuntimeContextAccessor runtimeContextAccessor, IAIUmbracoMediaResolver mediaResolver) : AIToolBase<GetUmbracoMediaItemArgs>
+public class GetUmbracoMediaItem(
+    IAIRuntimeContextAccessor runtimeContextAccessor,
+    IAIUmbracoMediaResolver mediaResolver,
+    IUmbracoReadAuthorizer readAuthorizer) : AIToolBase<GetUmbracoMediaItemArgs>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GetUmbracoMediaItem"/> class.
+    /// </summary>
+    [Obsolete("Use the constructor that accepts an IUmbracoReadAuthorizer. Will be removed in v20.")]
+    public GetUmbracoMediaItem(IAIRuntimeContextAccessor runtimeContextAccessor, IAIUmbracoMediaResolver mediaResolver)
+        : this(runtimeContextAccessor, mediaResolver, StaticServiceProvider.Instance.GetRequiredService<IUmbracoReadAuthorizer>())
+    {
+    }
+
     /// <inheritdoc />
     public override string Description =>
         "Retrieves a media item from Umbraco by its unique key. " +
@@ -35,7 +50,10 @@ public class GetUmbracoMediaItem(IAIRuntimeContextAccessor runtimeContextAccesso
     /// <inheritdoc />
     protected override async Task<object> ExecuteAsync(GetUmbracoMediaItemArgs args, CancellationToken ct)
     {
-        var media = await mediaResolver.ResolveAsync(args.MediaKey, cancellationToken: ct);
+        // Not readable is reported the same as not found, so the tool doesn't reveal what exists.
+        var media = await readAuthorizer.CanReadMediaAsync(args.MediaKey)
+            ? await mediaResolver.ResolveAsync(args.MediaKey, cancellationToken: ct)
+            : null;
         if (media is null)
         {
             return new { success = false, message = "Media item could not be found or is not a valid media type" };

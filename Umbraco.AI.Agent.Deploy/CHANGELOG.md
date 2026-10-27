@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Agent.Deploy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.1.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Deploy@17.1.0...Umbraco.AI.Agent.Deploy@17.1.1) (2026-10-26)
+
+### fix
+
+* **agent-deploy:** Deploy agent user group permissions by user group alias ([53e0641](https://github.com/umbraco/Umbraco.AI/commit/53e06410ae3b4b300ff3951a56fb9f7377c0ae6b))
+
 ## [17.1.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Deploy@17.0.1...Umbraco.AI.Agent.Deploy@17.1.0) (2026-10-19)
 
 ### feat

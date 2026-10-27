@@ -115,6 +115,50 @@ internal static class AIAgentToolHelper
     }
 
     /// <summary>
+    /// Checks whether any of the given user groups deny a front-end tool on the agent, by tool name or by
+    /// scope. A deny wins over every grant, the same as for backend tools in <see cref="GetAllowedToolIds"/>.
+    /// </summary>
+    /// <remarks>
+    /// Front-end tools aren't in the <see cref="AIToolCollection"/>, so a denied scope can't be expanded to
+    /// them there; they are matched on the scope they declare instead.
+    /// </remarks>
+    /// <param name="agent">The agent.</param>
+    /// <param name="toolName">The front-end tool's name.</param>
+    /// <param name="scopeId">The front-end tool's scope, if any.</param>
+    /// <param name="userGroupIds">The acting user's user group IDs.</param>
+    /// <returns>True if any of the user groups deny the tool, false otherwise.</returns>
+    public static bool IsFrontendToolDenied(
+        AIAgent agent,
+        string toolName,
+        string? scopeId,
+        IEnumerable<Guid>? userGroupIds)
+    {
+        ArgumentNullException.ThrowIfNull(agent);
+
+        AIStandardAgentConfig? config = agent.GetStandardConfig();
+        if (config is null || userGroupIds is null)
+        {
+            return false;
+        }
+
+        foreach (var userGroupId in userGroupIds)
+        {
+            if (!config.UserGroupPermissions.TryGetValue(userGroupId, out var permissions))
+            {
+                continue;
+            }
+
+            if (permissions.DeniedToolIds.Contains(toolName, StringComparer.OrdinalIgnoreCase)
+                || (scopeId is not null && permissions.DeniedToolScopeIds.Contains(scopeId, StringComparer.OrdinalIgnoreCase)))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Checks if a specific tool is allowed for the agent.
     /// Applies user group permission overrides if provided.
     /// </summary>

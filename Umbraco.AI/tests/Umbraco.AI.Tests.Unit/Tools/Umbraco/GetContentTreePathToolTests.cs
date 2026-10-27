@@ -11,13 +11,14 @@ namespace Umbraco.AI.Tests.Unit.Tools.Umbraco;
 
 public class GetContentTreePathToolTests
 {
+    private readonly Mock<IUmbracoReadAuthorizer> _readAuthorizerMock = TestReadAuthorizers.AllowAll();
     private readonly Mock<IUmbracoContextFactory> _umbracoContextFactoryMock;
     private readonly IAITool _tool;
 
     public GetContentTreePathToolTests()
     {
         _umbracoContextFactoryMock = new Mock<IUmbracoContextFactory>();
-        _tool = new GetContentTreePathTool(_umbracoContextFactoryMock.Object);
+        _tool = new GetContentTreePathTool(_umbracoContextFactoryMock.Object, _readAuthorizerMock.Object);
     }
 
     /// <summary>

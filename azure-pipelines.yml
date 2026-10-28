@@ -186,148 +186,27 @@ resources:
           endpoint: umbraco
 
 variables:
-    - group: dependency-track
-    - name: NODE_VERSION
-      value: "24.x"
     - name: DOTNET_NOLOGO
       value: "true"
     - name: DOTNET_CLI_TELEMETRY_OPTOUT
       value: "true"
 
-stages:
-    # ============================================================
-    # Build & Test everything
-    # ============================================================
-    - template: devops/monorepo/stages/build.yml@build
-      parameters:
-          solution: Umbraco.AI.slnx
-          node_version: $(NODE_VERSION)
-          test_frontend: true
-
-    # ============================================================
-    # Test on Windows and macOS - Only runs on push to vN/release/* and vN/hotfix/*, or on any
-    # branch when testAllPlatforms is ticked. Build has already tested on Linux.
-    # ============================================================
-    - template: devops/monorepo/stages/test.yml@build
-      parameters:
-          solution: Umbraco.AI.slnx
-          condition: |
-              and(
-                succeeded(),
-                ne(variables['Build.Reason'], 'PullRequest'),
-                or(
-                  eq('${{ parameters.testAllPlatforms }}', 'true'),
-                  contains(variables['Build.SourceBranch'], '/release/'),
-                  contains(variables['Build.SourceBranch'], '/hotfix/')
-                )
-              )
-
-    # ============================================================
-    # Generate & Upload SBOMs - Only runs on push to vN/release/* and vN/hotfix/*, or on any
-    # branch when generateSbom is ticked at queue time (generate + license check, no upload)
-    # Covers only the products being released (same change detection as Pack), uploads them to
-    # Dependency-Track, and gates Pack: a license policy violation stops the release
-    # ============================================================
-    - template: devops/monorepo/stages/sbom.yml@build
-      parameters:
-          core_product: Umbraco.AI
-          tiers: ${{ parameters.tiers }}
-          policy_allow_file: .sbom-policy.json
-          node_version: $(NODE_VERSION)
-          depends_on: [Build]
-          condition: |
-              and(
-                succeeded(),
-                ne(variables['Build.Reason'], 'PullRequest'),
-                or(
-                  eq('${{ parameters.generateSbom }}', 'true'),
-                  contains(variables['Build.SourceBranch'], '/release/'),
-                  contains(variables['Build.SourceBranch'], '/hotfix/')
-                )
-              )
-          all_products: ${{ or(parameters.forcePackAll, and(parameters.generateSbom, not(contains(variables['Build.SourceBranch'], '/release/')), not(contains(variables['Build.SourceBranch'], '/hotfix/')))) }}
-          upload: ${{ or(contains(variables['Build.SourceBranch'], '/release/'), contains(variables['Build.SourceBranch'], '/hotfix/')) }}
-
-    # ============================================================
-    # Validate Changelogs - Only runs on push to vN/release/* and vN/hotfix/*
-    # Ensures CHANGELOGs are present and match version.json
-    # ============================================================
-    - template: devops/monorepo/stages/validate-changelogs.yml@build
-      parameters:
-          depends_on: [Build]
-
-    # ============================================================
-    # Pack Stage - Only runs on push to main/dev/hotfix/release branches
-    # Uses dynamic change detection to only pack products that changed
-    # Waits for GenerateSBOM so a license policy violation stops a release before it is packed
-    # ============================================================
-    - template: devops/monorepo/stages/pack.yml@build
-      parameters:
-          core_product: Umbraco.AI
-          tiers: ${{ parameters.tiers }}
-          depends_on:
-              - Build
-              - Test
-              - ValidateChangelogs
-              - GenerateSBOM
-          condition: |
-              and(
-                in(dependencies.Build.result, 'Succeeded'),
-                in(dependencies.Test.result, 'Succeeded', 'Skipped'),
-                in(dependencies.ValidateChangelogs.result, 'Succeeded', 'Skipped'),
-                in(dependencies.GenerateSBOM.result, 'Succeeded', 'SucceededWithIssues', 'Skipped'),
-                ne(variables['Build.Reason'], 'PullRequest'),
-                or(
-                  eq('${{ parameters.forcePackAll }}', 'true'),
-                  contains(variables['Build.SourceBranch'], '/hotfix/'),
-                  contains(variables['Build.SourceBranch'], '/release/'),
-                  endsWith(variables['Build.SourceBranch'], '/main'),
-                  endsWith(variables['Build.SourceBranch'], '/dev')
-                )
-              )
-          force_all: ${{ parameters.forcePackAll }}
-          use_project_references: ${{ and(or(endsWith(variables['Build.SourceBranch'], '/dev'), parameters.forcePackAll), not(parameters.packWithNuGetRanges)) }}
-
-    # ============================================================
-    # Publish - only when the run was queued with publish set (see the parameter). Each stage is
-    # only included when chosen, so other runs never reference the feeds.
-    # ============================================================
-    - ${{ if eq(parameters.publish, 'nightly') }}:
-      - template: devops/monorepo/stages/prerelease.yml@build
-        parameters:
-            stage_name: Nightly
-            display_name: Publish nightlies (MyGet)
-            nuget_service_connection: NuGet MyGet Nightly Feed
-            npm_service_connection: NPM MyGet Nightly Feed
-            npm_registry_url: https://www.myget.org/F/umbraconightly/npm/
-
-    - ${{ if eq(parameters.publish, 'prerelease') }}:
-      - template: devops/monorepo/stages/prerelease.yml@build
-        parameters:
-            display_name: Publish prereleases (MyGet)
-            nuget_service_connection: NuGet MyGet Prereleases Feed
-            npm_service_connection: NPM MyGet Prereleases Feed
-            npm_registry_url: https://www.myget.org/F/umbracoprereleases/npm/
-
-    - ${{ if eq(parameters.publish, 'release') }}:
-      - ${{ if or(contains(variables['Build.SourceBranch'], '/release/'), contains(variables['Build.SourceBranch'], '/hotfix/')) }}:
-        - template: devops/monorepo/stages/release.yml@build
-          parameters:
-              environment: Umbraco AI Release
-              variable_group: umbraco-ai-release
-              nuget_service_connection: NuGet Feed
-              npm_service_connection: NPM Feed
-      - ${{ else }}:
-        - stage: Release
-          displayName: Release (not allowed on this branch)
-          dependsOn: []
-          jobs:
-              - job: Refuse
-                pool:
-                    vmImage: ubuntu-latest
-                steps:
-                    - checkout: none
-                    - bash: |
-                          echo "##[error]publish=release only runs on vN/release/* and vN/hotfix/*, not $(Build.SourceBranch)"
-                          exit 1
-                      displayName: Refuse release from this branch
+# The stages, and when each runs, come from Umbraco.Build's shared monorepo template:
+# https://github.com/umbraco/Umbraco.Build/tree/main/devops/monorepo
+extends:
+    template: devops/monorepo/templates/pipeline.yml@build
+    parameters:
+        core_product: Umbraco.AI
+        solution: Umbraco.AI.slnx
+        tiers: ${{ parameters.tiers }}
+        node_version: 24.x
+        test_frontend: true
+        policy_allow_file: .sbom-policy.json
+        dt_variable_group: dependency-track
+        force_pack_all: ${{ parameters.forcePackAll }}
+        pack_with_nuget_ranges: ${{ parameters.packWithNuGetRanges }}
+        generate_sbom: ${{ parameters.generateSbom }}
+        test_all_platforms: ${{ parameters.testAllPlatforms }}
+        publish: ${{ parameters.publish }}
+        release_environment: Umbraco AI Release
+        release_variable_group: umbraco-ai-release

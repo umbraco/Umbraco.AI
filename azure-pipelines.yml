@@ -268,3 +268,37 @@ stages:
               )
           force_all: ${{ parameters.forcePackAll }}
           use_project_references: ${{ and(or(endsWith(variables['Build.SourceBranch'], '/dev'), parameters.forcePackAll), not(parameters.packWithNuGetRanges)) }}
+
+    # ============================================================
+    # Publish - nightlies from vN/dev to MyGet; release and hotfix builds to MyGet prereleases
+    # straight away and, once approved in the "Umbraco AI Release" environment, to NuGet.org and
+    # npm, then tagged <product>@<version> with a GitHub release and a Slack post.
+    # Only included on the branches that publish, so other runs never reference the feeds.
+    # ============================================================
+    - ${{ if endsWith(variables['Build.SourceBranch'], '/dev') }}:
+      - template: devops/monorepo/stages/prerelease.yml@build
+        parameters:
+            stage_name: Nightly
+            display_name: Publish nightlies (MyGet)
+            nuget_service_connection: NuGet MyGet Nightly Feed
+            npm_service_connection: NPM MyGet Nightly Feed
+            npm_registry_url: https://www.myget.org/F/umbraconightly/npm/
+            condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+
+    - ${{ if or(contains(variables['Build.SourceBranch'], '/release/'), contains(variables['Build.SourceBranch'], '/hotfix/')) }}:
+      - template: devops/monorepo/stages/prerelease.yml@build
+        parameters:
+            display_name: Publish prereleases (MyGet)
+            nuget_service_connection: NuGet MyGet Prereleases Feed
+            npm_service_connection: NPM MyGet Prereleases Feed
+            npm_registry_url: https://www.myget.org/F/umbracoprereleases/npm/
+            condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+
+      - template: devops/monorepo/stages/release.yml@build
+        parameters:
+            environment: Umbraco AI Release
+            variable_group: umbraco-ai-release
+            slack_webhook_variable: SLACK_RELEASE_WEBHOOK
+            nuget_service_connection: NuGet Feed
+            npm_service_connection: NPM Feed
+            condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))

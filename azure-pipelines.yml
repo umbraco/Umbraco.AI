@@ -138,13 +138,23 @@ parameters:
 
     # Queue-time override: rerun the .NET tests on Windows and macOS on any branch. They
     # normally only run there on vN/release/* and vN/hotfix/*.
-    # Queue-time override: publish this run's packages to the MyGet nightly feed. Nightlies are
-    # only published on request, never on every push. The run must pack something, so on a
-    # feature branch tick forcePackAll too.
-    - name: publishNightly
-      displayName: Publish to the MyGet nightly feed
-      type: boolean
-      default: false
+    # Queue-time choice: where to publish this run's packages. Nothing publishes on a push; queue a
+    # run (by hand or with `az pipelines run --parameters publish=<value>`) to publish.
+    #   nightly    - MyGet nightly feed
+    #   prerelease - MyGet prereleases feed
+    #   release    - NuGet.org and npm after approval in the "Umbraco AI Release" environment, then
+    #                <product>@<version> tags, a GitHub release and a Slack post.
+    #                vN/release/* and vN/hotfix/* only.
+    # The run must pack something, so on a feature branch tick forcePackAll too.
+    - name: publish
+      displayName: Publish packages to
+      type: string
+      default: none
+      values:
+          - none
+          - nightly
+          - prerelease
+          - release
 
     - name: testAllPlatforms
       displayName: Run .NET tests on Windows and macOS too
@@ -278,12 +288,10 @@ stages:
           use_project_references: ${{ and(or(endsWith(variables['Build.SourceBranch'], '/dev'), parameters.forcePackAll), not(parameters.packWithNuGetRanges)) }}
 
     # ============================================================
-    # Publish - nightlies to MyGet when publishNightly is ticked; release and hotfix builds to
-    # MyGet prereleases straight away and, once approved in the "Umbraco AI Release" environment,
-    # to NuGet.org and npm, then tagged <product>@<version> with a GitHub release and a Slack post.
-    # Only included when they can run, so other runs never reference the feeds.
+    # Publish - only when the run was queued with publish set (see the parameter). Each stage is
+    # only included when chosen, so other runs never reference the feeds.
     # ============================================================
-    - ${{ if parameters.publishNightly }}:
+    - ${{ if eq(parameters.publish, 'nightly') }}:
       - template: devops/monorepo/stages/prerelease.yml@build
         parameters:
             stage_name: Nightly
@@ -291,22 +299,35 @@ stages:
             nuget_service_connection: NuGet MyGet Nightly Feed
             npm_service_connection: NPM MyGet Nightly Feed
             npm_registry_url: https://www.myget.org/F/umbraconightly/npm/
-            condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
 
-    - ${{ if or(contains(variables['Build.SourceBranch'], '/release/'), contains(variables['Build.SourceBranch'], '/hotfix/')) }}:
+    - ${{ if eq(parameters.publish, 'prerelease') }}:
       - template: devops/monorepo/stages/prerelease.yml@build
         parameters:
             display_name: Publish prereleases (MyGet)
             nuget_service_connection: NuGet MyGet Prereleases Feed
             npm_service_connection: NPM MyGet Prereleases Feed
             npm_registry_url: https://www.myget.org/F/umbracoprereleases/npm/
-            condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
 
-      - template: devops/monorepo/stages/release.yml@build
-        parameters:
-            environment: Umbraco AI Release
-            variable_group: umbraco-ai-release
-            slack_webhook_variable: SLACK_RELEASE_WEBHOOK
-            nuget_service_connection: NuGet Feed
-            npm_service_connection: NPM Feed
-            condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    - ${{ if eq(parameters.publish, 'release') }}:
+      - ${{ if or(contains(variables['Build.SourceBranch'], '/release/'), contains(variables['Build.SourceBranch'], '/hotfix/')) }}:
+        - template: devops/monorepo/stages/release.yml@build
+          parameters:
+              environment: Umbraco AI Release
+              variable_group: umbraco-ai-release
+              slack_webhook_variable: SLACK_RELEASE_WEBHOOK
+              nuget_service_connection: NuGet Feed
+              npm_service_connection: NPM Feed
+      - ${{ else }}:
+        - stage: Release
+          displayName: Release (not allowed on this branch)
+          dependsOn: []
+          jobs:
+              - job: Refuse
+                pool:
+                    vmImage: ubuntu-latest
+                steps:
+                    - checkout: none
+                    - bash: |
+                          echo "##[error]publish=release only runs on vN/release/* and vN/hotfix/*, not $(Build.SourceBranch)"
+                          exit 1
+                      displayName: Refuse release from this branch

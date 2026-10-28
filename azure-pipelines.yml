@@ -136,6 +136,13 @@ parameters:
       type: boolean
       default: false
 
+    # Queue-time override: rerun the .NET tests on Windows and macOS on any branch. They
+    # normally only run there on vN/release/* and vN/hotfix/*.
+    - name: testAllPlatforms
+      displayName: Run .NET tests on Windows and macOS too
+      type: boolean
+      default: false
+
 trigger:
     branches:
         include:
@@ -177,6 +184,24 @@ stages:
           solution: Umbraco.AI.slnx
           node_version: $(NODE_VERSION)
           test_frontend: true
+
+    # ============================================================
+    # Test on Windows and macOS - Only runs on push to vN/release/* and vN/hotfix/*, or on any
+    # branch when testAllPlatforms is ticked. Build has already tested on Linux.
+    # ============================================================
+    - template: devops/monorepo/stages/test.yml@build
+      parameters:
+          solution: Umbraco.AI.slnx
+          condition: |
+              and(
+                succeeded(),
+                ne(variables['Build.Reason'], 'PullRequest'),
+                or(
+                  eq('${{ parameters.testAllPlatforms }}', 'true'),
+                  contains(variables['Build.SourceBranch'], '/release/'),
+                  contains(variables['Build.SourceBranch'], '/hotfix/')
+                )
+              )
 
     # ============================================================
     # Generate & Upload SBOMs - Only runs on push to vN/release/* and vN/hotfix/*, or on any
@@ -223,11 +248,13 @@ stages:
           tiers: ${{ parameters.tiers }}
           depends_on:
               - Build
+              - Test
               - ValidateChangelogs
               - GenerateSBOM
           condition: |
               and(
                 in(dependencies.Build.result, 'Succeeded'),
+                in(dependencies.Test.result, 'Succeeded', 'Skipped'),
                 in(dependencies.ValidateChangelogs.result, 'Succeeded', 'Skipped'),
                 in(dependencies.GenerateSBOM.result, 'Succeeded', 'SucceededWithIssues', 'Skipped'),
                 ne(variables['Build.Reason'], 'PullRequest'),

@@ -183,6 +183,9 @@ stages:
                 - checkout: self
                   fetchDepth: 0
 
+                # Set here rather than in a stage of its own, which cost an agent and its wait
+                - template: devops/monorepo/steps/set-build-number.yml@build
+
                 - task: UseDotNet@2
                   displayName: Setup .NET
                   inputs:
@@ -280,38 +283,12 @@ stages:
           upload: ${{ or(contains(variables['Build.SourceBranch'], '/release/'), contains(variables['Build.SourceBranch'], '/hotfix/')) }}
 
     # ============================================================
-    # Validate Changelogs - Only runs on release and hotfix branches
+    # Validate Changelogs - Only runs on push to vN/release/* and vN/hotfix/*
     # Ensures CHANGELOGs are present and match version.json
-    # Runs in parallel with GenerateSBOM after Build
     # ============================================================
-    - stage: ValidateChangelogs
-      displayName: Validate Changelogs
-      dependsOn: Build
-      # Only validate on release and hotfix branches (not main or dev)
-      condition: |
-          and(
-            succeeded(),
-            ne(variables['Build.Reason'], 'PullRequest'),
-            or(
-              contains(variables['Build.SourceBranch'], '/release/'),
-              contains(variables['Build.SourceBranch'], '/hotfix/')
-            )
-          )
-      jobs:
-          - job: ValidateChangelogFiles
-            displayName: Validate CHANGELOG.md Files
-            pool:
-                vmImage: "ubuntu-latest"
-            steps:
-                - checkout: self
-                  fetchDepth: 0
-
-                - task: PowerShell@2
-                  displayName: Validate changelogs
-                  inputs:
-                      filePath: .azure-pipelines/scripts/validate-changelogs.ps1
-                      pwsh: true
-                      failOnStderr: false
+    - template: devops/monorepo/stages/validate-changelogs.yml@build
+      parameters:
+          depends_on: [Build]
 
     # ============================================================
     # Pack Stage - Only runs on push to main/dev/hotfix/release branches
@@ -347,26 +324,3 @@ stages:
                     product: $(product)
                     useProjectReferences: ${{ and(or(endsWith(variables['Build.SourceBranch'], '/dev'), parameters.forcePackAll), not(parameters.packWithNuGetRanges)) }}
                     condition: eq(variables['check.shouldPack'], 'true')
-
-    # ============================================================
-    # Finalize - set build number after GenerateSBOM and Pack complete
-    # ============================================================
-    - stage: Finalize
-      displayName: Finalize Build
-      dependsOn:
-          - GenerateSBOM
-          - Pack
-      condition: not(canceled())
-      jobs:
-          - job: SetBuildNumber
-            displayName: Set build number
-            pool:
-                vmImage: "ubuntu-latest"
-            steps:
-                - task: Bash@3
-                  displayName: Set build number (branch + date)
-                  inputs:
-                      targetType: inline
-                      script: |
-                          BUILD_DATE=$(date -u +%Y%m%d)
-                          echo "##vso[build.updatebuildnumber]$(Build.SourceBranchName)-${BUILD_DATE}-$(Build.BuildID)"

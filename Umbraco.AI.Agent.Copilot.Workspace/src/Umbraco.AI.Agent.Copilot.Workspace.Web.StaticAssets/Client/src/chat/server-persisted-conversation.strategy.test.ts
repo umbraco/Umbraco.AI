@@ -129,3 +129,47 @@ describe("UaiServerPersistedConversationStrategy — loadInitial reads agent nam
         expect(messages.find((m) => m.role === "assistant")?.agentName).toBe("Agent A");
     });
 });
+
+/**
+ * Regression coverage for SC-18: a shared (non-owned) conversation's owner-lookup endpoint 404s
+ * indistinguishably from a nonexistent id (see SPEC.md), so `requestMessages` resolves with `data:
+ * undefined` rather than throwing. `loadInitial` must fall back to `requestSharedView`'s `messages`
+ * field — the same `MessageResponseModel[]` shape — rather than silently rendering empty history.
+ */
+describe("UaiServerPersistedConversationStrategy — loadInitial falls back to the shared view", () => {
+    it("loads messages from requestSharedView when the owner lookup 404s", async () => {
+        const repository = new UaiConversationRepository(createFakeHost());
+        vi.spyOn(repository, "requestMessages").mockResolvedValue({ data: undefined } as Awaited<
+            ReturnType<UaiConversationRepository["requestMessages"]>
+        >);
+        vi.spyOn(repository, "requestSharedView").mockResolvedValue({
+            data: { messages: [storedAssistantRow()] },
+        } as Awaited<ReturnType<UaiConversationRepository["requestSharedView"]>>);
+
+        const strategy = new UaiServerPersistedConversationStrategy(repository, () => new Map([[AGENT_A, "Agent A"]]));
+        strategy.setConversationId("conv-1");
+
+        const messages = await strategy.loadInitial();
+
+        expect(messages).toHaveLength(1);
+        expect(messages[0]?.role).toBe("assistant");
+        expect(messages[0]?.agentName).toBe("Agent A");
+    });
+
+    it("returns an empty history when neither the owner lookup nor the shared view has data", async () => {
+        const repository = new UaiConversationRepository(createFakeHost());
+        vi.spyOn(repository, "requestMessages").mockResolvedValue({ data: undefined } as Awaited<
+            ReturnType<UaiConversationRepository["requestMessages"]>
+        >);
+        vi.spyOn(repository, "requestSharedView").mockResolvedValue({ data: undefined } as Awaited<
+            ReturnType<UaiConversationRepository["requestSharedView"]>
+        >);
+
+        const strategy = new UaiServerPersistedConversationStrategy(repository);
+        strategy.setConversationId("conv-1");
+
+        const messages = await strategy.loadInitial();
+
+        expect(messages).toEqual([]);
+    });
+});

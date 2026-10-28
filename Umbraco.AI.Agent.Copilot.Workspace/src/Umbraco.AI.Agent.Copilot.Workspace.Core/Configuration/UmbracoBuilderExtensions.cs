@@ -1,4 +1,7 @@
+using Umbraco.AI.Agent.Conversations.Core.Conversations;
+using Umbraco.AI.Agent.Copilot.Workspace.Core.Conversations;
 using Umbraco.Cms.Core.DependencyInjection;
+using Umbraco.Extensions;
 
 namespace Umbraco.AI.Agent.Copilot.Workspace.Core.Configuration;
 
@@ -16,6 +19,12 @@ public static class UmbracoBuilderExtensions
     public static IUmbracoBuilder AddUmbracoAICopilotWorkspaceCore(this IUmbracoBuilder builder)
     {
         // TODO (Phase 4): register the Workspace section + section-access policy (SectionAccessCopilotWorkspace).
+
+        // Emails the recipient on a genuinely new conversation share. Lives here (not in the
+        // host-agnostic Conversations core's own AddUmbracoAIConversationsCore) because building the
+        // email's "view conversation" link needs the Workspace section pathname.
+        builder.AddNotificationAsyncHandler<AIConversationShareCreatedNotification, AIConversationShareCreatedNotificationHandler>();
+
         return builder;
     }
 }

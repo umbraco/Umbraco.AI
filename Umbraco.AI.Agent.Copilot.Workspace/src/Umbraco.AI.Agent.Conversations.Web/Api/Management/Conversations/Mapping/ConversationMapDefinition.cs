@@ -35,6 +35,7 @@ internal sealed class ConversationMapDefinition : IMapDefinition
         target.DateCreated = source.DateCreated;
         target.DateModified = source.DateModified;
         target.LastMessageAt = source.LastMessageAt;
+        target.HasActiveShares = source.HasActiveShares;
     }
 
     // Umbraco.Code.MapAll
@@ -51,7 +52,7 @@ internal sealed class ConversationMapDefinition : IMapDefinition
         target.DateCreated = source.DateCreated;
     }
 
-    // Umbraco.Code.MapAll -Id -UserKey -IsPinned -IsArchived -DateCreated -DateModified -LastMessageAt -Version
+    // Umbraco.Code.MapAll -Id -UserKey -IsPinned -IsArchived -DateCreated -DateModified -LastMessageAt -Version -HasActiveShares
     private static void MapFromCreate(CreateConversationRequestModel source, AIConversation target, MapperContext context)
     {
         target.ProjectId = source.ProjectId;
@@ -62,7 +63,7 @@ internal sealed class ConversationMapDefinition : IMapDefinition
         target.Resources = context.MapEnumerable<ContextResourceModel, AIAttachedResource>(source.Resources);
     }
 
-    // Umbraco.Code.MapAll -Id -UserKey -DateCreated -DateModified -LastMessageAt -Version
+    // Umbraco.Code.MapAll -Id -UserKey -DateCreated -DateModified -LastMessageAt -Version -HasActiveShares
     private static void MapFromUpdate(UpdateConversationRequestModel source, AIConversation target, MapperContext context)
     {
         target.Title = source.Title;

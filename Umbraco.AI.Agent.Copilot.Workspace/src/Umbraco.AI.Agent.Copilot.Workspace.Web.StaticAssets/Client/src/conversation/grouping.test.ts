@@ -14,6 +14,7 @@ function conv(overrides: Partial<ConversationResponseModel>): ConversationRespon
         profileId: null,
         isPinned: overrides.isPinned ?? false,
         isArchived: overrides.isArchived ?? false,
+        hasActiveShares: overrides.hasActiveShares ?? false,
         dateCreated: overrides.dateCreated ?? new Date(NOW).toISOString(),
         dateModified: overrides.dateModified ?? new Date(NOW).toISOString(),
         lastMessageAt: overrides.lastMessageAt ?? null,

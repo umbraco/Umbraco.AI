@@ -83,7 +83,17 @@ export class UaiServerPersistedConversationStrategy implements UaiConversationSt
             return [];
         }
         const { data } = await this.#repository.requestMessages(id);
-        const messages = toDisplayMessages(data?.items ?? [], this.#getAgentNames());
+        let items = data?.items;
+        if (!items) {
+            // Not owned by the acting user — the owner's lookup 404s indistinguishably whether `id` is
+            // truly nonexistent or belongs to a conversation shared with the current user instead. Fall
+            // back to the recipient's view, whose `messages` field carries the same `MessageResponseModel`
+            // shape (see conversation-workspace.context.ts's `#reload`, which applies the identical fallback
+            // for the conversation's metadata).
+            const shared = await this.#repository.requestSharedView(id);
+            items = shared.data?.messages;
+        }
+        const messages = toDisplayMessages(items ?? [], this.#getAgentNames());
         this.#persisted = messages.length;
         this.#loaded = true;
         return messages;

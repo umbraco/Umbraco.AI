@@ -89,6 +89,13 @@ Given I've opened the share-picker modal and not yet picked anyone
 When I look at the footer
 Then "Share" is disabled
 
+**AC11 — A Snapshot share that can't be anchored to a message fails, never silently becomes Live**
+Given a conversation has no messages yet (or one is deleted from under the request by a concurrent
+regenerate)
+When I try to share it as "Snapshot"
+Then the share request fails with an error — it never succeeds with a cutoff that behaves like
+"Live"
+
 ---
 
 ### US2 — See and manage who a conversation is shared with
@@ -213,6 +220,12 @@ Then I see the same attachments the owner sees, with no controls to add or remov
 Given a Snapshot share's cutoff message was later deleted because the owner used regenerate
 When I open the conversation
 Then I see every message that still exists, and no error
+
+**AC7 — A Snapshot share's dates don't reveal activity after the cutoff**
+Given a colleague shared a conversation with me as "Snapshot", then kept chatting in it afterward
+When I open the shared conversation
+Then its "last modified"/"last message" dates reflect the cutoff point, not the owner's later
+activity — I can't tell from the dates alone that anything happened after what I can see
 
 Sad path
 

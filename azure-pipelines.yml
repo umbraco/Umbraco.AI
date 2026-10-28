@@ -136,8 +136,6 @@ parameters:
       type: boolean
       default: false
 
-    # Queue-time override: rerun the .NET tests on Windows and macOS on any branch. They
-    # normally only run there on vN/release/* and vN/hotfix/*.
     # Queue-time choice: where to publish this run's packages. Nothing publishes on a push; queue a
     # run (by hand or with `az pipelines run --parameters publish=<value>`) to publish.
     #   nightly    - MyGet nightly feed
@@ -157,10 +155,18 @@ parameters:
           - prerelease
           - release
 
-    - name: testAllPlatforms
-      displayName: Run .NET tests on Windows and macOS too
-      type: boolean
-      default: false
+    # Which tests run: the same choice as the main Umbraco.Build template.
+    #   auto  - Linux on every run; Windows and macOS too on vN/release/* and vN/hotfix/*
+    #   force - Linux, Windows and macOS on any branch
+    #   skip  - no tests (e.g. to check packing while a test is flaky); refused with publish=release
+    - name: runTests
+      displayName: Test
+      type: string
+      default: auto
+      values:
+          - auto
+          - force
+          - skip
 
 trigger:
     branches:
@@ -206,7 +212,7 @@ extends:
         force_pack_all: ${{ parameters.forcePackAll }}
         pack_with_nuget_ranges: ${{ parameters.packWithNuGetRanges }}
         generate_sbom: ${{ parameters.generateSbom }}
-        test_all_platforms: ${{ parameters.testAllPlatforms }}
+        run_tests: ${{ parameters.runTests }}
         publish: ${{ parameters.publish }}
         release_environment: Umbraco AI Release
         release_variable_group: umbraco-ai-release

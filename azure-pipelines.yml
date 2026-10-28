@@ -318,9 +318,4 @@ stages:
                 )
               )
           force_all: ${{ parameters.forcePackAll }}
-          pack_steps:
-              - template: .azure-pipelines/templates/pack-product.yml
-                parameters:
-                    product: $(product)
-                    useProjectReferences: ${{ and(or(endsWith(variables['Build.SourceBranch'], '/dev'), parameters.forcePackAll), not(parameters.packWithNuGetRanges)) }}
-                    condition: eq(variables['check.shouldPack'], 'true')
+          use_project_references: ${{ and(or(endsWith(variables['Build.SourceBranch'], '/dev'), parameters.forcePackAll), not(parameters.packWithNuGetRanges)) }}

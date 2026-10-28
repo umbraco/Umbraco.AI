@@ -10,7 +10,7 @@ sync by hand whenever a product's version changes relative to its dependents:
 - `Directory.Packages.props` (root) — NuGet `PackageVersion` floors, e.g.
   `<PackageVersion Include="Umbraco.AI.Core" Version="[18.4.0, 18.999.999)" />`
 - `package.json` (root) — npm `peerDependencyVersions`, e.g. `"@umbraco-ai/core": "^18.4.0"`,
-  consumed by `scripts/build/cleanse-package-json.js` to resolve each package's
+  consumed by the shared `cleanse-package-json.mjs` (umbraco/Umbraco.Build) to resolve each package's
   `workspace:*`/`*` dependencies into real `peerDependencies` ranges at pack time.
 
 **Why:** During the 2026.08.1 release finalize (RC -> stable), `Directory.Packages.props`

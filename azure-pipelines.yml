@@ -172,89 +172,11 @@ stages:
     # ============================================================
     # Build & Test everything
     # ============================================================
-    - stage: Build
-      displayName: Build & Test
-      jobs:
-          - job: BuildAndTest
-            displayName: Build & Test
-            pool:
-                vmImage: "ubuntu-latest"
-            steps:
-                - checkout: self
-                  fetchDepth: 0
-
-                # Set here rather than in a stage of its own, which cost an agent and its wait
-                - template: devops/monorepo/steps/set-build-number.yml@build
-
-                - task: UseDotNet@2
-                  displayName: Setup .NET
-                  inputs:
-                      useGlobalJson: true
-
-                - task: UseNode@1
-                  displayName: Setup Node.js
-                  inputs:
-                      version: $(NODE_VERSION)
-
-                - script: |
-                      npm ci --include=optional
-                      npm run build
-                  displayName: Build frontend
-
-                - script: npm test
-                  displayName: Test frontend
-
-                - task: PublishTestResults@2
-                  displayName: Publish frontend test results
-                  condition: always()
-                  inputs:
-                      testResultsFormat: JUnit
-                      testResultsFiles: "**/Client/test-results/junit.xml"
-                      searchFolder: $(Build.SourcesDirectory)
-                      mergeTestResults: true
-                      testRunTitle: Frontend
-                      failTaskOnMissingResultsFile: true
-
-                - script: |
-                      attempt=1
-                      max_attempts=3
-                      delay=15
-                      while true; do
-                        if dotnet restore Umbraco.AI.slnx; then
-                          break
-                        fi
-                        if [ $attempt -ge $max_attempts ]; then
-                          echo "##[error]dotnet restore failed after $attempt attempts"
-                          exit 1
-                        fi
-                        echo "##[warning]dotnet restore failed (attempt $attempt/$max_attempts), retrying in ${delay}s..."
-                        sleep $delay
-                        attempt=$((attempt + 1))
-                        delay=$((delay * 2))
-                      done
-                  displayName: Restore
-
-                - script: dotnet build Umbraco.AI.slnx --configuration Release --no-restore -p:DisableCloudBuildNumber=true
-                  displayName: Build
-
-                - script: dotnet test Umbraco.AI.slnx --configuration Release --no-build --verbosity normal --logger trx --results-directory $(Agent.TempDirectory)/TestResults
-                  displayName: Test .NET
-
-                - task: PublishTestResults@2
-                  displayName: Publish test results
-                  condition: always()
-                  inputs:
-                      testResultsFormat: VSTest
-                      testResultsFiles: "$(Agent.TempDirectory)/TestResults/**/*.trx"
-                      mergeTestResults: true
-                      testRunTitle: .NET
-
-                - task: PublishPipelineArtifact@1
-                  displayName: Upload build outputs
-                  inputs:
-                      targetPath: $(Build.SourcesDirectory)
-                      artifact: build-outputs
-                      publishLocation: pipeline
+    - template: devops/monorepo/stages/build.yml@build
+      parameters:
+          solution: Umbraco.AI.slnx
+          node_version: $(NODE_VERSION)
+          test_frontend: true
 
     # ============================================================
     # Generate & Upload SBOMs - Only runs on push to vN/release/* and vN/hotfix/*, or on any

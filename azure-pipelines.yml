@@ -143,7 +143,8 @@ parameters:
     #   nightly    - MyGet nightly feed
     #   prerelease - MyGet prereleases feed
     #   release    - NuGet.org and npm after approval in the "Umbraco AI Release" environment, then
-    #                <product>@<version> tags, a GitHub release and a Slack post.
+    #                <product>@<version> tags and a GitHub release (Slack's GitHub app announces
+    #                it in the release channel).
     #                vN/release/* and vN/hotfix/* only.
     # The run must pack something, so on a feature branch tick forcePackAll too.
     - name: publish
@@ -314,7 +315,6 @@ stages:
           parameters:
               environment: Umbraco AI Release
               variable_group: umbraco-ai-release
-              slack_webhook_variable: SLACK_RELEASE_WEBHOOK
               nuget_service_connection: NuGet Feed
               npm_service_connection: NPM Feed
       - ${{ else }}:

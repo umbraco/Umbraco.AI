@@ -171,7 +171,7 @@ If a product now requires a newer minimum version:
 
 ### Validation
 
-The `/release-management` skill should:
+The `/release-prepare` skill should:
 - Check inter-product dependencies in `Directory.Packages.props`
 - Verify corresponding ranges exist in `peerDependencyVersions`
 - Warn about mismatches

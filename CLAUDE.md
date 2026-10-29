@@ -265,22 +265,22 @@ makes worktrees use the wrong branch prefix and PRs target the wrong `vN/dev` ba
 
 | Skill | Purpose |
 |-------|---------|
-| `/release-management` | Full release orchestration: detect changes, recommend bumps, create branch, update versions/manifests/changelogs, commit |
+| `/release-prepare` | Full release orchestration: detect changes, recommend bumps, create branch, update versions/manifests/changelogs, commit |
 | `/release-manifest-management` | Generate `release-manifest.json` only |
 | `/changelog-management` | Generate single product changelog |
 | `/release-publish` | Queue a pipeline run that publishes a pushed branch (release, prerelease or nightly), watch it, confirm tags |
-| `/post-release-cleanup` | Merge `vN/release`->`vN/main`->`vN/dev`, bump versions on `vN/dev`, optionally delete branch |
+| `/release-cleanup` | Merge `vN/release`->`vN/main`->`vN/dev`, bump versions on `vN/dev`, optionally delete branch |
 | `/repo-management` | Interactive menu of all operations |
 
 ### Release Flow
 
-1. `/release-management` detects changed products since last release tags
+1. `/release-prepare` detects changed products since last release tags
 2. Analyzes conventional commits for version bump recommendations
 3. Creates `vN/release/YYYY.MM.N` branch (calendar-based, N increments per month)
 4. Updates `version.json`, generates `release-manifest.json` and `CHANGELOG.md` files
 5. Commits all changes to release branch
 6. After the push, `/release-publish` queues the publishing run (prerelease to MyGet to test, then release after approval in Azure)
-7. `/post-release-cleanup` merges back and bumps dev versions
+7. `/release-cleanup` merges back and bumps dev versions
 
 ### Version Bump Logic
 
@@ -288,7 +288,7 @@ makes worktrees use the wrong branch prefix and PRs target the wrong `vN/dev` ba
 BREAKING CHANGE or feat!: -> Major | feat: -> Minor | fix:/perf: -> Patch | docs/chore/refactor only -> Ask user
 ```
 
-**Major version alignment:** Package major versions track the Umbraco CMS major version. All packages ship as `17.x.x` for CMS 17, `18.x.x` for CMS 18, etc. When preparing a release that spans a CMS major boundary, bump all products to the new major simultaneously — a prep commit on `vN/dev` sets all `version.json` files and inter-product ranges in `Directory.Packages.props` before running `/release-management`.
+**Major version alignment:** Package major versions track the Umbraco CMS major version. All packages ship as `17.x.x` for CMS 17, `18.x.x` for CMS 18, etc. When preparing a release that spans a CMS major boundary, bump all products to the new major simultaneously — a prep commit on `vN/dev` sets all `version.json` files and inter-product ranges in `Directory.Packages.props` before running `/release-prepare`.
 
 When bumping Core to new major, the skill checks `Directory.Packages.props` for dependent add-ons and warns.
 
@@ -324,7 +324,7 @@ On `vN/hotfix/*` branches: manifest optional (falls back to per-product tag-base
 - Excludes `CHANGELOG.md`, `version.json` from diff
 - Falls back to merge-base with `vN/main` for new products
 
-### Post-Release (`/post-release-cleanup`)
+### Post-Release (`/release-cleanup`)
 
 1. Merges `vN/release/*` -> `vN/main` (no-ff, push), `vN/main` -> `vN/dev` (no-ff, push)
 2. Bumps `version.json` on `vN/dev` (patch increment, e.g., `1.5.0` -> `1.5.1` so nightlies are `1.5.1--preview.*`)
@@ -411,7 +411,7 @@ This gap was found via [umbraco/Umbraco.AI#332](https://github.com/umbraco/Umbra
 ### Generating Changelogs
 
 ```bash
-/release-management                    # Generates all changelogs as part of release
+/release-prepare                    # Generates all changelogs as part of release
 /changelog-management                  # Individual product
 npm run changelog -- --product=Umbraco.AI --version=1.1.0
 npm run changelog -- --product=Umbraco.AI --unreleased

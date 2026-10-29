@@ -13,5 +13,5 @@ One line per file in this folder, newest relevant first. See `README.md` for the
 - [Provider contract checks inside tracking](provider-contract-checks-inside-tracking.md) — reject bad provider responses inside tracking (error classifier), caller input outside it
 - [Controller ctor change keeps obsolete](controller-ctor-change-keep-obsolete.md) — new controller dependency: keep old ctor [Obsolete], mark new one [ActivatorUtilitiesConstructor]
 - [Polymorphic response DeclaredType](polymorphic-response-declared-type.md) — Ok(derived) drops "$type" on root polymorphic responses; set DeclaredType to the base
-- [Inter-Product Ranges Stay Paired](inter-product-ranges-stay-paired.md) — `Directory.Packages.props` (.NET) and root `package.json`'s `peerDependencyVersions` (npm) are parallel structures; a version floor change outside `/release-management` must update both
+- [Inter-Product Ranges Stay Paired](inter-product-ranges-stay-paired.md) — `Directory.Packages.props` (.NET) and root `package.json`'s `peerDependencyVersions` (npm) are parallel structures; a version floor change outside `/release-prepare` must update both
 - [Consumers don't copy Core validation](consumers-dont-copy-core-validation.md) — add-ons map Core's ArgumentException instead of re-implementing its bounds

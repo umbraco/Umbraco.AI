@@ -1,9 +1,9 @@
 ---
-name: post-release-cleanup
+name: release-cleanup
 description: Merges a release or hotfix branch back into vN/main and vN/dev, bumps version.json on vN/dev so nightly builds produce versions higher than the released version, checks GitHub issues and the Azure DevOps AI Team backlog for anything needing a release-confirmation comment or closing, and optionally deletes the release branch. If the release is a new major version, creates the new vN+1/dev and vN+1/main branches and updates the GitHub default branch. Use after /release-publish has published and tagged a release.
 ---
 
-# Post-Release Cleanup
+# Release Cleanup
 
 You are the orchestrator for post-release cleanup in the Umbraco.AI repository.
 

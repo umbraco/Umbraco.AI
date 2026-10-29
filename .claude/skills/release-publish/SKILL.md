@@ -1,6 +1,6 @@
 ---
 name: release-publish
-description: Publishes a pushed release, hotfix or other branch to a package feed by queuing an Azure pipeline run with the "Publish packages to" choice (release = NuGet.org + npm after approval, prerelease = MyGet prereleases, nightly = MyGet nightly). Checks nothing is already published, watches the run, tells the user when it waits for approval, and confirms the tags and GitHub release. Use after /release-management has pushed a release branch, to re-publish a new RC, or to put a branch on MyGet.
+description: Publishes a pushed release, hotfix or other branch to a package feed by queuing an Azure pipeline run with the "Publish packages to" choice (release = NuGet.org + npm after approval, prerelease = MyGet prereleases, nightly = MyGet nightly). Checks nothing is already published, watches the run, tells the user when it waits for approval, and confirms the tags and GitHub release. Use after /release-prepare has pushed a release branch, to re-publish a new RC, or to put a branch on MyGet.
 ---
 
 # Release Publish
@@ -61,7 +61,7 @@ NuGet.org refuses a version that already exists, so a run that repeats one fails
    npm view <npm-package>@<version> version
    ```
    A 404 from NuGet means the package has never been published, which is fine for a new product.
-3. **If any version is already out,** stop and show which. Usually this means the release already went through (run `/post-release-cleanup`), or an RC needs its next number (see the RC rule in root `CLAUDE.md`). Never queue a release that repeats a published version.
+3. **If any version is already out,** stop and show which. Usually this means the release already went through (run `/release-cleanup`), or an RC needs its next number (see the RC rule in root `CLAUDE.md`). Never queue a release that repeats a published version.
 
 ### Phase 3: Confirm, then queue
 
@@ -105,7 +105,7 @@ For `nightly` and `prerelease`, give the user the versions from the run's `pack-
 
 ### Phase 6: Next step
 
-- `release`: tell the user the next step is `/post-release-cleanup` on the same branch.
+- `release`: tell the user the next step is `/release-cleanup` on the same branch.
 - `prerelease` or `nightly`: nothing else. The branch stays open.
 
 ## Rules

@@ -1,9 +1,9 @@
 ---
-name: release-management
+name: release-prepare
 description: Orchestrates the complete release preparation process - detects changed products, analyzes commits for version bumps, updates version.json files, generates manifests and changelogs, and creates release branches. Use when preparing a new release.
 ---
 
-# Release Manager
+# Release Prepare
 
 You are the orchestrator for preparing releases in the Umbraco.AI repository.
 
@@ -193,7 +193,7 @@ while queue not empty:
         # so it does not itself trigger further cascade.
 ```
 
-`patchBump` mirrors `/post-release-cleanup` Phase 4 — reuse the same helper:
+`patchBump` mirrors `/release-cleanup` Phase 4 — reuse the same helper:
 - `1.10.1` → `1.10.2`
 - `1.0.0-beta.1` → `1.0.0-beta.2` (dotted — the required form for new prerelease lines)
 - `1.0.0-alpha` → `1.0.0-alpha.1`
@@ -775,7 +775,7 @@ Verify all files are consistent:
     - Push to remote: git push -u origin v18/release/2026.02.1
     - CI will validate and build packages (a push never publishes)
     - Publish: /release-publish (prerelease to MyGet first if you want to test, then release)
-    - After the release is published and tagged, run /post-release-cleanup
+    - After the release is published and tagged, run /release-cleanup
     ```
 
 ## Important Notes
@@ -822,7 +822,7 @@ Range updates follow the simplified Phase 4 rule (lower bound on every bump; bot
 ## Example Flow
 
 ```
-User invokes: /release-management
+User invokes: /release-prepare
 
 Phase 1: Detect changes
 You scan git history and show:

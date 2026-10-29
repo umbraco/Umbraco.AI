@@ -380,7 +380,7 @@ git pull origin v18/dev
 git checkout -b v18/release/2026.06.1
 ```
 
-Or use the `/release-management` skill which handles this automatically.
+Or use the `/release-prepare` skill which handles this automatically.
 
 #### 2. Define Release Manifest
 
@@ -492,10 +492,10 @@ The GitHub release number comes from the publish date, so it can differ from the
 
 #### 8. Merge Back and Bump Dev Versions
 
-Use the `/post-release-cleanup` skill to automate this step:
+Use the `/release-cleanup` skill to automate this step:
 
 ```bash
-/post-release-cleanup
+/release-cleanup
 ```
 
 This will:
@@ -563,7 +563,7 @@ git push -u origin v17/hotfix/2026.06.1
 
 # 7. Publish (choose release), approve in Azure, then run post-release cleanup
 /release-publish
-/post-release-cleanup
+/release-cleanup
 ```
 
 ### Releasing Multiple Products

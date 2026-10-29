@@ -22,7 +22,7 @@ Initial repository setup for new developers:
 - Install dependencies
 - Run initial build
 
-### 2. Release Management (`/release-management`)
+### 2. Release Prepare (`/release-prepare`)
 
 Complete release preparation orchestration:
 
@@ -41,7 +41,7 @@ Publish a pushed branch through the Azure pipeline:
 - `prerelease` / `nightly`: MyGet feeds, no approval
 - Checks nothing is already published, watches the run, confirms tags and the GitHub release
 
-### 4. Post-Release Cleanup (`/post-release-cleanup`)
+### 4. Release Cleanup (`/release-cleanup`)
 
 Merge release/hotfix branch back after publishing:
 
@@ -80,8 +80,8 @@ Common build tasks:
 
 2. **Delegate to appropriate skill** or execute directly:
     - Setup → Invoke `/repo-setup` skill
-    - Release → Invoke `/release-management` skill
-    - Post-release cleanup → Invoke `/post-release-cleanup` skill
+    - Release → Invoke `/release-prepare` skill
+    - Post-release cleanup → Invoke `/release-cleanup` skill
     - Changelog → Invoke `/changelog-management` skill
     - Build → Execute command directly
 
@@ -92,9 +92,9 @@ Common build tasks:
 | Operation        | When to Use                                          |
 | ---------------- | ---------------------------------------------------- |
 | Setup            | First time cloning repo, new dev onboarding          |
-| Release Manager  | Preparing a complete release (end-to-end automation) |
+| Prepare          | Preparing a release branch (versions, changelogs)    |
 | Publish          | Pushed release branch: publish to feeds              |
-| Post-Release     | After publishing: merge back, bump versions          |
+| Cleanup          | After publishing: merge back, bump versions          |
 | Changelog        | Updating individual product changelog only           |
 | Build            | After pulling changes, switching branches            |
 | Watch            | Active frontend development                          |
@@ -124,9 +124,9 @@ You present menu:
 
 User selects: "Post-release cleanup"
 
-You invoke: /post-release-cleanup
+You invoke: /release-cleanup
 
-The post-release-cleanup skill will:
+The release-cleanup skill will:
 - Detect released products from git tags
 - Merge release branch → main → dev
 - Bump version.json on dev
@@ -136,9 +136,9 @@ The post-release-cleanup skill will:
 
 User selects: "Prepare release"
 
-You invoke: /release-management
+You invoke: /release-prepare
 
-The release-management skill will:
+The release-prepare skill will:
 - Detect changed products
 - Analyze commits and recommend version bumps
 - Update version.json files

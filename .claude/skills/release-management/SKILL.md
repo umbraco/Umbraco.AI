@@ -447,7 +447,7 @@ This is independent from product version numbers (which follow semantic versioni
 
    **For release branch naming, we only care about date-based tags:**
    - Date tags follow the format `YYYY.MM.N` where N is an incrementing counter
-   - Created by the release pipeline when a release is deployed
+   - Created by the pipeline's Release stage when a release is published, numbered by publish date (so it can differ from the branch name)
    - Multiple products can be released together under one date tag (e.g., `2026.02.1` might include Core@1.1.0, OpenAI@2.0.0, Prompt@1.0.5)
    - The pattern `git tag --list "YYYY.MM.*"` only matches date-based tags, not product tags
    - Find the latest date tag for the current month and increment N
@@ -773,8 +773,9 @@ Verify all files are consistent:
     Next steps:
     - Review the changes: git show HEAD
     - Push to remote: git push -u origin v18/release/2026.02.1
-    - CI will validate and build packages
-    - After CI passes, run /post-release-cleanup
+    - CI will validate and build packages (a push never publishes)
+    - Publish: /release-publish (prerelease to MyGet first if you want to test, then release)
+    - After the release is published and tagged, run /post-release-cleanup
     ```
 
 ## Important Notes
@@ -788,7 +789,7 @@ Verify all files are consistent:
 - Validate cross-product dependencies
 - This skill orchestrates `/release-manifest-management` and `/changelog-management`
 - Creates commits following conventional commit format
-- Release branches trigger CI validation and packaging
+- Release branches trigger CI validation and packaging; publishing is a separate step (`/release-publish`)
 
 ## Version Bump Decision Logic
 

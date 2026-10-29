@@ -268,6 +268,7 @@ makes worktrees use the wrong branch prefix and PRs target the wrong `vN/dev` ba
 | `/release-management` | Full release orchestration: detect changes, recommend bumps, create branch, update versions/manifests/changelogs, commit |
 | `/release-manifest-management` | Generate `release-manifest.json` only |
 | `/changelog-management` | Generate single product changelog |
+| `/release-publish` | Queue a pipeline run that publishes a pushed branch (release, prerelease or nightly), watch it, confirm tags |
 | `/post-release-cleanup` | Merge `vN/release`->`vN/main`->`vN/dev`, bump versions on `vN/dev`, optionally delete branch |
 | `/repo-management` | Interactive menu of all operations |
 
@@ -278,6 +279,8 @@ makes worktrees use the wrong branch prefix and PRs target the wrong `vN/dev` ba
 3. Creates `vN/release/YYYY.MM.N` branch (calendar-based, N increments per month)
 4. Updates `version.json`, generates `release-manifest.json` and `CHANGELOG.md` files
 5. Commits all changes to release branch
+6. After the push, `/release-publish` queues the publishing run (prerelease to MyGet to test, then release after approval in Azure)
+7. `/post-release-cleanup` merges back and bumps dev versions
 
 ### Version Bump Logic
 
@@ -335,7 +338,7 @@ On `vN/hotfix/*` branches: manifest optional (falls back to per-product tag-base
 | `all-npm-packages` | .tgz files for npm |
 | `pack-manifest` | Package metadata for git tagging |
 
-Release pipeline deploys to feeds and tags repo with `[Product]@[Version]`. See [CONTRIBUTING.md](CONTRIBUTING.md#release-process).
+A push never publishes. To publish, queue the pipeline with "Publish packages to" set (`/release-publish`): `release` goes to NuGet.org and npm after approval in the `Umbraco AI Release` environment, then tags `[Product]@[Version]` and creates a GitHub release named by publish date. See [CONTRIBUTING.md](CONTRIBUTING.md#release-process).
 
 ## Cross-Product Dependency Management
 

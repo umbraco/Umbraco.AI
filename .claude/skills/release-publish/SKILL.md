@@ -43,7 +43,7 @@ The GitHub release is named from the date it is published (next free `YYYY.MM.N`
    git rev-parse HEAD origin/<branch>   # must match
    ```
    If they differ, stop and tell the user. Do not push for them without asking.
-5. **Feature branches** only pack with `forcePackAll=true`. Add it for `nightly`/`prerelease` from `vN/feature/*`, and say so.
+5. **Topic branches** only pack with `forcePackAll=true`. Add it for `nightly`/`prerelease` from `vN/topic/*` (or the older `vN/feature/*`), and say so.
 
 ### Phase 2: Check nothing is already published (`release` only)
 
@@ -71,7 +71,7 @@ NuGet.org refuses a version that already exists, so a run that repeats one fails
    az pipelines run --org https://dev.azure.com/umbraco --project "Umbraco AI" --id 694 \
      --branch <branch> --parameters publish=<target> -o json
    ```
-   Add `forcePackAll=true` to `--parameters` for a feature branch. Never pass `runTests=skip` with `release`; the pipeline refuses it.
+   Add `forcePackAll=true` to `--parameters` for a topic branch. Never pass `runTests=skip` with `release`; the pipeline refuses it.
 3. **Give the user the run link:** `https://dev.azure.com/umbraco/Umbraco%20AI/_build/results?buildId=<id>`.
 
 ### Phase 4: Watch the run

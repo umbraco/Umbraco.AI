@@ -207,7 +207,7 @@ Umbraco.AI major versions track Umbraco CMS major versions. Multiple versions ma
 | `vN/main` | Latest released state for major version N |
 | `vN/release/YYYY.MM.N` | Release branch for major version N |
 | `vN/hotfix/<name>` | Hotfix branch for major version N, based off a release branch |
-| `vN/feature/<name>` | Feature/fix branch for major version N, based off `vN/dev` |
+| `vN/topic/<name>` | Any work branch (feature, fix, refactor, docs, tooling) for major version N, based off `vN/dev`. `vN/feature/<name>` is the old name, still accepted for branches opened before the rename |
 
 Each supported major version gets its own `vN/` branch family — there is no separate `support/X.x` branch; that naming was replaced when the repo moved to this `vN/`-prefixed model (see `project_branch_model` in memory for the history).
 
@@ -245,14 +245,14 @@ on one line before the other), so those are expected to differ.
 When a fix or feature applies to an older supported version:
 
 1. Branch from `vN/dev` for the target version line (not from the line you originally fixed)
-2. Apply and commit the change on the `vN/feature/<name>` or `vN/hotfix/<name>` branch
+2. Apply and commit the change on the `vN/topic/<name>` or `vN/hotfix/<name>` branch
 3. Open a PR back into `vN/dev` (or the relevant `vN/release/*` branch if it's a hotfix against an in-progress release) — always as a PR, never merged automatically, even when this step is done by an agent
 4. Release via the normal release flow on that branch
 
 Do **not** forward-merge one version line's branches into another's — each version line is maintained independently. Always create a *separate* worktree per version line (with an absolute path — see CLAUDE.local.md) rather than reusing one worktree for both; reusing one has caused a worktree to get created nested inside another.
 
 When backporting **worktree/tooling config**, note that some files hardcode the version line and must
-be rewritten to the target `vN`: `.humanlayer/workspace.json` (`branchTemplate: "v18/feature/..."`) and
+be rewritten to the target `vN`: `.humanlayer/workspace.json` (`branchTemplate: "v18/topic/..."`) and
 `.worktreeinclude` (demo path `demos/v18/`). Leaving `v18` in place makes worktrees use the wrong branch
 prefix and PRs target the wrong `vN/dev` base.
 

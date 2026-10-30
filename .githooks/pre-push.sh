@@ -3,7 +3,8 @@
 # Valid patterns:
 #   - v<N>/dev
 #   - v<N>/main
-#   - v<N>/feature/<anything>
+#   - v<N>/topic/<anything>
+#   - v<N>/feature/<anything>  (old name for topic/, still accepted)
 #   - v<N>/release/<anything>
 #   - v<N>/hotfix/<anything>
 #   - claude/<anything>
@@ -20,7 +21,7 @@ fi
 valid_branch=false
 if [[ $current_branch =~ ^v[0-9]+/(dev|main)$ ]]; then
     valid_branch=true
-elif [[ $current_branch =~ ^v[0-9]+/(feature|release|hotfix)/.+ ]]; then
+elif [[ $current_branch =~ ^v[0-9]+/(topic|feature|release|hotfix)/.+ ]]; then
     valid_branch=true
 elif [[ $current_branch =~ ^claude/.+ ]]; then
     valid_branch=true
@@ -34,14 +35,14 @@ if [ "$valid_branch" = false ]; then
     echo "Branch names must follow one of these patterns:" >&2
     echo "  v<N>/dev" >&2
     echo "  v<N>/main" >&2
-    echo "  v<N>/feature/<anything>" >&2
+    echo "  v<N>/topic/<anything>" >&2
     echo "  v<N>/release/<anything>" >&2
     echo "  v<N>/hotfix/<anything>" >&2
     echo "  claude/<anything>" >&2
     echo "" >&2
     echo "Examples:" >&2
     echo "  v18/dev" >&2
-    echo "  v18/feature/add-caching" >&2
+    echo "  v18/topic/add-caching" >&2
     echo "  v17/release/2026.01" >&2
     echo "  v17/hotfix/2026.01.1" >&2
     echo "========================================" >&2

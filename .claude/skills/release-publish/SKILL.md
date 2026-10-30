@@ -108,6 +108,18 @@ For `nightly` and `prerelease`, give the user the versions from the run's `pack-
 - `release`: tell the user the next step is `/release-cleanup` on the same branch.
 - `prerelease` or `nightly`: nothing else. The branch stays open.
 
+## Called by another skill
+
+When another skill (such as `ops-release`) calls this one with the branch and target, run it with no
+questions:
+
+- Skip the go-ahead in Phase 3. The caller's own trigger is the go-ahead.
+- Still run every check in Phases 1 and 2, and stop on any of them.
+- When the run waits for approval, return straight away with the run link, rather than watching.
+  The caller checks back later.
+- Report back as facts (run id and link, state, versions, tags, GitHub release link), not as a
+  question.
+
 ## Rules
 
 - One run per invocation. Do not queue a second run while one for the same branch is in progress.

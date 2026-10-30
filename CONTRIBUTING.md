@@ -818,7 +818,7 @@ git push
 
 The `Umbraco.AI` pipeline (`azure-pipelines.yml`) extends Umbraco.Build's shared monorepo template. One pipeline builds, packs and, when asked, publishes:
 
-1. **On every push** to `vN/release/*`, `vN/hotfix/*`, `vN/dev`, `vN/main` and `vN/topic/*`
+1. **On every push** to `vN/release/*`, `vN/hotfix/*`, `vN/dev`, `vN/main` and `vN/topic/*` (plus the old `vN/feature/*`)
     - Builds and tests products
     - Creates NuGet and npm packages
     - Publishes them as pipeline artifacts

@@ -188,7 +188,7 @@ resources:
         - repository: build
           type: github
           name: umbraco/Umbraco.Build
-          ref: refs/heads/feature/monorepo-pack-steps
+          ref: refs/heads/main
           endpoint: umbraco
 
 variables:

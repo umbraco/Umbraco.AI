@@ -207,7 +207,7 @@ These edits are mandatory. Missing any one means CI or the demo site won't pick 
 
 - `.github/ISSUE_TEMPLATE/01_bug_report.yml` / `.github/DISCUSSION_TEMPLATE/ideas.yml` — list only Core + OpenAI + Anthropic + a few add-ons. Google/Amazon/MicrosoftFoundry/Mistral aren't there either. Needs a separate coordinated cleanup.
 - `.github/workflows/auto-labeler.yml` — same rationale.
-- `.github/actions/pack-product/action.yml` and `.azure-pipelines/templates/*.yml` — parametric, no hard-coded provider list.
+- `.github/actions/pack-product/action.yml` and the shared pack stage in umbraco/Umbraco.Build — parametric, no hard-coded provider list.
 - `release-manifest.json` — only required on `release/*` branches; the release skill picks up new products automatically.
 
 ## 6. Build + test

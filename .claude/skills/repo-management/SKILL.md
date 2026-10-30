@@ -22,7 +22,7 @@ Initial repository setup for new developers:
 - Install dependencies
 - Run initial build
 
-### 2. Release Management (`/release-management`)
+### 2. Release Prepare (`/release-prepare`)
 
 Complete release preparation orchestration:
 
@@ -33,16 +33,24 @@ Complete release preparation orchestration:
 - Generates CHANGELOG.md files
 - Creates release branch with all changes committed
 
-### 3. Post-Release Cleanup (`/post-release-cleanup`)
+### 3. Publish (`/release-publish`)
 
-Merge release/hotfix branch back after deployment:
+Publish a pushed branch through the Azure pipeline:
+
+- `release`: NuGet.org and npm, after approval in Azure (release/hotfix branches only)
+- `prerelease` / `nightly`: MyGet feeds, no approval
+- Checks nothing is already published, watches the run, confirms tags and the GitHub release
+
+### 4. Release Cleanup (`/release-cleanup`)
+
+Merge release/hotfix branch back after publishing:
 
 - Detects released products from git tags
 - Merges release branch → main → dev
 - Bumps version.json on dev (patch increment)
 - Optionally deletes the release/hotfix branch
 
-### 4. Changelog Generation (`/changelog-management`)
+### 5. Changelog Generation (`/changelog-management`)
 
 Generate changelogs from commit history:
 
@@ -50,7 +58,7 @@ Generate changelogs from commit history:
 - Generate for specific version or unreleased
 - Validates against conventional commits
 
-### 5. Build Operations
+### 6. Build Operations
 
 Common build tasks:
 
@@ -64,6 +72,7 @@ Common build tasks:
 1. **Present menu** - Use AskUserQuestion to show available operations:
     - "Setup repository"
     - "Prepare release (full orchestration)"
+    - "Publish to feeds (release or prerelease)"
     - "Post-release cleanup (merge & bump)"
     - "Generate changelog only"
     - "Build solution"
@@ -71,8 +80,8 @@ Common build tasks:
 
 2. **Delegate to appropriate skill** or execute directly:
     - Setup → Invoke `/repo-setup` skill
-    - Release → Invoke `/release-management` skill
-    - Post-release cleanup → Invoke `/post-release-cleanup` skill
+    - Release → Invoke `/release-prepare` skill
+    - Post-release cleanup → Invoke `/release-cleanup` skill
     - Changelog → Invoke `/changelog-management` skill
     - Build → Execute command directly
 
@@ -83,8 +92,9 @@ Common build tasks:
 | Operation        | When to Use                                          |
 | ---------------- | ---------------------------------------------------- |
 | Setup            | First time cloning repo, new dev onboarding          |
-| Release Manager  | Preparing a complete release (end-to-end automation) |
-| Post-Release     | After deployment: merge back, bump versions          |
+| Prepare          | Preparing a release branch (versions, changelogs)    |
+| Publish          | Pushed release branch: publish to feeds              |
+| Cleanup          | After publishing: merge back, bump versions          |
 | Changelog        | Updating individual product changelog only           |
 | Build            | After pulling changes, switching branches            |
 | Watch            | Active frontend development                          |
@@ -106,15 +116,17 @@ You present menu:
 "What would you like to do?"
 - Setup repository (new clone/dev setup)
 - Prepare release (full orchestration)
+- Publish a release or prerelease
+- Post-release cleanup
 - Generate changelog only
 - Build solution
 - Watch frontends
 
 User selects: "Post-release cleanup"
 
-You invoke: /post-release-cleanup
+You invoke: /release-cleanup
 
-The post-release-cleanup skill will:
+The release-cleanup skill will:
 - Detect released products from git tags
 - Merge release branch → main → dev
 - Bump version.json on dev
@@ -124,9 +136,9 @@ The post-release-cleanup skill will:
 
 User selects: "Prepare release"
 
-You invoke: /release-management
+You invoke: /release-prepare
 
-The release-management skill will:
+The release-prepare skill will:
 - Detect changed products
 - Analyze commits and recommend version bumps
 - Update version.json files

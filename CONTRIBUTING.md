@@ -71,7 +71,7 @@ Branch names are version-prefixed so that each major version (which tracks the U
 | --------------------------- | ------------------------------------ | ----------------------------------- |
 | `vN/dev`                    | Active development for version N     | `v18/dev`                           |
 | `vN/main`                   | Last released state for version N    | `v18/main`                          |
-| `vN/feature/<anything>`     | Feature or fix branch for version N  | `v18/feature/add-embeddings`        |
+| `vN/topic/<anything>`       | Any work branch for version N        | `v18/topic/add-embeddings`          |
 | `vN/release/<anything>`     | Release preparation for version N    | `v18/release/2026.06.1`             |
 | `vN/hotfix/<anything>`      | Hotfix branch for version N          | `v17/hotfix/2026.06.1`              |
 | `claude/<anything>`         | Claude Code automation branches      | `claude/add-streaming-abc123`       |
@@ -98,19 +98,24 @@ The GitHub default branch always points to the latest version's `dev` (currently
 
 - Example: `v17/hotfix/2026.01.1` for the first hotfix in January 2026 on v17
 
-**Feature branches:** `vN/feature/<descriptive-name>`
+**Topic branches:** `vN/topic/<descriptive-name>`
 
-- Example: `v18/feature/add-streaming-support`
-- Example: `v17/feature/backport-split-view-fix`
+Use a topic branch for any piece of work: a feature, a fix, a refactor, docs or tooling.
+
+- Example: `v18/topic/add-streaming-support`
+- Example: `v17/topic/backport-split-view-fix`
+
+`vN/feature/<name>` is the old name for this. Branches already open under it still push and build, but
+new branches should use `vN/topic/`.
 
 ### Examples
 
 **Correct:**
 
 ```bash
-v18/feature/add-streaming-support
-v18/feature/improve-context-handling
-v17/feature/backport-split-view-fix
+v18/topic/add-streaming-support
+v18/topic/improve-context-handling
+v17/topic/backport-split-view-fix
 v18/release/2026.01.1      # Calendar-based (recommended)
 v17/hotfix/2026.01.1       # Calendar-based with sequence
 ```
@@ -118,7 +123,7 @@ v17/hotfix/2026.01.1       # Calendar-based with sequence
 **Incorrect:**
 
 ```bash
-feature/add-streaming       # Missing version prefix
+topic/add-streaming         # Missing version prefix
 release/2026.01             # Missing version prefix
 dev                         # Bare dev (no longer valid)
 main                        # Bare main (no longer valid)
@@ -130,7 +135,7 @@ support/17.x                # Old maintenance convention
 Branch naming is enforced at two levels:
 
 1. **Git Hooks** (`.githooks/pre-push`): Local validation before push — blocks pushes from branches that don't match the `vN/` convention
-2. **Azure DevOps CI/CD**: Trigger patterns only run on `v*/dev`, `v*/main`, `v*/release/*`, `v*/hotfix/*`, `v*/feature/*`
+2. **Azure DevOps CI/CD**: Trigger patterns only run on `v*/dev`, `v*/main`, `v*/release/*`, `v*/hotfix/*`, `v*/topic/*` (plus the old `v*/feature/*`)
 
 ### Git Hooks for Release Manifest Protection
 
@@ -156,10 +161,10 @@ This ensures:
 ### Feature Development (Single Product)
 
 ```bash
-# 1. Create feature branch from the appropriate vN/dev
+# 1. Create a topic branch from the appropriate vN/dev
 git checkout v18/dev
 git pull origin v18/dev
-git checkout -b v18/feature/add-embeddings
+git checkout -b v18/topic/add-embeddings
 
 # 2. Make changes in the product directory
 # Edit: Umbraco.AI/src/Umbraco.AI.Core/...
@@ -179,7 +184,7 @@ git commit -m "feat(core): add embedding support
 Implements IChatClient.EmbeddAsync using M.E.AI abstractions"
 
 # 6. Push and create PR targeting vN/dev
-git push -u origin v18/feature/add-embeddings
+git push -u origin v18/topic/add-embeddings
 ```
 
 ### Feature Development (Cross-Product)
@@ -187,9 +192,9 @@ git push -u origin v18/feature/add-embeddings
 When a feature spans multiple products (e.g., Core + Agent):
 
 ```bash
-# 1. Create feature branch from the appropriate vN/dev
+# 1. Create a topic branch from the appropriate vN/dev
 git checkout v18/dev
-git checkout -b v18/feature/shared-context
+git checkout -b v18/topic/shared-context
 
 # 2. Make changes to both products
 # Edit: Umbraco.AI/src/Umbraco.AI.Core/...
@@ -210,7 +215,7 @@ git commit -m "feat(core,agent): add shared context handling
 - Agent: Implement context sharing between agents"
 
 # 6. Push and create PR targeting vN/dev
-git push -u origin v18/feature/shared-context
+git push -u origin v18/topic/shared-context
 ```
 
 ### Backport Workflow
@@ -221,13 +226,13 @@ When a fix or feature also applies to an older supported version:
 # 1. Branch from the older version's dev — NOT from v18/dev
 git checkout v17/dev
 git pull origin v17/dev
-git checkout -b v17/feature/backport-split-view-fix
+git checkout -b v17/topic/backport-split-view-fix
 
 # 2. Apply the fix (cherry-pick or re-implement)
 git cherry-pick <commit-sha>
 
 # 3. Push and create PR targeting v17/dev
-git push -u origin v17/feature/backport-split-view-fix
+git push -u origin v17/topic/backport-split-view-fix
 ```
 
 Do **not** forward-merge `v17/dev` into `v18/dev` — each version line is maintained independently.
@@ -348,7 +353,7 @@ Closes #123
 
 Before submitting a PR:
 
-- [ ] Branch name follows convention (`vN/feature/<anything>`)
+- [ ] Branch name follows convention (`vN/topic/<anything>`)
 - [ ] PR targets the correct `vN/dev` base branch
 - [ ] Code follows [coding standards](CLAUDE.md#coding-standards)
 - [ ] All tests pass
@@ -813,7 +818,7 @@ git push
 
 The `Umbraco.AI` pipeline (`azure-pipelines.yml`) extends Umbraco.Build's shared monorepo template. One pipeline builds, packs and, when asked, publishes:
 
-1. **On every push** to `vN/release/*`, `vN/hotfix/*`, `vN/dev`, `vN/main` and `vN/feature/*`
+1. **On every push** to `vN/release/*`, `vN/hotfix/*`, `vN/dev`, `vN/main` and `vN/topic/*`
     - Builds and tests products
     - Creates NuGet and npm packages
     - Publishes them as pipeline artifacts
@@ -837,7 +842,7 @@ The Azure DevOps pipeline uses smart change detection to build only affected pro
 - **`vN/dev` and `vN/main` pushes**: Compare against previous completed build on the same branch
 - **`vN/release/*` branches**: Require `release-manifest.json`; pack only the listed products
 - **`vN/hotfix/*` branches**: Honor manifest if present; otherwise use change detection
-- **`vN/feature/*` branches**: Compare against merge-base with `vN/dev` (where N is extracted from the branch name)
+- **`vN/topic/*` branches**: Compare against merge-base with `vN/dev` (where N is extracted from the branch name)
 
 ### Git Tagging Strategy
 

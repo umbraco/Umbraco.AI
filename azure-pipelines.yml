@@ -109,21 +109,21 @@ parameters:
       default: false
 
     # Queue-time override: pack every product regardless of what changed, and allow
-    # packing from a vN/feature/* branch. Feature branches normally build and test but
+    # packing from a vN/topic/* branch. Topic branches normally build and test but
     # never pack, and change detection normally narrows the pack list to what the branch
-    # touched. Tick this to get a full set of installable packages out of a feature
+    # touched. Tick this to get a full set of installable packages out of a topic
     # branch - e.g. to hand-publish a nightly of in-progress work for testing.
     #
     # Implies preview-style packing (project references), the same mode vN/dev uses,
     # unless packWithNuGetRanges is also ticked. That is required rather than merely
     # preferable: ranged packing recompiles each product against its declared dependency
-    # floor resolved from a feed, and a feature branch's computed version is a prerelease
+    # floor resolved from a feed, and a topic branch's computed version is a prerelease
     # that a [X.Y.0, X.999.999) range will not accept - so restore silently falls back to
     # the newest published stable and the product compiles against a Core that predates
     # whatever the branch is adding. Packing the whole chain from source in one run is
     # exactly the case project-reference pinning is for.
     - name: forcePackAll
-      displayName: Pack all products (allows packing a feature branch)
+      displayName: Pack all products (allows packing a topic branch)
       type: boolean
       default: false
 
@@ -144,7 +144,7 @@ parameters:
     #                <product>@<version> tags and a GitHub release (Slack's GitHub app announces
     #                it in the release channel).
     #                vN/release/* and vN/hotfix/* only.
-    # The run must pack something, so on a feature branch tick forcePackAll too.
+    # The run must pack something, so on a topic branch tick forcePackAll too.
     - name: publish
       displayName: Publish packages to
       type: string
@@ -175,7 +175,8 @@ trigger:
             - v*/dev
             - v*/release/*
             - v*/hotfix/*
-            - v*/feature/*
+            - v*/topic/*
+            - v*/feature/* # Old name for topic/, kept for branches opened before the rename
 
 pr:
     branches:

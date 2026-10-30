@@ -1,15 +1,15 @@
 ---
-name: post-release-cleanup
-description: Merges a release or hotfix branch back into vN/main and vN/dev, bumps version.json on vN/dev so nightly builds produce versions higher than the released version, checks GitHub issues and the Azure DevOps AI Team backlog for anything needing a release-confirmation comment or closing, and optionally deletes the release branch. If the release is a new major version, creates the new vN+1/dev and vN+1/main branches and updates the GitHub default branch. Use after a release has been deployed and tagged.
+name: release-cleanup
+description: Merges a release or hotfix branch back into vN/main and vN/dev, bumps version.json on vN/dev so nightly builds produce versions higher than the released version, checks GitHub issues and the Azure DevOps AI Team backlog for anything needing a release-confirmation comment or closing, and optionally deletes the release branch. If the release is a new major version, creates the new vN+1/dev and vN+1/main branches and updates the GitHub default branch. Use after /release-publish has published and tagged a release.
 ---
 
-# Post-Release Cleanup
+# Release Cleanup
 
 You are the orchestrator for post-release cleanup in the Umbraco.AI repository.
 
 ## Task
 
-After a release has been deployed and tagged by the release pipeline, merge the release/hotfix branch back into the appropriate `vN/main` and `vN/dev`, bump `version.json` on `vN/dev` so nightly builds produce versions **higher** than the released version, check whether any GitHub issues or Azure DevOps work items need a release-confirmation comment or closing, and optionally clean up the branch. If this is the first release of a new major version, also create the new version's `dev`/`main` branches and update the GitHub default branch.
+After `/release-publish` has published a release and the pipeline's Release stage has tagged it, merge the release/hotfix branch back into the appropriate `vN/main` and `vN/dev`, bump `version.json` on `vN/dev` so nightly builds produce versions **higher** than the released version, check whether any GitHub issues or Azure DevOps work items need a release-confirmation comment or closing, and optionally clean up the branch. If this is the first release of a new major version, also create the new version's `dev`/`main` branches and update the GitHub default branch.
 
 ## Why This Matters
 
@@ -62,10 +62,11 @@ Without the version bump on `vN/dev`, NBGV + `Umbraco.GitVersioning.Extensions` 
    If NO tags are found, warn the user:
    ```
    ⚠ No product version tags found on this branch.
-   This usually means the release pipeline hasn't run yet, or tags haven't been pushed.
+   Tags are only created after the pipeline's Release stage has published, so this usually
+   means the release hasn't been published yet. Run `/release-publish` first.
 
    Options:
-   - Wait for the release pipeline to complete and try again
+   - Publish with `/release-publish` (or wait for its run to finish) and try again
    - Proceed anyway (merge only, skip version bump)
    - Cancel
    ```
@@ -300,7 +301,7 @@ Increment the numeric portion of the pre-release identifier:
 
 ## Important Notes
 
-- **Always fetch tags first** — the release pipeline creates tags asynchronously after deploy
+- **Always fetch tags first** — the pipeline's Release stage creates them on GitHub, not locally
 - **Use `--no-ff` merges** — preserves the merge commit for clear history
 - **Post-merge hooks handle `release-manifest.json` cleanup** — don't manually delete it
 - **version.json only has a `"version"` field** — update only that field, preserve all other properties

@@ -16,12 +16,13 @@ Umbraco.AI/                                    # Root
 ├── Umbraco.AI/
 │   └── src/Umbraco.AI.Web.StaticAssets/Client/
 │       └── package.json                       # Can define peerDependencies for overrides
-├── Umbraco.AI.Agent/
-│   └── src/Umbraco.AI.Agent.Web.StaticAssets/Client/
-│       └── package.json                       # Can define peerDependencies for overrides
-└── scripts/build/
-    └── cleanse-package-json.js               # Script that applies ranges during packaging
+└── Umbraco.AI.Agent/
+    └── src/Umbraco.AI.Agent.Web.StaticAssets/Client/
+        └── package.json                       # Can define peerDependencies for overrides
 ```
+
+The script that applies the ranges during packaging lives in umbraco/Umbraco.Build
+(`devops/monorepo/scripts/cleanse-package-json.mjs`), shared with Umbraco.Automate.
 
 ## Root Configuration
 
@@ -80,12 +81,12 @@ npm workspaces resolve `*` to the local package, enabling fast iteration.
 
 ### During CI/CD Packaging
 
-When creating npm packages (`.azure-pipelines/templates/pack-product.yml`):
+When creating npm packages (`devops/monorepo/steps/pack-product-npm.yml` in umbraco/Umbraco.Build):
 
 1. **Load Ranges**
    - Read root `package.json` → `peerDependencyVersions` field
 
-2. **Cleanse package.json** (`scripts/build/cleanse-package-json.js`)
+2. **Cleanse package.json** (`devops/monorepo/scripts/cleanse-package-json.mjs` in umbraco/Umbraco.Build)
    - Update `version` to match NuGet version (from NBGV)
    - Convert `dependencies` → `peerDependencies` using resolution order:
      1. **If package already has `peerDependencies`:** Use those (highest priority)
@@ -170,7 +171,7 @@ If a product now requires a newer minimum version:
 
 ### Validation
 
-The `/release-management` skill should:
+The `/release-prepare` skill should:
 - Check inter-product dependencies in `Directory.Packages.props`
 - Verify corresponding ranges exist in `peerDependencyVersions`
 - Warn about mismatches
@@ -183,7 +184,8 @@ You can test the cleanse script locally:
 cd Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client
 
 # Run cleanse (simulates CI/CD behavior)
-node ../../../../scripts/build/cleanse-package-json.js "1.2.0" "Umbraco.AI" "../../../../"
+# <umbraco-build> is your local clone of umbraco/Umbraco.Build
+node <umbraco-build>/devops/monorepo/scripts/cleanse-package-json.mjs "1.2.0" "Umbraco.AI" "../../../../"
 
 # Check output
 cat package.json
@@ -213,4 +215,4 @@ cat package.json
 
 - [CLAUDE.md - Cross-Product Dependency Management](../../CLAUDE.md#cross-product-dependency-management)
 - [Directory.Packages.props](../../Directory.Packages.props)
-- [Azure Pipeline: pack-product.yml](../../.azure-pipelines/templates/pack-product.yml)
+- [umbraco/Umbraco.Build: monorepo pack steps](https://github.com/umbraco/Umbraco.Build/tree/main/devops/monorepo/steps)

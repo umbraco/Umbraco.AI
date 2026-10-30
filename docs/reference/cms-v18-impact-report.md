@@ -459,7 +459,7 @@ The docs repo is independent of this monorepo. After the code migration ships, r
 
 ## 7. Release Manifest
 
-`/release-management` will need to create a `release/2026.05.N` (or `release/2026.06.N`) branch with `release-manifest.json` listing **every product**. Recommend the object form with empty `exclude`:
+`/release-prepare` will need to create a `release/2026.05.N` (or `release/2026.06.N`) branch with `release-manifest.json` listing **every product**. Recommend the object form with empty `exclude`:
 
 ```json
 { "include": ["Umbraco.AI", "Umbraco.AI.Agent", "...", "Umbraco.AI.TogetherAI"], "exclude": [] }
@@ -497,7 +497,7 @@ This is a non-trivial migration and should be staged so we can validate each pha
    - Bump root `peerDependencyVersions["@umbraco-cms/backoffice"]` to `^18.0.0-rc2` (latest on MyGet at the time) and propagate to every workspace `package.json`.
 
 6. **Phase F — Release manifest + changelog**
-   - Run `/release-management` to detect changed products, generate the manifest, and write changelogs.
+   - Run `/release-prepare` to detect changed products, generate the manifest, and write changelogs.
    - Commit on a `release/2026.MM.N` branch.
 
 7. **Phase G — Pin cleanup (post-public-npm)**

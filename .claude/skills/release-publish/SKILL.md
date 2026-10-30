@@ -43,7 +43,7 @@ The GitHub release is named from the date it is published (next free `YYYY.MM.N`
    git rev-parse HEAD origin/<branch>   # must match
    ```
    If they differ, stop and tell the user. Do not push for them without asking.
-5. **Feature branches** only pack with `forcePackAll=true`. Add it for `nightly`/`prerelease` from `vN/feature/*`, and say so.
+5. **Topic branches** only pack with `forcePackAll=true`. Add it for `nightly`/`prerelease` from `vN/topic/*` (or the older `vN/feature/*`), and say so.
 
 ### Phase 2: Check nothing is already published (`release` only)
 

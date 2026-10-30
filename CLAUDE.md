@@ -207,7 +207,7 @@ All branches are version-prefixed. The `claude/` prefix is exempt (auto-created 
 |----------------|------|
 | `vN/dev` | Active development for version N |
 | `vN/main` | Last released state for version N |
-| `vN/feature/<name>` | Feature or fix branch targeting version N |
+| `vN/topic/<name>` | Any work branch (feature, fix, refactor, docs, tooling) targeting version N. `vN/feature/<name>` is the old name, still accepted for branches opened before the rename |
 | `vN/release/<date>` | Release preparation branch for version N |
 | `vN/hotfix/<name>` | Hotfix branch for version N |
 
@@ -248,7 +248,7 @@ Run `/umbraco-devkit:change-backport` to do a port. It follows the rules below.
 
 When a fix or feature applies to an older supported version:
 
-1. Branch from `vN/dev` for the target version line (not from the line you originally fixed), naming it `vN/feature/<name>` or `vN/hotfix/<name>`
+1. Branch from `vN/dev` for the target version line (not from the line you originally fixed), naming it `vN/topic/<name>` or `vN/hotfix/<name>`
 2. Apply and commit the change on that branch
 3. Open a PR back into `vN/dev` (or the relevant `vN/release/*` branch if it's a hotfix against an in-progress release) — always as a PR, never merged automatically, even when this step is done by an agent
 4. Release via the normal release flow on that branch

@@ -65,8 +65,9 @@ internal static class AgentSelectionTestBuilders
         string? allowedSection = null,
         string? description = null)
     {
-        var agent = new UmbracoAIAgent
+        return new UmbracoAIAgent
         {
+            Id = id,
             Alias = alias,
             Name = $"{alias} name",
             Description = description,
@@ -77,8 +78,6 @@ internal static class AgentSelectionTestBuilders
                 ? null
                 : new AIAgentScope { AllowRules = [new AIAgentScopeRule { Sections = [allowedSection] }] },
         };
-        agent.Id = id; // internal setter, visible to this test assembly
-        return agent;
     }
 
     public static AgentAvailabilityContext CreateAvailabilityContext(string section = "content", string? entityType = null)

@@ -9,6 +9,8 @@ namespace Umbraco.AI.Core.Guardrails;
 /// </summary>
 public sealed class AIGuardrailRule
 {
+    private Guid _id;
+
     /// <summary>
     /// Creates a guardrail rule with no ID. An ID is generated when it is first saved.
     /// </summary>
@@ -32,7 +34,15 @@ public sealed class AIGuardrailRule
     /// <summary>
     /// The unique identifier of the rule.
     /// </summary>
-    public Guid Id { get; internal set; }
+    /// <remarks>
+    /// Leave empty to have an ID generated when the guardrail is saved. Set it when creating a
+    /// rule that must keep an ID from elsewhere, such as one synced from another environment.
+    /// </remarks>
+    public Guid Id
+    {
+        get => _id;
+        init => _id = value;
+    }
 
     /// <summary>
     /// The identifier of the registered evaluator to use (e.g., "pii", "toxicity", "llm-judge").
@@ -78,4 +88,9 @@ public sealed class AIGuardrailRule
     /// Controls evaluation order within the guardrail.
     /// </summary>
     public int SortOrder { get; set; }
+
+    /// <summary>
+    /// Assigns the ID of a new rule. Used by the service when saving a rule with no ID.
+    /// </summary>
+    internal void SetId(Guid id) => _id = id;
 }

@@ -402,6 +402,8 @@ public sealed class AIInlineAgentBuilder
         // SetContexts) are emitted as runtime-context override keys by BuildAgentProperties.
         var agent = new AIAgent
         {
+            // Deterministic ID from alias
+            Id = DeterministicGuid.Create(InlineAgentNamespace, _alias),
             Alias = _alias,
             Name = _name ?? _alias,
             Description = _description,
@@ -411,9 +413,6 @@ public sealed class AIInlineAgentBuilder
             IsActive = true,
             SurfaceIds = [],
         };
-
-        // Set deterministic ID from alias (internal setter accessible within assembly)
-        agent.Id = DeterministicGuid.Create(InlineAgentNamespace, _alias);
 
         if (isOrchestrated)
         {

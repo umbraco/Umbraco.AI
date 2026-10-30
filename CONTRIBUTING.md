@@ -65,68 +65,75 @@ Umbraco.AI/                    # Monorepo root
 
 ### Valid Branch Patterns
 
-| Pattern              | Description                | Example                      |
-| -------------------- | -------------------------- | ---------------------------- |
-| `main`               | Main development branch    | `main`                       |
-| `dev`                | Integration branch         | `dev`                        |
-| `support/<anything>` | Long-term support branches | `support/1.x`, `support/2.x` |
-| `feature/<anything>` | New feature development    | `feature/add-embeddings`     |
-| `release/<anything>` | Release preparation        | `release/2026.01`            |
-| `hotfix/<anything>`  | Emergency fixes            | `hotfix/2026.01.1`           |
+| Pattern                     | Description                          | Example                             |
+| --------------------------- | ------------------------------------ | ----------------------------------- |
+| `vN/dev`                    | Active development for version N     | `v18/dev`                           |
+| `vN/main`                   | Last released state for version N    | `v18/main`                          |
+| `vN/topic/<anything>`       | Any work branch for version N        | `v18/topic/add-embeddings`          |
+| `vN/release/<anything>`     | Release preparation for version N    | `v18/release/2026.06.1`             |
+| `vN/hotfix/<anything>`      | Hotfix branch for version N          | `v17/hotfix/2026.06.1`              |
+| `claude/<anything>`         | Claude Code automation branches      | `claude/add-streaming-abc123`       |
+
+### Currently Active Version Lines
+
+| CMS Version | AI Branches               | Policy                |
+| ----------- | ------------------------- | --------------------- |
+| v18 (STS)   | `v18/dev` / `v18/main`   | Features + bug fixes  |
+| v17 (LTS)   | `v17/dev` / `v17/main`   | Features + bug fixes  |
+
+The GitHub default branch always points to the latest version's `dev` (currently `v18/dev`).
 
 ### Recommended Naming Conventions
 
-While the pattern allows `<anything>` after the prefix, we recommend these conventions for consistency:
+**Release branches:** `vN/release/YYYY.MM.N`
 
-**Release branches:** `release/YYYY.MM`
-
+- `N` is the CMS major version
 - `YYYY.MM` = Year and month of the release
-- Example: `release/2026.01` for a January 2026 release
-- Example: `release/2026.12` for a December 2026 release
+- Trailing `.N` = Incrementing release number within that month
+- Example: `v18/release/2026.01.1` for the first January 2026 release on v18
 
-**Hotfix branches:** `hotfix/YYYY.MM.N`
+**Hotfix branches:** `vN/hotfix/YYYY.MM.N`
 
-- `YYYY.MM` = Year and month
-- `.N` = Sequential number (1st, 2nd, 3rd hotfix in that period)
-- Example: `hotfix/2026.01.1` for the first hotfix in January 2026
-- Example: `hotfix/2026.01.2` for the second hotfix in January 2026
+- Example: `v17/hotfix/2026.01.1` for the first hotfix in January 2026 on v17
 
-**Benefits of this convention:**
+**Topic branches:** `vN/topic/<descriptive-name>`
 
-- Calendar-based organization makes it easy to find branches chronologically
-- Clear distinction between regular releases (monthly cadence) and hotfixes (emergency patches)
-- Sequential hotfix numbering prevents branch name conflicts
-- Independent from product version numbers (which follow semantic versioning)
+Use a topic branch for any piece of work: a feature, a fix, a refactor, docs or tooling.
 
-**Note:** This is a recommendation, not a requirement. The validation only enforces the prefix pattern (`release/` or `hotfix/`).
+- Example: `v18/topic/add-streaming-support`
+- Example: `v17/topic/backport-split-view-fix`
+
+`vN/feature/<name>` is the old name for this. Branches already open under it still push and build, but
+new branches should use `vN/topic/`.
 
 ### Examples
 
 **Correct:**
 
 ```bash
-feature/add-streaming-support
-feature/improve-context-handling
-feature/add-versioning
-release/2026.01              # Recommended: calendar-based
-release/v1.1.0               # Valid: version-based
-hotfix/2026.01.1             # Recommended: calendar-based with sequence
-hotfix/critical-security-fix # Valid: descriptive name
+v18/topic/add-streaming-support
+v18/topic/improve-context-handling
+v17/topic/backport-split-view-fix
+v18/release/2026.01.1      # Calendar-based (recommended)
+v17/hotfix/2026.01.1       # Calendar-based with sequence
 ```
 
 **Incorrect:**
 
 ```bash
-feature-add-streaming        # Wrong delimiter
-release-2026.01              # Wrong delimiter
+topic/add-streaming         # Missing version prefix
+release/2026.01             # Missing version prefix
+dev                         # Bare dev (no longer valid)
+main                        # Bare main (no longer valid)
+support/17.x                # Old maintenance convention
 ```
 
 ### Enforcement
 
 Branch naming is enforced at two levels:
 
-1. **Git Hooks** (`.githooks/pre-push`): Local validation before push
-2. **Azure DevOps CI/CD**: Validation in pipeline (cannot be bypassed)
+1. **Git Hooks** (`.githooks/pre-push`): Local validation before push — blocks pushes from branches that don't match the `vN/` convention
+2. **Azure DevOps CI/CD**: Trigger patterns only run on `v*/dev`, `v*/main`, `v*/release/*`, `v*/hotfix/*`, `v*/topic/*` (plus the old `v*/feature/*`)
 
 ### Git Hooks for Release Manifest Protection
 
@@ -158,10 +165,10 @@ git push --no-verify
 ### Feature Development (Single Product)
 
 ```bash
-# 1. Create feature branch from main
-git checkout main
-git pull origin main
-git checkout -b feature/add-embeddings
+# 1. Create a topic branch from the appropriate vN/dev
+git checkout v17/dev
+git pull origin v17/dev
+git checkout -b v17/topic/add-embeddings
 
 # 2. Make changes in the product directory
 # Edit: Umbraco.AI/src/Umbraco.AI.Core/...
@@ -181,7 +188,7 @@ git commit -m "feat(core): add embedding support
 Implements IChatClient.EmbeddAsync using M.E.AI abstractions"
 
 # 6. Push and create PR
-git push -u origin feature/add-embeddings
+git push -u origin v17/topic/add-embeddings
 ```
 
 ### Feature Development (Cross-Product)
@@ -189,8 +196,9 @@ git push -u origin feature/add-embeddings
 When a feature spans multiple products (e.g., Core + Agent):
 
 ```bash
-# 1. Create feature branch
-git checkout -b feature/shared-context
+# 1. Create a topic branch from the appropriate vN/dev
+git checkout v17/dev
+git checkout -b v17/topic/shared-context
 
 # 2. Make changes to both products
 # Edit: Umbraco.AI/src/Umbraco.AI.Core/...
@@ -211,7 +219,7 @@ git commit -m "feat(core,agent): add shared context handling
 - Agent: Implement context sharing between agents"
 
 # 6. Push and create PR
-git push -u origin feature/shared-context
+git push -u origin v17/topic/shared-context
 ```
 
 **Note:** Use a descriptive branch name that reflects the scope of the work.
@@ -336,7 +344,7 @@ Closes #123
 
 Before submitting a PR:
 
-- [ ] Branch name follows convention (`feature/<anything>`)
+- [ ] Branch name follows convention (`vN/topic/<anything>`)
 - [ ] Code follows [coding standards](CLAUDE.md#coding-standards)
 - [ ] All tests pass
 - [ ] Frontend builds (if frontend changes)

@@ -6,6 +6,7 @@ import type {
     SpeechToTextProfileSettingsModel,
     ImageGenerationProfileSettingsModel,
     DecisionProfileSettingsModel,
+    ExtractionProfileSettingsModel,
 } from "../api/types.gen.js";
 import { UAI_PROFILE_ENTITY_TYPE } from "./constants.js";
 import type {
@@ -17,6 +18,7 @@ import type {
     UaiSpeechToTextProfileSettings,
     UaiImageGenerationProfileSettings,
     UaiDecisionProfileSettings,
+    UaiExtractionProfileSettings,
 } from "./types.js";
 import {
     isChatSettings,
@@ -24,6 +26,7 @@ import {
     isSpeechToTextSettings,
     isImageGenerationSettings,
     isDecisionSettings,
+    isExtractionProfileSettings,
 } from "./types.js";
 
 export const UaiProfileTypeMapper = {
@@ -133,6 +136,12 @@ export const UaiProfileTypeMapper = {
             } as UaiDecisionProfileSettings;
         }
 
+        if (settings.$type === "extraction") {
+            return {
+                $type: "extraction",
+            } as UaiExtractionProfileSettings;
+        }
+
         return null;
     },
 
@@ -147,6 +156,7 @@ export const UaiProfileTypeMapper = {
         | SpeechToTextProfileSettingsModel
         | ImageGenerationProfileSettingsModel
         | DecisionProfileSettingsModel
+        | ExtractionProfileSettingsModel
         | null {
         if (!settings) return null;
 
@@ -187,6 +197,12 @@ export const UaiProfileTypeMapper = {
             return {
                 $type: "decision",
             } as DecisionProfileSettingsModel;
+        }
+
+        if (isExtractionProfileSettings(settings)) {
+            return {
+                $type: "extraction",
+            } as ExtractionProfileSettingsModel;
         }
 
         return null;

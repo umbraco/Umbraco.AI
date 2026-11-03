@@ -19,6 +19,7 @@ const stored: UaiSettingsModel = {
     defaultSpeechToTextProfileId: null,
     defaultImageGenerationProfileId: "22222222-2222-2222-2222-222222222222",
     defaultDecisionProfileId: "33333333-3333-3333-3333-333333333333",
+    defaultExtractionProfileId: null,
     classifierChatProfileId: null,
     disclosureNoticeMode: "Always",
 };

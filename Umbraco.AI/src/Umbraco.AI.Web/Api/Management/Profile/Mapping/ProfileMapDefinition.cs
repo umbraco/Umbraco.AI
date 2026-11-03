@@ -126,6 +126,7 @@ public class ProfileMapDefinition : IMapDefinition
                 MediaType = imageGeneration.MediaType
             },
             AIDecisionProfileSettings => new DecisionProfileSettingsModel(),
+            AIExtractionProfileSettings => new ExtractionProfileSettingsModel(),
             _ => null
         };
     }
@@ -160,6 +161,7 @@ public class ProfileMapDefinition : IMapDefinition
             },
             AICapability.ImageGeneration => new AIImageGenerationProfileSettings(),
             AICapability.Decision => new AIDecisionProfileSettings(),
+            AICapability.Extraction => new AIExtractionProfileSettings(),
             _ => null
         };
     }

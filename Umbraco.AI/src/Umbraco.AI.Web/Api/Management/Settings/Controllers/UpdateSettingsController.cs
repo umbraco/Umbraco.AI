@@ -83,6 +83,7 @@ public class UpdateSettingsController : SettingsControllerBase
             (nameof(AISettings.DefaultSpeechToTextProfileId), settings.DefaultSpeechToTextProfileId, AICapability.SpeechToText),
             (nameof(AISettings.DefaultImageGenerationProfileId), settings.DefaultImageGenerationProfileId, AICapability.ImageGeneration),
             (nameof(AISettings.DefaultDecisionProfileId), settings.DefaultDecisionProfileId, AICapability.Decision),
+            (nameof(AISettings.DefaultExtractionProfileId), settings.DefaultExtractionProfileId, AICapability.Extraction),
             (nameof(AISettings.ClassifierChatProfileId), settings.ClassifierChatProfileId, AICapability.Chat),
         ];
 

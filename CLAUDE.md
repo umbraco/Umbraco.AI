@@ -28,6 +28,7 @@ Monorepo for Umbraco.AI and add-on packages. Each product has its own `.slnx`, `
 | Umbraco.AI.FireworksAI | `Umbraco.AI.FireworksAI/` | Provider |
 | Umbraco.AI.TogetherAI | `Umbraco.AI.TogetherAI/` | Provider |
 | Umbraco.AI.TypeSafe | `Umbraco.AI.TypeSafe/` | Provider |
+| Umbraco.AI.Cloudflare | `Umbraco.AI.Cloudflare/` | Provider |
 | Umbraco.AI.Alibaba | `Umbraco.AI.Alibaba/` | Provider |
 | Umbraco.AI.Moonshot | `Umbraco.AI.Moonshot/` | Provider |
 | Umbraco.AI.OpenRouter | `Umbraco.AI.OpenRouter/` | Provider |
@@ -39,7 +40,7 @@ Monorepo for Umbraco.AI and add-on packages. Each product has its own `.slnx`, `
 Umbraco.AI (Core)
 ├── Providers: OpenAI, Anthropic, Amazon, Google, MicrosoftFoundry,
 │              Mistral, DeepSeek, HuggingFace, FireworksAI, TogetherAI,
-│              TypeSafe, Alibaba, Moonshot, OpenRouter, ZAI
+│              TypeSafe, Cloudflare, Alibaba, Moonshot, OpenRouter, ZAI
 ├── Umbraco.AI.Prompt → Prompt.Deploy (depends on Prompt + Deploy)
 ├── Umbraco.AI.Agent → Agent.UI → Agent.Copilot
 │                     → Agent.Copilot.Workspace (depends on Agent + Umbraco.AI)

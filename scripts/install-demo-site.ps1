@@ -292,6 +292,9 @@ Add-ProductProjects -ProductFolder "Umbraco.AI.TogetherAI" -SolutionFolder "Prov
 Write-Host "Adding Umbraco.AI.TypeSafe projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.TypeSafe" -SolutionFolder "Providers/TypeSafe"
 
+Write-Host "Adding Umbraco.AI.Cloudflare projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Cloudflare" -SolutionFolder "Providers/Cloudflare"
+
 Write-Host "Adding Umbraco.AI.ZAI projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.ZAI" -SolutionFolder "Providers/ZAI"
 
@@ -412,6 +415,11 @@ if (Test-Path "Umbraco.AI.ZAI/src/Umbraco.AI.ZAI/Umbraco.AI.ZAI.csproj") {
 # TypeSafe provider
 if (Test-Path "Umbraco.AI.TypeSafe/src/Umbraco.AI.TypeSafe/Umbraco.AI.TypeSafe.csproj") {
     dotnet add $demoProject reference "Umbraco.AI.TypeSafe/src/Umbraco.AI.TypeSafe/Umbraco.AI.TypeSafe.csproj"
+}
+
+# Cloudflare provider
+if (Test-Path "Umbraco.AI.Cloudflare/src/Umbraco.AI.Cloudflare/Umbraco.AI.Cloudflare.csproj") {
+    dotnet add $demoProject reference "Umbraco.AI.Cloudflare/src/Umbraco.AI.Cloudflare/Umbraco.AI.Cloudflare.csproj"
 }
 
 # Prompt add-on (Startup + Web.StaticAssets)

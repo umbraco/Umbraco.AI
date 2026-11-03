@@ -42,6 +42,12 @@ public static class UmbracoAIAutomateConstants
         /// decision profile, in a single call.
         /// </summary>
         public const string AskDecisions = "umbracoAI.askDecisions";
+
+        /// <summary>
+        /// Action alias for extracting typed values (text, numbers, dates, lists) from text against
+        /// an AI extraction profile, in a single call.
+        /// </summary>
+        public const string ExtractValues = "umbracoAI.extractValues";
     }
 
     /// <summary>

@@ -268,6 +268,9 @@ dotnet add package Umbraco.AI.ZAI --version "$VERSION_FLOAT"
 echo "  Installing Umbraco.AI.TypeSafe..."
 dotnet add package Umbraco.AI.TypeSafe $PRERELEASE_FLAG
 
+echo "  Installing Umbraco.AI.Cloudflare..."
+dotnet add package Umbraco.AI.Cloudflare $PRERELEASE_FLAG
+
 # Add-on packages (includes Startup + Web.StaticAssets)
 echo "  Installing Umbraco.AI.Prompt..."
 dotnet add package Umbraco.AI.Prompt --version "$VERSION_FLOAT"

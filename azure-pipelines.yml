@@ -63,6 +63,9 @@ parameters:
                 - name: Umbraco.AI.TypeSafe
                   change_var: TypesafeChanged
                   has_npm: false
+                - name: Umbraco.AI.Cloudflare
+                  change_var: CloudflareChanged
+                  has_npm: false
                 - name: Umbraco.AI.Search
                   change_var: SearchChanged
                   has_npm: false

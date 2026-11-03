@@ -1,15 +1,15 @@
 import { css, customElement, html, nothing, repeat, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
-import { umbOpenModal } from "@umbraco-cms/backoffice/modal";
+import { UmbModalRouteRegistrationController } from "@umbraco-cms/backoffice/router";
 import type { UaiContextPickerElement } from "@umbraco-ai/core";
 import {
     UAI_CONVERSATION_WORKSPACE_CONTEXT,
     type UaiConversationWorkspaceContext,
 } from "./conversation-workspace.context.js";
 import { UaiConversationRepository } from "../repository/conversation.repository.js";
-import { UAI_SHARE_PICKER_MODAL } from "../modal/share-picker-modal.token.js";
-import { uaiShareHasAttachments } from "../modal/share-picker-modal.helpers.js";
+import { UAI_SHARE_PICKER_MODAL, type UaiSharePickerModalValue } from "../modal/share-picker-modal.token.js";
+import { UAI_DEFAULT_SHARE_SCOPE_MODE, uaiShareHasAttachments } from "../modal/share-picker-modal.helpers.js";
 import { uaiRemoveShare, uaiSharesConversationId, uaiSortShares } from "./conversation-context-panel.helpers.js";
 import type { ContextResourceModel, ConversationShareResponseModel, UaiConversationDetailModel } from "../types.js";
 import type { ProjectResponseModel } from "../../project/types.js";
@@ -55,9 +55,34 @@ export class UaiCopilotWorkspaceConversationContextPanelElement extends UmbLitEl
     @state() private _project?: ProjectResponseModel;
     @state() private _conversation?: UaiConversationDetailModel;
     @state() private _shares: ConversationShareResponseModel[] = [];
+    @state() private _sharePickerPath?: string;
+
+    /** The conversation the open share picker was set up for, so a submit always shares that one. */
+    #sharePickerConversationId?: string;
 
     constructor() {
         super();
+        // Routed rather than opened with umbOpenModal: the user picker inside it needs a router to stay
+        // open (since CMS 17.2 it closes itself straight away without one, Umbraco-CMS#23220), and a
+        // routed modal is what gives it one.
+        new UmbModalRouteRegistrationController(this, UAI_SHARE_PICKER_MODAL)
+            .addAdditionalPath("share")
+            .onSetup(() => {
+                const conversation = this._conversation;
+                if (!conversation?.id || conversation.readonly) return false;
+                this.#sharePickerConversationId = conversation.id;
+                return {
+                    data: {
+                        title: conversation.title?.trim() || this.localize.term("uaiCopilotWorkspace_untitledConversation"),
+                        hasAttachments: uaiShareHasAttachments(conversation.contextIds, conversation.resources),
+                    },
+                    // Nobody picked yet; the modal only submits once a person is chosen.
+                    value: { recipientUserKey: "", scopeMode: UAI_DEFAULT_SHARE_SCOPE_MODE },
+                };
+            })
+            .onSubmit((value) => this.#onShareSubmitted(value))
+            .observeRouteBuilder((routeBuilder) => (this._sharePickerPath = routeBuilder({})));
+
         this.consumeContext(UAI_CONVERSATION_WORKSPACE_CONTEXT, (store) => {
             this.#store = store;
             this.observe(store?.conversation$, (c) => {
@@ -95,20 +120,13 @@ export class UaiCopilotWorkspaceConversationContextPanelElement extends UmbLitEl
         this._shares = uaiSortShares(data ?? []);
     }
 
-    async #onChooseRecipient() {
-        const conversation = this._conversation;
-        if (!conversation?.id) return;
+    async #onShareSubmitted(result: UaiSharePickerModalValue | undefined) {
+        const conversationId = this.#sharePickerConversationId;
+        this.#sharePickerConversationId = undefined;
+        if (!conversationId || !result?.recipientUserKey) return;
 
-        const result = await umbOpenModal(this, UAI_SHARE_PICKER_MODAL, {
-            data: {
-                title: conversation.title?.trim() || this.localize.term("uaiCopilotWorkspace_untitledConversation"),
-                hasAttachments: uaiShareHasAttachments(conversation.contextIds, conversation.resources),
-            },
-        }).catch(() => undefined);
-        if (!result) return;
-
-        await this.#shareRepository.share(conversation.id, result.recipientUserKey, result.scopeMode);
-        await this.#fetchShares(conversation.id);
+        await this.#shareRepository.share(conversationId, result.recipientUserKey, result.scopeMode);
+        await this.#fetchShares(conversationId);
     }
 
     async #onRevokeShare(userKey: string) {
@@ -257,7 +275,7 @@ export class UaiCopilotWorkspaceConversationContextPanelElement extends UmbLitEl
 
     #renderChooseButton() {
         return html`
-            <uui-button look="placeholder" @click=${this.#onChooseRecipient}>
+            <uui-button look="placeholder" href=${this._sharePickerPath ?? nothing}>
                 ${this.localize.term("uaiCopilotWorkspace_contextShareChoose")}
             </uui-button>
         `;
@@ -365,8 +383,10 @@ export class UaiCopilotWorkspaceConversationContextPanelElement extends UmbLitEl
                 gap: 0;
                 margin-bottom: var(--uui-size-space-3);
             }
+            /* flex, not block: as a link (href) the button's inner <a> is content-box, so block + 100%
+               width spills its padding past the panel edge and adds a horizontal scrollbar. */
             .block-body > uui-button[look="placeholder"] {
-                display: block;
+                display: flex;
                 width: 100%;
             }
             /* Divider between the inherited (project) layer and the conversation's own layer. Only drawn

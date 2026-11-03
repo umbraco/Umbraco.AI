@@ -281,9 +281,9 @@ After confirming versions, update `Directory.Packages.props` so the dependency r
 
 **Workflow:**
 
-1. **Read current Directory.Packages.props** (the inter-product ItemGroup).
+1. **Read current Directory.Packages.props** (the inter-product ItemGroup), **and every product-level override** (see below).
 
-2. **Compute proposed updates** by applying the rule above to every entry in `bumpSet`.
+2. **Compute proposed updates** by applying the rule above to every entry in `bumpSet`, in the root file and in each product-level override.
 
 3. **Present proposed changes** to user:
    ```
@@ -305,7 +305,20 @@ After confirming versions, update `Directory.Packages.props` so the dependency r
 6. **Confirm updates**:
    ```
    ✓ Updated N inter-product dependency ranges in Directory.Packages.props
+   ✓ Updated M product-level overrides (Umbraco.AI.Deploy, Umbraco.AI.Search, ...)
    ```
+
+**Product-level overrides (do not skip):**
+
+Some products raise a floor in their own `<Product>/Directory.Packages.props` with `PackageVersion Update="..."`, usually to require an API from a specific upstream release. That entry **replaces** the root range for that product. Updating only the root file leaves the product on its old floor, and NuGet resolves the lowest version a range allows. So a ranged pack then compiles against the *previous* upstream. That is how release 2026.11.1 failed: `Umbraco.AI.Deploy` still had `Umbraco.AI.Startup` at `[18.6.1, …)`, so its pack built against Core 18.6.1, which has no Extraction API, and failed with `CS1061`.
+
+Find them with `Update=`, not `Include=`. Product-level files only use `Update`, so a search for `Include="Umbraco.AI` finds nothing:
+
+```bash
+grep -Ho 'Update="Umbraco\.AI[^"]*" Version="[^"]*"' Umbraco.AI*/Directory.Packages.props
+```
+
+For each match whose package belongs to a product in `bumpSet`, apply the same rule as the root file. Never leave an override floor below the root floor for the same package. Raising it is always safe: the override exists to set a minimum, and the release's own version is above it. If the override has a comment naming the API it needs, update the comment to say why the new floor is required, or keep the old reason if it still applies.
 
 **Important Notes:**
 - The rule deliberately does *not* exempt products without breaking changes. Phase 2.5's cascade ensures consumers are bumped alongside, so raising the lower bound is the safe default.
@@ -536,6 +549,15 @@ for upstream in bumpSet:
                       f"which is going to a new major. Either include "
                       f"{downstream} with a compatible bump or hold {upstream} "
                       f"at the current major for this release.")
+
+# 4. No product-level override sits below the root floor for the same package.
+#    An override replaces the root range for that product, so a stale one keeps the
+#    product building against the previous upstream (see Phase 4).
+for (product, pkg, override_range) in product_level_overrides():   # Update="..." entries
+    root_range = parsed_range(Directory.Packages.props[pkg])
+    if override_range.min < root_range.min:
+        error(f"{product}/Directory.Packages.props pins {pkg} at {override_range}, "
+              f"below the root floor {root_range}. Raise it to the root floor.")
 ```
 
 Present results:
@@ -543,6 +565,7 @@ Present results:
 ```
 ✅ All bumped products satisfy their declared ranges
 ✅ Cascade closed: every consumer of a minor/major/downplayed upstream is in the release
+✅ No product-level override is below the root floor
 🔴 Umbraco.AI.OpenAI (not in release) depends on Umbraco.AI which is going to 2.0.0
    → must be addressed before continuing
 ```
@@ -741,6 +764,7 @@ Verify all files are consistent:
     ```bash
     git add release-manifest.json
     git add Directory.Packages.props
+    git add */Directory.Packages.props
     git add package.json
     git add */version.json
     git add */CHANGELOG.md
@@ -808,6 +832,7 @@ The dependency graph used for cascade (Phase 2.5) and validation (Phase 7) is bu
 
 1. The "Inter-product dependencies" ItemGroup in root `Directory.Packages.props`
 2. Each `<Product>/src/**/*.csproj` file's `<PackageReference>` entries
+3. Each `<Product>/Directory.Packages.props` override (`PackageVersion Update="..."`), which replaces the root range for that product. Phase 4 updates these, and Phase 7 checks none sits below the root floor
 
 The `packageToProduct` map is built filesystem-first (each product folder owns the csprojs inside it) with a longest-prefix fallback for any inter-product package not represented by a csproj in the current checkout. This handles edge cases like `Umbraco.AI.AGUI` whose package name doesn't carry the owning product's full prefix.
 

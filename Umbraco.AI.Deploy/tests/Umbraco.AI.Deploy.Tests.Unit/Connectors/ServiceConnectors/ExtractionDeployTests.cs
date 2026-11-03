@@ -38,7 +38,8 @@ public class ExtractionDeployTests
         _settingsConnector = new UmbracoAISettingsServiceConnector(
             _settingsServiceMock.Object, _profileServiceMock.Object, _settingsAccessorMock.Object);
         _profileConnector = new UmbracoAIProfileServiceConnector(
-            _profileServiceMock.Object, _connectionServiceMock.Object, _settingsAccessorMock.Object);
+            _profileServiceMock.Object, _connectionServiceMock.Object, _settingsAccessorMock.Object,
+            new Umbraco.AI.Core.Providers.AIProviderCollection(() => []));
     }
 
     private async Task<AIProfile?> ImportExtractionProfileAsync()

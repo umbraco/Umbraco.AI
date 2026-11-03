@@ -14,6 +14,8 @@ import type {
  * Single-recipient share form: a one-item user-picker field (built on `UmbUserPickerInputContext`,
  * the same picker context a user-picker property editor uses — `max = 1` makes it open
  * `UMB_USER_PICKER_MODAL` with `multiple: false`, per ARCHITECTURE.md decision 7), a Snapshot/Live
+ * The picker opens through the context's `modalRoute` link, not `openPicker()`: since CMS 17.2 the
+ * user picker modal closes itself straight away when opened without a route (Umbraco-CMS#23220).
  * `uui-select`, and a disclosure banner shown only when the conversation has attachments. Resolves
  * `{ recipientUserKey, scopeMode }` on submit — it does not call `UaiConversationRepository.share()`
  * itself; its caller (the "Shared with" section's "Choose" button, SC-14) does that after the modal
@@ -29,14 +31,14 @@ export class UaiSharePickerModalElement extends UmbModalBaseElement<UaiSharePick
     @state()
     private _scopeMode: UaiConversationShareScopeMode = UAI_DEFAULT_SHARE_SCOPE_MODE;
 
+    @state()
+    private _pickerRoute?: string;
+
     constructor() {
         super();
         this.#picker.max = 1;
         this.observe(this.#picker.selectedItems, (items) => (this._recipient = items[0]), "_observeRecipient");
-    }
-
-    #openPicker() {
-        this.#picker.openPicker();
+        this.observe(this.#picker.modalRoute, (route) => (this._pickerRoute = route), "_observePickerRoute");
     }
 
     #onModeChange(event: UmbChangeEvent) {
@@ -67,7 +69,7 @@ export class UaiSharePickerModalElement extends UmbModalBaseElement<UaiSharePick
                                       <uui-ref-node-user
                                           name=${this._recipient.name}
                                           detail=${this.localize.term("uaiCopilotWorkspace_sharePickDifferentPerson")}
-                                          @open=${this.#openPicker}
+                                          href=${this._pickerRoute ?? nothing}
                                       ></uui-ref-node-user>
                                   `
                                 : html`
@@ -75,7 +77,7 @@ export class UaiSharePickerModalElement extends UmbModalBaseElement<UaiSharePick
                                           id="choose-person"
                                           look="placeholder"
                                           label=${this.localize.term("uaiCopilotWorkspace_sharePersonChoose")}
-                                          @click=${this.#openPicker}
+                                          href=${this._pickerRoute ?? nothing}
                                       ></uui-button>
                                   `}
                         </div>
@@ -138,8 +140,9 @@ export class UaiSharePickerModalElement extends UmbModalBaseElement<UaiSharePick
     static override styles = [
         UmbTextStyles,
         css`
+            /* flex, not block: as a link (href) its inner <a> would otherwise overflow the field. */
             #choose-person {
-                display: block;
+                display: flex;
             }
 
             uui-select {

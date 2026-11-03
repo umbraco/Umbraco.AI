@@ -22,7 +22,8 @@ namespace Umbraco.AI.Cloudflare;
 /// </remarks>
 internal sealed partial class CloudflareExtractionClient : IAIExtractionClient
 {
-    private const string RunPath = "ai/run/@cf/cloudflare/clairic";
+    private const string Model = "@cf/cloudflare/clairic";
+    private const string RunPath = "ai/run/" + Model;
     private const int MaxAttempts = 3;
 
     private static readonly TimeSpan MaxRetryDelay = TimeSpan.FromSeconds(30);
@@ -91,7 +92,8 @@ internal sealed partial class CloudflareExtractionClient : IAIExtractionClient
             fields[field.Id!] = BuildField(field);
         }
 
-        var body = new JsonObject();
+        // The model is already in the URL, but Cloudflare's docs mark the body field required too.
+        var body = new JsonObject { ["model"] = Model };
         SetIfNotNull(body, "state", request.State);
         body["fields"] = fields;
         if (request.ReferenceDate is { } referenceDate)

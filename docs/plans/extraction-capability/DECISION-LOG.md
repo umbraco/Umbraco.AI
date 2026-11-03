@@ -106,3 +106,7 @@
   like every other inline builder, because the alias is how calls stay uniquely named in the
   logs and audit trail. The profile overloads still use "extraction", like Decision's "decision".
   Decision and Image Generation gain the in-service flag check instead (#660).
+- 03-11-2026: The Clairic request now sends `"model": "@cf/cloudflare/clairic"`. Cloudflare's docs
+  now mark it required; the live API still accepts a body without it, so this is insurance.
+  The same live check showed the response wrapped in `result` (T9 saw it bare) and offset-free
+  date-times; both were already handled. Docs also list `estimate`, `images` and `guess`, unused.

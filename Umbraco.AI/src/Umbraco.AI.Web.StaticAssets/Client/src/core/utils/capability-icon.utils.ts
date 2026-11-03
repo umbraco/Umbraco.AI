@@ -22,6 +22,8 @@ export function getCapabilityIcon(capability: string): string {
             return "icon-picture";
         case "decision":
             return "icon-directions";
+        case "extraction":
+            return "icon-filter";
         default:
             return "icon-wand";
     }

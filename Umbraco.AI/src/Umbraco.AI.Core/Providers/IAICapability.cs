@@ -4,6 +4,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.Decision;
+using Umbraco.AI.Core.Extraction;
 using Umbraco.AI.Core.ImageGeneration;
 using Umbraco.AI.Core.Models;
 using Umbraco.Cms.Core.DependencyInjection;
@@ -11,6 +12,7 @@ using Umbraco.Cms.Core.DependencyInjection;
 #pragma warning disable MEAI001 // ISpeechToTextClient / IImageGenerator are experimental in M.E.AI
 #pragma warning disable UMBRACOAI_IMAGEGEN // Defining the experimental image-generation capability surface
 #pragma warning disable UMBRACOAI_DECISION // Defining the experimental decision capability surface
+#pragma warning disable UMBRACOAI_EXTRACTION // Defining the experimental extraction capability surface
 
 namespace Umbraco.AI.Core.Providers;
 
@@ -261,6 +263,40 @@ public interface IAIDecisionCapability : IAICapability
     /// The two-parameter <c>AIDecisionCapabilityBase&lt;TSettings, TCapabilitySettings&gt;</c> overrides this to apply them per request.
     /// </remarks>
     Task<IAIDecisionClient> CreateClientAsync(object? settings, object? capabilitySettings, string? modelId, CancellationToken cancellationToken)
+        => CreateClientAsync(settings, modelId, cancellationToken);
+}
+
+/// <summary>
+/// Defines an AI capability for reading a batch of typed <see cref="AIExtractionField"/>s — text, numbers,
+/// dates, times, durations or lists — out of text.
+/// </summary>
+[Experimental(AIExtractionDiagnostics.DiagnosticId)]
+public interface IAIExtractionCapability : IAICapability
+{
+    /// <summary>
+    /// Creates a extraction client with the provided settings.
+    /// </summary>
+    /// <param name="settings">Provider-specific settings (e.g., API key).</param>
+    /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured extraction client.</returns>
+    Task<IAIExtractionClient> CreateClientAsync(object? settings = null, string? modelId = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates a extraction client with the provided connection settings and resolved, provider-declared
+    /// capability settings.
+    /// </summary>
+    /// <param name="settings">Provider-specific connection settings (e.g., API key). Must be resolved (not a raw <see cref="JsonElement"/>).</param>
+    /// <param name="capabilitySettings">The resolved, typed capability settings, or <c>null</c> when the profile declares none. Must be resolved (not a raw <see cref="JsonElement"/>).</param>
+    /// <param name="modelId">Optional model ID to use. If null, the provider's default model is used.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured extraction client.</returns>
+    /// <remarks>
+    /// Default implementation ignores <paramref name="capabilitySettings"/> and delegates to
+    /// <see cref="CreateClientAsync(object?, string?, CancellationToken)"/> so existing capabilities keep working.
+    /// The two-parameter <c>AIExtractionCapabilityBase&lt;TSettings, TCapabilitySettings&gt;</c> overrides this to apply them per request.
+    /// </remarks>
+    Task<IAIExtractionClient> CreateClientAsync(object? settings, object? capabilitySettings, string? modelId, CancellationToken cancellationToken)
         => CreateClientAsync(settings, modelId, cancellationToken);
 }
 
@@ -1183,6 +1219,167 @@ public abstract class AIDecisionCapabilityBase<TSettings, TCapabilitySettings>(I
         // profile declares none (or a different capability's settings), return the client untouched.
         return capabilitySettings is TCapabilitySettings typed
             ? new CapabilitySettingsDecisionClient<TCapabilitySettings>(inner, typed, modelId, ApplyCapabilitySettings)
+            : inner;
+    }
+}
+
+/// <summary>
+/// Base implementation of an AI extraction capability.
+/// </summary>
+[Experimental(AIExtractionDiagnostics.DiagnosticId)]
+public abstract class AIExtractionCapabilityBase(IAIProvider provider) : AICapabilityBase(provider), IAIExtractionCapability
+{
+    /// <inheritdoc />
+    public override AICapability Kind => AICapability.Extraction;
+
+    /// <summary>
+    /// Creates a extraction client with the specified model.
+    /// </summary>
+    /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
+    /// <returns>A configured extraction client.</returns>
+    protected virtual IAIExtractionClient CreateClient(string? modelId)
+    {
+        throw new NotImplementedException("CreateClient must be implemented by extraction capability providers.");
+    }
+
+    /// <summary>
+    /// Creates a extraction client with the specified model, asynchronously.
+    /// </summary>
+    /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured extraction client.</returns>
+    protected virtual Task<IAIExtractionClient> CreateClientAsync(string? modelId, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(CreateClient(modelId));
+    }
+
+    async Task<IAIExtractionClient> IAIExtractionCapability.CreateClientAsync(object? settings, string? modelId, CancellationToken cancellationToken)
+    {
+        var inner = await CreateClientAsync(modelId, cancellationToken).ConfigureAwait(false);
+
+        return new DeclaredSettingsExtractionClient(inner);
+    }
+}
+
+/// <summary>
+/// Base implementation of an AI extraction capability with specific settings.
+/// </summary>
+/// <typeparam name="TSettings">The provider-specific settings type.</typeparam>
+[Experimental(AIExtractionDiagnostics.DiagnosticId)]
+public abstract class AIExtractionCapabilityBase<TSettings>(IAIProvider provider) : AICapabilityBase<TSettings>(provider), IAICapability<TSettings>, IAIExtractionCapability
+    where TSettings : class
+{
+    /// <inheritdoc />
+    public override AICapability Kind => AICapability.Extraction;
+
+    /// <summary>
+    /// Creates a extraction client with the provided settings and model.
+    /// </summary>
+    /// <param name="settings">Provider-specific settings.</param>
+    /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
+    /// <returns>A configured extraction client.</returns>
+    protected virtual IAIExtractionClient CreateClient(TSettings settings, string? modelId)
+    {
+        throw new NotImplementedException("CreateClient must be implemented by extraction capability providers.");
+    }
+
+    /// <summary>
+    /// Creates a extraction client with the provided settings and model, asynchronously.
+    /// </summary>
+    /// <param name="settings">Provider-specific settings.</param>
+    /// <param name="modelId">Optional model ID. If null, use provider's default.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A configured extraction client.</returns>
+    protected virtual Task<IAIExtractionClient> CreateClientAsync(TSettings settings, string? modelId, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(CreateClient(settings, modelId));
+    }
+
+    /// <inheritdoc />
+    Task<IAIExtractionClient> IAIExtractionCapability.CreateClientAsync(object? settings, string? modelId, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateClient));
+        return CreateDeclarationEnforcingClientAsync((TSettings)settings, modelId, cancellationToken);
+    }
+
+    /// <summary>
+    /// Builds the provider's client and wraps it so this capability's per-model declaration is enforced on
+    /// every request.
+    /// </summary>
+    internal async Task<IAIExtractionClient> CreateDeclarationEnforcingClientAsync(
+        TSettings settings,
+        string? modelId,
+        CancellationToken cancellationToken)
+    {
+        var inner = await CreateClientAsync(settings, modelId, cancellationToken).ConfigureAwait(false);
+
+        return new DeclaredSettingsExtractionClient(inner);
+    }
+}
+
+/// <summary>
+/// Base implementation of an AI extraction capability with both provider-specific connection settings and
+/// provider-declared capability settings.
+/// </summary>
+/// <typeparam name="TSettings">The provider-specific connection settings type.</typeparam>
+/// <typeparam name="TCapabilitySettings">The provider-declared capability settings type (a POCO with <c>[AIField]</c> properties).</typeparam>
+/// <remarks>
+/// Derive from this (instead of <see cref="AIExtractionCapabilityBase{TSettings}"/>) to let a provider
+/// surface extra per-profile settings. The base exposes the schema hook (<see cref="CapabilitySettingsType"/>)
+/// and applies the resolved settings to every request's <see cref="AIExtractionOptions"/> via
+/// <see cref="ApplyCapabilitySettings"/>; the provider implements only that typed translation.
+/// </remarks>
+[Experimental(AIExtractionDiagnostics.DiagnosticId)]
+public abstract class AIExtractionCapabilityBase<TSettings, TCapabilitySettings>(IAIProvider provider)
+    : AIExtractionCapabilityBase<TSettings>(provider), IAIExtractionCapability
+    where TSettings : class
+    where TCapabilitySettings : class, new()
+{
+    /// <inheritdoc />
+    public sealed override Type? CapabilitySettingsType => typeof(TCapabilitySettings);
+
+    /// <summary>
+    /// Applies the resolved capability settings onto a request's <see cref="AIExtractionOptions"/>.
+    /// Called for every request. Implementations should no-op when a value is not set.
+    /// </summary>
+    /// <param name="capabilitySettings">The resolved, typed capability settings for the profile.</param>
+    /// <param name="modelId">
+    /// The model the request will run against — the caller's <see cref="AIExtractionOptions.ModelId"/> when
+    /// set, otherwise the model the client was created for. <c>null</c> only when neither is known.
+    /// </param>
+    /// <param name="options">The options for the current request (safe to mutate; it is a per-request copy).</param>
+    /// <remarks>
+    /// Gate on <paramref name="modelId"/> with the same predicate used by
+    /// <see cref="IAICapability.GetSettingsSupport"/>: hiding a setting in the editor does not stop a
+    /// profile saved before a model change, or a direct <see cref="IAIExtractionClient"/> consumer, from
+    /// reaching here with a value the model rejects.
+    /// </remarks>
+    protected abstract void ApplyCapabilitySettings(
+        TCapabilitySettings capabilitySettings,
+        string? modelId,
+        AIExtractionOptions options);
+
+    /// <inheritdoc />
+    async Task<IAIExtractionClient> IAIExtractionCapability.CreateClientAsync(
+        object? settings,
+        object? capabilitySettings,
+        string? modelId,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        CapabilityGuards.ThrowIfUnresolvedSettings(settings, nameof(CreateClient));
+        CapabilityGuards.ThrowIfUnresolvedSettings(capabilitySettings, nameof(CreateClient));
+
+        // Build the underlying client from connection settings only (unchanged provider path), already
+        // wrapped so the per-model declaration is enforced.
+        var inner = await CreateDeclarationEnforcingClientAsync((TSettings)settings, modelId, cancellationToken)
+            .ConfigureAwait(false);
+
+        // Wrap so the provider-declared capability settings are applied to every request. When the
+        // profile declares none (or a different capability's settings), return the client untouched.
+        return capabilitySettings is TCapabilitySettings typed
+            ? new CapabilitySettingsExtractionClient<TCapabilitySettings>(inner, typed, modelId, ApplyCapabilitySettings)
             : inner;
     }
 }

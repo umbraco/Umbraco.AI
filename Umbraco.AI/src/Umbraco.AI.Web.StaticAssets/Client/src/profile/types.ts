@@ -61,6 +61,13 @@ export interface UaiDecisionProfileSettings extends UaiProfileSettings {
 }
 
 /**
+ * Extraction-specific profile settings. Empty today, like Decision.
+ */
+export interface UaiExtractionProfileSettings extends UaiProfileSettings {
+    $type: "extraction";
+}
+
+/**
  * Detail model for workspace editing.
  */
 export interface UaiProfileDetailModel extends UmbEntityModel {
@@ -129,4 +136,13 @@ export function isImageGenerationSettings(settings: UaiProfileSettings | null): 
  */
 export function isDecisionSettings(settings: UaiProfileSettings | null): settings is UaiDecisionProfileSettings {
     return settings?.$type === "decision";
+}
+
+/**
+ * Type guard for extraction settings.
+ */
+export function isExtractionProfileSettings(
+    settings: UaiProfileSettings | null,
+): settings is UaiExtractionProfileSettings {
+    return settings?.$type === "extraction";
 }

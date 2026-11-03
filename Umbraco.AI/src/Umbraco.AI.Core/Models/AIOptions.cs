@@ -36,6 +36,11 @@ public class AIOptions
     public string? DefaultDecisionProfileAlias { get; set; }
 
     /// <summary>
+    /// The default extraction profile alias to use when none is specified.
+    /// </summary>
+    public string? DefaultExtractionProfileAlias { get; set; }
+
+    /// <summary>
     /// Gets or sets the <see cref="Microsoft.Extensions.Configuration.IConfiguration"/> key
     /// prefixes that editable model settings may dereference via the <c>$Key:Path</c> syntax.
     /// </summary>

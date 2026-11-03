@@ -28,6 +28,7 @@ public class SettingsMapDefinition : IMapDefinition
         target.DefaultSpeechToTextProfileId = source.DefaultSpeechToTextProfileId;
         target.DefaultImageGenerationProfileId = source.DefaultImageGenerationProfileId;
         target.DefaultDecisionProfileId = source.DefaultDecisionProfileId;
+        target.DefaultExtractionProfileId = source.DefaultExtractionProfileId;
         target.DisclosureNoticeMode = source.DisclosureNoticeMode.ToString();
     }
 
@@ -40,6 +41,7 @@ public class SettingsMapDefinition : IMapDefinition
         target.DefaultSpeechToTextProfileId = source.DefaultSpeechToTextProfileId;
         target.DefaultImageGenerationProfileId = source.DefaultImageGenerationProfileId;
         target.DefaultDecisionProfileId = source.DefaultDecisionProfileId;
+        target.DefaultExtractionProfileId = source.DefaultExtractionProfileId;
         target.DisclosureNoticeMode = ParseDisclosureNoticeMode(source.DisclosureNoticeMode);
     }
 

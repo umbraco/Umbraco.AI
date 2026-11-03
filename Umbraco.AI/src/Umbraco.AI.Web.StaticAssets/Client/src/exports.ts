@@ -6,6 +6,7 @@ export * from "./embeddings/exports.js";
 export * from "./speech-to-text/exports.js";
 export * from "./image-generation/exports.js";
 export * from "./decision/exports.js";
+export * from "./extraction/exports.js";
 export * from "./entity-adapter/exports.js";
 export * from "./profile/exports.js";
 export * from "./request-context/exports.js";

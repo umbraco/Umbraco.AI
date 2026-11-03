@@ -36,6 +36,11 @@ public class AISettingsArtifact(GuidUdi udi, IEnumerable<ArtifactDependency>? de
     public GuidUdi? DefaultDecisionProfileUdi { get; set; }
 
     /// <summary>
+    /// The UDI of the default extraction profile (optional).
+    /// </summary>
+    public GuidUdi? DefaultExtractionProfileUdi { get; set; }
+
+    /// <summary>
     /// The UDI of the classifier chat profile (optional).
     /// </summary>
     public GuidUdi? ClassifierChatProfileUdi { get; set; }

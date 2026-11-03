@@ -1,0 +1,84 @@
+<!doctype html>
+<!--
+  Field config modal, opened after picking a field type from "Add field" (or from Edit).
+  Built from modal-sidebar.html, medium size, mirroring Umbraco.AI's
+  decision-question-config-modal (umb-property-layout fields in a uui-box).
+  Default shows a Number field. #list shows the List variant, #error a duplicate-alias mistake.
+-->
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Mockup: Extraction field config</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@umbraco-ui/uui@2/dist/themes/light.css">
+	<link rel="stylesheet" href="_mockup.css">
+	<script type="module" src="_mockup.js"></script>
+	<style>
+		.variant { display:none; }
+		.variant:target { display:block; }
+		.variant:target ~ .default { display:none; }
+		.error { color: var(--uui-color-danger); font-size: 12px; margin-top: 4px; }
+		/* Small/medium modals stack each property: label, description, then the editor. */
+		.modal-sidebar .property { grid-template-columns: minmax(0, 1fr); row-gap: var(--uui-size-space-3); }
+	</style>
+</head>
+<body class="uui-font uui-text">
+	<header class="app-header">
+		<span class="logo">Umbraco</span>
+		<uui-tab-group class="sections">
+			<uui-tab label="Content">Content</uui-tab>
+			<uui-tab label="Automate" active>Automate</uui-tab>
+		</uui-tab-group>
+		<div class="apps"><uui-button look="primary" compact label="User"><uui-avatar name="Matt Brailsford"></uui-avatar></uui-button></div>
+	</header>
+	<div class="section">
+		<nav class="section-sidebar"><h3>Automations</h3></nav>
+		<main class="section-main"></main>
+	</div>
+
+	<div class="modal-backdrop"></div>
+	<aside class="modal-sidebar">
+		<div class="body-layout">
+			<div class="header">
+				<h3 class="headline">Add field: Number</h3>
+			</div>
+
+			<div class="main">
+				<!-- Replace from here -->
+				<div id="list" class="variant">
+					<uui-box>
+						<div class="property"><div><uui-label>Alias</uui-label><div class="description">Used to reach this value in later steps, e.g. ${steps.extract.damagedProducts.value}.</div></div><div><uui-input label="Alias" value="damagedProducts" style="width:100%"></uui-input></div></div>
+						<div class="property"><div><uui-label>Instructions</uui-label><div class="description">What the field should contain.</div></div><div><uui-textarea label="Instructions" value="Names of every product the customer says arrived damaged or was missing from the parcel" style="width:100%"></uui-textarea></div></div>
+						<div class="property"><div><uui-label>Item type</uui-label><div class="description">What each item in the list is.</div></div><div><uui-select label="Item type" style="width:100%" placeholder="Text"></uui-select></div></div>
+					</uui-box>
+				</div>
+
+				<div id="error" class="variant">
+					<uui-box>
+						<div class="property"><div><uui-label>Alias</uui-label><div class="description">Used to reach this value in later steps.</div></div><div><uui-input label="Alias" value="orderId" style="width:100%" error></uui-input>
+							<div class="error">Another field already uses the alias "orderId".</div></div></div>
+						<div class="property"><div><uui-label>Instructions</uui-label><div class="description">What the field should contain.</div></div><div><uui-textarea label="Instructions" value="Order number from the original purchase" style="width:100%"></uui-textarea></div></div>
+					</uui-box>
+				</div>
+
+				<div class="default">
+					<uui-box>
+						<div class="property"><div><uui-label>Alias</uui-label><div class="description">Used to reach this value in later steps, e.g. ${steps.extract.amount.value}. Letters, numbers and _ only.</div></div><div><uui-input label="Alias" value="amount" style="width:100%"></uui-input></div></div>
+						<div class="property"><div><uui-label>Instructions</uui-label><div class="description">What the field should contain. Be specific about which number you mean.</div></div><div><uui-textarea label="Instructions" value="Amount the customer paid, including shipping" style="width:100%"></uui-textarea></div></div>
+						<div class="property"><div><uui-label>Decimal places</uui-label><div class="description">Optional. 0 to 6.</div></div><div><uui-input type="number" label="Decimal places" value="2" style="width:120px"></uui-input></div></div>
+						<div class="property"><div><uui-label>Whole number</uui-label><div class="description">Only accept whole numbers.</div></div><div><uui-toggle label="Whole number"></uui-toggle></div></div>
+						<div class="property"><div><uui-label>Unit</uui-label><div class="description">Optional. Helps the model pick the right number, e.g. EUR or kg.</div></div><div><uui-input label="Unit" value="DKK" style="width:200px"></uui-input></div></div>
+					</uui-box>
+				</div>
+				<!-- Replace to here -->
+			</div>
+
+			<div class="footer">
+				<div class="actions">
+					<uui-button label="Cancel">Cancel</uui-button>
+					<uui-button look="primary" color="positive" label="Save">Save</uui-button>
+				</div>
+			</div>
+		</div>
+	</aside>
+</body>
+</html>

@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Deploy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.4.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Deploy@18.3.1...Umbraco.AI.Deploy@18.4.0) (2026-11-03)
+
+### feat
+
+* **deploy:** Carry the default Extraction profile in Deploy settings ([d294a08](https://github.com/umbraco/Umbraco.AI/commit/d294a0843cf259950b7df88788ddb76bfc2538bf))
+
 ## [18.3.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Deploy@18.3.0...Umbraco.AI.Deploy@18.3.1) (2026-10-26)
 
 ### fix

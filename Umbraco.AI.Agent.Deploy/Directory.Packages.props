@@ -6,6 +6,6 @@
   <ItemGroup>
     <!-- 18.4.0 is the first Umbraco.AI.Agent release with the public AIAgent(Guid id) constructor
          the service connector creates agents with. -->
-    <PackageVersion Update="Umbraco.AI.Agent.Startup" Version="[18.4.0, 18.999.999)" />
+    <PackageVersion Update="Umbraco.AI.Agent.Startup" Version="[18.4.1, 18.999.999)" />
   </ItemGroup>
 </Project>

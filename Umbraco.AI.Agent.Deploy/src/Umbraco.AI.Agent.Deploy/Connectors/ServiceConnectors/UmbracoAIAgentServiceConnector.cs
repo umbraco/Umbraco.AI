@@ -1,5 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Agent.Deploy.Artifacts;
@@ -7,22 +9,58 @@ using Umbraco.AI.Deploy;
 using Umbraco.AI.Deploy.Configuration;
 using Umbraco.AI.Deploy.Connectors.ServiceConnectors;
 using Umbraco.Cms.Core;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Deploy;
+using Umbraco.Cms.Core.Services;
 
 namespace Umbraco.AI.Agent.Deploy.Connectors.ServiceConnectors;
 
 /// <summary>
 /// Service connector for deploying Umbraco AI Agents. Handles export and import of agents, including their dependencies on profiles.
 /// </summary>
+/// <remarks>
+/// A standard agent's user group permissions are keyed by user group in the artifact by <em>alias</em>, not
+/// by key: a user group created separately on each environment has a different key on each, and Deploy
+/// doesn't transfer user groups. Import maps each alias back to the target's own group.
+/// </remarks>
 [UdiDefinition(UmbracoAIAgentConstants.UdiEntityType.Agent, UdiType.GuidUdi)]
-public class UmbracoAIAgentServiceConnector(
-    IAIAgentService agentService,
-    IAIProfileService profileService,
-    UmbracoAIDeploySettingsAccessor settingsAccessor)
-    : UmbracoAIProfileDependentEntityServiceConnectorBase<AIAgentArtifact, AIAgent>(
-        profileService,
-        settingsAccessor)
+public class UmbracoAIAgentServiceConnector
+    : UmbracoAIProfileDependentEntityServiceConnectorBase<AIAgentArtifact, AIAgent>
 {
+    private const string UserGroupPermissionsProperty = "userGroupPermissions";
+
+    private readonly IAIAgentService _agentService;
+    private readonly IUserGroupService _userGroupService;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UmbracoAIAgentServiceConnector"/> class.
+    /// </summary>
+    [Obsolete("Use the constructor that accepts an IUserGroupService. Will be removed in v20.")]
+    public UmbracoAIAgentServiceConnector(
+        IAIAgentService agentService,
+        IAIProfileService profileService,
+        UmbracoAIDeploySettingsAccessor settingsAccessor)
+        : this(
+            agentService,
+            profileService,
+            settingsAccessor,
+            StaticServiceProvider.Instance.GetRequiredService<IUserGroupService>())
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UmbracoAIAgentServiceConnector"/> class.
+    /// </summary>
+    public UmbracoAIAgentServiceConnector(
+        IAIAgentService agentService,
+        IAIProfileService profileService,
+        UmbracoAIDeploySettingsAccessor settingsAccessor,
+        IUserGroupService userGroupService)
+        : base(profileService, settingsAccessor)
+    {
+        _agentService = agentService;
+        _userGroupService = userGroupService;
+    }
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -53,12 +91,12 @@ public class UmbracoAIAgentServiceConnector(
 
     /// <inheritdoc />
     public override Task<AIAgent?> GetEntityAsync(Guid id, CancellationToken cancellationToken = default)
-        => agentService.GetAgentAsync(id, cancellationToken);
+        => _agentService.GetAgentAsync(id, cancellationToken);
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<AIAgent> GetEntitiesAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var agents = await agentService.GetAgentsAsync(cancellationToken);
+        var agents = await _agentService.GetAgentsAsync(cancellationToken);
         foreach (var agent in agents)
         {
             yield return agent;
@@ -70,12 +108,12 @@ public class UmbracoAIAgentServiceConnector(
         => entity.Name;
 
     /// <inheritdoc />
-    public override Task<AIAgentArtifact?> GetArtifactAsync(
+    public override async Task<AIAgentArtifact?> GetArtifactAsync(
         GuidUdi udi,
         AIAgent? entity,
         CancellationToken cancellationToken = default)
     {
-        if (entity == null) return Task.FromResult<AIAgentArtifact?>(null);
+        if (entity == null) return null;
 
         var dependencies = new ArtifactDependencyCollection();
 
@@ -104,6 +142,11 @@ public class UmbracoAIAgentServiceConnector(
         if (entity.Config is not null)
         {
             configJson = JsonSerializer.Serialize(entity.Config, entity.Config.GetType(), JsonOptions);
+
+            if (entity.Config is AIStandardAgentConfig)
+            {
+                configJson = await KeyUserGroupPermissionsByAliasAsync(configJson);
+            }
         }
 
         var artifact = new AIAgentArtifact(udi, dependencies)
@@ -121,7 +164,7 @@ public class UmbracoAIAgentServiceConnector(
             IsActive = entity.IsActive
         };
 
-        return Task.FromResult<AIAgentArtifact?>(artifact);
+        return artifact;
     }
 
     /// <inheritdoc />
@@ -163,8 +206,11 @@ public class UmbracoAIAgentServiceConnector(
             ? parsed
             : AIAgentType.Standard;
 
-        // Deserialize config based on agent type
-        IAIAgentConfig? config = DeserializeConfig(agentType, artifact.Config);
+        // Deserialize config based on agent type, mapping user group aliases to this environment's groups
+        var configJson = agentType == AIAgentType.Standard && !string.IsNullOrWhiteSpace(artifact.Config)
+            ? await KeyUserGroupPermissionsByTargetGroupAsync(artifact.Config, artifact.Alias)
+            : artifact.Config;
+        IAIAgentConfig? config = DeserializeConfig(agentType, configJson);
 
         // Get or create agent entity
         var agent = state.Entity
@@ -196,7 +242,82 @@ public class UmbracoAIAgentServiceConnector(
             .ToList();
         agent.IsActive = artifact.IsActive;
 
-        state.Entity = await agentService.SaveAgentAsync(agent, cancellationToken);
+        state.Entity = await _agentService.SaveAgentAsync(agent, cancellationToken);
+    }
+
+    /// <summary>
+    /// Re-keys a standard config's user group permissions from user group key to alias, for export.
+    /// A key that matches no group here is left as it is.
+    /// </summary>
+    private async Task<string> KeyUserGroupPermissionsByAliasAsync(string configJson)
+    {
+        JsonObject? config = JsonNode.Parse(configJson)?.AsObject();
+        if (config?[UserGroupPermissionsProperty] is not JsonObject permissions)
+        {
+            return configJson;
+        }
+
+        var rekeyed = new JsonObject();
+        foreach ((string key, JsonNode? value) in permissions.ToList())
+        {
+            permissions.Remove(key);
+            var userGroup = Guid.TryParse(key, out Guid userGroupKey)
+                ? await _userGroupService.GetAsync(userGroupKey)
+                : null;
+            rekeyed[userGroup?.Alias ?? key] = value;
+        }
+
+        config[UserGroupPermissionsProperty] = rekeyed;
+        return config.ToJsonString();
+    }
+
+    /// <summary>
+    /// Re-keys a standard config's user group permissions to this environment's user group keys, for import.
+    /// </summary>
+    /// <remarks>
+    /// Entries are keyed by alias; artifacts written by older versions are keyed by the source's user group
+    /// key, which is used as-is only when a group with that key exists here. An entry that matches no group
+    /// here is dropped when it only allows tools (it would grant nobody anything), but fails the import when
+    /// it denies any: silently losing a deny would give that group's users tools an administrator withheld.
+    /// </remarks>
+    private async Task<string> KeyUserGroupPermissionsByTargetGroupAsync(string configJson, string? agentAlias)
+    {
+        JsonObject? config = JsonNode.Parse(configJson)?.AsObject();
+        if (config?[UserGroupPermissionsProperty] is not JsonObject permissions)
+        {
+            return configJson;
+        }
+
+        var rekeyed = new JsonObject();
+        foreach ((string key, JsonNode? value) in permissions.ToList())
+        {
+            permissions.Remove(key);
+            var userGroup = Guid.TryParse(key, out Guid userGroupKey)
+                ? await _userGroupService.GetAsync(userGroupKey)
+                : await _userGroupService.GetAsync(key);
+
+            if (userGroup is not null)
+            {
+                rekeyed[userGroup.Key.ToString()] = value;
+                continue;
+            }
+
+            if (HasDenies(value))
+            {
+                throw new InvalidOperationException(
+                    $"Agent '{agentAlias}' denies tools for user group '{key}', which doesn't exist in this environment. "
+                    + "Create the user group (with the same alias), then deploy the agent again.");
+            }
+        }
+
+        config[UserGroupPermissionsProperty] = rekeyed;
+        return config.ToJsonString();
+    }
+
+    private static bool HasDenies(JsonNode? permissions)
+    {
+        var entry = permissions?.Deserialize<AIAgentUserGroupPermissions>(JsonOptions);
+        return entry is not null && (entry.DeniedToolIds.Count > 0 || entry.DeniedToolScopeIds.Count > 0);
     }
 
     private static IAIAgentConfig? DeserializeConfig(AIAgentType agentType, string? json)

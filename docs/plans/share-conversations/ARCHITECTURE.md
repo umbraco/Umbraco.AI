@@ -16,9 +16,9 @@ point for the share-notification email:
 - **Frontend**: new entity action + modal + sidebar grouping in
   `Umbraco.AI.Agent.Copilot.Workspace.Web.StaticAssets`, following the existing
   `UaiConversationRenameAction` (action-opens-modal-then-calls-repository) shape.
-- **Email**: publishes Umbraco core's `SendEmailNotification` (`Umbraco.Cms.Core.Notifications`)
-  when a share is first created — see decision 5. Not a new mechanism; the same generic pipeline
-  core already uses for forgot-password and content-change alert emails.
+- **Email**: sends via Umbraco core's `IEmailSender` (`Umbraco.Cms.Core.Mail`) when a share is first
+  created — see decision 5. Not a new mechanism; the same generic pipeline core already uses for
+  forgot-password and content-change alert emails.
 
 ## Data model & persistence
 
@@ -28,7 +28,7 @@ point for the share-notification email:
 |---|---|---|
 | `Id` | `Guid` | PK |
 | `ConversationId` | `Guid` | FK → `AIConversationEntity.Id`, cascade delete |
-| `SharedWithUserKey` | `Guid` | The recipient. Unique together with `ConversationId` (re-sharing to the same person updates their existing row instead of duplicating) |
+| `SharedWithUserKey` | `Guid` | The recipient. Unique together with `ConversationId`, filtered to active rows only (`WHERE DateRevoked IS NULL`) — see "Why a filtered unique index" below |
 | `SharedByUserKey` | `Guid` | Owner at the moment of sharing — explicit rather than inferred from the conversation, so the audit trail survives even if ownership rules ever change later |
 | `ScopeMode` | `int` (enum: `Snapshot` = 0, `Live` = 1) | Owner's choice at share time |
 | `CutoffMessageId` | `Guid?` | Set only when `ScopeMode == Snapshot` — the id of the last message visible at share time (references `AIMessage.Id`). `null` for `Live` (no ceiling) |
@@ -65,14 +65,35 @@ ever added, removed, or renumbered for a reason unrelated to sharing.
 
 **Graceful degradation if the cutoff message no longer exists**: `TruncateAfterLastUserMessageAsync`
 (the regenerate feature) can delete messages after a point in the conversation, which could delete
-the very message a `Snapshot` share was anchored to. If the read-time lookup for `CutoffMessageId`
-finds nothing, the shared-view read falls back to returning every message that still exists —
-never an error, and never a reason to reveal more than what remains (there is nothing beyond the
-current tail to withhold or expose either way).
+the very message a `Snapshot` share was anchored to — and the regenerated reply that replaces it
+gets a fresh `Sequence`, which may reuse a number the deleted message held. If the read-time lookup
+for `CutoffMessageId` finds nothing, the shared-view read falls back to a time bound instead:
+every message whose `DateCreated` is at or before the share's own `DateShared`. This never errors,
+and still never reveals anything written after the share was made — unlike falling back to "every
+message that currently exists," a time bound isn't fooled by a post-truncation message reusing a
+`Sequence` number that looks like it belongs before the cutoff.
 
 **Why soft-revoke (`DateRevoked`), not delete**: preserves who had access to what and when, which
 matters if a privacy review ever needs to reconstruct exposure — a hard delete erases that history
 at the exact moment it might matter most.
+
+**Why a filtered unique index, not a plain one, and what re-sharing after a revoke does**: a plain
+unique index on `(ConversationId, SharedWithUserKey)` would combine badly with soft-revoke —
+once a recipient's row is revoked, it still occupies that unique slot forever, so the owner could
+never share with that same person on that conversation again. That's not the intent; revoke-then-
+regrant is a normal workflow (undo a mistake, or re-add someone later). The index is filtered to
+`WHERE DateRevoked IS NULL`: uniqueness holds only among *active* shares for a given recipient, so
+multiple revoked rows for the same `(ConversationId, SharedWithUserKey)` pair can coexist — one per
+share/revoke cycle — which is exactly the audit trail the "why soft-revoke" rationale above wants.
+
+The repository's save/upsert operation looks up the recipient's *active* row only (`DateRevoked IS
+NULL`). If one exists, it updates `ScopeMode`/`CutoffMessageId` on it (not a new share — no email,
+per decision 5). If none exists — whether this recipient has never been shared with, or was shared
+with and then revoked — it inserts a brand-new row with a fresh `DateShared`. Sharing again after a
+revoke is therefore a new grant, not a resurrection of the old one: it gets its own row (preserving
+the revoked row's history untouched) and **does** fire the share-notification email, the same as
+any other first-time share for that recipient. This is a deliberate, not incidental, consequence of
+treating "no active row" as the one condition that means "create."
 
 ## Connected systems
 
@@ -85,8 +106,13 @@ at the exact moment it might matter most.
 - **Notification events**: `AIConversationSaving`/`SavedNotification` already exist for
   create/update/delete on `AIConversation` itself. Sharing doesn't modify the conversation entity,
   so it doesn't need to publish through those — a share is its own entity with its own lifecycle.
-  No new notification type is needed for v1; nothing downstream currently needs to react to a share
-  being created or revoked beyond what this feature itself does (the email in decision 5).
+  It does get one new, non-cancelable notification of its own: `AIConversationShareCreatedNotification`
+  (carrying the new `AIConversationShare` and its `AIConversation`), published only when a genuinely
+  new share row is created — never on a scope-change update to an already-active recipient. This
+  exists purely as the seam decision 5's email hangs off: the sharing service itself knows nothing
+  about email, a separate notification handler reacts to this to send one. Same shape as every other
+  "already happened" notification in this codebase (e.g. `AIAgentSelectedNotification`) — takes an
+  `EventMessages` parameter like its siblings, even though nothing currently cancels it.
 
 ## Key decisions
 
@@ -149,17 +175,26 @@ Confirmed with the user: the owner picks specific colleagues (a recipient picker
 ill-defined and the "shared with me" list would have had to become the *owner's* "what I've
 shared" list instead.
 
-### 5. Email on first share, via core's existing `SendEmailNotification` — not on every re-share
+### 5. Email on first share, via core's existing `IEmailSender` — not on every re-share
 
-**Decision:** when the owner-side sharing service (see decision 1, `GetSharedConversationAsync`'s
-counterpart on the write side) creates a **new** share row for a recipient, it publishes
-`SendEmailNotification` (`Umbraco.Cms.Core.Notifications`) with a share-specific
-`NotificationEmailModel` — the same core pipeline already used for forgot-password and
-content-change alert emails (`Umbraco.Core.Events.UserNotificationsHandler` /
-`Umbraco.Core.Notifications.SendEmailNotification`), not new infrastructure. No new toast/bell
-mechanism — checked the codebase and Umbraco core for one; none exists to hook into, and building
-one would be a materially bigger lift than reusing the email pipeline for what's a small,
-internal-collaboration signal.
+**Corrected from an earlier pass:** this decision originally said the sharing service "publishes
+`SendEmailNotification`" directly. Checked against the real Umbraco CMS source rather than assumed:
+`SendEmailNotification` is an internal interception point `EmailSender` (the concrete
+`IEmailSender`) publishes itself, when asked, so *other* handlers can intercept or override a send —
+it isn't something a feature author constructs and publishes to send mail. The actual, correct way
+to send an email is to inject `IEmailSender` and call `SendAsync(EmailMessage, emailType, ...)`;
+this is the exact method core's own password-reset and content-notification emails go through.
+
+**Decision:** a new `AIConversationShareCreatedNotificationHandler`
+(`INotificationAsyncHandler<AIConversationShareCreatedNotification>`, reacting to the notification
+`AIConversationShareService` publishes on a genuinely new share — see the Connected systems section)
+resolves the recipient's and owner's `IUser` records via `IUserService.GetAsync(key)`,
+builds an `EmailMessage`, and calls `IEmailSender.SendAsync(message, emailType)`. Same underlying
+core pipeline already used for forgot-password and content-change alert emails — not new
+infrastructure, just the first consumer of it in this product. No new toast/bell mechanism —
+checked the codebase and Umbraco core for one; none exists to hook into, and building one would be a
+materially bigger lift than reusing the email pipeline for what's a small, internal-collaboration
+signal.
 
 **Decision:** the email fires only when a share row is *created*, not when
 `ShareConversationAsync`'s idempotent upsert (decision — see "Recipients are named" AC4 in
@@ -170,6 +205,20 @@ spamming a recipient every time the owner adjusts scope.
 **Why the recipient's own email address, not a generic system address**: the recipient is an
 existing backoffice user; their email is already on their user record (the same address core's own
 notification emails already go to) — no new address collection needed.
+
+**Why the send happens inline (synchronously, inside the `POST .../shares` request), not queued on
+a background worker**: found during `feature-build` review — core's own `NotificationService` queues
+its mail via a `ThreadPool` worker rather than sending inline, and `umbraco-performance` flags
+blocking I/O inside a notification handler as a smell. Weighed against that: this is explicitly a
+low-volume, internal-collaboration signal (one or a handful of colleagues per share, never a bulk
+send), and building real queue infrastructure for it — a background task runner, a DI-scope-safe
+way to reuse `IUserService`/`IEmailSender` outside the request's own scope — would be a materially
+bigger lift than the feature warrants, the same proportionality call decision 5 already makes about
+not building a new toast/bell mechanism. **Decision:** keep the send inline per recipient, accepting
+that a slow or misconfigured SMTP server adds latency to the owner's `POST .../shares` request (in
+the worst case, a timeout) rather than that latency being invisible. If this product ever needs
+higher-volume or latency-sensitive email sending, revisit with a real background-queue mechanism
+then — not speculatively now for a feature whose own `BRIEF.md` scope is "a handful of colleagues."
 
 **TODO for `feature-build`**: exact email copy (subject, body, what it links to) — same
 product/legal-adjacent review flag as the disclosure-warning copy in decision 2, not just
@@ -200,8 +249,10 @@ rather than assuming:
 
 **Decision:** register a real `entitySign` manifest for conversations —
 `forEntityTypes: [UAI_CONVERSATION_ENTITY_TYPE]`, `forEntityFlags: ['Uai.Conversation.IsShared']`,
-`meta: { iconName: 'icon-share', iconColorAlias: 'positive', label: '#uaiCopilotWorkspace_isSharedSignLabel' }`
-— and wrap `uai-copilot-workspace-conversation-tree-item`'s existing icon-rendering in
+`meta: { iconName: 'icon-share', iconColorAlias: 'green', label: '#uaiCopilotWorkspace_sharedBadgeLabel' }`
+(`'green'`, not `'positive'` — that string isn't a real UUI color-alias token; confirmed against
+core's own usage of the same badge mechanism) — and wrap
+`uai-copilot-workspace-conversation-tree-item`'s existing icon-rendering in
 `<umb-entity-sign-bundle>`, passing `entityFlags: hasActiveShares ? [{ alias: 'Uai.Conversation.IsShared' }] : []`.
 This is strictly additive to the row's existing icon logic (pin vs. chat) — the main icon
 rendering doesn't change at all, the sign just overlays on top of whichever one is showing. Pinned
@@ -210,6 +261,16 @@ the badge gives a quick "Shared" label without opening anything, for free. Rejec
 (the superseded icon-swap): couldn't show both states at once and wasn't the established
 convention for this exact kind of thing — this repo's own "mirror an existing pattern, don't
 hand-roll" rule, applied one level more carefully than the first pass did.
+
+A **second**, independent `entitySign` manifest (`Uai.Conversation.IsSharedWithMe`) uses the same
+`kind: 'icon'` visual treatment for the "Shared with me" sidebar grouping's rows, but with a custom
+`api` (`UaiSharedWithMeSignApi`) instead of a static `meta.label`: those rows need a per-row dynamic
+label ("Shared by \<owner\>", a different name per row), which one static per-manifest label can't
+produce. The api reads the owner's name from a per-row context (`UaiSharedConversationRowContext`,
+provided by the row element itself) and exposes it as a reactive `label: Observable<string>` —
+`<umb-entity-sign-bundle>` already supports an api-supplied observable label, it's just unused by
+every other sign in this codebase today. The two manifests are deliberately separate rather than
+one manifest trying to serve both a static and a dynamic label.
 
 **Data shape, to avoid an N+1 query:** the owner's paged conversation list
 (`AIConversationService.GetConversationsPagedAsync` → `IAIConversationRepository.GetPagedAsync`)
@@ -292,18 +353,69 @@ multi-recipient-with-chips picker, where this feature's only two building blocks
 remove from" and "a picker you can add from" — already exist and are already used twice in this
 exact panel.
 
+### 8. A Snapshot share that can't resolve a cutoff message fails the share — it never silently becomes Live
+
+Found during `feature-build` review (`SC-04`), not anticipated at design time: resolving the
+`CutoffMessageId` for a `Snapshot` share means finding the conversation's current last message. Two
+cases can come back with no message to anchor to — the conversation has zero messages yet, or a
+regenerate truncates the tail in the narrow window between counting messages and fetching the last
+one. The naive handling stores `CutoffMessageId = null` in both cases, but `null` is exactly what a
+`Live` share's cutoff looks like (see the data model table). A share the owner explicitly chose as
+"frozen at today's messages" would silently read as "no ceiling" instead — the opposite of what was
+asked for, and a real exposure: everything the owner writes afterward becomes visible to a recipient
+they only meant to show today's state to.
+
+**Decision:** if a `Snapshot` share's cutoff can't be resolved to a concrete message id, the share
+request fails outright (the service throws, the owner sees an error and can retry) rather than
+falling back to `null`/Live. This is the same "never reveal more than intended" posture the data
+model's graceful-degradation rule already applies at *read* time (a cutoff message deleted by
+regenerate falls back to a `DateShared` time bound, never to "everything, unbounded") — applied here
+at *share* time instead, where the safe failure mode is "reject the share," not "silently widen it."
+
+**Sharing a conversation with zero messages:** a `Snapshot` share of one fails outright for the same
+reason (no message to anchor the cutoff to) — the share-picker modal doesn't disable the Snapshot
+option for this case client-side, so the owner sees the service's rejection rather than a disabled
+control, which is an acceptable rough edge given how rarely this is actually reachable (see below). A
+`Live` share has no cutoff to resolve, so it's unaffected and succeeds — the recipient would just see
+an empty read-only chat, which is harmless since there's nothing to disclose either way. Confirmed
+with the user this asymmetry (Snapshot blocked, Live allowed) is fine as the permanent behavior, not
+a gap to close: in the normal product flow a conversation is never visible anywhere (including to its
+own owner) until its first message has actually persisted, so a zero-message conversation sitting in
+the owner's own list to go and share is already an edge case — reachable only if a draft's first
+message is created but then never finishes sending (e.g. the tab closes mid-send), not something
+either the UI or a reasonable user would hit in ordinary use.
+
+### 9. A Snapshot share's `dateModified`/`lastMessageAt` freeze at the cutoff — they don't leak the conversation's live state
+
+Found during `feature-build` review (`SC-09`): `SharedConversationResponseModel` was going to carry
+the conversation's live `DateModified`/`LastMessageAt` straight through, same as the owner's own
+response model. For a `Live` share that's correct — there's no ceiling, so "live" metadata is
+exactly what's being disclosed. For a `Snapshot` share it's a small but real version of the same
+leak the title-only-search rule (`SPEC.md`'s `shared-with-me` section) already exists to close: the
+recipient can't see any message the owner sent after the cutoff, but a `LastMessageAt` timestamp
+past that point would still tell them *that* the owner kept talking, and roughly *when* — metadata
+about hidden content is still a disclosure about hidden content, even with no words attached.
+
+**Decision:** for a `Snapshot` share, `dateModified` and `lastMessageAt` on the `shared-view`
+response are derived from the returned message list itself (`DateCreated` of its most recent entry)
+rather than the conversation's live fields — the same "frozen at this point" guarantee the message
+list itself already makes, applied consistently to the two date fields that would otherwise quietly
+stay live. This holds whether that list ends at the cutoff message (the normal case) or at the
+`DateShared` time bound (the graceful-degradation fallback above) — deriving from the list itself,
+rather than from "the cutoff message" specifically, means the frozen date is correct either way
+without needing to know which path produced the list. If the conversation has no messages at all
+(nothing to anchor to, decision 8 already prevents this from happening for a *new* Snapshot share,
+but a `Live`-then-never-updated edge case could still reach here with zero messages), leave
+`DateModified`/`LastMessageAt` at the conversation's own live values, unfrozen — there's nothing
+hidden to leak either way.
+`Live` shares are entirely unaffected; there's no cutoff for them to be honest about.
+
 ## TODOs carried into `feature-plan` / `feature-build`
 
 - Exact copy for the share-time disclosure warning (see decision 2) — needs product/legal-adjacent
-  review given the org's GDPR-conscious posture, not just engineering wording.
-- Exact copy for the share-notification email (see decision 5) — same review flag.
-- Confirm `UMB_USER_PICKER_MODAL` actually supports (or can be configured/wrapped for) a
-  max-selection-of-one constraint at `feature-build` time (decision 7) — identified this session as
-  the real modal to reuse, but its single-select behavior wasn't verified beyond the type shape.
+  review given the org's GDPR-conscious posture, not just engineering wording. Still placeholder
+  text as shipped.
+- Exact copy for the share-notification email (see decision 5) — same review flag. Still
+  placeholder text as shipped.
 - No v17-specific CMS API incompatibility is expected (nothing here uses a v18-only API), but this
-  hasn't been explicitly checked against the v17 line yet.
-- The exact share-icon name and icon color alias used for the entitySign (decision 6, `icon-share`
-  / `positive` in the design) need confirming against the real Umbraco icon/color sets during
-  `feature-build`.
-- Localization key and exact label text for the entitySign's hover tooltip (decision 6's
-  `uaiCopilotWorkspace_isSharedSignLabel`) — not drafted this session.
+  hasn't been explicitly checked against the v17 line yet (see `SC-19` in `PLAN.md`).

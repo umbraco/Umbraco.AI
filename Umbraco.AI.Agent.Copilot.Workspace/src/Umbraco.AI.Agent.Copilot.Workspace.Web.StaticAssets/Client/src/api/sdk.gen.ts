@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { Create2Data, Create2Errors, Create2Responses, CreateData, CreateErrors, CreateResponses, Delete2Data, Delete2Errors, Delete2Responses, DeleteData, DeleteErrors, DeleteResponses, GetAll2Data, GetAll2Errors, GetAll2Responses, GetAllData, GetAllErrors, GetAllResponses, GetById2Data, GetById2Errors, GetById2Responses, GetByIdData, GetByIdErrors, GetByIdResponses, GetMessagesData, GetMessagesErrors, GetMessagesResponses, StreamAgentAGUIData, StreamAgentAGUIErrors, StreamAgentAGUIResponse, StreamAgentAGUIResponses, TruncateAfterLastUserMessageData, TruncateAfterLastUserMessageErrors, TruncateAfterLastUserMessageResponses, Update2Data, Update2Errors, Update2Responses, UpdateData, UpdateErrors, UpdateResponses } from './types.gen';
+import type { Create2Data, Create2Errors, Create2Responses, CreateData, CreateErrors, CreateResponses, Delete2Data, Delete2Errors, Delete2Responses, DeleteData, DeleteErrors, DeleteResponses, GetAll2Data, GetAll2Errors, GetAll2Responses, GetAllData, GetAllErrors, GetAllResponses, GetById2Data, GetById2Errors, GetById2Responses, GetByIdData, GetByIdErrors, GetByIdResponses, GetMessagesData, GetMessagesErrors, GetMessagesResponses, GetSharedViewData, GetSharedViewErrors, GetSharedViewResponses, GetSharedWithMeData, GetSharedWithMeErrors, GetSharedWithMeResponses, GetSharesData, GetSharesErrors, GetSharesResponses, RevokeData, RevokeErrors, RevokeResponses, ShareData, ShareErrors, ShareResponses, StreamAgentAGUIData, StreamAgentAGUIErrors, StreamAgentAGUIResponse, StreamAgentAGUIResponses, TruncateAfterLastUserMessageData, TruncateAfterLastUserMessageErrors, TruncateAfterLastUserMessageResponses, Update2Data, Update2Errors, Update2Responses, UpdateData, UpdateErrors, UpdateResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -79,6 +79,50 @@ export class ConversationsService {
         return (options.client ?? client).delete<TruncateAfterLastUserMessageResponses, TruncateAfterLastUserMessageErrors, ThrowOnError>({
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/umbraco/ai/management/api/v1/conversations/{id}/messages/after-last-user',
+            ...options
+        });
+    }
+    
+    public static getSharedView<ThrowOnError extends boolean = false>(options: Options<GetSharedViewData, ThrowOnError>) {
+        return (options.client ?? client).get<GetSharedViewResponses, GetSharedViewErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/ai/management/api/v1/conversations/{id}/shared-view',
+            ...options
+        });
+    }
+    
+    public static getShares<ThrowOnError extends boolean = false>(options: Options<GetSharesData, ThrowOnError>) {
+        return (options.client ?? client).get<GetSharesResponses, GetSharesErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/ai/management/api/v1/conversations/{id}/shares',
+            ...options
+        });
+    }
+    
+    public static share<ThrowOnError extends boolean = false>(options: Options<ShareData, ThrowOnError>) {
+        return (options.client ?? client).post<ShareResponses, ShareErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/ai/management/api/v1/conversations/{id}/shares',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    public static revoke<ThrowOnError extends boolean = false>(options: Options<RevokeData, ThrowOnError>) {
+        return (options.client ?? client).delete<RevokeResponses, RevokeErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/ai/management/api/v1/conversations/{id}/shares/{userKey}',
+            ...options
+        });
+    }
+    
+    public static getSharedWithMe<ThrowOnError extends boolean = false>(options?: Options<GetSharedWithMeData, ThrowOnError>) {
+        return (options?.client ?? client).get<GetSharedWithMeResponses, GetSharedWithMeErrors, ThrowOnError>({
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/umbraco/ai/management/api/v1/conversations/shared-with-me',
             ...options
         });
     }

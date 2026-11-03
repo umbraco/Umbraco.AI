@@ -388,3 +388,217 @@
   (the hasActiveShares computation) and specs/frontend/shared-indicator.spec.ts (the entitySign
   badge's simultaneous-with-pin and hover-tooltip behavior) — neither had a spec file in the
   original pass since the mechanism they cover didn't exist yet at that point.
+- **2026-10-20 (`feature-build` SC-01 review → filtered unique index + title-only search)** — The
+  reviewer caught a real gap in `ARCHITECTURE.md` itself, not a builder mistake: the data model
+  never said whether the `(ConversationId, SharedWithUserKey)` uniqueness applied to all rows or
+  just active ones. Taken literally (a plain unique index), it would combine badly with soft-revoke
+  — a revoked recipient's slot would stay occupied forever, permanently blocking re-sharing with
+  them. Resolved: the index is filtered to `WHERE DateRevoked IS NULL`, so uniqueness holds only
+  among active shares; sharing again after a revoke inserts a fresh row (new `DateShared`, fires the
+  notification email same as any first share) rather than resurrecting the revoked one, preserving
+  the full share/revoke history per recipient. `ARCHITECTURE.md`'s data model section rewritten with
+  this as an explicit decision, not left implicit for `SC-02` to guess at.
+  Also fixed from the same review: `SPEC.md`'s `shared-with-me` `search` param now explicitly
+  matches title only, not message content — matching on content could leak whether a word exists
+  past a Snapshot share's cutoff, the exact channel the cutoff exists to close. `SC-01`'s
+  `AISharedConversationSummary` type is being corrected from `OwnerDisplayName` to `OwnerUserKey`
+  (display-name resolution belongs in the service/Web layer, which already has to resolve it for
+  `GET .../shares`' `userName` field anyway) — sent back to a fresh builder along with the other two
+  findings and the reviewer's non-blocking naming/one-type-per-file suggestions.
+- **2026-10-20 (`feature-build` SC-02: filtered-index cross-provider verification)** — The filtered
+  unique index decided during SC-01's review (`(ConversationId, SharedWithUserKey)` unique where
+  `DateRevoked IS NULL`) is the first of its kind in this codebase, so whether the raw filter SQL
+  would need provider-specific branching (SQL Server vs. SQLite) was an open question rather than
+  assumed. Verified empirically: generated scratch migrations against both
+  `Persistence.SqlServer` and `Persistence.Sqlite` projects; both rendered the identical
+  `filter: "DateRevoked IS NULL"` with no errors. No provider-conditional code needed — a single
+  plain filter string works on both. Scratch migrations were deleted (not committed) once this was
+  confirmed; the real, permanently-named migration is SC-03's job.
+- **2026-10-20 (`feature-build` SC-04: Snapshot cutoff must fail, never silently become Live)** —
+  Found during review, not anticipated at design time: resolving a Snapshot share's cutoff message
+  (the conversation's current last message) can come back empty two ways — the conversation has no
+  messages yet, or a regenerate race empties the tail between counting messages and fetching the
+  last one. The first implementation stored `CutoffMessageId = null` in both cases, which is exactly
+  what a `Live` share's cutoff looks like — an owner's explicit "frozen at today's messages" choice
+  would have silently become "no ceiling, see everything forever." Resolved: the service now throws
+  (`AIConversationShareCutoffUnresolvableException`) and rejects the share outright in both cases,
+  applying the same "never reveal more than intended" posture the data model's read-time graceful
+  degradation already uses, just at share-creation time instead. Written up as `ARCHITECTURE.md`
+  decision 8 and `STORIES.md` US1 AC11. Whether "Snapshot an empty conversation" should ever be a
+  supported case (it would need its own sentinel) is left as an open product question, not patched
+  around.
+- **2026-10-20 (`feature-build` SC-04: added a notification type, correcting an earlier assumption)**
+  — `ARCHITECTURE.md`'s "Connected systems" section originally said "No new notification type is
+  needed for v1." That turned out to be wrong once the email seam (decision 5) needed a way to
+  decouple "a share was created" from "send an email about it" — `AIConversationShareCreatedNotification`
+  now exists for exactly that, published only on a genuinely new share. Updated that paragraph to
+  describe the real, current design rather than leave the stale claim in place.
+- **2026-10-20 (`feature-build` pre-SC-06 research: corrected a design-doc inaccuracy about how
+  Umbraco actually sends email)** — Before starting SC-06, checked the real `Umbraco.Cms` source
+  for `SendEmailNotification`/`NotificationEmailModel`/`IEmailSender` rather than trusting
+  ARCHITECTURE.md decision 5's original wording ("the sharing service publishes
+  `SendEmailNotification`"). That's backwards: `SendEmailNotification` is an internal interception
+  point `EmailSender` (the concrete `IEmailSender`) publishes itself when asked to, so *other*
+  handlers can intercept a send — a feature author sends mail by injecting `IEmailSender` and
+  calling `SendAsync(EmailMessage, emailType)`, the same method core's own password-reset and
+  content-alert emails use. Corrected decision 5, the Extension points list, `PLAN.md` SC-06/SC-10,
+  and `SPEC.md`'s POST-shares section to say this accurately before any code was written against
+  the wrong mental model.
+- **2026-10-20 (share-picker modal size: `small`, matching Automate's own convention)** — At the
+  user's request, checked the sibling `Umbraco.Automate` product's own modals rather than picking a
+  size arbitrarily. Every comparably-scoped picker/settings modal there (`node-picker`,
+  `connection-type-picker`, `condition`, `notification-channel`, `trigger-settings`) uses `size:
+  "small"`; only the heavier whole-node-configuration modal (`node-settings`) uses `"medium"`.
+  `UAI_SHARE_PICKER_MODAL` (one person + one mode dropdown + a disclosure banner) is closer in
+  weight to Automate's "settings" modals than to its node-configuration one, so `small` is the
+  cross-product-consistent choice — already what the mockup used, now made explicit in `SPEC.md`
+  (landed in the previous commit alongside an unrelated correction, since both were staged
+  together) rather than left implicit in the mockup's CSS class alone.
+- **2026-10-20 (pre-SC-09 fix: `SharedConversationResponseModel` was missing an owner-name field)**
+  — Found before dispatching SC-09: `SPEC.md`'s single-conversation shared-view response never
+  defined a field for the owner's display name, even though the frontend's read-only banner
+  ("shared by \<owner\>") and the sidebar badge's hover tooltip both need one. Added
+  `ownerDisplayName` to the response model's spec, resolved the same way `GET .../shares`'
+  `userName` already is (via `IUserService` at the Web layer, not stored on the domain model) —
+  caught before it became a frontend-task surprise two tasks later.
+- **2026-10-21 (SC-11: `share()`/`revokeShare()` dispatch an entity-action event; `scopeMode`
+  stays a plain `string` at the generated-type layer)** — Neither was spelled out in `SPEC.md`'s
+  repository-additions section. (1) Sharing/revoking flips `hasActiveShares` on the owner's own
+  conversation row, but nothing told the sidebar's conversation list to refetch after either call —
+  caught in SC-11's review and fixed by mirroring `update()`'s existing `UaiEntityActionEvent.updated(...)`
+  dispatch pattern exactly (including the same awaited-dispatch timing). `getShares()` stays a plain
+  read with no dispatch. (2) `ShareConversationRequestModel["scopeMode"]` is left as the generated
+  plain `string` rather than a hand-written `"Snapshot" | "Live"` union, matching this file's existing
+  convention for other enum-like wire fields (e.g. `MessageResponseModel.role`); SC-15 (the mode
+  dropdown) can add a stricter frontend-only type if it turns out to need one.
+- **2026-10-21 (SC-12: `ownerDisplayName` lives on `UaiConversationDetailModel` itself; shared-view
+  loading is a separate workspace-context method, not `#reload()`'s "second path")** — Neither was
+  spelled out precisely in `SPEC.md`. (1) `ownerDisplayName?: string` was added directly to the one
+  store model, set only by `toSharedConversationDetailModel()`, so the chat view's read-only notice
+  and the later sidebar badge tooltip (SC-13/17) both read it off the same place rather than a
+  second observable. (2) `SPEC.md` describes `#reload()` needing "a second path" for a shared
+  conversation, but since no route to a shared conversation exists yet (that's SC-17/SC-18), SC-12
+  added a separate, currently-uncalled `setSharedConversationId()` alongside `#reload()` instead of
+  merging the branching logic into it now. Reviewer flagged this as a real but not-yet-reachable gap
+  (today only owner-side writes fire the update event `#reload()` responds to) and recommended SC-18
+  unify the two load paths into `#reload()` itself (keyed on `model.isShared`) rather than leaving
+  two separate routines — noted here so it isn't lost before SC-18 starts.
+- **2026-10-21 (SC-13: `iconColorAlias: 'green'`, not `'positive'`)** — `ARCHITECTURE.md`/`PLAN.md`
+  both named `'positive'` as a placeholder, flagged as needing confirmation against the real
+  icon/color sets. `'positive'` isn't a real `iconColorAlias` token in this CMS version (checked the
+  actual fixed color list in `extractUmbColorVariable.function.js`); `'green'` is what Umbraco core's
+  own entity signs use for this same positive/success styling (e.g. the has-schedule sign), so that's
+  what shipped.
+- **2026-10-21 (build order: SC-15 before SC-14)** — `PLAN.md` lists SC-14 ("Shared with" panel
+  section) before SC-15 (share-picker modal), both depending only on SC-11. SC-14's own bullet text
+  says its "Choose" button "opens SC-15's picker modal" — building SC-14 first would mean referencing
+  a modal token that doesn't exist yet. Swapped the build order (SC-15 first) so SC-14 can import a
+  real, already-reviewed `UAI_SHARE_PICKER_MODAL` token rather than a forward reference. No change to
+  either task's own scope or acceptance criteria — purely a sequencing call, since neither task
+  actually depends on the other per `PLAN.md`'s own `depends-on` lines.
+- **2026-10-21 (SC-15: user-picker single-pick constraint resolved)** — `ARCHITECTURE.md` decision 7
+  left open whether the real `UMB_USER_PICKER_MODAL` could actually be constrained to one pick.
+  Confirmed yes, via the real (CMS 18.0.0) `UmbUserPickerInputContext`/`UmbPickerInputContext.max`
+  property: setting `max = 1` makes the picker pass `multiple: false` into the modal's data
+  automatically. SC-19 (v17 backport) should re-verify this same behavior against the v17 CMS tag,
+  since it couldn't be checked from this worktree.
+- **2026-10-21 (SC-14: narrowed `share`/`getShares`/`revokeShare` to take `id: string`)** —
+  `SPEC.md` originally documented these repository methods as taking the full `conversation` object
+  (matching the pattern of this file's own writers like `rename(conversation, title)`). SC-14's
+  component only ever holds the lighter `UaiConversationDetailModel` (not the `ConversationResponseModel`
+  SC-11 originally typed these against), and all three methods only ever read `.id` anyway — the
+  data-source layer underneath already took a plain `id`. Narrowed the repository signatures to match,
+  confirmed safe since nothing called the old signature yet (unreleased, pre-merge branch), and updated
+  `SPEC.md`'s repository-additions section to the corrected `(id, ...)` signatures so the design doc
+  doesn't drift from what shipped.
+- **2026-10-21 (SC-17: dynamic per-row badge label via a custom `entitySign` api, not a hand-rolled
+  badge)** — `SPEC.md` asks for "Shared with me" rows to reuse "the same `Uai.Conversation.IsShared`
+  entity-sign badge overlay" as SC-13's owner-side rows, while also requiring per-row dynamic hover
+  text ("Shared by `<owner>`", a different name per row) — a combination a first build pass believed
+  was impossible, since an `entitySign` manifest's label looked fixed per manifest. Verified (reviewer,
+  then independently re-confirmed by the orchestrator against the real CMS 18.0.0 source) that it's
+  not: `UmbEntitySignApi.label` can be an `Observable<string>`, and `entity-sign-bundle.element.js`
+  creates a fresh api instance per `<umb-entity-sign-bundle>` (i.e. per row), with that api's element
+  ending up a real DOM descendant of the row — so a custom api can `consumeContext` a per-row context
+  the row provides, the same ambient-context pattern `UaiConversationEntityContext` already uses.
+  Built a second `entitySign` manifest (`Uai.Conversation.IsSharedWithMe`) with a custom
+  `UaiSharedWithMeSignApi` instead of hand-rolling the badge, keeping both rows' badges on the real
+  extension mechanism rather than one real and one look-alike.
+- **2026-10-21 (SC-17: live hover verification accepted as code-trace-only)** — This is the first
+  dynamic-label `entitySign` in this codebase. Two isolated live-verification attempts against the
+  running demo site (fresh login, real share, hover the badge) both hit the same modal-dismissal
+  instability already documented in SC-16's `BUILD-LOG.md` entry, even after avoiding the specific
+  triggers (zoom/scroll/interleaved JS queries) SC-16 identified. Accepted the strong code-level
+  verification (two independent reviews plus the orchestrator's own re-check of the exact source
+  lines) in place of a live visual confirmation, consistent with the precedent SC-16 already set for
+  this category of interaction in this environment. If this ever visibly misbehaves, the fix is
+  isolated to `shared-with-me-sign.api.ts`'s context-consumption wiring.
+- **2026-10-21 (SC-17 live-verification update)** — The hover check flagged as code-trace-only above
+  was completed live during SC-18's work: seeded a real share directly in the demo SQLite database
+  (see the next entry) instead of fighting the picker UI again, logged in as the real recipient, and
+  confirmed the badge genuinely shows "Shared by Administrator" on hover. No code change resulted;
+  recorded here so the decision log reflects the gap is actually closed, not just accepted-as-is.
+- **2026-10-21 (SC-18: owned-vs-shared routing resolved by try-then-fallback inside the store, not a
+  second route)** — `shared-with-me-tree-item.element.ts` (SC-17) deliberately reuses the exact same
+  `copilotWorkspaceConversationPath()` helper an owned conversation's row uses, so there is only one
+  route/URL shape (`conversation/:id`) for both kinds of conversation — the workspace element
+  genuinely cannot tell which kind it's opening from the URL alone. Rather than add a second route,
+  a query parameter, or thread an `isShared` flag through the router, `conversation-workspace.context
+  .ts`'s `#reload()` tries the owner lookup first and falls back to the already-built
+  `setSharedConversationId()` when it 404s (the backend's documented contract: 404 is indistinguishable
+  between "doesn't exist" and "not owned by you" — see `SPEC.md`). `conversation-workspace.element.ts`
+  needed zero changes as a result. The identical pattern was then mirrored in
+  `server-persisted-conversation.strategy.ts`'s `loadInitial()` for the chat-history load, deliberately
+  accepting a second `requestSharedView(id)` call (duplicating the one the store already makes) rather
+  than threading pre-fetched data between the store and the chat context — keeps the two contexts
+  decoupled, per the chat context's own documented design ("NOT the source of truth for which
+  conversation is open"). Flagged by review as worth revisiting only if a shared conversation's
+  message payload becomes large enough for the duplicate fetch to matter; not a blocker today.
+- **2026-10-21 (SC-18: lived-verified via direct DB seeding, not the share-picker UI)** — This plan's
+  share-picker/user-picker modal chain has been unreliable to drive via browser automation across
+  SC-16 and SC-17 (modal dismissal on almost any interleaved zoom/scroll/JS query). For SC-18's
+  required live click-through, inserted a real row into `umbracoAIConversationsShare` directly (same
+  shape the real `POST .../shares` endpoint would write — SC-10 already proved that endpoint works),
+  reset a real interactive demo user's password via the Users section UI, and logged in as them. This
+  is accepted as equivalent live verification because the recipient-side code path being tested
+  (sidebar load, click-through, chat/context-panel render) has no way to know or care how its share
+  row was created — it just queries the same `umbracoAIConversationsShare` table either way. Confirmed
+  working end-to-end: real sidebar entry, real dynamic badge tooltip, real chat history, real
+  read-only notice with the correct owner name, no "Shared with" section.
+- **2026-10-21 (whole-feature review: Snapshot-cutoff-not-found fallback changed from "everything
+  current" to a `DateShared` time bound)** — Found by the whole-feature review, not any per-task
+  review: a Snapshot share's cutoff message can be deleted by the owner's (pre-existing, unrelated)
+  regenerate feature, and the original graceful-degradation fallback for "cutoff not found" —
+  "return every message that currently exists" — was only safe at the instant of truncation. Once
+  the owner wrote anything new afterward, that fallback silently turned a frozen Snapshot share into
+  an unbounded Live one, because a regenerated reply's `Sequence` number gets reassigned (reused)
+  from the deleted message, so sequence-based reasoning alone can't tell "written before the share"
+  from "written after." Changed the fallback to a time bound on the share's own `DateShared`
+  timestamp instead — a value that exists independently of `Sequence` and can't be fooled by
+  sequence reuse. `ARCHITECTURE.md`'s "Graceful degradation" note, decision 8, and decision 9 all
+  updated to describe this (the original text described the "everything current" behavior as the
+  intended design, not a known limitation — this wasn't a documented tradeoff being corrected, it
+  was a genuine bug that review caught before release). Non-blocking follow-up noted but not
+  actioned: cross-server clock drift could in theory let a message squeak through this time bound in
+  a load-balanced deployment if the drift exceeds the gap between share and regenerate — judged
+  acceptable risk for now, revisit if this product is ever deployed with multiple app servers behind
+  a load balancer sharing one database.
+- **2026-10-21 (SC-19: backport decisions recorded on the v17 branch, not duplicated here)** — The
+  v17 backport's own design/porting decisions (how the migration IDs were handled, the two real
+  v17-vs-v18 API differences found, why the cross-branch port used `git show` instead of
+  `cherry-pick`/`merge`, and why recipient-side live verification was accepted via code-diff parity
+  rather than a fresh v17 login check) are logged in full on `v17/feature/share-conversations`'s own
+  `DECISION-LOG.md`, per this repo's convention that plan-folder docs are branch-specific. This entry
+  is just the pointer.
+- **2026-10-23 (resolved via PR review: sharing a zero-message conversation stays
+  Snapshot-blocked/Live-allowed, permanently, not a product question to revisit)** — `ARCHITECTURE.md`
+  decision 8 left this as an open TODO. The user confirmed closing it as-is: in the normal product
+  flow, a conversation is never visible anywhere (including to its own owner's sidebar) until its
+  first message has actually persisted, so a zero-message conversation existing at all is already an
+  edge case — reachable only if a draft's first message is created but then never finishes sending.
+  Given how rarely that's reachable, the existing asymmetry (a `Snapshot` share throws since there's
+  no message to anchor a cutoff to; a `Live` share succeeds and just shows an empty read-only chat,
+  which discloses nothing since there's nothing there) is accepted as the permanent behavior. No code
+  change made — the share-picker modal still doesn't disable the Snapshot option client-side for this
+  case, so the rough edge is the owner seeing the service's rejection rather than a disabled control,
+  which was explicitly judged not worth polishing for how rarely it's hit.

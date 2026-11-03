@@ -34,7 +34,8 @@ public class UmbracoAIProfileServiceConnectorTests
         _connector = new UmbracoAIProfileServiceConnector(
             _profileServiceMock.Object,
             _connectionServiceMock.Object,
-            _settingsAccessorMock.Object);
+            _settingsAccessorMock.Object,
+            new Umbraco.AI.Core.Providers.AIProviderCollection(() => []));
     }
 
     [Fact]

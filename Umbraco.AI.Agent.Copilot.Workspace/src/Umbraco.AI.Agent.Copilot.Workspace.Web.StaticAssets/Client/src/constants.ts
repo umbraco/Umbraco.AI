@@ -20,10 +20,25 @@ export const UAI_COPILOT_WORKSPACE_API_NAME = "ai-copilot-workspace-management";
 export const UAI_PROJECT_ENTITY_TYPE = "uai:copilot-workspace-project";
 export const UAI_CONVERSATION_ENTITY_TYPE = "uai:copilot-workspace-conversation";
 
+/**
+ * Entity flag alias for a conversation with at least one active share, used as both the `forEntityFlags`
+ * target on the "is shared" entitySign manifest and the flag the sidebar tree item passes to
+ * `<umb-entity-sign-bundle>` when `conversation.hasActiveShares` is true.
+ */
+export const UAI_CONVERSATION_SHARED_FLAG = "Uai.Conversation.IsShared";
+
+/**
+ * Entity flag alias for a "shared with me" row (i.e. a conversation owned by someone else), used as the
+ * `forEntityFlags` target on that row's "shared by <owner>" entitySign manifest and the flag the
+ * shared-with-me tree item passes to `<umb-entity-sign-bundle>`.
+ */
+export const UAI_CONVERSATION_SHARED_WITH_ME_FLAG = "Uai.Conversation.IsSharedWithMe";
+
 /** Sidebar group menu aliases (each backs a sectionSidebarApp, mirroring the AI section's menus). */
 export const UAI_PINNED_MENU_ALIAS = "Uai.CopilotWorkspace.Menu.Pinned";
 export const UAI_PROJECTS_MENU_ALIAS = "Uai.CopilotWorkspace.Menu.Projects";
 export const UAI_RECENT_MENU_ALIAS = "Uai.CopilotWorkspace.Menu.Recent";
+export const UAI_SHARED_WITH_ME_MENU_ALIAS = "Uai.CopilotWorkspace.Menu.SharedWithMe";
 
 /** Workspace alias for the project entity workspace (matches its manifests' condition + editor). */
 export const UAI_PROJECT_WORKSPACE_ALIAS = "Uai.CopilotWorkspace.Workspace.Project";

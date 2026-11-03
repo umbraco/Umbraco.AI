@@ -70,7 +70,7 @@ When an entity is saved:
 3. Serializes properties to JSON
 4. Adds dependency UDIs
 5. Filters sensitive settings
-6. Writes artifact to disk (e.g., `~/data/UmbracoAI/AIConnection__abc123.uda`)
+6. Writes artifact to disk (`umbraco/Deploy/Revision/*.uda`, committed to source control)
 
 **2. Deployment (Target Environment)**
 
@@ -86,24 +86,22 @@ Example: AIProfile deployment
 Any ID an artifact references (profile, connection, context, guardrail) must be declared as an
 artifact dependency in `GetArtifactAsync`, or Deploy can transfer the entity without it.
 
-### Settings Filtering
+### Sensitive Settings
 
-Three-layer filtering for AIConnection settings:
+Rule lives in `UmbracoAISensitiveSettingsFilter`, applied on both export **and** import (so an
+artifact written by an older version can't carry a secret into another environment):
 
-**Layer 1: IgnoreSettings (Highest Priority)**
-- Specific field names to always block
-- Most granular control
-- Example: `["ApiKey", "SecretKey"]`
-
-**Layer 2: IgnoreSensitive**
-- Blocks fields marked `[AIField(IsSensitive = true)]`
-- Blocks all values (even `$` references)
-- Use for fields that should never be deployed
-
-**Layer 3: IgnoreEncrypted**
-- Blocks encrypted values (`ENC:...`)
-- **Allows `$` configuration references**
-- Most common setting
+- Sensitivity comes from the schema (`[AIField(IsSensitive = true)]`), matched case-insensitively.
+  Connections use the provider settings schema; profiles, guardrail rules and context resources use
+  their own schemas. A connection whose provider is unknown treats every string as sensitive.
+- Sensitive fields keep only `$` configuration references (`$$` is a literal, not a reference),
+  unless listed in `IncludeSensitiveSettings`.
+- `ENC:` values are never deployed (each environment has its own Data Protection keys).
+- `IgnoreSettings` drops a field whatever its value and wins over `IncludeSensitiveSettings`.
+- On import the target keeps its own value for a sensitive field the artifact doesn't carry. A new
+  connection missing a *required* secret gets `MissingSecretPlaceholder` and is imported inactive
+  (and stays inactive on redeploy while the placeholder is in place).
+- `IgnoreEncrypted` / `IgnoreSensitive` are obsolete no-ops.
 
 **Configuration Reference Pattern:**
 
@@ -154,9 +152,8 @@ dependencies.Add(new UmbracoAIArtifactDependency(
     "AI": {
       "Deploy": {
         "Connections": {
-          "IgnoreEncrypted": true,
-          "IgnoreSensitive": false,
-          "IgnoreSettings": ["SpecificFieldName"]
+          "IgnoreSettings": ["specificFieldName"],
+          "IncludeSensitiveSettings": []
         }
       }
     }
@@ -223,7 +220,7 @@ internal sealed class EntitySavedHandler
 Unit tests focus on:
 - Artifact creation with all properties
 - Dependency tracking
-- Settings filtering (IgnoreSettings, IgnoreSensitive, IgnoreEncrypted)
+- Sensitive settings filtering (export and import, IgnoreSettings, IncludeSensitiveSettings)
 - Optional property handling (null cases)
 
 ## Deployment Strategy

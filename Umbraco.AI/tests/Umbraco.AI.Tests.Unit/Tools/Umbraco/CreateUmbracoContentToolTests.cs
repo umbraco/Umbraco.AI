@@ -180,6 +180,39 @@ public class CreateUmbracoContentToolTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_ContentTypeHasDefaultTemplate_LeavesTemplateToTheCms()
+    {
+        // The CMS assigns the content type's default template when a new item is first saved with no
+        // template (PublishableContentRepositoryBase.PersistNewItem). Sending a key here would instead run
+        // ContentEditingService's allowed-template check, which the CMS's own fallback skips.
+        var userKey = Guid.NewGuid();
+        var templateKey = Guid.NewGuid();
+        var args = new CreateUmbracoContentArgs(null, "blogPost", "Home", null);
+
+        _authorizerMock
+            .Setup(x => x.AuthorizeContentAsync(ActionNew.ActionLetter, null, null))
+            .ReturnsAsync(UmbracoWriteAuthorizationResult.Allowed(userKey));
+
+        var templateMock = new Mock<ITemplate>();
+        templateMock.Setup(x => x.Key).Returns(templateKey);
+        var contentTypeMock = new Mock<IContentType>();
+        contentTypeMock.Setup(x => x.DefaultTemplate).Returns(templateMock.Object);
+        _contentTypeServiceMock.Setup(x => x.Get("blogPost")).Returns(contentTypeMock.Object);
+
+        ContentCreateModel? capturedModel = null;
+        _contentEditingServiceMock
+            .Setup(x => x.CreateAsync(It.IsAny<ContentCreateModel>(), userKey))
+            .Callback<ContentCreateModel, Guid>((model, _) => capturedModel = model)
+            .ReturnsAsync(Attempt<ContentCreateResult, ContentEditingOperationStatus>.Succeed(
+                ContentEditingOperationStatus.Success, new ContentCreateResult { Content = CreateContentMock(Guid.NewGuid(), "Home", "blogPost").Object }));
+
+        await _tool.ExecuteAsync(args, CancellationToken.None);
+
+        capturedModel.ShouldNotBeNull();
+        capturedModel!.TemplateKey.ShouldBeNull();
+    }
+
+    [Fact]
     public void Description_ReturnsNonEmptyString()
     {
         var description = _tool.Description;

@@ -46,8 +46,8 @@ You are merging a feature branch from a worktree into the appropriate versioned 
    ```
 
 5. **Determine the target dev branch** from the feature branch name. The version prefix of the feature branch dictates the target:
-   - `v18/feature/foo` → merge into `v18/dev`
-   - `v17/feature/bar` → merge into `v17/dev`
+   - `v18/topic/foo` → merge into `v18/dev`
+   - `v17/topic/bar` → merge into `v17/dev`
 
    Extract the prefix:
    ```bash

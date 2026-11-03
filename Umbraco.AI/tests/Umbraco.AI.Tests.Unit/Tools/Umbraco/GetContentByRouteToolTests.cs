@@ -12,6 +12,7 @@ namespace Umbraco.AI.Tests.Unit.Tools.Umbraco;
 
 public class GetContentByRouteToolTests
 {
+    private readonly Mock<IUmbracoReadAuthorizer> _readAuthorizerMock = TestReadAuthorizers.AllowAll();
     private readonly Mock<IUmbracoContextFactory> _umbracoContextFactoryMock;
     private readonly Mock<IDocumentUrlService> _documentUrlServiceMock;
     private readonly IAITool _tool;
@@ -20,7 +21,7 @@ public class GetContentByRouteToolTests
     {
         _umbracoContextFactoryMock = new Mock<IUmbracoContextFactory>();
         _documentUrlServiceMock = new Mock<IDocumentUrlService>();
-        _tool = new GetContentByRouteTool(_umbracoContextFactoryMock.Object, _documentUrlServiceMock.Object);
+        _tool = new GetContentByRouteTool(_umbracoContextFactoryMock.Object, _documentUrlServiceMock.Object, _readAuthorizerMock.Object);
     }
 
     /// <summary>

@@ -2,7 +2,9 @@ using System.ComponentModel;
 using Examine;
 using Examine.Search;
 
+using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Core.Tools.Scopes;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.Security;
 using Umbraco.Cms.Core.Web;
@@ -38,9 +40,14 @@ public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
 {
     private const string ExternalIndexName = "ExternalIndex";
 
+    // How many index matches to fetch per result asked for, and the most to fetch, before access filtering.
+    private const int CandidateMultiplier = 5;
+    private const int MaxCandidates = 250;
+
     private readonly IExamineManager _examineManager;
     private readonly IUmbracoContextFactory _umbracoContextFactory;
     private readonly IBackOfficeSecurityAccessor _backOfficeSecurityAccessor;
+    private readonly IUmbracoReadAuthorizer _readAuthorizer;
 
     /// <summary>
     /// Initializes a new instance of <see cref="SearchUmbracoTool"/>.
@@ -48,14 +55,36 @@ public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
     /// <param name="examineManager">The Examine manager.</param>
     /// <param name="umbracoContextFactory">The Umbraco context factory.</param>
     /// <param name="backOfficeSecurityAccessor">The backoffice security accessor for user context.</param>
+    [Obsolete("Use the constructor that accepts an IUmbracoReadAuthorizer. Will be removed in v20.")]
     public SearchUmbracoTool(
         IExamineManager examineManager,
         IUmbracoContextFactory umbracoContextFactory,
         IBackOfficeSecurityAccessor backOfficeSecurityAccessor)
+        : this(
+            examineManager,
+            umbracoContextFactory,
+            backOfficeSecurityAccessor,
+            StaticServiceProvider.Instance.GetRequiredService<IUmbracoReadAuthorizer>())
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of <see cref="SearchUmbracoTool"/>.
+    /// </summary>
+    /// <param name="examineManager">The Examine manager.</param>
+    /// <param name="umbracoContextFactory">The Umbraco context factory.</param>
+    /// <param name="backOfficeSecurityAccessor">The backoffice security accessor for user context.</param>
+    /// <param name="readAuthorizer">Limits results to what the acting user can access.</param>
+    public SearchUmbracoTool(
+        IExamineManager examineManager,
+        IUmbracoContextFactory umbracoContextFactory,
+        IBackOfficeSecurityAccessor backOfficeSecurityAccessor,
+        IUmbracoReadAuthorizer readAuthorizer)
     {
         _examineManager = examineManager;
         _umbracoContextFactory = umbracoContextFactory;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
+        _readAuthorizer = readAuthorizer;
     }
 
     /// <inheritdoc />
@@ -68,25 +97,25 @@ public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
         "**IMPORTANT** Use the ID or Key from results to reference content or media items in other tools.";
 
     /// <inheritdoc />
-    protected override Task<object> ExecuteAsync(SearchUmbracoArgs args, CancellationToken cancellationToken = default)
+    protected override async Task<object> ExecuteAsync(SearchUmbracoArgs args, CancellationToken cancellationToken = default)
     {
         // Validate input
         if (string.IsNullOrWhiteSpace(args.Query))
         {
-            return Task.FromResult<object>(new SearchUmbracoResult(
+            return new SearchUmbracoResult(
                 false,
                 Array.Empty<UmbracoSearchResultItem>(),
-                "Search query cannot be empty."));
+                "Search query cannot be empty.");
         }
 
         // Sanitize type filter
         var typeFilter = args.Type?.ToLowerInvariant() ?? "all";
         if (typeFilter != "content" && typeFilter != "media" && typeFilter != "all")
         {
-            return Task.FromResult<object>(new SearchUmbracoResult(
+            return new SearchUmbracoResult(
                 false,
                 Array.Empty<UmbracoSearchResultItem>(),
-                $"Invalid type filter '{args.Type}'. Must be 'content', 'media', or 'all'."));
+                $"Invalid type filter '{args.Type}'. Must be 'content', 'media', or 'all'.");
         }
 
         // Enforce max results limit
@@ -95,46 +124,48 @@ public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
         // Get Examine index
         if (!_examineManager.TryGetIndex(ExternalIndexName, out var index))
         {
-            return Task.FromResult<object>(new SearchUmbracoResult(
+            return new SearchUmbracoResult(
                 false,
                 Array.Empty<UmbracoSearchResultItem>(),
-                "Search index is not available."));
+                "Search index is not available.");
         }
 
         try
         {
-            // Resolve user start node restrictions for content/media access filtering
+            // Search results show names, keys and places in the tree, so they need an acting user who can
+            // browse the tree; results are then limited to that user's start nodes.
             var user = _backOfficeSecurityAccessor.BackOfficeSecurity?.CurrentUser;
-            int[]? startContentIds = null;
-            int[]? startMediaIds = null;
-
-            if (user is not null)
+            if (user is null || !UmbracoSectionAccess.CanBrowseTree(user))
             {
-                startContentIds = GetEffectiveStartNodeIds(user.StartContentIds, user.Groups.Select(g => g.StartContentId));
-                startMediaIds = GetEffectiveStartNodeIds(user.StartMediaIds, user.Groups.Select(g => g.StartMediaId));
+                return new SearchUmbracoResult(
+                    false,
+                    Array.Empty<UmbracoSearchResultItem>(),
+                    "You do not have access to search content or media.");
             }
 
-            // Execute search with start node filtering applied at query level
-            var searchResults = PerformSearch(index, args.Query, typeFilter, args.Tags, maxResults, startContentIds, startMediaIds);
+            // Access is decided per result by the read authorizer (start nodes, sections, permissions, as
+            // the CMS tree does). Fetch extra matches so a user restricted to part of the tree still gets
+            // up to maxResults of what they can see.
+            var searchResults = PerformSearch(index, args.Query, typeFilter, args.Tags, Math.Min(maxResults * CandidateMultiplier, MaxCandidates));
 
-            // Enrich results with published content data
-            var enrichedResults = EnrichResults(searchResults, startContentIds, startMediaIds);
+            // Enrich results with published content data, keeping only what the user may see
+            var enrichedResults = (await EnrichResultsAsync(searchResults)).Take(maxResults).ToList();
 
-            return Task.FromResult<object>(new SearchUmbracoResult(
+            return new SearchUmbracoResult(
                 true,
                 enrichedResults,
-                null));
+                null);
         }
         catch (Exception ex)
         {
-            return Task.FromResult<object>(new SearchUmbracoResult(
+            return new SearchUmbracoResult(
                 false,
                 Array.Empty<UmbracoSearchResultItem>(),
-                $"Search failed: {ex.Message}"));
+                $"Search failed: {ex.Message}");
         }
     }
 
-    private ISearchResults PerformSearch(IIndex index, string query, string typeFilter, string[]? tags, int maxResults, int[]? startContentIds, int[]? startMediaIds)
+    private ISearchResults PerformSearch(IIndex index, string query, string typeFilter, string[]? tags, int maxResults)
     {
         var searcher = index.Searcher;
         var queryExecutor = searcher.CreateQuery();
@@ -167,15 +198,6 @@ public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
         if (tags is { Length: > 0 })
         {
             booleanQuery = booleanQuery.And().GroupedOr(["tags"], tags);
-        }
-
-        // Start node access filter — restricts results to content/media the user can access.
-        // The __Path field in Examine contains the ancestor chain (e.g., "-1,1234,5678"),
-        // so filtering on it ensures only items under the user's allowed start nodes are returned.
-        var pathFilter = BuildStartNodePathFilter(typeFilter, startContentIds, startMediaIds);
-        if (pathFilter is not null)
-        {
-            booleanQuery = booleanQuery.And().NativeQuery(pathFilter);
         }
 
         return booleanQuery.Execute(new QueryOptions(0, maxResults));
@@ -241,96 +263,14 @@ public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
         return sb.ToString();
     }
 
-    /// <summary>
-    /// Computes effective start node IDs by combining user-level and group-level start nodes.
-    /// User-level start nodes take precedence; if not set, group start nodes are used.
-    /// </summary>
-    internal static int[]? GetEffectiveStartNodeIds(int[]? userStartNodeIds, IEnumerable<int?> groupStartNodeIds)
+    private async Task<IReadOnlyList<UmbracoSearchResultItem>> EnrichResultsAsync(ISearchResults searchResults)
     {
-        // User-level start nodes take precedence when set
-        if (userStartNodeIds is { Length: > 0 })
-        {
-            return userStartNodeIds;
-        }
-
-        // Fall back to group start nodes
-        var groupIds = groupStartNodeIds
-            .Where(id => id.HasValue)
-            .Select(id => id!.Value)
-            .Distinct()
-            .ToArray();
-
-        return groupIds.Length > 0 ? groupIds : null;
-    }
-
-    /// <summary>
-    /// Builds a Lucene query fragment to filter results by the user's start node path restrictions.
-    /// Returns null when no filtering is needed.
-    /// </summary>
-    internal static string? BuildStartNodePathFilter(string typeFilter, int[]? startContentIds, int[]? startMediaIds)
-    {
-        var contentRestricted = !IsUnrestricted(startContentIds);
-        var mediaRestricted = !IsUnrestricted(startMediaIds);
-
-        // When searching a specific type, only that type's restrictions matter
-        if (typeFilter == "content")
-        {
-            return contentRestricted ? BuildPathOrClause(startContentIds!) : null;
-        }
-
-        if (typeFilter == "media")
-        {
-            return mediaRestricted ? BuildPathOrClause(startMediaIds!) : null;
-        }
-
-        // typeFilter == "all": both content and media
-        if (!contentRestricted && !mediaRestricted)
-        {
-            return null;
-        }
-
-        if (contentRestricted && mediaRestricted)
-        {
-            // Both restricted — combine all start node IDs (content/media have separate path trees)
-            var allIds = startContentIds!.Concat(startMediaIds!).Distinct().ToArray();
-            return BuildPathOrClause(allIds);
-        }
-
-        // Mixed: one restricted, one unrestricted.
-        // Allow all items of the unrestricted type, restrict the other by path.
-        if (contentRestricted)
-        {
-            // Media is unrestricted; content must match start nodes
-            var pathClause = BuildPathOrClause(startContentIds!);
-            return $"(__IndexType:media OR ({pathClause}))";
-        }
-
-        // Content is unrestricted; media must match start nodes
-        var mediaPathClause = BuildPathOrClause(startMediaIds!);
-        return $"(__IndexType:content OR ({mediaPathClause}))";
-    }
-
-    internal static bool IsUnrestricted(int[]? ids)
-        => ids is null or { Length: 0 } || Array.Exists(ids, static id => id == -1);
-
-    private static string BuildPathOrClause(int[] startNodeIds)
-    {
-        // __Path is indexed as a tokenized field with comma-separated IDs.
-        // Each start node ID is searched as a term within the path.
-        var clauses = startNodeIds.Select(id => $"__Path:{id}");
-        return $"({string.Join(" OR ", clauses)})";
-    }
-
-    private IReadOnlyList<UmbracoSearchResultItem> EnrichResults(ISearchResults searchResults, int[]? startContentIds, int[]? startMediaIds)
-    {
-        var hasRestrictions = !IsUnrestricted(startContentIds) || !IsUnrestricted(startMediaIds);
         var enrichedResults = new List<UmbracoSearchResultItem>();
 
         // Ensure UmbracoContext exists — not automatically created for backoffice API requests, and
         // never created at all when this tool is invoked from Umbraco.Automate's background dispatcher.
-        // A no-op if a context is already ambient. Needed here specifically so path-based access
-        // control (below) can always verify a restricted user's start nodes rather than falling back
-        // to leaking unverified basic results.
+        // A no-op if a context is already ambient. Every result is checked against the published item,
+        // so a result that can't be loaded is dropped rather than returned unverified.
         using var contextReference = _umbracoContextFactory.EnsureUmbracoContext();
         var umbracoContext = contextReference.UmbracoContext;
 
@@ -346,61 +286,26 @@ public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
             var isMedia = searchResult.Values.ContainsKey("__IndexType") &&
                          searchResult.Values["__IndexType"] == "media";
 
-            IPublishedContent? publishedItem = null;
+            IPublishedContent? publishedItem = isMedia
+                ? umbracoContext.Media?.GetById(nodeId)
+                : umbracoContext.Content?.GetById(nodeId);
 
-            if (isMedia)
+            if (publishedItem is null)
             {
-                publishedItem = umbracoContext.Media?.GetById(nodeId);
-            }
-            else
-            {
-                publishedItem = umbracoContext.Content?.GetById(nodeId);
+                continue;
             }
 
-            if (publishedItem != null)
+            var canSee = isMedia
+                ? await _readAuthorizer.CanReadMediaAsync(publishedItem.Key)
+                : await _readAuthorizer.CanSeeContentInTreeAsync(publishedItem.Key, publishedItem.Path);
+
+            if (canSee)
             {
                 enrichedResults.Add(CreateEnrichedResultItem(publishedItem, searchResult.Score, isMedia));
-            }
-            else if (!hasRestrictions)
-            {
-                // Fallback to basic result only when there are no start node restrictions,
-                // since we can't verify the path without IPublishedContent.
-                enrichedResults.Add(CreateBasicResultItem(searchResult));
             }
         }
 
         return enrichedResults;
-    }
-
-    private UmbracoSearchResultItem CreateBasicResultItem(ISearchResult searchResult)
-    {
-        // Extract basic data from search result
-        var name = searchResult.Values.ContainsKey("nodeName")
-            ? searchResult.Values["nodeName"]
-            : "Unknown";
-
-        var contentType = searchResult.Values.ContainsKey("contentType")
-            ? searchResult.Values["contentType"]
-            : "Unknown";
-
-        var updateDate = searchResult.Values.ContainsKey("updateDate")
-            ? DateTime.TryParse(searchResult.Values["updateDate"], out var date) ? date : DateTime.MinValue
-            : DateTime.MinValue;
-
-        var isMedia = searchResult.Values.ContainsKey("__IndexType") &&
-                     searchResult.Values["__IndexType"] == "media";
-
-        return new UmbracoSearchResultItem(
-            Guid.TryParse(searchResult.Id, out var guid) ? guid : Guid.Empty,
-            name,
-            isMedia ? "media" : "content",
-            contentType,
-            null, // No URL without published content
-            null, // No thumbnail without published content
-            searchResult.Score,
-            updateDate,
-            "Unknown",
-            new Dictionary<string, object>());
     }
 
     private UmbracoSearchResultItem CreateEnrichedResultItem(IPublishedContent content, float score, bool isMedia)

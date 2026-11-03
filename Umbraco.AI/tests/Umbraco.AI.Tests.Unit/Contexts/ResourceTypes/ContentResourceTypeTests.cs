@@ -22,7 +22,14 @@ public class ContentResourceTypeTests
     private readonly Mock<IUmbracoContextAccessor> _umbracoContextAccessor = new();
     private readonly Mock<IContentPermissionAuthorizer> _authorizer = new();
     private readonly Mock<IBackOfficeSecurityAccessor> _securityAccessor = new();
-    private readonly IUser _user = new Mock<IUser>().Object;
+    private readonly IUser _user = UserWithSections("content");
+
+    private static IUser UserWithSections(params string[] sections)
+    {
+        var user = new Mock<IUser>();
+        user.SetupGet(u => u.AllowedSections).Returns(sections);
+        return user.Object;
+    }
 
     private ContentResourceType CreateSut()
         => new(new Mock<IAIContextResourceTypeInfrastructure>().Object, _umbracoContextAccessor.Object, _authorizer.Object, _securityAccessor.Object);
@@ -60,6 +67,24 @@ public class ContentResourceTypeTests
         var key = Guid.NewGuid();
         WithActingUser(_user);
         _authorizer.Setup(a => a.IsDeniedAsync(_user, key, ActionBrowse.ActionLetter)).ReturnsAsync(true);
+
+        var result = await CreateSut().ResolveDataAsync(new ContentResourceSettings { ContentId = key });
+
+        result.ShouldBeNull();
+        _umbracoContextAccessor.Verify(a => a.TryGetUmbracoContext(out It.Ref<IUmbracoContext>.IsAny), Times.Never);
+    }
+
+    [Theory]
+    [InlineData("settings")]
+    [InlineData("media")]
+    [InlineData("translation")]
+    public async Task UserWithoutContentSection_ReturnsNull_EvenWithBrowsePermission(string section)
+    {
+        // Full property values need the Content section, as the CMS's document endpoint does.
+        var user = UserWithSections(section);
+        var key = Guid.NewGuid();
+        WithActingUser(user);
+        _authorizer.Setup(a => a.IsDeniedAsync(user, key, ActionBrowse.ActionLetter)).ReturnsAsync(false);
 
         var result = await CreateSut().ResolveDataAsync(new ContentResourceSettings { ContentId = key });
 

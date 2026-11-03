@@ -21,9 +21,11 @@ Request:
 ```json
 {
   "recipientUserKeys": ["<guid>", "..."],
-  "scopeMode": "snapshot" | "live"
+  "scopeMode": "Snapshot" | "Live"
 }
 ```
+(`scopeMode` is parsed case-insensitively server-side, but the API documents and returns the
+PascalCase enum member names, and that's what the frontend sends.)
 
 Behavior:
 - 404 if `{id}` isn't owned by the acting user (indistinguishable from not-found).
@@ -34,7 +36,7 @@ Behavior:
   caller-supplied identity of what's being frozen" posture as `UserKey` elsewhere in this service.
   `scopeMode: "live"` leaves it `null`.
 - For each recipient a **new** share row is created for (not an update to an existing one): sends
-  them an email via `SendEmailNotification` (see `ARCHITECTURE.md` decision 5), naming the owner
+  them an email via `IEmailSender` (see `ARCHITECTURE.md` decision 5), naming the owner
   and linking to the shared conversation. Updating an existing recipient's scope does not send a
   second email.
 
@@ -75,6 +77,10 @@ active shares where the acting user is the recipient, not from owned conversatio
 - Query params mirror the existing list endpoint where they still make sense: `skip`, `take`,
   `search`. `projectId`/`includeArchived` do not apply (shared conversations aren't grouped into
   the recipient's own projects, and archiving is an owner-only concept) and are omitted.
+  `search` matches **title only** — not message content like the owner's own list endpoint does.
+  A Snapshot share hides messages after its cutoff from the recipient; matching message content
+  here would let a search hit (or miss) leak whether a word exists past that cutoff, through a
+  channel the cutoff is supposed to close. Title-only is a deliberate narrowing, not an oversight.
 - 200 `PagedViewModel<SharedConversationSummaryResponseModel>` — conversation id, title, owner's
   display name, `scopeMode`, `dateShared`. No message content in the list view.
 
@@ -83,12 +89,24 @@ active shares where the acting user is the recipient, not from owned conversatio
 - 404 if there is no active (non-revoked) share for `{id}` addressed to the acting user.
 - 200 `SharedConversationResponseModel`:
   - Conversation metadata (title, agent, dates) — same shape as the owner's response model, minus
-    owner-only fields (`isPinned`, `isArchived`, `projectId`).
+    owner-only fields (`isPinned`, `isArchived`, `projectId`), **plus `ownerDisplayName`** (string) —
+    not on the owner's own response model, since a conversation never needs to name its own owner
+    to the owner. The frontend's read-only banner ("Read-only — shared by \<owner\>", see the "Chat
+    detail view" section below) and the "Shared with me" sidebar badge's hover tooltip both need
+    this, so it has to come from somewhere on the wire — this is that place, resolved the same way
+    `GET .../shares`' `userName` is (via `IUserService`, not stored on the domain model).
+    **`dateModified`/`lastMessageAt` for a `Snapshot` share are the cutoff message's own timestamp,
+    not the conversation's live values** — see `ARCHITECTURE.md` decision 9: the conversation's
+    current `LastMessageAt` would otherwise reveal *that* (and *when*) the owner kept chatting after
+    the cutoff, even though the recipient can't see *what* was said — a smaller version of the same
+    leak-through-metadata concern the title-only-search rule above already closes. `Live` shares are
+    unaffected (there's no ceiling to be honest about).
   - `messages`: for a `Snapshot` share, every message whose `Sequence` is `<=` the `CutoffMessageId`
     message's `Sequence` (resolved at read time); for a `Live` share, all messages. Both in the
     existing ascending order. If the `CutoffMessageId` message no longer exists (e.g. the owner
-    used regenerate and truncated past it), falls back to every message that still exists — never
-    an error.
+    used regenerate and truncated past it), falls back to every message whose `DateCreated` is at
+    or before the share's own `DateShared` — never an error, and never a message written after the
+    share was made, regardless of `Sequence` reuse from the regenerate.
   - `resources` / `contextIds`: unfiltered — the same attachment list the owner sees. See
     `ARCHITECTURE.md` decision 2 for why; the corresponding disclosure happens at share time, in
     the Share modal (below), not by filtering the read.
@@ -127,7 +145,13 @@ A new "Shared with" `<details class="cw-context-block">` in `conversation-contex
 ### `UAI_SHARE_PICKER_MODAL` — pick one person + a mode
 
 A single-recipient form, opened directly by "Choose" above — repeatable, one person per
-invocation, the same way adding one resource is one picker invocation:
+invocation, the same way adding one resource is one picker invocation. `modal: { type: "sidebar",
+size: "small" }` — checked against `Umbraco.Automate`'s own sibling product, which puts every
+comparably-scoped picker/settings modal (`node-picker`, `connection-type-picker`, `condition`,
+`notification-channel`, `trigger-settings`) at `size: "small"`, reserving `"medium"` for a
+genuinely heavier form (`node-settings`, which configures a whole flow node). This form is closer
+in weight to Automate's own "settings" modals than to its node-configuration one, so `small`
+matches the established cross-product convention rather than being picked arbitrarily:
 
 - **Recipient**: a one-item picker field (same shape as a content-picker property editor): empty
   shows a "Choose a person" placeholder button that opens the real `UMB_USER_PICKER_MODAL`
@@ -149,9 +173,9 @@ invocation, the same way adding one resource is one picker invocation:
 
 ### `conversation.repository.ts` additions
 
-- `share(conversation, recipientUserKey, scopeMode)` → `POST .../shares`
-- `getShares(conversation)` → `GET .../shares`
-- `revokeShare(conversation, userKey)` → `DELETE .../shares/{userKey}`
+- `share(id, recipientUserKey, scopeMode)` → `POST .../shares`
+- `getShares(id)` → `GET .../shares`
+- `revokeShare(id, userKey)` → `DELETE .../shares/{userKey}`
 - `requestSharedWithMe(skip, take, search?)` → `GET /conversations/shared-with-me`
 - `requestSharedView(id)` → `GET /conversations/{id}/shared-view`
 
@@ -172,11 +196,18 @@ from the owner's own shared entries, just a different group.
 **"Shared with me" grouping:**
 - A new group in the existing conversation sidebar list, visually parallel to the existing
   Pinned/Recent groupings, sourced from `requestSharedWithMe()`.
-- Each entry renders like any other tree item: title only, plain chat icon with the same
-  `Uai.Conversation.IsShared` entity-sign badge overlay described below — no owner-name subtitle
-  row. The owner's name isn't dropped as information, just moved: hovering the badge on one of
-  these entries shows "Shared by \<owner\>" (vs. plain "Shared" on the owner's own rows), and
-  opening the conversation shows the same owner name again in the read-only banner (below).
+- Each entry renders like any other tree item: title only, plain chat icon with a corner badge —
+  no owner-name subtitle row. This is a *second* `entitySign` flag/manifest
+  (`Uai.Conversation.IsSharedWithMe`), not a reuse of the owner-side `Uai.Conversation.IsShared`
+  one below: these rows' badge needs a different, per-row *dynamic* hover label ("Shared by
+  \<owner\>", the summary's actual owner name), which a static per-manifest label can't produce, so
+  its `kind: 'icon'` manifest carries a custom `api` (`UaiSharedWithMeSignApi`) that reads the
+  owner's name from a per-row context (`UaiSharedConversationRowContext`, provided by each row) and
+  exposes it as a reactive `label`. Visually the badge is identical to the owner-side one (same
+  icon, same ring styling) — only the label mechanism differs. The owner's name isn't dropped as
+  information, just moved: hovering the badge shows "Shared by \<owner\>" (vs. plain "Shared" on
+  the owner's own rows), and opening the conversation shows the same owner name again in the
+  read-only banner (below).
 - Only a "View" affordance — no Pin/Archive/Rename/Move/Delete entity actions render for shared
   entries; those remain exclusively on the owner's own conversations.
 - **Not** a separate section or tab — reuses the one existing sidebar list surface, since Copilot
@@ -186,17 +217,17 @@ from the owner's own shared entries, just a different group.
 in the mockup, under Recent): a real Umbraco **entity sign** (flag badge), per `ARCHITECTURE.md`
 decision 6 — not an icon swap. `uai-copilot-workspace-conversation-tree-item` wraps its existing
 icon (pin if `isPinned`, else plain chat icon — unchanged) in `<umb-entity-sign-bundle
-.entityType="uai-conversation" .entityFlags=${hasActiveShares ? [{ alias:
-'Uai.Conversation.IsShared' }] : []}>`, and a new `entitySign` manifest
-(`forEntityTypes: ['uai-conversation']`, `forEntityFlags: ['Uai.Conversation.IsShared']`, `kind:
-'icon'`, `iconName: 'icon-share'`, `iconColorAlias: 'positive'`) renders it as a small corner badge
-over whichever main icon is showing. Pinned and shared now show **simultaneously** — a pinned,
-shared conversation has both the pushpin and the badge at once. Hovering the badge shows its label
-as a tooltip ("Shared") without opening anything. "With whom" is answered by opening the
-conversation and looking at the context panel's "Shared with" section (below) — not a tooltip on
-the row itself, and not a separate entity action (there isn't one — see `ARCHITECTURE.md` decision
-7). The exact icon name (`icon-share`) and color alias (`positive`) are `feature-build` details to
-confirm against the real icon/color sets, not decided here.
+.entityType="uai:copilot-workspace-conversation" .entityFlags=${hasActiveShares ? [{ alias:
+'Uai.Conversation.IsShared' }] : []}>`, and an `entitySign` manifest
+(`forEntityTypes: ['uai:copilot-workspace-conversation']`, `forEntityFlags:
+['Uai.Conversation.IsShared']`, `kind: 'icon'`, `iconName: 'icon-share'`, `iconColorAlias: 'green'`
+— `'positive'` isn't a real UUI color-alias token, confirmed against core's own usage) renders it
+as a small corner badge over whichever main icon is showing. Pinned and shared now show
+**simultaneously** — a pinned, shared conversation has both the pushpin and the badge at once.
+Hovering the badge shows its label as a tooltip ("Shared") without opening anything. "With whom" is
+answered by opening the conversation and looking at the context panel's "Shared with" section
+(below) — not a tooltip on the row itself, and not a separate entity action (there isn't one — see
+`ARCHITECTURE.md` decision 7).
 
 ### Chat detail view and context panel: read-only mode
 
@@ -234,12 +265,17 @@ resource/context" is enabled.
   working-looking "add a resource/context" controls that silently fail, since there's no write
   endpoint for a shared view. It shows the same (unfiltered — see `ARCHITECTURE.md` decision 2)
   resource list the owner sees; it just can't be edited.
-- `UaiConversationWorkspaceContext.#reload()` needs a second path: when the route target is a
-  shared conversation, it calls the new `requestSharedView(id)` instead of the owner's
-  `requestById(id)`, and maps the `SharedConversationResponseModel` into
-  `UaiConversationDetailModel` via a new `toSharedConversationDetailModel()` (parallel to the
-  existing `toConversationDetailModel()`) that sets `isShared: true` and leaves
-  `isPinned`/`isArchived` at their defaults, since those concepts don't apply to a share.
+- `UaiConversationWorkspaceContext.#reload()` tries the owner's `requestById(id)` first; there is
+  only one route (`conversation/:id`) for both an owned and a shared conversation, so the store —
+  not the router — decides which kind it's looking at. When that lookup 404s (the backend's
+  ownership check is indistinguishable from not-found), it falls back to
+  `setSharedConversationId(id)`, which calls `requestSharedView(id)` and maps the
+  `SharedConversationResponseModel` into `UaiConversationDetailModel` via
+  `toSharedConversationDetailModel()` (parallel to the existing `toConversationDetailModel()`),
+  setting `isShared: true` and leaving `isPinned`/`isArchived` at their defaults, since those
+  concepts don't apply to a share. The chat runtime's own history load
+  (`UaiServerPersistedConversationStrategy.loadInitial()`) mirrors the same try-then-fallback
+  independently, since it is a separate call the store doesn't fetch on the chat's behalf.
 - The `readonly-notice` text varies by *why* it's read-only (archived vs. shared-by-\<owner name\>)
   — `conversation-chat-view.element.ts` already passes this as a plain attribute, so this is a
   matter of picking the right localized string (a new `uaiCopilotWorkspace_sharedReadOnlyNotice`,

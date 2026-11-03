@@ -40,7 +40,8 @@ public class UpdateUmbracoContentTool(
     IContentEditingService contentEditingService,
     IUmbracoWriteAuthorizer authorizer,
     PropertyEditorCollection propertyEditors,
-    IJsonSerializer jsonSerializer)
+    IJsonSerializer jsonSerializer,
+    ITemplateService templateService)
     : AIToolBase<UpdateUmbracoContentArgs>
 {
     private readonly ContentEditorValueReader _valueReader = new(propertyEditors, jsonSerializer);
@@ -56,7 +57,26 @@ public class UpdateUmbracoContentTool(
             contentEditingService,
             authorizer,
             StaticServiceProvider.Instance.GetRequiredService<PropertyEditorCollection>(),
-            StaticServiceProvider.Instance.GetRequiredService<IJsonSerializer>())
+            StaticServiceProvider.Instance.GetRequiredService<IJsonSerializer>(),
+            StaticServiceProvider.Instance.GetRequiredService<ITemplateService>())
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UpdateUmbracoContentTool"/> class.
+    /// </summary>
+    [Obsolete("Use the constructor that accepts an ITemplateService. Will be removed in v20")]
+    public UpdateUmbracoContentTool(
+        IContentEditingService contentEditingService,
+        IUmbracoWriteAuthorizer authorizer,
+        PropertyEditorCollection propertyEditors,
+        IJsonSerializer jsonSerializer)
+        : this(
+            contentEditingService,
+            authorizer,
+            propertyEditors,
+            jsonSerializer,
+            StaticServiceProvider.Instance.GetRequiredService<ITemplateService>())
     {
     }
 
@@ -105,40 +125,21 @@ public class UpdateUmbracoContentTool(
             })
             .ToList();
 
-        // ContentEditingServiceBase.RemoveMissingProperties clears every property alias NOT present in
-        // Properties on every save, so — unlike a create — this tool must resubmit every other property's
-        // current value or an update that only names one field would silently wipe the rest of the content
-        // item. The values must be resubmitted in editor format, not the stored format, or editors such as
-        // pickers and dropdowns can't read them back (see ContentEditorValueReader). Segment-varying
-        // properties are skipped here: this tool has no Segment argument to read/write them correctly, so
-        // they're left with the pre-existing (removed-if-omitted) behavior rather than risk a
-        // NotSupportedException from guessing a segment.
-        foreach (var property in existing.Properties)
-        {
-            if (explicitAliases.Contains(property.Alias) || property.PropertyType.VariesBySegment())
-            {
-                continue;
-            }
-
-            var propertyCulture = property.PropertyType.VariesByCulture() ? culture : null;
-            properties.Add(new PropertyValueModel
-            {
-                Alias = property.Alias,
-                Value = _valueReader.GetEditorValue(property, propertyCulture, null),
-                Culture = propertyCulture,
-            });
-        }
+        // Unlike a create, an update must send back every property it isn't changing, or the CMS clears
+        // them (see ContentEditorValueReader.GetUnchangedValues).
+        properties.AddRange(_valueReader.GetUnchangedValues(existing, explicitAliases, culture));
 
         // ContentEditingServiceBase.TryGetAndValidateContentType requires at least one Variants entry
         // matching the content type's own variance regardless of what Properties contains — an invariant
         // type demands one with Culture/Segment both null, otherwise the whole update fails with
         // ContentTypeCultureVarianceMismatch even when Name isn't changing.
-        var variantName = args.Name ?? existing.Name ?? string.Empty;
+        var variantName = args.Name ?? ContentToolHelpers.GetCurrentName(existing, culture);
 
         var updateModel = new ContentUpdateModel
         {
             Properties = properties,
             Variants = [new VariantModel { Name = variantName, Culture = culture }],
+            TemplateKey = await ContentToolHelpers.GetTemplateKeyAsync(templateService, existing),
         };
 
         var attempt = await contentEditingService.UpdateAsync(args.Key, updateModel, authResult.UserKey!.Value);

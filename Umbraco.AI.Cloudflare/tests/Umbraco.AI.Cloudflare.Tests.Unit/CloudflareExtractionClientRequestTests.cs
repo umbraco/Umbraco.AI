@@ -81,6 +81,13 @@ public class CloudflareExtractionClientRequestTests
         }
 
         [Fact]
+        public void SendsTheModel()
+        {
+            // Cloudflare's docs mark "model" required (checked 03-11-2026), although the API accepts a body without it.
+            _sent.Body.GetProperty("model").GetString().ShouldBe("@cf/cloudflare/clairic");
+        }
+
+        [Fact]
         public void SendsNoImages()
         {
             _sent.Body.TryGetProperty("images", out _).ShouldBeFalse();

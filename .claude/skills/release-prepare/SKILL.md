@@ -213,21 +213,34 @@ New prerelease lines must use dotted `-{stage}.N`; non-dotted `-betaN` sorts inc
 
 CI's `detect-changes.ps1` flags any product whose csproj references a package whose range moved in `Directory.Packages.props` — including patch bumps. Cascade (Step 3) correctly does **not** add such products to `bumpSet` for patch upstreams (forward-compatible, no new release needed), but CI still requires those products to appear in either `include` or `exclude` of `release-manifest.json`. Without this acknowledgement, CI fails with `release-manifest.json is missing changed products: <Product>`.
 
-Compute the broader "affected" set so Phase 9 can put it straight into `exclude`:
+Compute the broader "affected" set so Phase 9 can put it straight into `exclude`. **Mirror CI's rule exactly, not the dependency graph.** `Get-AffectedProductsFromPackageProps` in Umbraco.Build's `devops/monorepo/scripts/detect-changes.ps1` works like this:
+
+1. It diffs root `Directory.Packages.props` against the **latest tag of any kind** (`git describe --tags --abbrev=0`), not each product's own tag.
+2. It collects every `PackageVersion Include="..."` name on a changed line. That covers inter-product ranges **and third-party packages** bumped on dev since that tag.
+3. It marks a product affected when **any** `src/**/*.csproj` in it contains one of those names **as plain text** (a regex-escaped substring, not an exact reference). So a changed `Umbraco.AI.Agent` range also hits a product that only references `Umbraco.AI.Agent.UI`.
+
+Run the same rule against the release branch's final `Directory.Packages.props` (after Phase 4):
 
 ```pseudo
+latestTag = git("describe", "--tags", "--abbrev=0")
+changedPkgs = { name for each +/- line in git diff {latestTag}..HEAD -- Directory.Packages.props
+                matching '<PackageVersion\s+Include="([^"]+)"' }
+
 manifestAffected = set()                  # products that need acknowledgement only
-for upstream in bumpSet:                  # every bump moves at least one range
-    for downstream in dependents.get(upstream, []):
-        if downstream not in bumpSet:
-            manifestAffected.add(downstream)
+for product in all_products:
+    if product in bumpSet: continue
+    text = concat(read(f) for f in glob(f"{product}/src/**/*.csproj"))
+    if any(pkg in text for pkg in changedPkgs):   # substring, like CI
+        manifestAffected.add(product)
 ```
 
-This is the *broader* counterpart to Step 3's cascade. Step 3 produces `bumpSet ⊇ direct + forced` (everything that needs a new version). Step 5 produces `manifestAffected = (consumers of bumpSet via dep graph) − bumpSet` (everything that needs acknowledgement only).
+Step 3 produces `bumpSet ⊇ direct + forced` (everything that needs a new version). Step 5 produces `manifestAffected` (everything CI will flag that isn't being released). The two answer different questions: the dependency graph says who *needs* a new version, and CI's text match says who must be *acknowledged*. Don't derive one from the other.
+
+**Example from release 2026.11.1:** `Umbraco.AI.Agent` got a forced patch, so its range moved. `Umbraco.AI.Agent.Copilot` only references `Umbraco.AI.Agent.UI`, which wasn't bumped, so the dependency graph left Copilot out. CI's substring match on `Umbraco.AI.Agent` still flagged it, and the build failed with `release-manifest.json is missing changed products: Umbraco.AI.Agent.Copilot`.
 
 Hand both sets to Phase 9.
 
-**Example from release 2026.05.1:** all four bumps were patch (`Umbraco.AI`, `Agent.UI`, `Prompt`, `Search`) → `bumpSet` size 4, no cascade. But `Umbraco.AI` patch-bumped `Core/Web/Startup` ranges, which `Umbraco.AI.Agent`'s csproj references. Agent had zero file changes since its tag, so Phase 1 didn't flag it; cascade didn't add it because patches don't trigger; but CI flagged it as affected and the manifest blew up at validation time. Step 5 catches this by walking `dependents[Umbraco.AI] = {Agent, Amazon, Anthropic, ...}` and queuing them all for `exclude`.
+**Example from release 2026.05.1:** all four bumps were patch (`Umbraco.AI`, `Agent.UI`, `Prompt`, `Search`) → `bumpSet` size 4, no cascade. But `Umbraco.AI` patch-bumped `Core/Web/Startup` ranges, which `Umbraco.AI.Agent`'s csproj references. Agent had zero file changes since its tag, so Phase 1 didn't flag it; cascade didn't add it because patches don't trigger; but CI flagged it as affected and the manifest blew up at validation time. Step 5 catches this because Agent's csproj contains `Umbraco.AI.Core`, one of the changed package names.
 
 ### Phase 3: Version Confirmation
 

@@ -9,7 +9,7 @@ import { UAI_COPILOT_WORKSPACE_SIDEBAR_CONTEXT } from "./sidebar.context.js";
 
 export const UAI_SIDEBAR_GROUP_NOT_EMPTY_CONDITION = "Uai.CopilotWorkspace.Condition.SidebarGroupNotEmpty";
 
-export type UaiSidebarGroup = "pinned" | "projects" | "recent";
+export type UaiSidebarGroup = "pinned" | "projects" | "recent" | "sharedWithMe";
 
 export interface UaiSidebarGroupNotEmptyConditionConfig extends UmbConditionConfigBase {
     /** Which slice of the shared sidebar model gates this group. */
@@ -17,15 +17,18 @@ export interface UaiSidebarGroupNotEmptyConditionConfig extends UmbConditionConf
 }
 
 /**
- * Hides a sidebar group (Pinned / Projects / Recent) when its slice of the shared sidebar model is
- * empty, so we don't show a bare heading. Fail-open: permitted defaults to true, so a group is never
- * hidden if the context hasn't resolved yet.
+ * Hides a sidebar group (Pinned / Projects / Recent / Shared with me) when its slice of the shared
+ * sidebar model is empty, so we don't show a bare heading. Fail-open: permitted defaults to true, so a
+ * group is never hidden if the context hasn't resolved yet.
  */
 export class UaiSidebarGroupNotEmptyCondition
     extends UmbConditionBase<UaiSidebarGroupNotEmptyConditionConfig>
     implements UmbExtensionCondition
 {
-    constructor(host: UmbControllerHost, args: UmbConditionControllerArguments<UaiSidebarGroupNotEmptyConditionConfig>) {
+    constructor(
+        host: UmbControllerHost,
+        args: UmbConditionControllerArguments<UaiSidebarGroupNotEmptyConditionConfig>,
+    ) {
         super(host, args);
         this.permitted = true;
         this.consumeContext(UAI_COPILOT_WORKSPACE_SIDEBAR_CONTEXT, (context) => {
@@ -35,7 +38,9 @@ export class UaiSidebarGroupNotEmptyCondition
                     ? context.pinned
                     : this.config.match === "projects"
                       ? context.projects
-                      : context.recent;
+                      : this.config.match === "sharedWithMe"
+                        ? context.sharedWithMe
+                        : context.recent;
             this.observe(slice, (items) => {
                 this.permitted = (items?.length ?? 0) > 0;
             });

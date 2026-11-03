@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.4.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.4.1...Umbraco.AI.Agent@17.4.2) (2026-11-03)
+
+### Internal
+
+* Bump to align with Umbraco.AI 17.7.0.
+
 ## [17.4.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@17.4.0...Umbraco.AI.Agent@17.4.1) (2026-10-26)
 
 ### fix

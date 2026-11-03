@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Automate will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.2.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Automate@17.1.0...Umbraco.AI.Automate@17.2.0) (2026-11-03)
+
+### feat
+
+* **automate:** Add an Extract Values action that pulls typed values out of text with the experimental Extraction capability (requires the `Umbraco:AI:Experimental:Extraction` feature flag) ([0875ad7](https://github.com/umbraco/Umbraco.AI/commit/0875ad7033ca435abdc3ace0b947ebe2cd3deb67))
+
 ## [17.1.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Automate@17.0.1...Umbraco.AI.Automate@17.1.0) (2026-10-19)
 
 ### feat

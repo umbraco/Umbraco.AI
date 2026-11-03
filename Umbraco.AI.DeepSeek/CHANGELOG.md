@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.DeepSeek will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.0.5](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.DeepSeek@17.0.4...Umbraco.AI.DeepSeek@17.0.5) (2026-11-03)
+
+### Internal
+
+* Bump to align with Umbraco.AI 17.7.0.
+
 ## [17.0.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.DeepSeek@17.0.3...Umbraco.AI.DeepSeek@17.0.4) (2026-10-19)
 
 ### Internal

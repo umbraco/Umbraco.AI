@@ -5,6 +5,23 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.7.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.6.1...Umbraco.AI@17.7.0) (2026-11-03)
+
+### feat
+
+* **core:** Add an experimental Extraction capability that pulls typed values (text, number, date, time, date-time, duration and lists) out of text, enabled with the `Umbraco:AI:Experimental:Extraction` feature flag. Includes `IAIExtractionService`, an `extraction/extract` Management API endpoint, `UaiExtractionController` in `@umbraco-ai/core`, Extraction profiles, a default Extraction profile setting and an Extraction field list property editor. Off by default ([d9791fe](https://github.com/umbraco/Umbraco.AI/commit/d9791fe90cfc8b087bcc32f0909b323c87cfde4f))
+* **core:** Make audit log tool argument and result limits configurable ([b7f5d4a](https://github.com/umbraco/Umbraco.AI/commit/b7f5d4a1641a3814d767f992a26baa9e895a658a))
+
+### fix
+
+* **api:** Keep option keys as sent in Decision choice probabilities ([0c62d41](https://github.com/umbraco/Umbraco.AI/commit/0c62d417637a04963d53379c0b1908f854fae92c))
+* **core:** Check the experimental flag inside the Decision and Image Generation services ([20378a3](https://github.com/umbraco/Umbraco.AI/commit/20378a3bc8bcc08dbf36ddf9f67fe652e893a5b2)), closes [#660](https://github.com/umbraco/Umbraco.AI/issues/660)
+* **core:** Keep the document template when AI content tools save ([93006d8](https://github.com/umbraco/Umbraco.AI/commit/93006d88dad86cf99938ffce54991c25ecb14158)), closes [#645](https://github.com/umbraco/Umbraco.AI/issues/645)
+* **core:** Leave new content's template to the CMS default ([968fa38](https://github.com/umbraco/Umbraco.AI/commit/968fa38dbe3ba84e2359bfad8af152bb7529da96))
+* **core:** Redact audit log tool content before escaping and truncation ([8dc0620](https://github.com/umbraco/Umbraco.AI/commit/8dc0620bc620b1c3a600e571fae19ae89b5e130a))
+* **core:** Stop AI content and media write tools losing data they didn't touch ([a0c6283](https://github.com/umbraco/Umbraco.AI/commit/a0c628368118e4ca9c88d05b92a57a7b1fb268a9)), closes [#666](https://github.com/umbraco/Umbraco.AI/issues/666)
+* **imagegeneration:** Mark image builder guardrail methods obsolete ([414287d](https://github.com/umbraco/Umbraco.AI/commit/414287d06a9b7065e07c8d3780cef1d0d8dfb57d))
+
 ## [17.6.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.6.0...Umbraco.AI@17.6.1) (2026-10-26)
 
 ### fix

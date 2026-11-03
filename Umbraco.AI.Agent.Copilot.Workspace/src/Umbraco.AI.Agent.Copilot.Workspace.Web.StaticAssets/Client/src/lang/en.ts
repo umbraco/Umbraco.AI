@@ -27,9 +27,12 @@ export default {
         listEmpty: "Your conversations will appear here.",
         listNoResults: "No conversations match your search.",
         untitledConversation: "Untitled conversation",
+        sharedBadgeLabel: "Shared",
+        sharedByOwner: "Shared by %0%",
 
         // Sidebar group headers
         groupPinned: "Pinned",
+        groupSharedWithMe: "Shared with me",
         groupToday: "Today",
         groupYesterday: "Yesterday",
         groupPrevious7Days: "Previous 7 days",
@@ -51,8 +54,24 @@ export default {
         deleteConfirmTitle: "Delete conversation",
         deleteConfirmMessage: "Are you sure you want to delete this conversation? This cannot be undone.",
 
-        // Read-only (archived) conversation
+        // Share-picker modal
+        sharePickerHeadline: 'Share "%0%"',
+        sharePersonLabel: "Person",
+        sharePersonHelp: "Pick one colleague — not a link anyone can open.",
+        sharePersonChoose: "Choose a person",
+        sharePickDifferentPerson: "Pick a different person",
+        shareModeLabel: "Mode",
+        shareModeSnapshot: "Snapshot — frozen at today's messages",
+        shareModeLive: "Live — always shows the latest messages",
+        // Placeholder copy pending real product/legal review (ARCHITECTURE.md decision 2) — same status
+        // as the share-notification email's copy.
+        shareDisclosureBanner:
+            "The person you share with will see everything referenced in this conversation, including pages or files they might not otherwise have permission to open.",
+        shareSubmit: "Share",
+
+        // Read-only (archived or shared) conversation
         readOnlyNotice: "This conversation is archived. Restore it to continue chatting.",
+        sharedReadOnlyNotice: "This conversation is read-only — shared by %0%.",
 
         // Projects
         newProject: "New project",
@@ -91,5 +110,9 @@ export default {
         contextNoContexts: "No contexts attached.",
         contextNoResources: "No resources attached.",
         contextInheritedHint: "Inherited from the project",
+        contextSharedHeading: "Shared with",
+        contextNoShares: "Not shared with anyone yet.",
+        contextShareChoose: "Choose",
+        contextShareRemoveLabel: "Remove",
     },
 } satisfies UmbLocalizationDictionary;

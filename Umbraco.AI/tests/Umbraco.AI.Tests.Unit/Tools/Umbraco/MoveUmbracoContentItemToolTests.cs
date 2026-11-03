@@ -25,7 +25,7 @@ public class MoveUmbracoContentItemToolTests
 
     public MoveUmbracoContentItemToolTests()
     {
-        _tool = new MoveUmbracoContentItemTool(_contentEditingServiceMock.Object, _dispatcherMock.Object, _authorizerMock.Object, new PropertyEditorCollection(new DataEditorCollection(() => [])), Mock.Of<IJsonSerializer>());
+        _tool = new MoveUmbracoContentItemTool(_contentEditingServiceMock.Object, _dispatcherMock.Object, _authorizerMock.Object, new PropertyEditorCollection(new DataEditorCollection(() => [])), Mock.Of<IJsonSerializer>(), Mock.Of<ITemplateService>());
     }
 
     [Fact]

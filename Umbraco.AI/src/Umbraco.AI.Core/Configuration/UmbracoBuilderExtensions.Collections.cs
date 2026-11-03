@@ -1,5 +1,6 @@
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.Decision;
+using Umbraco.AI.Core.Extraction;
 using Umbraco.AI.Core.Embeddings;
 using Umbraco.AI.Core.FileProcessing;
 using Umbraco.AI.Core.ImageGeneration;
@@ -104,6 +105,23 @@ public static partial class UmbracoBuilderExtensions
     [System.Diagnostics.CodeAnalysis.Experimental(AIDecisionDiagnostics.DiagnosticId)]
     public static AIDecisionMiddlewareCollectionBuilder AIDecisionMiddleware(this IUmbracoBuilder builder)
         => builder.WithCollectionBuilder<AIDecisionMiddlewareCollectionBuilder>();
+
+    /// <summary>
+    /// Gets the AI extraction middleware collection builder.
+    /// </summary>
+    /// <param name="builder">The Umbraco builder.</param>
+    /// <returns>The AI extraction middleware collection builder.</returns>
+    /// <remarks>
+    /// Use this to add, remove, or reorder extraction middleware. Example:
+    /// <code>
+    /// builder.AIExtractionMiddleware()
+    ///     .Append&lt;LoggingExtractionMiddleware&gt;()
+    ///     .Append&lt;CachingMiddleware&gt;();
+    /// </code>
+    /// </remarks>
+    [System.Diagnostics.CodeAnalysis.Experimental(AIExtractionDiagnostics.DiagnosticId)]
+    public static AIExtractionMiddlewareCollectionBuilder AIExtractionMiddleware(this IUmbracoBuilder builder)
+        => builder.WithCollectionBuilder<AIExtractionMiddlewareCollectionBuilder>();
 
     /// <summary>
     /// Gets the AI tools collection builder.

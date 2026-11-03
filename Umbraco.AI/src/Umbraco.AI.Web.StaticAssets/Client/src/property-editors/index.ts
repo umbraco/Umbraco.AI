@@ -3,6 +3,8 @@ export { UaiPropertyEditorUIDecisionQuestionListElement } from "./decision-quest
 export { UaiDecisionQuestionConfigModalElement } from "./decision-question-list/index.js";
 export { UaiPropertyEditorUIEntityPickerElement } from "./entity-picker/index.js";
 export { UaiPropertyEditorUIEntityPropertyPickerElement } from "./entity-property-picker/index.js";
+export { UaiPropertyEditorUIExtractionFieldListElement } from "./extraction-field-list/index.js";
+export { UaiExtractionFieldConfigModalElement } from "./extraction-field-list/index.js";
 export { UaiPropertyEditorUIKeyValueListElement } from "./key-value-list/index.js";
 export { UaiPropertyEditorUIMaskedTextBoxElement } from "./masked-text-box/index.js";
 export { UaiPropertyEditorUIProfilePickerElement } from "./profile-picker/index.js";

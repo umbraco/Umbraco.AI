@@ -19,6 +19,7 @@ import {
     createConversationDraft,
     toConversationDetailModel,
     toCreateConversationRequestModel,
+    toSharedConversationDetailModel,
     toUpdateConversationRequestModel,
 } from "../types.js";
 import type { ContextResourceModel, UaiConversationDetailModel } from "../types.js";
@@ -59,8 +60,8 @@ export class UaiConversationWorkspaceContext extends UmbContextBase {
     readonly conversation$ = this.#model.asObservable();
     /** The conversation's owning project, for the inherited context layer (undefined if none). */
     readonly project$ = this.#project.asObservable();
-    /** True while the conversation is archived — consumers render read-only. */
-    readonly isReadonly$ = this.#model.asObservablePart((c) => c?.isArchived ?? false);
+    /** True while the conversation is archived or a recipient's read-only share — consumers render read-only. */
+    readonly isReadonly$ = this.#model.asObservablePart((c) => c?.readonly ?? false);
     /** True once the current target's mode is known (loaded, or a draft) — gates the composer flash. */
     readonly isResolved$ = this.#resolved.asObservable();
     /** The route-set target (conversation id or draft), emitted synchronously for the chat runtime. */
@@ -72,9 +73,13 @@ export class UaiConversationWorkspaceContext extends UmbContextBase {
         // Reflect an external change to the open conversation (e.g. archive/move from its menu ⋯ actions)
         // so every consumer updates in place. One subscription for the whole workspace. Own writes are
         // skipped (they already updated the state optimistically and dispatched the event for the menu).
-        new UaiConversationUpdatedController(this, () => this.#model.getValue()?.id, () => {
-            if (this.#selfWrites === 0) void this.#reload();
-        });
+        new UaiConversationUpdatedController(
+            this,
+            () => this.#model.getValue()?.id,
+            () => {
+                if (this.#selfWrites === 0) void this.#reload();
+            },
+        );
     }
 
     isDraft(): boolean {
@@ -87,6 +92,29 @@ export class UaiConversationWorkspaceContext extends UmbContextBase {
         this.#resolved.setValue(false);
         this.#target.setValue({ id: conversationId, isDraft: false });
         await this.#reload(conversationId);
+    }
+
+    /**
+     * Opens a conversation shared with the current user, in place of {@link setConversationId}. Parallel to
+     * it, but loads the recipient's read-only view (`requestSharedView`) rather than the owner's
+     * (`requestById`), and maps into the store via {@link toSharedConversationDetailModel}. Has no owning
+     * project — a share never carries one.
+     *
+     * Called by {@link #reload} as the fallback when the owner lookup 404s — not by {@link setConversationId}
+     * directly. There is only one route (`conversation/:id`) for both an owned and a shared conversation
+     * (see `shared-with-me-tree-item.element.ts`), so the owner's 404 is the only signal available that
+     * `id` might instead belong to a conversation shared with the current user.
+     */
+    async setSharedConversationId(conversationId: string): Promise<void> {
+        const token = ++this.#requestToken;
+        this.#resolved.setValue(false);
+        this.#target.setValue({ id: conversationId, isDraft: false });
+
+        const { data } = await this.#conversationRepository.requestSharedView(conversationId);
+        if (token !== this.#requestToken) return; // superseded by a newer open
+        this.#model.setValue(data ? toSharedConversationDetailModel(data) : undefined);
+        this.#resolved.setValue(true);
+        this.#project.setValue(undefined);
     }
 
     /** Enters draft mode (nothing persisted yet); an optional project pre-attaches the eventual chat. */
@@ -113,9 +141,17 @@ export class UaiConversationWorkspaceContext extends UmbContextBase {
 
         const { data } = await this.#conversationRepository.requestById(id);
         if (token !== this.#requestToken) return; // superseded by a newer open
-        this.#model.setValue(data ? toConversationDetailModel(data) : undefined);
+        if (!data) {
+            // Not owned by the acting user — the owner's lookup 404s indistinguishably whether `id` is
+            // truly nonexistent or belongs to a conversation shared with the current user instead. Fall
+            // back to the recipient's view rather than giving up; {@link setSharedConversationId} bumps
+            // `#requestToken` again itself, so a third open racing this fallback still wins correctly.
+            await this.setSharedConversationId(id);
+            return;
+        }
+        this.#model.setValue(toConversationDetailModel(data));
         this.#resolved.setValue(true);
-        await this.#loadProject(data?.projectId ?? undefined, token);
+        await this.#loadProject(data.projectId ?? undefined, token);
     }
 
     async #loadProject(projectId: string | null | undefined, token = this.#requestToken): Promise<void> {
@@ -161,11 +197,9 @@ export class UaiConversationWorkspaceContext extends UmbContextBase {
         // Persisting dispatches an UPDATED event (so the menu refreshes); count it as our own so our own
         // action-bus subscriber doesn't treat it as an external change and refetch what we just wrote.
         this.#selfWrites++;
-        void this.#conversationRepository
-            .update(next.id, toUpdateConversationRequestModel(next))
-            .finally(() => {
-                this.#selfWrites = Math.max(0, this.#selfWrites - 1);
-            });
+        void this.#conversationRepository.update(next.id, toUpdateConversationRequestModel(next)).finally(() => {
+            this.#selfWrites = Math.max(0, this.#selfWrites - 1);
+        });
     }
 
     /**

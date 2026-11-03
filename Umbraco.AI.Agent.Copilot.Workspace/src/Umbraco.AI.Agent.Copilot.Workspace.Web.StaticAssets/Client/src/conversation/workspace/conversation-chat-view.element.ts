@@ -7,13 +7,18 @@ import { UAI_CONVERSATION_WORKSPACE_CONTEXT } from "./conversation-workspace.con
  * Center region of the conversation workspace. Hosts a {@link UaiCopilotWorkspaceChatContext} (which
  * provides `UAI_CHAT_CONTEXT` + `UAI_HITL_CONTEXT` and re-keys itself off the workspace store) and renders
  * the shared `<uai-chat>` against it. Read-only/ready come from the store — the chat runtime no longer
- * owns them — so an archived conversation locks and there's no composer flash while a conversation resolves.
+ * owns them — so an archived or shared (read-only) conversation locks and there's no composer flash while a
+ * conversation resolves.
  */
 @customElement("uai-copilot-workspace-conversation-chat-view")
 export class UaiCopilotWorkspaceConversationChatViewElement extends UmbLitElement {
     #context = new UaiCopilotWorkspaceChatContext(this);
 
     @state() private _readonly = false;
+    /** Whether the open conversation is archived — picks the archived vs. shared read-only notice text. */
+    @state() private _isArchived = false;
+    /** Whether the open conversation is a recipient's shared (read-only) view, and by whom. */
+    @state() private _ownerDisplayName?: string;
     /** True once the store knows the target's mode (loaded, or a draft) — gates the composer flash. */
     @state() private _resolved = false;
     /** True once the chat context's history load has resolved for the *currently targeted* conversation —
@@ -32,6 +37,12 @@ export class UaiCopilotWorkspaceConversationChatViewElement extends UmbLitElemen
         this.consumeContext(UAI_CONVERSATION_WORKSPACE_CONTEXT, (store) => {
             this.observe(store?.isReadonly$, (value) => (this._readonly = value ?? false));
             this.observe(store?.isResolved$, (value) => (this._resolved = value ?? false));
+            // The collapsed `readonly` boolean (observed above) doesn't say *why* it's read-only, but the
+            // notice text does (archived vs. shared-by-<owner>), so read `isArchived`/`isShared` directly.
+            this.observe(store?.conversation$, (c) => {
+                this._isArchived = c?.isArchived ?? false;
+                this._ownerDisplayName = c?.isShared ? c.ownerDisplayName : undefined;
+            });
             // Re-key auto-scroll and composer focus on every target the store is pointed at, not just
             // this view's first mount — the store re-targets within a mount (a draft promoted to its real
             // conversation, or the user picking a different saved conversation), and `<uai-chat>` is never
@@ -53,8 +64,16 @@ export class UaiCopilotWorkspaceConversationChatViewElement extends UmbLitElemen
         return html`<uai-chat
             .ready=${this._resolved && this._historyLoaded}
             .readonly=${this._readonly}
-            readonly-notice=${this.localize.term("uaiCopilotWorkspace_readOnlyNotice")}
+            readonly-notice=${this.#readonlyNotice()}
         ></uai-chat>`;
+    }
+
+    /** Picks the read-only notice by *why* the conversation is read-only — archived takes precedence, since
+     *  the two are mutually exclusive in practice (a share is never also archived for its recipient). */
+    #readonlyNotice(): string {
+        return this._isArchived || !this._ownerDisplayName
+            ? this.localize.term("uaiCopilotWorkspace_readOnlyNotice")
+            : this.localize.term("uaiCopilotWorkspace_sharedReadOnlyNotice", this._ownerDisplayName);
     }
 
     static override styles = [

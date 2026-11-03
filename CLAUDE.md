@@ -28,6 +28,7 @@ Monorepo for Umbraco.AI and add-on packages. Each product has its own `.slnx`, `
 | Umbraco.AI.FireworksAI | `Umbraco.AI.FireworksAI/` | Provider |
 | Umbraco.AI.TogetherAI | `Umbraco.AI.TogetherAI/` | Provider |
 | Umbraco.AI.TypeSafe | `Umbraco.AI.TypeSafe/` | Provider |
+| Umbraco.AI.Cloudflare | `Umbraco.AI.Cloudflare/` | Provider |
 | Umbraco.AI.Alibaba | `Umbraco.AI.Alibaba/` | Provider |
 | Umbraco.AI.Moonshot | `Umbraco.AI.Moonshot/` | Provider |
 | Umbraco.AI.OpenRouter | `Umbraco.AI.OpenRouter/` | Provider |
@@ -39,7 +40,7 @@ Monorepo for Umbraco.AI and add-on packages. Each product has its own `.slnx`, `
 Umbraco.AI (Core)
 ├── Providers: OpenAI, Anthropic, Amazon, Google, MicrosoftFoundry,
 │              Mistral, DeepSeek, HuggingFace, FireworksAI, TogetherAI,
-│              TypeSafe, Alibaba, Moonshot, OpenRouter, ZAI
+│              TypeSafe, Cloudflare, Alibaba, Moonshot, OpenRouter, ZAI
 ├── Umbraco.AI.Prompt → Prompt.Deploy (depends on Prompt + Deploy)
 ├── Umbraco.AI.Agent → Agent.UI → Agent.Copilot
 │                     → Agent.Copilot.Workspace (depends on Agent + Umbraco.AI)
@@ -207,7 +208,7 @@ Umbraco.AI major versions track Umbraco CMS major versions. Multiple versions ma
 | `vN/main` | Latest released state for major version N |
 | `vN/release/YYYY.MM.N` | Release branch for major version N |
 | `vN/hotfix/<name>` | Hotfix branch for major version N, based off a release branch |
-| `vN/feature/<name>` | Feature/fix branch for major version N, based off `vN/dev` |
+| `vN/topic/<name>` | Any work branch (feature, fix, refactor, docs, tooling) for major version N, based off `vN/dev`. `vN/feature/<name>` is the old name, still accepted for branches opened before the rename |
 
 Each supported major version gets its own `vN/` branch family — there is no separate `support/X.x` branch; that naming was replaced when the repo moved to this `vN/`-prefixed model (see `project_branch_model` in memory for the history).
 
@@ -245,14 +246,14 @@ on one line before the other), so those are expected to differ.
 When a fix or feature applies to an older supported version:
 
 1. Branch from `vN/dev` for the target version line (not from the line you originally fixed)
-2. Apply and commit the change on the `vN/feature/<name>` or `vN/hotfix/<name>` branch
+2. Apply and commit the change on the `vN/topic/<name>` or `vN/hotfix/<name>` branch
 3. Open a PR back into `vN/dev` (or the relevant `vN/release/*` branch if it's a hotfix against an in-progress release) — always as a PR, never merged automatically, even when this step is done by an agent
 4. Release via the normal release flow on that branch
 
 Do **not** forward-merge one version line's branches into another's — each version line is maintained independently. Always create a *separate* worktree per version line (with an absolute path — see CLAUDE.local.md) rather than reusing one worktree for both; reusing one has caused a worktree to get created nested inside another.
 
 When backporting **worktree/tooling config**, note that some files hardcode the version line and must
-be rewritten to the target `vN`: `.humanlayer/workspace.json` (`branchTemplate: "v18/feature/..."`) and
+be rewritten to the target `vN`: `.humanlayer/workspace.json` (`branchTemplate: "v18/topic/..."`) and
 `.worktreeinclude` (demo path `demos/v18/`). Leaving `v18` in place makes worktrees use the wrong branch
 prefix and PRs target the wrong `vN/dev` base.
 
@@ -262,19 +263,22 @@ prefix and PRs target the wrong `vN/dev` base.
 
 | Skill | Purpose |
 |-------|---------|
-| `/release-management` | Full release orchestration: detect changes, recommend bumps, create branch, update versions/manifests/changelogs, commit |
+| `/release-prepare` | Full release orchestration: detect changes, recommend bumps, create branch, update versions/manifests/changelogs, commit |
 | `/release-manifest-management` | Generate `release-manifest.json` only |
 | `/changelog-management` | Generate single product changelog |
-| `/post-release-cleanup` | Merge release->main->dev, bump versions on dev, optionally delete branch |
+| `/release-publish` | Queue a pipeline run that publishes a pushed branch (release, prerelease or nightly), watch it, confirm tags |
+| `/release-cleanup` | Merge `vN/release`->`vN/main`->`vN/dev`, bump versions on `vN/dev`, optionally delete branch |
 | `/repo-management` | Interactive menu of all operations |
 
 ### Release Flow
 
-1. `/release-management` detects changed products since last release tags
+1. `/release-prepare` detects changed products since last release tags
 2. Analyzes conventional commits for version bump recommendations
 3. Creates `release/YYYY.MM.N` branch (calendar-based, N increments per month)
 4. Updates `version.json`, generates `release-manifest.json` and `CHANGELOG.md` files
 5. Commits all changes to release branch
+6. After the push, `/release-publish` queues the publishing run (prerelease to MyGet to test, then release after approval in Azure)
+7. `/release-cleanup` merges back and bumps dev versions
 
 ### Version Bump Logic
 
@@ -316,7 +320,7 @@ On `hotfix/*` branches: manifest optional (falls back to per-product tag-based c
 - Excludes `CHANGELOG.md`, `version.json` from diff
 - Falls back to merge-base with main for new products
 
-### Post-Release (`/post-release-cleanup`)
+### Post-Release (`/release-cleanup`)
 
 1. Merges release->main (no-ff, push), main->dev (no-ff, push)
 2. Bumps `version.json` on dev (patch increment, e.g., `1.5.0` -> `1.5.1` so nightlies are `1.5.1--preview.*`)
@@ -330,7 +334,7 @@ On `hotfix/*` branches: manifest optional (falls back to per-product tag-based c
 | `all-npm-packages` | .tgz files for npm |
 | `pack-manifest` | Package metadata for git tagging |
 
-Release pipeline deploys to feeds and tags repo with `[Product]@[Version]`. See [CONTRIBUTING.md](CONTRIBUTING.md#release-process).
+A push never publishes. To publish, queue the pipeline with "Publish packages to" set (`/release-publish`): `release` goes to NuGet.org and npm after approval in the `Umbraco AI Release` environment, then tags `[Product]@[Version]` and creates a GitHub release named by publish date. See [CONTRIBUTING.md](CONTRIBUTING.md#release-process).
 
 ## Cross-Product Dependency Management
 
@@ -356,7 +360,7 @@ Format: `[min, max)` -- inclusive lower, exclusive upper. Use `[X.Y.0, X.999.999
 
 **Rules**: Use project refs for local dev. Use `[X.Y.0, X.999.999)` ranges. Avoid exact versions `[X.Y.Z]`. Test with `UseProjectReferences=false` before releasing. When releasing Core with breaking changes, verify dependent products update their minimum.
 
-**Pack recompiles against ranges (do not re-add `--no-build` to ranged packs).** The Build stage compiles the whole solution with project references (sibling *source*). For ranged packs (release/hotfix/main, or `packWithNuGetRanges`), `pack-product.yml` deliberately drops `--no-build` and recompiles so the shipped binary is validated against the *same* dependency versions the `.nuspec` declares — resolved from the LocalCI feed when the dependency was packed in the same run (co-release) or from nuget.org when it was not (solo release). This is what makes a solo release that needs an unpublished dependency API fail the pack instead of silently shipping a binary compiled against a higher version than its declared floor. Project-reference packs (dev previews) keep `--no-build` since the Build stage already produced those exact binaries.
+**Pack recompiles against ranges (do not re-add `--no-build` to ranged packs).** The Build stage compiles the whole solution with project references (sibling *source*). For ranged packs (release/hotfix/main, or `packWithNuGetRanges`), the shared pack step (`devops/monorepo/steps/pack-product-nuget.yml` in umbraco/Umbraco.Build) deliberately drops `--no-build` and recompiles so the shipped binary is validated against the *same* dependency versions the `.nuspec` declares — resolved from the LocalCI feed when the dependency was packed in the same run (co-release) or from nuget.org when it was not (solo release). This is what makes a solo release that needs an unpublished dependency API fail the pack instead of silently shipping a binary compiled against a higher version than its declared floor. Project-reference packs (dev previews) keep `--no-build` since the Build stage already produced those exact binaries.
 
 ## Intra-Product Dependency Management
 
@@ -367,7 +371,7 @@ The `.csproj` files themselves need **no special handling** — keep using plain
 - `PackageReference ... VersionOverride="[$(Version)]"` — breaks because NuGet restore evaluates `VersionOverride` *before* Nerdbank.GitVersioning's version-setting targets run (excluded during restore), so it silently resolves against whatever unrelated package sits at the SDK default `1.0.0` on nuget.org (see [dotnet/Nerdbank.GitVersioning#351](https://github.com/dotnet/Nerdbank.GitVersioning/issues/351)).
 - Even with the version supplied externally (e.g. `-p:Version=...`), a real `PackageReference` to a sibling still can't restore, because that sibling's `.nupkg` doesn't exist yet — it's part of the *same* pack invocation that's trying to restore it. Cross-product deps avoid this because they're always satisfied by an *earlier pipeline tier* that already finished packing; siblings within one product have no such tiering.
 
-The actual fix is a **post-pack rewrite**: `pack-product.yml` runs `scripts/build/pin-intra-product-nuspec-deps.ps1` after `dotnet pack`, which opens each just-packed `.nupkg`, and for every dependency whose id matches one of this product's own `src/*` sibling projects, rewrites the already-correct version string from `version="X"` to `version="[X]"` directly in the `.nuspec` entry. The version itself is never recomputed — only its string form changes — so none of the restore-timing or pack-ordering problems above apply.
+The actual fix is a **post-pack rewrite**: the shared pack stage runs Umbraco.Build's `devops/steps/pin-sibling-versions.yml` (with `projects_dir` set to the product's `src/`) after `dotnet pack`, which opens each just-packed `.nupkg`, and for every dependency whose id matches one of this product's own `src/*` sibling projects, rewrites the already-correct version string from `version="X"` to `version="[X]"` directly in the `.nuspec` entry. The version itself is never recomputed — only its string form changes — so none of the restore-timing or pack-ordering problems above apply.
 
 This gap was found via [umbraco/Umbraco.AI#332](https://github.com/umbraco/Umbraco.AI/issues/332): before this fix, every intra-product dependency was an implicit NuGet floor (e.g. `Umbraco.AI.Startup` depending on `Umbraco.AI.Persistence >= 17.3.1`), so a consumer pinning the outer meta-package while a dependency floor elsewhere pulled a sibling package up produced a half-upgraded install — new server code next to old backoffice JavaScript, or similar mismatches, with no restore warning because no individual rule was technically violated.
 
@@ -403,7 +407,7 @@ This gap was found via [umbraco/Umbraco.AI#332](https://github.com/umbraco/Umbra
 ### Generating Changelogs
 
 ```bash
-/release-management                    # Generates all changelogs as part of release
+/release-prepare                    # Generates all changelogs as part of release
 /changelog-management                  # Individual product
 npm run changelog -- --product=Umbraco.AI --version=1.1.0
 npm run changelog -- --product=Umbraco.AI --unreleased

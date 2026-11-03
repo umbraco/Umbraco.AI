@@ -35,7 +35,7 @@ public sealed class AITestOutcome
     /// <summary>
     /// Always null; the runner never sets it. Use <see cref="Usage"/> instead.
     /// </summary>
-    [Obsolete("Always null. Use Usage instead. Will be removed in v19")]
+    [Obsolete("Always null. Use Usage instead. Will be removed in v20")]
 #pragma warning disable CS0618 // Declares the obsolete AITestTokenUsage type for compatibility
     public AITestTokenUsage? TokenUsage { get; set; }
 #pragma warning restore CS0618

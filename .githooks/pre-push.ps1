@@ -2,7 +2,8 @@
 # Valid patterns:
 #   - v<N>/dev
 #   - v<N>/main
-#   - v<N>/feature/<anything>
+#   - v<N>/topic/<anything>
+#   - v<N>/feature/<anything>  (old name for topic/, still accepted)
 #   - v<N>/release/<anything>
 #   - v<N>/hotfix/<anything>
 #   - claude/<anything>
@@ -21,7 +22,7 @@ if ([string]::IsNullOrEmpty($currentBranch)) {
 $validBranch = $false
 if ($currentBranch -match "^v\d+/(dev|main)$") {
     $validBranch = $true
-} elseif ($currentBranch -match "^v\d+/(feature|release|hotfix)/.+") {
+} elseif ($currentBranch -match "^v\d+/(topic|feature|release|hotfix)/.+") {
     $validBranch = $true
 } elseif ($currentBranch -match "^claude/.+") {
     $validBranch = $true
@@ -35,14 +36,14 @@ if (-not $validBranch) {
     Write-Host "Branch names must follow one of these patterns:"
     Write-Host "  v<N>/dev"
     Write-Host "  v<N>/main"
-    Write-Host "  v<N>/feature/<anything>"
+    Write-Host "  v<N>/topic/<anything>"
     Write-Host "  v<N>/release/<anything>"
     Write-Host "  v<N>/hotfix/<anything>"
     Write-Host "  claude/<anything>"
     Write-Host ""
     Write-Host "Examples:"
     Write-Host "  v18/dev"
-    Write-Host "  v18/feature/add-caching"
+    Write-Host "  v18/topic/add-caching"
     Write-Host "  v17/release/2026.01"
     Write-Host "  v17/hotfix/2026.01.1"
     Write-Host "========================================" -ForegroundColor Red

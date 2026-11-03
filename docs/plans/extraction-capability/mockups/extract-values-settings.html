@@ -1,0 +1,125 @@
+<!doctype html>
+<!--
+  Extract Values step settings, as shown when the step is opened in an Automate flow.
+  Built from modal-sidebar.html at Automate's real node-settings size (medium, 800px; node-settings-modal.token.ts).
+  Chrome copied from node-settings-modal.element.ts: headline = action name, a details box
+  (Name with alias, Error behavior), then the action's settings form (label-on-top), Close + Save. The Fields list mirrors Umbraco.AI's
+  property-editors/decision-question-list (uui-ref-list + placeholder "Add" button).
+  The flow canvas behind is only context. #empty shows the first-run state.
+-->
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Mockup: Extract Values settings</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@umbraco-ui/uui@2/dist/themes/light.css">
+	<link rel="stylesheet" href="_mockup.css">
+	<script type="module" src="_mockup.js"></script>
+	<style>
+		.canvas { display:flex; flex-direction:column; align-items:center; gap:28px; padding:48px; }
+		.node { width:260px; padding:12px 16px; background:#fff; border:1px solid var(--uui-color-border); border-radius:8px; display:flex; gap:10px; align-items:center; }
+		.node.active { outline:2px solid var(--uui-color-focus); }
+		.add-btn { width:100%; margin-top: var(--uui-size-space-3); }
+		.hint { color: var(--uui-color-text-alt); font-size: 12px; margin-top: 4px; }
+		.variant { display:none; }
+		.variant:target { display:block; }
+		.variant:target ~ .default { display:none; }
+		.empty-box { padding: var(--uui-size-space-5); text-align:center; color: var(--uui-color-text-alt); border:1px dashed var(--uui-color-border-standalone); border-radius:6px; }
+		/* Small/medium modals stack each property: label, description, then the editor. */
+		.modal-sidebar .property { grid-template-columns: minmax(0, 1fr); row-gap: var(--uui-size-space-3); }
+	</style>
+</head>
+<body class="uui-font uui-text">
+	<header class="app-header">
+		<span class="logo">Umbraco</span>
+		<uui-tab-group class="sections">
+			<uui-tab label="Content">Content</uui-tab>
+			<uui-tab label="Media">Media</uui-tab>
+			<uui-tab label="Automate" active>Automate</uui-tab>
+			<uui-tab label="AI">AI</uui-tab>
+		</uui-tab-group>
+		<div class="apps">
+			<uui-button look="primary" compact label="User"><uui-avatar name="Matt Brailsford"></uui-avatar></uui-button>
+		</div>
+	</header>
+	<div class="section">
+		<nav class="section-sidebar"><h3>Automations</h3>
+			<uui-menu-item label="Support ticket triage" active><uui-icon slot="icon" name="icon-mindmap"></uui-icon></uui-menu-item>
+		</nav>
+		<main class="section-main">
+			<div class="canvas">
+				<div class="node"><uui-icon name="icon-link"></uui-icon> Webhook</div>
+				<div class="node active"><uui-icon name="icon-filter"></uui-icon> Extract Values</div>
+				<div class="node"><uui-icon name="icon-list"></uui-icon> Ask Pick-One</div>
+			</div>
+		</main>
+	</div>
+
+	<div class="modal-backdrop"></div>
+	<aside class="modal-sidebar">
+		<div class="body-layout">
+			<div class="header">
+				<h3 class="headline">Extract Values</h3>
+			</div>
+
+			<div class="main">
+				<!-- Replace from here -->
+				<uui-box style="margin-bottom: var(--uui-size-layout-1)">
+					<div class="property"><div><uui-label required>Name</uui-label></div><div><uui-input label="Name" value="Extract ticket details"><div slot="append" style="padding:0 10px; color:var(--uui-color-text-alt); display:flex; align-items:center; gap:4px"><uui-icon name="icon-lock"></uui-icon> extractTicketDetails</div></uui-input></div></div>
+					<div class="property"><div><uui-label>Error behavior</uui-label></div><div><uui-select label="Error behavior" placeholder="Retry"></uui-select></div></div>
+				</uui-box>
+				<uui-box>
+					<div class="property"><div><uui-label>Fields</uui-label>
+						<div class="description">The values to pull out of the content. Each field becomes an output later steps can use.</div></div><div><div id="empty" class="variant">
+							<div class="empty-box">No fields yet. Add the first value you want to pull out.</div>
+							<uui-button class="add-btn" look="placeholder" label="Add field"><uui-icon name="icon-add"></uui-icon> Add field</uui-button>
+						</div>
+
+						<div class="default">
+							<uui-ref-list>
+								<uui-ref-node name="The customer's order number, usually starting with A-" detail="Text · orderId">
+									<uui-icon slot="icon" name="icon-autofill"></uui-icon>
+									<uui-action-bar slot="actions"><uui-button label="Edit"><uui-icon name="icon-edit"></uui-icon></uui-button><uui-button label="Remove"><uui-icon name="icon-trash"></uui-icon></uui-button></uui-action-bar>
+								</uui-ref-node>
+								<uui-ref-node name="Amount the customer paid, including shipping" detail="Number · amount">
+									<uui-icon slot="icon" name="icon-calculator"></uui-icon>
+									<uui-action-bar slot="actions"><uui-button label="Edit"><uui-icon name="icon-edit"></uui-icon></uui-button><uui-button label="Remove"><uui-icon name="icon-trash"></uui-icon></uui-button></uui-action-bar>
+								</uui-ref-node>
+								<uui-ref-node name="Date the order was delivered" detail="Date · deliveredOn">
+									<uui-icon slot="icon" name="icon-calendar"></uui-icon>
+									<uui-action-bar slot="actions"><uui-button label="Edit"><uui-icon name="icon-edit"></uui-icon></uui-button><uui-button label="Remove"><uui-icon name="icon-trash"></uui-icon></uui-button></uui-action-bar>
+								</uui-ref-node>
+								<uui-ref-node name="Names of every product the customer says arrived damaged or was missing from the parcel" detail="List of text · damagedProducts">
+									<uui-icon slot="icon" name="icon-bulleted-list"></uui-icon>
+									<uui-action-bar slot="actions"><uui-button label="Edit"><uui-icon name="icon-edit"></uui-icon></uui-button><uui-button label="Remove"><uui-icon name="icon-trash"></uui-icon></uui-button></uui-action-bar>
+								</uui-ref-node>
+							</uui-ref-list>
+							<uui-button class="add-btn" look="placeholder" label="Add field"><uui-icon name="icon-add"></uui-icon> Add field</uui-button>
+						</div></div></div>
+
+					<div class="property"><div><uui-label>Content</uui-label>
+						<div class="description">The text to read the values from. Use a binding to take it from an earlier step.</div></div><div><uui-textarea label="Content" value="${trigger.body}" style="width:100%"></uui-textarea></div></div>
+
+					<div class="property"><div><uui-label>Reference date</uui-label>
+						<div class="description">Optional. Dates like "last Tuesday" are worked out from this. Leave empty to use the run date.</div></div><div><uui-input label="Reference date" placeholder="e.g. ${trigger.receivedOn}" style="width:100%"></uui-input></div></div>
+
+					<div class="property"><div><uui-label>Profile</uui-label>
+						<div class="description">Leave empty to use the default Extraction profile.</div></div><div><uui-ref-list>
+							<uui-ref-node name="Cloudflare Clairic" detail="cloudflare-clairic · Extraction">
+								<uui-icon slot="icon" name="icon-wand"></uui-icon>
+								<uui-action-bar slot="actions"><uui-button label="Remove">Remove</uui-button></uui-action-bar>
+							</uui-ref-node>
+						</uui-ref-list></div></div>
+				</uui-box>
+				<!-- Replace to here -->
+			</div>
+
+			<div class="footer">
+				<div class="actions">
+					<uui-button label="Close">Close</uui-button>
+					<uui-button look="primary" color="positive" label="Save">Save</uui-button>
+				</div>
+			</div>
+		</div>
+	</aside>
+</body>
+</html>

@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -71,8 +72,8 @@ public class AIAuditLogFactoryTests
 
         // Assert
         snapshot.ShouldNotBeNull();
-        snapshot.ShouldContain($"===== [system] ====={Environment.NewLine}You are a helpful assistant.");
-        snapshot.ShouldContain($"===== [user] ====={Environment.NewLine}Hello!");
+        snapshot.ShouldContain($"===== [system] =====\nYou are a helpful assistant.");
+        snapshot.ShouldContain($"===== [user] =====\nHello!");
     }
 
     [Fact]
@@ -115,7 +116,7 @@ public class AIAuditLogFactoryTests
 
         // Assert
         snapshot.ShouldNotBeNull();
-        snapshot.ShouldContain($"===== [assistant] ====={Environment.NewLine}Let me check the weather.");
+        snapshot.ShouldContain($"===== [assistant] =====\nLet me check the weather.");
         snapshot.ShouldContain("[tool_call:tc_001] get_weather({\"city\":\"London\"})");
     }
 
@@ -239,8 +240,8 @@ public class AIAuditLogFactoryTests
     public void FormatPromptSnapshot_WithLargeArguments_Truncates()
     {
         // Arrange
-        // Create arguments that exceed 500 characters
-        var largeValue = new string('x', 600);
+        // Create arguments that exceed the 1,000-character default
+        var largeValue = new string('x', 1100);
         var functionCall = new FunctionCallContent(
             callId: "tc_001",
             name: "process",
@@ -262,8 +263,8 @@ public class AIAuditLogFactoryTests
     public void FormatPromptSnapshot_WithLargeResult_Truncates()
     {
         // Arrange
-        // Create result that exceeds 1000 characters
-        var largeResult = new string('y', 1200);
+        // Create result that exceeds the 4,000-character default
+        var largeResult = new string('y', 4200);
         var functionResult = new FunctionResultContent(
             callId: "tc_001",
             result: largeResult);
@@ -278,6 +279,49 @@ public class AIAuditLogFactoryTests
         snapshot.ShouldNotBeNull();
         snapshot.ShouldContain("(truncated,");
         snapshot.ShouldContain("chars)");
+    }
+
+    [Fact]
+    public void FormatPromptSnapshot_WithRedactor_RedactsResultBeforeTruncating()
+    {
+        // Arrange
+        var largeResult = new string('y', 980) + " secret-abcdefghijklmnopqrstuvwxyz1234";
+        var functionResult = new FunctionResultContent(callId: "tc_001", result: largeResult);
+        var messages = new List<ChatMessage> { new(ChatRole.Tool, new List<AIContent> { functionResult }) };
+
+        // Act
+        var snapshot = AIAuditLogFactory.FormatPromptSnapshot(
+            messages,
+            AICapability.Chat,
+            value => Regex.Replace(value, @"secret-\w+", "[REDACTED]"),
+            new AIAuditLogOptions { MaxToolResultLength = 1000 });
+
+        // Assert
+        snapshot.ShouldNotBeNull();
+        snapshot.ShouldNotContain("secret-");
+        snapshot.ShouldContain("[REDACTED]");
+    }
+
+    #endregion
+
+    #region JSON Escaping
+
+    [Fact]
+    public void FormatPromptSnapshot_WithEscapableCharacters_WritesThemAsIs()
+    {
+        // Arrange
+        var functionCall = new FunctionCallContent(
+            callId: "tc_001",
+            name: "send",
+            arguments: new Dictionary<string, object?> { ["to"] = "jørgen+news@example.dk", ["note"] = "it's <b>" });
+        var messages = new List<ChatMessage> { new(ChatRole.Assistant, new List<AIContent> { functionCall }) };
+
+        // Act
+        var snapshot = AIAuditLogFactory.FormatPromptSnapshot(messages, AICapability.Chat);
+
+        // Assert
+        snapshot.ShouldNotBeNull();
+        snapshot.ShouldContain("send({\"to\":\"jørgen+news@example.dk\",\"note\":\"it's <b>\"})");
     }
 
     #endregion
@@ -304,7 +348,7 @@ public class AIAuditLogFactoryTests
 
         // Assert
         snapshot.ShouldNotBeNull();
-        snapshot.ShouldContain($"===== [user] ====={Environment.NewLine}Here is an image:");
+        snapshot.ShouldContain($"===== [user] =====\nHere is an image:");
         snapshot.ShouldContain("[data:image/png] (4 bytes)");
     }
 
@@ -342,12 +386,12 @@ public class AIAuditLogFactoryTests
 
         // Assert
         snapshot.ShouldNotBeNull();
-        snapshot.ShouldContain($"===== [system] ====={Environment.NewLine}You are a helpful assistant with weather tools.");
-        snapshot.ShouldContain($"===== [user] ====={Environment.NewLine}What's the weather in London?");
-        snapshot.ShouldContain($"===== [assistant] ====={Environment.NewLine}Let me check the weather for you.");
+        snapshot.ShouldContain($"===== [system] =====\nYou are a helpful assistant with weather tools.");
+        snapshot.ShouldContain($"===== [user] =====\nWhat's the weather in London?");
+        snapshot.ShouldContain($"===== [assistant] =====\nLet me check the weather for you.");
         snapshot.ShouldContain("[tool_call:tc_001] get_weather({\"city\":\"London\"})");
         snapshot.ShouldContain("[tool:tc_001] -> {\"temperature\":15,\"condition\":\"partly cloudy\"}");
-        snapshot.ShouldContain($"===== [assistant] ====={Environment.NewLine}The weather in London is 15 degrees and partly cloudy.");
+        snapshot.ShouldContain($"===== [assistant] =====\nThe weather in London is 15 degrees and partly cloudy.");
     }
 
     #endregion

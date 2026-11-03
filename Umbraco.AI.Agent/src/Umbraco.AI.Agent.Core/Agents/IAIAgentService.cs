@@ -142,7 +142,7 @@ public interface IAIAgentService
     /// including any custom <c>IAIAgentSelector</c> registrations - runs exactly as it does for an
     /// <c>auto</c> request.
     /// </remarks>
-    [Obsolete("Use IAIAgentSelectionService.SelectAgentAsync. Will be removed in v19")]
+    [Obsolete("Use IAIAgentSelectionService.SelectAgentAsync. Will be removed in v20")]
     Task<AIAgent?> SelectAgentForPromptAsync(
         string userPrompt,
         string surfaceId,

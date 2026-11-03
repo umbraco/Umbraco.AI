@@ -26,7 +26,7 @@ public class AddUmbracoContentItemToolTests
 
     public AddUmbracoContentItemToolTests()
     {
-        _tool = new AddUmbracoContentItemTool(_contentEditingServiceMock.Object, _dispatcherMock.Object, _authorizerMock.Object, new PropertyEditorCollection(new DataEditorCollection(() => [])), Mock.Of<IJsonSerializer>());
+        _tool = new AddUmbracoContentItemTool(_contentEditingServiceMock.Object, _dispatcherMock.Object, _authorizerMock.Object, new PropertyEditorCollection(new DataEditorCollection(() => [])), Mock.Of<IJsonSerializer>(), Mock.Of<ITemplateService>());
     }
 
     [Fact]

@@ -10,6 +10,7 @@ import {
     isSpeechToTextSettings,
     isImageGenerationSettings,
     isDecisionSettings,
+    isExtractionProfileSettings,
 } from "../../../types.js";
 import { UaiPartialUpdateCommand, isCapabilitySettingSupported, getSupportedImageSizes } from "../../../../core/index.js";
 // Imported for the custom-element registrations as well as the rules: these live in this view's own chunk
@@ -319,6 +320,14 @@ export class UaiProfileDetailsWorkspaceViewElement extends UmbLitElement {
                         .metadata=${metadata}
                         @uai-profile-settings-change=${this.#onProfileSettingsChange}
                     ></uai-decision-profile-settings>
+                `;
+            case "extraction":
+                return html`
+                    <uai-extraction-profile-settings
+                        .settings=${isExtractionProfileSettings(settings) ? settings : null}
+                        .metadata=${metadata}
+                        @uai-profile-settings-change=${this.#onProfileSettingsChange}
+                    ></uai-extraction-profile-settings>
                 `;
             default:
                 return nothing;

@@ -28,7 +28,7 @@ public class UpdateSettingsController : SettingsControllerBase
     /// <summary>
     /// Initializes a new instance of the <see cref="UpdateSettingsController"/> class.
     /// </summary>
-    [Obsolete("Use the constructor that accepts an IAIProfileService so that default-profile slots are validated against their required capability. Will be removed in v19.")]
+    [Obsolete("Use the constructor that accepts an IAIProfileService so that default-profile slots are validated against their required capability. Will be removed in v20.")]
     public UpdateSettingsController(IAISettingsService settingsService, IUmbracoMapper umbracoMapper)
         : this(settingsService, StaticServiceProvider.Instance.GetRequiredService<IAIProfileService>(), umbracoMapper)
     {
@@ -83,6 +83,7 @@ public class UpdateSettingsController : SettingsControllerBase
             (nameof(AISettings.DefaultSpeechToTextProfileId), settings.DefaultSpeechToTextProfileId, AICapability.SpeechToText),
             (nameof(AISettings.DefaultImageGenerationProfileId), settings.DefaultImageGenerationProfileId, AICapability.ImageGeneration),
             (nameof(AISettings.DefaultDecisionProfileId), settings.DefaultDecisionProfileId, AICapability.Decision),
+            (nameof(AISettings.DefaultExtractionProfileId), settings.DefaultExtractionProfileId, AICapability.Extraction),
             (nameof(AISettings.ClassifierChatProfileId), settings.ClassifierChatProfileId, AICapability.Chat),
         ];
 

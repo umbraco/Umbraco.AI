@@ -60,10 +60,10 @@ Match the user's intent. By default, if unsure:
 
 Skip unusual capabilities (moderation, OCR, image gen) unless Umbraco.AI.Core has a capability base class for them. Check `Umbraco.AI/src/Umbraco.AI.Core/Providers/` for `AI*CapabilityBase` classes before promising support.
 
-## 3. Feature branch
+## 3. Topic branch
 
 ```bash
-git checkout -b feature/<provider-id>-provider
+git checkout -b v17/topic/<provider-id>-provider
 ```
 
 ## 4. Scaffold the provider
@@ -207,7 +207,7 @@ These edits are mandatory. Missing any one means CI or the demo site won't pick 
 
 - `.github/ISSUE_TEMPLATE/01_bug_report.yml` / `.github/DISCUSSION_TEMPLATE/ideas.yml` — list only Core + OpenAI + Anthropic + a few add-ons. Google/Amazon/MicrosoftFoundry/Mistral aren't there either. Needs a separate coordinated cleanup.
 - `.github/workflows/auto-labeler.yml` — same rationale.
-- `.github/actions/pack-product/action.yml` and `.azure-pipelines/templates/*.yml` — parametric, no hard-coded provider list.
+- `.github/actions/pack-product/action.yml` and the shared pack stage in umbraco/Umbraco.Build — parametric, no hard-coded provider list.
 - `release-manifest.json` — only required on `release/*` branches; the release skill picks up new products automatically.
 
 ## 6. Build + test
@@ -252,7 +252,7 @@ git commit -m "feat(<provider-id>): Add <ProviderName> AI provider"
 git add azure-pipelines.yml scripts/install-demo-site.{sh,ps1} scripts/install-package-test-site.{sh,ps1}
 git commit -m "chore(<provider-id>,ci): Register <ProviderName> in install scripts and CI pipeline"
 
-git push -u origin feature/<provider-id>-provider
+git push -u origin v17/topic/<provider-id>-provider
 ```
 
 Commitlint enforces: sentence-case subject, scope declared in a `changelog.config.json`, valid types. Your new `<provider-id>` scope is picked up automatically from the `changelog.config.json` you added.

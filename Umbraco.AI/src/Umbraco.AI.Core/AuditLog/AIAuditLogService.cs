@@ -32,7 +32,7 @@ internal sealed class AIAuditLogService : IAIAuditLogService
     }
 
     /// <inheritdoc />
-    [Obsolete("Unused by Umbraco.AI; use QueueStartAuditLogAsync instead. Will be removed in v19.")]
+    [Obsolete("Unused by Umbraco.AI; use QueueStartAuditLogAsync instead. Will be removed in v20.")]
     public async Task<AIAuditLog> StartAuditLogAsync(AIAuditLog auditLog,
         CancellationToken ct = default)
     {
@@ -58,7 +58,7 @@ internal sealed class AIAuditLogService : IAIAuditLogService
     }
 
     /// <inheritdoc />
-    [Obsolete("Unused by Umbraco.AI; use QueueCompleteAuditLogAsync instead. Will be removed in v19.")]
+    [Obsolete("Unused by Umbraco.AI; use QueueCompleteAuditLogAsync instead. Will be removed in v20.")]
     public async Task CompleteAuditLogAsync(
         AIAuditLog audit,
         AIAuditPrompt? prompt,
@@ -75,7 +75,7 @@ internal sealed class AIAuditLogService : IAIAuditLogService
 
         if (_options.CurrentValue.PersistResponses && response?.Data != null)
         {
-            var formattedResponse = FormatResponseSnapshot(response.Data);
+            var formattedResponse = FormatResponseSnapshot(response.Data, RedactToolContent, _options.CurrentValue);
             if (!string.IsNullOrEmpty(formattedResponse))
             {
                 audit.ResponseSnapshot = ApplyRedactions(formattedResponse);
@@ -90,7 +90,7 @@ internal sealed class AIAuditLogService : IAIAuditLogService
     }
 
     /// <inheritdoc />
-    [Obsolete("Unused by Umbraco.AI; use QueueRecordAuditLogFailureAsync instead. Will be removed in v19.")]
+    [Obsolete("Unused by Umbraco.AI; use QueueRecordAuditLogFailureAsync instead. Will be removed in v20.")]
     public async Task RecordAuditLogFailureAsync(
         AIAuditLog audit,
         AIAuditPrompt? prompt,
@@ -168,7 +168,7 @@ internal sealed class AIAuditLogService : IAIAuditLogService
 
         if (_options.CurrentValue.PersistResponses && response?.Data != null)
         {
-            var formattedResponse = FormatResponseSnapshot(response.Data);
+            var formattedResponse = FormatResponseSnapshot(response.Data, RedactToolContent, _options.CurrentValue);
             if (!string.IsNullOrEmpty(formattedResponse))
             {
                 audit.ResponseSnapshot = ApplyRedactions(formattedResponse);
@@ -401,7 +401,7 @@ internal sealed class AIAuditLogService : IAIAuditLogService
     /// Formats response data for storage in the audit log.
     /// Handles ChatMessage types to include tool calls and other content types.
     /// </summary>
-    private static string? FormatResponseSnapshot(object? data)
+    private static string? FormatResponseSnapshot(object? data, Func<string, string> redact, AIAuditLogOptions options)
     {
         if (data is null)
         {
@@ -410,8 +410,8 @@ internal sealed class AIAuditLogService : IAIAuditLogService
 
         return data switch
         {
-            IEnumerable<ChatMessage> messages => AIChatMessageFormatter.FormatChatMessages(messages),
-            ChatMessage message => AIChatMessageFormatter.FormatChatMessage(message),
+            IEnumerable<ChatMessage> messages => AIChatMessageFormatter.FormatChatMessages(messages, redact, options),
+            ChatMessage message => AIChatMessageFormatter.FormatChatMessage(message, redact, options),
             string text => text,
             _ => data.ToString()
         };
@@ -458,10 +458,11 @@ internal sealed class AIAuditLogService : IAIAuditLogService
 
     private void CapturePromptSnapshot(AIAuditLog audit, AIAuditPrompt? prompt)
     {
-        if (!_options.CurrentValue.PersistPrompts || prompt?.Data is null)
+        var options = _options.CurrentValue;
+        if (!options.PersistPrompts || prompt?.Data is null)
             return;
 
-        var formatted = AIAuditLogFactory.FormatPromptSnapshot(prompt.Data, prompt.Capability);
+        var formatted = AIAuditLogFactory.FormatPromptSnapshot(prompt.Data, prompt.Capability, RedactToolContent, options);
         if (!string.IsNullOrEmpty(formatted))
         {
             audit.PromptSnapshot = ApplyRedactions(formatted);
@@ -473,4 +474,9 @@ internal sealed class AIAuditLogService : IAIAuditLogService
 
     private string? ApplyRedactions(string? input)
         => AIAuditLogRedactor.ApplyRedactions(input, _options.CurrentValue.RedactionPatterns, _logger);
+
+    // Tool arguments and results are redacted before the formatters truncate them, so a value cut at the
+    // length limit can't escape a pattern that would have matched it whole.
+    private string RedactToolContent(string input)
+        => ApplyRedactions(input) ?? input;
 }

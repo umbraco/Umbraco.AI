@@ -52,6 +52,11 @@ public class UpdateSettingsProfileCapabilityValidationTests
         };
         yield return new object[]
         {
+            "DefaultExtractionProfileId", AICapability.Extraction,
+            (Action<UpdateSettingsRequestModel, Guid?>)((m, id) => m.DefaultExtractionProfileId = id),
+        };
+        yield return new object[]
+        {
             "ClassifierChatProfileId", AICapability.Chat,
             (Action<UpdateSettingsRequestModel, Guid?>)((m, id) => m.ClassifierChatProfileId = id),
         };

@@ -56,7 +56,7 @@ public class StreamAgentAGUIController : AgentControllerBase
     /// <summary>
     /// Initializes a new instance of the <see cref="StreamAgentAGUIController"/> class.
     /// </summary>
-    [Obsolete("Use the constructor that accepts an AIAgentScopeValidator and AIAgentSurfaceCollection so that explicitly requested agents are checked against their scope rules. Will be removed in v19.")]
+    [Obsolete("Use the constructor that accepts an AIAgentScopeValidator and AIAgentSurfaceCollection so that explicitly requested agents are checked against their scope rules. Will be removed in v20.")]
     public StreamAgentAGUIController(
         IAIAgentService agentService,
         IAGUIContextConverter contextConverter,
@@ -79,7 +79,7 @@ public class StreamAgentAGUIController : AgentControllerBase
     /// <summary>
     /// Initializes a new instance of the <see cref="StreamAgentAGUIController"/> class.
     /// </summary>
-    [Obsolete("Use the constructor that accepts an IAIAgentSelectionService and IAGUIMessageConverter so that 'auto' agent selection runs through the pluggable selector chain. Will be removed in v19.")]
+    [Obsolete("Use the constructor that accepts an IAIAgentSelectionService and IAGUIMessageConverter so that 'auto' agent selection runs through the pluggable selector chain. Will be removed in v20.")]
     public StreamAgentAGUIController(
         IAIAgentService agentService,
         IAGUIContextConverter contextConverter,

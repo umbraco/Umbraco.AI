@@ -40,7 +40,7 @@ public class StreamConversationAGUIController : CopilotWorkspaceStreamController
     private readonly AIAgentSurfaceCollection _surfaces;
 
     /// <summary>Initializes a new instance of the <see cref="StreamConversationAGUIController"/> class.</summary>
-    [Obsolete("Use the constructor that accepts an IAIAgentSelectionService and IAGUIMessageConverter so that 'auto' conversations run through the pluggable selector chain. Will be removed in v19.")]
+    [Obsolete("Use the constructor that accepts an IAIAgentSelectionService and IAGUIMessageConverter so that 'auto' conversations run through the pluggable selector chain. Will be removed in v20.")]
     public StreamConversationAGUIController(
         IAIConversationService conversationService,
         IAIProjectService projectService,

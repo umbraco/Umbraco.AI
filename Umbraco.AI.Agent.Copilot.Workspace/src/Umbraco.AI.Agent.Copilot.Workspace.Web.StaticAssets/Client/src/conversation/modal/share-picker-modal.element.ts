@@ -140,8 +140,9 @@ export class UaiSharePickerModalElement extends UmbModalBaseElement<UaiSharePick
     static override styles = [
         UmbTextStyles,
         css`
+            /* flex, not block: as a link (href) its inner <a> would otherwise overflow the field. */
             #choose-person {
-                display: block;
+                display: flex;
             }
 
             uui-select {

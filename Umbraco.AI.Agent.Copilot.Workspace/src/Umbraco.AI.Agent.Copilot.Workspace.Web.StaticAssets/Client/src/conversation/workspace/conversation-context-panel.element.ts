@@ -383,8 +383,10 @@ export class UaiCopilotWorkspaceConversationContextPanelElement extends UmbLitEl
                 gap: 0;
                 margin-bottom: var(--uui-size-space-3);
             }
+            /* flex, not block: as a link (href) the button's inner <a> is content-box, so block + 100%
+               width spills its padding past the panel edge and adds a horizontal scrollbar. */
             .block-body > uui-button[look="placeholder"] {
-                display: block;
+                display: flex;
                 width: 100%;
             }
             /* Divider between the inherited (project) layer and the conversation's own layer. Only drawn

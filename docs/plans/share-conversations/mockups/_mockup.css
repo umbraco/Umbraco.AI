@@ -1,0 +1,569 @@
+/*
+  Shared styles for feature-design mockups. Copy into <plan-folder>/mockups/ beside the screens.
+
+  Recreates the backoffice's own layout elements (umb-backoffice-header, umb-section-sidebar,
+  umb-body-layout, umb-property-layout, umb-footer-layout...) with plain CSS, because those
+  umb-* elements aren't loadable outside a running site. Values are copied from the
+  Umbraco 17.6 and 18.1 backoffice source (they're the same apart from the 17-only rules
+  marked below). Everything else is real UUI.
+
+  Screen-specific styles go in a <style> block in the screen's own file, not here.
+*/
+
+/* Umbraco 17 only (umb-css.css): every corner is 3px, "current" is Spanish pink. Umbraco 18
+   drops these and uses UUI 2's rounder defaults. */
+html[data-umbraco='17']:root {
+	--uui-border-radius: var(--uui-size-1);
+	--uui-border-radius-2: var(--uui-size-1);
+	--uui-border-radius-3: var(--uui-size-1);
+	--uui-palette-spanish-pink: #f5c1bc;
+	--uui-palette-spanish-pink-light: rgb(248, 214, 211);
+	--uui-palette-spanish-pink-dark: rgb(232, 192, 189);
+}
+
+html,
+body {
+	height: 100%;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+	min-width: 920px;
+	color: var(--uui-color-text);
+}
+
+/* Hide everything until UUI and the icons have loaded, so screenshots never catch a half-built page. */
+html:not([data-mockup-ready]) body {
+	visibility: hidden;
+}
+
+/* A plain h1-h6 used for backoffice chrome (a panel title, a tree group label, an empty-state
+   message) is never the thing UUI's own .uui-text h1-h6 rule was written for: that rule is
+   UUI's rich-text type scale (h3 = 30px, h4 = 21px...), meant for article-style content. Every
+   real backoffice heading instead lives inside a component's shadow DOM, where this page's
+   .uui-text class can't reach it, so it just keeps the browser's small bold default. Reset to
+   that default here, once, instead of re-discovering and re-patching the same oversized
+   heading per screen. A screen that genuinely wants a specific size (a workspace title, a
+   small uppercase group label) still sets its own font-size on top of this. */
+.uui-text h1,
+.uui-text h2,
+.uui-text h3,
+.uui-text h4,
+.uui-text h5,
+.uui-text h6 {
+	font-size: inherit;
+	font-weight: 700;
+	margin: 0;
+	line-height: 1.3;
+}
+
+/* ---- Header: logo, section tabs, apps ---- */
+
+.app-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	height: 60px;
+	padding: 0 var(--uui-size-space-5);
+	background-color: var(--uui-color-header-surface);
+	--uui-focus-outline-color: var(--uui-color-header-contrast-emphasis);
+}
+
+.app-header .logo {
+	margin: 0 var(--uui-size-space-4) 0 0;
+	color: var(--uui-color-header-contrast-emphasis);
+	font-weight: 700;
+	font-size: 16px;
+	white-space: nowrap;
+}
+
+.app-header .sections {
+	height: 60px;
+	flex: 1 1 auto;
+	font-size: 16px;
+	--uui-tab-text: var(--uui-color-header-contrast);
+	--uui-tab-text-hover: var(--uui-color-header-contrast-emphasis);
+	--uui-tab-text-active: var(--uui-color-header-contrast-emphasis);
+	--uui-tab-group-dropdown-background: var(--uui-color-header-surface);
+}
+
+.app-header .apps {
+	display: flex;
+	align-items: center;
+	gap: var(--uui-size-space-2);
+}
+
+.app-header .apps uui-button {
+	font-size: 18px;
+	color: var(--uui-color-header-contrast-emphasis);
+	--uui-button-background-color: transparent;
+	--uui-button-background-color-hover: var(--uui-color-emphasis);
+}
+
+.app-header .apps uui-avatar {
+	font-size: 14px;
+	background-color: transparent;
+	color: inherit;
+	box-shadow: 0 0 0 1.5px var(--uui-color-border);
+}
+
+/* ---- Section: sidebar + main ---- */
+
+.section {
+	display: flex;
+	height: calc(100% - 60px);
+	background-color: var(--uui-color-background);
+}
+
+.section-sidebar {
+	flex: 0 0 300px;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	background-color: var(--uui-color-surface);
+	border-right: 1px solid var(--uui-color-border);
+	font-weight: 500;
+	overflow: auto;
+}
+
+.section-sidebar h3 {
+	display: flex;
+	align-items: center;
+	height: 70px;
+	margin: 0;
+	padding: var(--uui-size-4) var(--uui-size-8);
+	box-sizing: border-box;
+	font-size: 14px;
+}
+
+.section-sidebar uui-menu-item uui-icon[slot='icon'] {
+	font-size: 15px;
+}
+
+.section-main {
+	flex: 1 1 auto;
+	height: 100%;
+	min-width: 0;
+	position: relative;
+}
+
+/* ---- Body layout: header bar, scrolling main, footer (umb-body-layout) ---- */
+
+.body-layout {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	background: var(--uui-color-background);
+}
+
+.body-layout > .header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex: none;
+	height: 70px;
+	background: var(--uui-color-surface);
+	border-bottom: 1px solid var(--uui-color-border);
+}
+
+.body-layout > .header.fit-height {
+	height: fit-content;
+}
+
+.body-layout > .header.transparent {
+	background: transparent;
+	border-bottom: none;
+}
+
+.body-layout > .header > .header-content {
+	display: flex;
+	align-items: center;
+	flex-grow: 1;
+	height: 100%;
+	padding: 0 var(--uui-size-layout-1);
+}
+
+.body-layout > .header > .navigation {
+	margin-left: auto;
+	height: 100%;
+}
+
+.body-layout > .header uui-tab-group {
+	height: 100%;
+}
+
+.body-layout > .main {
+	flex: 1;
+	overflow: auto;
+	padding: var(--uui-size-layout-1);
+}
+
+.body-layout > .main.no-padding {
+	padding: 0;
+}
+
+.body-layout h3.headline {
+	/* Explicit, not inherited: the real umb-body-layout's headline sits in its shadow DOM, so
+	   the page's .uui-text class can't reach it and UUI's 30px .uui-text h3 rule never
+	   applies there — only here, by accident, since this h3 is in the light DOM. */
+	font-size: 16px;
+	font-weight: 700;
+	margin: 0 var(--uui-size-layout-1);
+	line-height: 1.3;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* View tabs on the right of a header (Content / Info, or section views). */
+.view-tabs {
+	--uui-tab-divider: var(--uui-color-border);
+	border-left: 1px solid var(--uui-color-border);
+	border-right: 1px solid var(--uui-color-border);
+}
+
+/* Dashboard / content tabs across the top of a body layout. */
+.header-tabs {
+	height: auto;
+	--uui-tab-background: var(--uui-color-surface);
+}
+
+/* Count badge on a view tab's icon (workspace-editor's umb-badge). */
+.view-tabs div[slot='icon'] {
+	position: relative;
+}
+
+.view-tabs div[slot='icon'] uui-badge {
+	position: absolute;
+	inset: -8px -1.5em auto auto;
+	font-size: var(--uui-type-small-size);
+}
+
+/* Count badge in a content tab's "extra" slot, pinned to the tab's top right. */
+uui-tab uui-badge[slot='extra'] {
+	position: absolute;
+	inset: 0 0 auto auto;
+}
+
+/* ---- Footer (umb-footer-layout) ---- */
+
+.footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex: none;
+	height: 54px;
+	border-top: 1px solid var(--uui-color-border);
+	background: var(--uui-color-surface);
+}
+
+.footer uui-breadcrumbs {
+	margin-left: var(--uui-size-layout-1);
+}
+
+.footer .actions {
+	display: flex;
+	gap: var(--uui-size-space-2);
+	margin: 0 var(--uui-size-layout-1);
+	margin-left: auto;
+}
+
+.footer .split-expand uui-symbol-expand {
+	transform: rotate(-90deg);
+}
+
+/* ---- Workspace editor header ---- */
+
+/* Workspace "..." actions: sits between the name and the view tabs. */
+.action-menu {
+	height: 100%;
+	margin-left: calc(var(--uui-size-layout-1) * -1);
+}
+
+.action-menu > uui-button {
+	height: 100%;
+}
+
+.workspace-header uui-button.back {
+	margin-right: var(--uui-size-space-4);
+}
+
+.workspace-header .entity-icon {
+	font-size: var(--uui-size-6);
+	margin-right: var(--uui-size-space-4);
+}
+
+.workspace-header uui-input.name {
+	width: 100%;
+}
+
+/* Read-only title where an editable name input would be (collections, dashboards). */
+.workspace-header .title {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 700;
+}
+
+/* ---- Property groups and property layout (umb-property-layout) ---- */
+
+.group {
+	--uui-box-default-padding: 0 var(--uui-size-space-5);
+}
+
+.group + .group {
+	margin-top: var(--uui-size-layout-1);
+}
+
+.property {
+	display: grid;
+	grid-template-columns: 200px minmax(0, 1fr);
+	column-gap: var(--uui-size-layout-2);
+	padding: var(--uui-size-layout-1) 0;
+	border-bottom: 1px solid var(--uui-color-divider);
+}
+
+.property:last-child {
+	border-bottom: none;
+}
+
+.property uui-label {
+	--uui-color-invalid: var(--uui-color-danger);
+}
+
+.property .description {
+	color: var(--uui-color-text-alt);
+}
+
+.property uui-input,
+.property uui-textarea {
+	width: 100%;
+}
+
+/* Picker: picked items + Choose button. */
+.picker uui-button.choose {
+	display: block;
+}
+
+/* ---- Collection: toolbar, table, grid, bulk bar, empty state ---- */
+
+.collection {
+	display: flex;
+	flex-direction: column;
+	gap: var(--uui-size-space-5);
+}
+
+.collection-toolbar {
+	display: flex;
+	gap: var(--uui-size-space-5);
+	justify-content: space-between;
+	width: 100%;
+}
+
+.collection-toolbar uui-input {
+	flex: 1 1 auto;
+}
+
+/* Umbraco 17 only: 18 drops the table shadow. */
+html[data-umbraco='17'] .collection-table {
+	box-shadow: var(--uui-shadow-depth-1);
+}
+
+.collection-table uui-table-head-cell,
+.collection-table uui-table-cell {
+	--uui-table-cell-padding: 0 var(--uui-size-5);
+}
+
+.collection-table .select-cell {
+	--uui-table-cell-padding: 0;
+	width: 60px;
+	text-align: center;
+}
+
+.collection-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+	gap: var(--uui-size-space-4);
+}
+
+.collection-grid uui-card-content-node {
+	min-width: auto;
+	width: 100%;
+	min-height: 180px;
+}
+
+/* Media cards (umb-media-grid-collection-view). */
+.media-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	grid-auto-rows: 200px;
+	gap: var(--uui-size-space-5);
+}
+
+.media-grid uui-card-media {
+	height: 100%;
+}
+
+.collection-grid ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	font-size: 12px;
+}
+
+.bulk-bar {
+	display: flex;
+	gap: var(--uui-size-3);
+	align-items: center;
+	justify-content: space-between;
+	padding: var(--uui-size-space-4) var(--uui-size-space-6);
+	background-color: var(--uui-color-selected);
+	color: var(--uui-color-selected-contrast);
+}
+
+.bulk-bar > div {
+	display: flex;
+	gap: var(--uui-size-3);
+	align-items: center;
+}
+
+.empty-state {
+	height: 80%;
+	align-content: center;
+	text-align: center;
+}
+
+uui-pagination {
+	margin-top: var(--uui-size-layout-1);
+}
+
+/* ---- Dashboard content ---- */
+
+.dashboard {
+	display: block;
+	padding: var(--uui-size-layout-1);
+}
+
+.dashboard-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: var(--uui-size-layout-1);
+}
+
+.dashboard-grid .wide {
+	grid-column: 1 / -1;
+}
+
+/* A box holding an edge-to-edge table. */
+uui-box.table-box {
+	--uui-box-default-padding: 0;
+}
+
+/* ---- Popover menus ("..." actions, save options) ---- */
+
+/* Wrap a trigger in .popover-anchor and put the open .popover-menu beside it. */
+.popover-anchor {
+	position: relative;
+}
+
+.popover-menu.below-end {
+	position: absolute;
+	top: calc(100% + 6px);
+	right: 0;
+	z-index: 5;
+}
+
+.popover-menu.above-end {
+	position: absolute;
+	bottom: calc(100% + 6px);
+	right: 0;
+	z-index: 5;
+}
+
+/* A second open state for the same page, shown at <page>.html#<id> instead of the default one. */
+.popover-menu.on-target {
+	display: none;
+}
+
+.popover-menu.on-target:target {
+	display: block;
+}
+
+body:has(.on-target:target) .popover-menu:not(.on-target),
+body:has(.on-target:target) .toasts {
+	display: none;
+}
+
+.popover-menu {
+	min-width: 200px;
+	width: max-content;
+	background: var(--uui-color-surface);
+	border: 1px solid var(--uui-color-border);
+	border-radius: var(--uui-border-radius);
+	box-shadow: var(--uui-shadow-depth-3);
+	overflow: clip;
+	--uui-menu-item-indent: 0;
+	--uui-menu-item-flat-structure: 1;
+}
+
+/* ---- Modals, shown open over the page ---- */
+
+.modal-backdrop {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.3);
+	z-index: 10;
+}
+
+.modal-sidebar {
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	width: min(800px, calc(100% - 64px));
+	background: var(--uui-color-surface);
+	box-shadow: var(--uui-shadow-depth-5);
+	z-index: 11;
+}
+
+.modal-sidebar.small {
+	width: min(500px, calc(100% - 64px));
+}
+
+.modal-sidebar.large {
+	width: min(1200px, calc(100% - 64px));
+}
+
+.modal-dialog {
+	position: fixed;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 11;
+}
+
+.modal-dialog uui-dialog-layout {
+	max-inline-size: 60ch;
+}
+
+/* ---- Toasts ---- */
+
+uui-toast-notification-container.toasts {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 45px;
+	height: auto;
+	width: 100vw;
+	box-sizing: border-box;
+	padding: var(--uui-size-layout-1);
+	margin: 0;
+	border: 0;
+	background: 0;
+	outline: 0;
+	pointer-events: none;
+	z-index: 20;
+}

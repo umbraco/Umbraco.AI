@@ -24,6 +24,7 @@ public class ContentPropertyValueOperationHelperTests
     private readonly Mock<IDataEditor> _editorMock = new();
     private readonly Mock<IDataValueEditor> _valueEditorMock = new();
     private readonly Mock<IJsonSerializer> _jsonSerializerMock = new();
+    private readonly Mock<ITemplateService> _templateServiceMock = new();
     private readonly List<IDataEditor> _editors = [];
 
     public ContentPropertyValueOperationHelperTests()
@@ -104,6 +105,7 @@ public class ContentPropertyValueOperationHelperTests
             new ContentEditorValueReader(
                 new PropertyEditorCollection(new DataEditorCollection(() => _editors)),
                 _jsonSerializerMock.Object),
+            _templateServiceMock.Object,
             key,
             path,
             operation,
@@ -307,6 +309,39 @@ public class ContentPropertyValueOperationHelperTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_ContentHasTemplate_KeepsItSoThePageStillRenders()
+    {
+        var key = Guid.NewGuid();
+        var userKey = Guid.NewGuid();
+        var templateKey = Guid.NewGuid();
+        _authorizerMock
+            .Setup(x => x.AuthorizeContentAsync(ActionUpdate.ActionLetter, key, null))
+            .ReturnsAsync(UmbracoWriteAuthorizationResult.Allowed(userKey));
+        var contentMock = CreateContentMock(Guid.NewGuid(), "Hello World");
+        contentMock.Setup(x => x.TemplateId).Returns(1234);
+        _contentEditingServiceMock.Setup(x => x.GetAsync(key)).ReturnsAsync(contentMock.Object);
+        var templateMock = new Mock<ITemplate>();
+        templateMock.Setup(x => x.Key).Returns(templateKey);
+        _templateServiceMock.Setup(x => x.GetAsync(1234)).ReturnsAsync(templateMock.Object);
+        _dispatcherMock
+            .Setup(x => x.DispatchAsync(It.IsAny<AIPropertyValueDispatchRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AIPropertyValueDispatchResult.Ok(JsonValue.Create("Updated")));
+
+        ContentUpdateModel? capturedModel = null;
+        _contentEditingServiceMock
+            .Setup(x => x.UpdateAsync(key, It.IsAny<ContentUpdateModel>(), userKey))
+            .Callback<Guid, ContentUpdateModel, Guid>((_, model, _) => capturedModel = model)
+            .ReturnsAsync(Attempt<ContentUpdateResult, ContentEditingOperationStatus>.Succeed(
+                ContentEditingOperationStatus.Success, new ContentUpdateResult()));
+
+        var result = await ExecuteAsync(key, [RootSegment]);
+
+        result.Success.ShouldBeTrue();
+        capturedModel.ShouldNotBeNull();
+        capturedModel!.TemplateKey.ShouldBe(templateKey);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_NestedBlockPath_ParsesJsonEnvelopeAndBuildsCorrectSegments()
     {
         var key = Guid.NewGuid();
@@ -440,11 +475,10 @@ public class ContentPropertyValueOperationHelperTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_OtherPropertyVariesBySegment_IsLeftOutOfThePatch()
+    public async Task ExecuteAsync_OtherPropertyVariesBySegment_IsSentForTheDefaultSegmentSoItSurvives()
     {
-        // There's no per-property segment to read/write these correctly here, so — matching
-        // UpdateUmbracoContentTool — they're left out of the resubmitted set rather than risk a
-        // NotSupportedException from guessing a segment.
+        // Leaving a segment-varying alias out makes the CMS clear every value of it. Sending its
+        // default-segment value keeps the alias in the update without touching the other segments.
         var key = Guid.NewGuid();
         var userKey = Guid.NewGuid();
         var contentTypeKey = Guid.NewGuid();
@@ -475,7 +509,8 @@ public class ContentPropertyValueOperationHelperTests
 
         result.Success.ShouldBeTrue();
         capturedModel.ShouldNotBeNull();
-        capturedModel!.Properties.Select(p => p.Alias).ShouldBe(new[] { "contentBlocks", "title" });
+        capturedModel!.Properties.Select(p => p.Alias).ShouldBe(new[] { "contentBlocks", "title", "regionalNote" });
+        capturedModel.Properties.Single(p => p.Alias == "regionalNote").Segment.ShouldBeNull();
     }
 
     [Fact]

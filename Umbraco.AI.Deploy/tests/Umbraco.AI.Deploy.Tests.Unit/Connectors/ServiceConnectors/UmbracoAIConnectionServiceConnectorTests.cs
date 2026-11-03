@@ -1,217 +1,337 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Shouldly;
 using Umbraco.AI.Core.Connections;
+using Umbraco.AI.Core.EditableModels;
+using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Deploy.Artifacts;
 using Umbraco.AI.Deploy.Configuration;
 using Umbraco.AI.Deploy.Connectors.ServiceConnectors;
 using Umbraco.Cms.Core;
+using Umbraco.Cms.Core.Deploy;
 using Xunit;
 
 namespace Umbraco.AI.Deploy.Tests.Unit.Connectors.ServiceConnectors;
 
 public class UmbracoAIConnectionServiceConnectorTests
 {
+    private const string ProviderId = "test-provider";
+
     private readonly Mock<IAIConnectionService> _connectionServiceMock;
     private readonly Mock<UmbracoAIDeploySettingsAccessor> _settingsAccessorMock;
+    private readonly UmbracoAIDeployConnectionSettings _connectionSettings = new();
     private readonly UmbracoAIConnectionServiceConnector _connector;
 
     public UmbracoAIConnectionServiceConnectorTests()
     {
         _connectionServiceMock = new Mock<IAIConnectionService>();
-        _settingsAccessorMock = new Mock<UmbracoAIDeploySettingsAccessor>(MockBehavior.Strict, null!);
+        _connectionServiceMock
+            .Setup(x => x.SaveConnectionAsync(It.IsAny<AIConnection>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIConnection c, CancellationToken _) => c);
 
-        // Setup default settings
-        var settings = new UmbracoAIDeploySettings
-        {
-            Connections = new UmbracoAIDeployConnectionSettings
-            {
-                IgnoreEncrypted = true,
-                IgnoreSensitive = true,
-                IgnoreSettings = []
-            }
-        };
-        _settingsAccessorMock.Setup(x => x.Settings).Returns(settings);
+        _settingsAccessorMock = new Mock<UmbracoAIDeploySettingsAccessor>(MockBehavior.Strict, null!);
+        _settingsAccessorMock.Setup(x => x.Settings).Returns(new UmbracoAIDeploySettings { Connections = _connectionSettings });
+
+        // Mirrors a typical provider: a required API key, an optional secret and a plain endpoint.
+        var schema = new AIEditableModelSchema(typeof(object),
+        [
+            new AIEditableModelField { Key = "apiKey", Label = "API Key", PropertyName = "ApiKey", IsSensitive = true, ValidationRules = [new RequiredAttribute()] },
+            new AIEditableModelField { Key = "organizationId", Label = "Organization", PropertyName = "OrganizationId", IsSensitive = true },
+            new AIEditableModelField { Key = "endpoint", Label = "Endpoint", PropertyName = "Endpoint" },
+        ]);
+        var provider = new Mock<IAIProvider>();
+        provider.SetupGet(x => x.Id).Returns(ProviderId);
+        provider.Setup(x => x.GetSettingsSchema()).Returns(schema);
 
         _connector = new UmbracoAIConnectionServiceConnector(
             _connectionServiceMock.Object,
-            _settingsAccessorMock.Object);
+            _settingsAccessorMock.Object,
+            new AIProviderCollection(() => [provider.Object]),
+            NullLogger<UmbracoAIConnectionServiceConnector>.Instance);
+    }
+
+    // ---- Export ----
+
+    [Fact]
+    public async Task GetArtifactAsync_SensitiveLiteral_IsNotWritten()
+    {
+        // The shape a connection has at runtime: decrypted JSON with camelCase keys.
+        var artifact = await ExportAsync(Json(new { apiKey = "sk-live-secret", endpoint = "https://api.example.com" }));
+
+        var settings = ReadSettings(artifact);
+        settings.ShouldNotContainKey("apiKey");
+        settings["endpoint"].GetString().ShouldBe("https://api.example.com");
     }
 
     [Fact]
-    public async Task GetArtifactAsync_WithConfigurationReference_PreservesValue()
+    public async Task GetArtifactAsync_SensitiveLiteral_IsNotWritten_WhateverTheKeyCasing()
     {
-        // Arrange
+        var artifact = await ExportAsync(new Dictionary<string, object?> { ["ApiKey"] = "sk-live-secret" });
+
+        ReadSettings(artifact).ShouldNotContainKey("ApiKey");
+    }
+
+    [Fact]
+    public async Task GetArtifactAsync_SensitiveLiteral_IsNotWritten_WithObsoleteOptionsTurnedOff()
+    {
+#pragma warning disable CS0618 // Type or member is obsolete
+        _connectionSettings.IgnoreEncrypted = false;
+        _connectionSettings.IgnoreSensitive = false;
+#pragma warning restore CS0618
+
+        var artifact = await ExportAsync(Json(new { apiKey = "sk-live-secret", organizationId = "org-secret" }));
+
+        var settings = ReadSettings(artifact);
+        settings.ShouldNotContainKey("apiKey");
+        settings.ShouldNotContainKey("organizationId");
+    }
+
+    [Fact]
+    public async Task GetArtifactAsync_ConfigurationReference_IsWritten()
+    {
+        var artifact = await ExportAsync(Json(new { apiKey = "$Umbraco:AI:Secrets:OpenAI" }));
+
+        ReadSettings(artifact)["apiKey"].GetString().ShouldBe("$Umbraco:AI:Secrets:OpenAI");
+    }
+
+    [Fact]
+    public async Task GetArtifactAsync_EscapedLiteral_IsNotWritten()
+    {
+        var artifact = await ExportAsync(Json(new { apiKey = "$$starts-with-dollar" }));
+
+        ReadSettings(artifact).ShouldNotContainKey("apiKey");
+    }
+
+    [Fact]
+    public async Task GetArtifactAsync_EncryptedValue_IsNotWritten_EvenInANonSensitiveField()
+    {
+        var artifact = await ExportAsync(Json(new { endpoint = "ENC:abc123" }));
+
+        ReadSettings(artifact).ShouldNotContainKey("endpoint");
+    }
+
+    [Fact]
+    public async Task GetArtifactAsync_IncludedSensitiveSetting_IsWritten_CaseInsensitively()
+    {
+        _connectionSettings.IncludeSensitiveSettings = ["ApiKey"];
+
+        var artifact = await ExportAsync(Json(new { apiKey = "sk-live-secret" }));
+
+        ReadSettings(artifact)["apiKey"].GetString().ShouldBe("sk-live-secret");
+    }
+
+    [Fact]
+    public async Task GetArtifactAsync_IgnoredSetting_IsNotWritten_CaseInsensitively()
+    {
+        _connectionSettings.IgnoreSettings = ["Endpoint"];
+
+        var artifact = await ExportAsync(Json(new { endpoint = "https://api.example.com" }));
+
+        ReadSettings(artifact).ShouldNotContainKey("endpoint");
+    }
+
+    [Fact]
+    public async Task GetArtifactAsync_IgnoredSetting_WinsOverIncludedSensitiveSetting()
+    {
+        _connectionSettings.IgnoreSettings = ["apiKey"];
+        _connectionSettings.IncludeSensitiveSettings = ["apiKey"];
+
+        var artifact = await ExportAsync(Json(new { apiKey = "$Umbraco:AI:Secrets:OpenAI" }));
+
+        ReadSettings(artifact).ShouldNotContainKey("apiKey");
+    }
+
+    [Fact]
+    public async Task GetArtifactAsync_UnknownProvider_TreatsEveryStringAsSensitive()
+    {
         var connection = new AIConnection
         {
             Alias = "test-connection",
             Name = "Test Connection",
-            ProviderId = "test-provider",
-            Settings = new Dictionary<string, object?>
-            {
-                ["ApiKey"] = "$OpenAI:ApiKey", // Configuration reference
-                ["Endpoint"] = "https://api.example.com"
-            }
+            ProviderId = "not-installed",
+            Settings = Json(new { anything = "sk-live-secret", reference = "$Umbraco:AI:Secrets:X", maxTokens = 100 })
         };
 
-        var udi = new GuidUdi("umbraco-ai-connection", connection.Id);
+        var artifact = await _connector.GetArtifactAsync(new GuidUdi("umbraco-ai-connection", connection.Id), connection);
 
-        // Act
-        var artifact = await _connector.GetArtifactAsync(udi, connection);
-
-        // Assert
-        artifact.ShouldNotBeNull();
-        artifact.Settings.ShouldNotBeNull();
-
-        var settings = JsonSerializer.Deserialize<Dictionary<string, object?>>(artifact.Settings.Value);
-        settings.ShouldNotBeNull();
-        settings.ShouldContainKey("Endpoint");
-
-        // Configuration reference should be preserved when IgnoreEncrypted is true
-        // (only blocks ENC: values, allows $ refs)
-        settings.ShouldContainKey("ApiKey");
-        settings["ApiKey"]!.ToString().ShouldBe("$OpenAI:ApiKey");
-    }
-
-    [Fact]
-    public async Task GetArtifactAsync_WithEncryptedValue_FiltersWhenIgnoreEncryptedTrue()
-    {
-        // Arrange
-        var connection = new AIConnection
-        {
-            Alias = "test-connection",
-            Name = "Test Connection",
-            ProviderId = "test-provider",
-            Settings = new Dictionary<string, object?>
-            {
-                ["ApiKey"] = "ENC:abc123encrypted", // Encrypted value
-                ["Endpoint"] = "https://api.example.com"
-            }
-        };
-
-        var udi = new GuidUdi("umbraco-ai-connection", connection.Id);
-
-        // Act
-        var artifact = await _connector.GetArtifactAsync(udi, connection);
-
-        // Assert
-        artifact.ShouldNotBeNull();
-        artifact.Settings.ShouldNotBeNull();
-
-        var settings = JsonSerializer.Deserialize<Dictionary<string, object?>>(artifact.Settings.Value);
-        settings.ShouldNotBeNull();
-        settings.ShouldContainKey("Endpoint");
-
-        // Encrypted value should be filtered out when IgnoreEncrypted is true
-        settings.ShouldNotContainKey("ApiKey");
-    }
-
-    [Fact]
-    public async Task GetArtifactAsync_WithIgnoreSettingsList_FiltersSpecifiedFields()
-    {
-        // Arrange
-        _settingsAccessorMock.Setup(x => x.Settings).Returns(new UmbracoAIDeploySettings
-        {
-            Connections = new UmbracoAIDeployConnectionSettings
-            {
-                IgnoreEncrypted = false,
-                IgnoreSensitive = false,
-                IgnoreSettings = ["ApiKey"] // Specific field to ignore
-            }
-        });
-
-        var connection = new AIConnection
-        {
-            Alias = "test-connection",
-            Name = "Test Connection",
-            ProviderId = "test-provider",
-            Settings = new Dictionary<string, object?>
-            {
-                ["ApiKey"] = "secret-key",
-                ["Endpoint"] = "https://api.example.com"
-            }
-        };
-
-        var udi = new GuidUdi("umbraco-ai-connection", connection.Id);
-
-        // Act
-        var artifact = await _connector.GetArtifactAsync(udi, connection);
-
-        // Assert
-        artifact.ShouldNotBeNull();
-        artifact.Settings.ShouldNotBeNull();
-
-        var settings = JsonSerializer.Deserialize<Dictionary<string, object?>>(artifact.Settings.Value);
-        settings.ShouldNotBeNull();
-        settings.ShouldContainKey("Endpoint");
-
-        // ApiKey should be filtered (highest precedence - IgnoreSettings)
-        settings.ShouldNotContainKey("ApiKey");
+        var settings = ReadSettings(artifact);
+        settings.ShouldNotContainKey("anything");
+        settings["reference"].GetString().ShouldBe("$Umbraco:AI:Secrets:X");
+        settings["maxTokens"].GetInt32().ShouldBe(100);
     }
 
     [Fact]
     public async Task GetArtifactAsync_WithNullSettings_ReturnsNullSettings()
     {
-        // Arrange
-        var connection = new AIConnection
-        {
-            Alias = "test-connection",
-            Name = "Test Connection",
-            ProviderId = "test-provider",
-            Settings = null
-        };
+        var artifact = await ExportAsync(null);
 
-        var udi = new GuidUdi("umbraco-ai-connection", connection.Id);
-
-        // Act
-        var artifact = await _connector.GetArtifactAsync(udi, connection);
-
-        // Assert
-        artifact.ShouldNotBeNull();
         artifact.Settings.ShouldBeNull();
     }
+
+    // ---- Import ----
+
+    [Fact]
+    public async Task ProcessAsync_ArtifactCarryingASensitiveLiteral_DoesNotImportIt()
+    {
+        // An artifact written by an affected version still holds the key in plain text.
+        var existing = NewConnection(Json(new { apiKey = "target-own-key" }));
+
+        var saved = await ImportAsync(Json(new { apiKey = "leaked-source-key", endpoint = "https://source" }), existing);
+
+        var settings = SavedSettings(saved);
+        settings["apiKey"].GetString().ShouldBe("target-own-key");
+        settings["endpoint"].GetString().ShouldBe("https://source");
+    }
+
+    [Fact]
+    public async Task ProcessAsync_IncludedSensitiveSetting_IsImported()
+    {
+        _connectionSettings.IncludeSensitiveSettings = ["apiKey"];
+        var existing = NewConnection(Json(new { apiKey = "target-own-key" }));
+
+        var saved = await ImportAsync(Json(new { apiKey = "source-key" }), existing);
+
+        SavedSettings(saved)["apiKey"].GetString().ShouldBe("source-key");
+    }
+
+    [Fact]
+    public async Task ProcessAsync_ConfigurationReference_ReplacesTargetValue()
+    {
+        var existing = NewConnection(Json(new { apiKey = "target-own-key" }));
+
+        var saved = await ImportAsync(Json(new { apiKey = "$Umbraco:AI:Secrets:OpenAI" }), existing);
+
+        SavedSettings(saved)["apiKey"].GetString().ShouldBe("$Umbraco:AI:Secrets:OpenAI");
+        saved.IsActive.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task ProcessAsync_ExistingConnection_KeepsItsOwnSecrets()
+    {
+        var existing = NewConnection(Json(new { apiKey = "target-own-key", organizationId = "target-org" }));
+
+        var saved = await ImportAsync(Json(new { endpoint = "https://source" }), existing);
+
+        var settings = SavedSettings(saved);
+        settings["apiKey"].GetString().ShouldBe("target-own-key");
+        settings["organizationId"].GetString().ShouldBe("target-org");
+        saved.IsActive.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task ProcessAsync_NewConnection_MissingRequiredSecret_IsImportedInactiveWithPlaceholder()
+    {
+        var saved = await ImportAsync(Json(new { endpoint = "https://source" }), existing: null);
+
+        SavedSettings(saved)["apiKey"].GetString().ShouldBe(UmbracoAIConnectionServiceConnector.MissingSecretPlaceholder);
+        saved.IsActive.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task ProcessAsync_NewConnection_MissingOptionalSecret_IsLeftEmpty()
+    {
+        var saved = await ImportAsync(Json(new { apiKey = "$Umbraco:AI:Secrets:OpenAI" }), existing: null);
+
+        SavedSettings(saved).ShouldNotContainKey("organizationId");
+        saved.IsActive.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task ProcessAsync_Redeploy_KeepsConnectionInactiveWhilePlaceholderIsInPlace()
+    {
+        var existing = NewConnection(Json(new { apiKey = UmbracoAIConnectionServiceConnector.MissingSecretPlaceholder }));
+        existing.IsActive = false;
+
+        var saved = await ImportAsync(Json(new { endpoint = "https://source" }), existing, sourceIsActive: true);
+
+        saved.IsActive.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task ProcessAsync_Redeploy_AfterRealSecretIsSet_FollowsSourceActiveState()
+    {
+        var existing = NewConnection(Json(new { apiKey = "target-own-key" }));
+
+        var saved = await ImportAsync(Json(new { endpoint = "https://source" }), existing, sourceIsActive: true);
+
+        saved.IsActive.ShouldBeTrue();
+    }
+
+    // ---- Other ----
 
     [Fact]
     public async Task GetEntityAsync_ReturnsConnection()
     {
-        // Arrange
         var connectionId = Guid.NewGuid();
-        var connection = new AIConnection
-        {
-            Alias = "test-connection",
-            Name = "Test Connection",
-            ProviderId = "test-provider"
-        };
-
+        var connection = NewConnection(null);
         _connectionServiceMock
             .Setup(x => x.GetConnectionAsync(connectionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(connection);
 
-        // Act
         var result = await _connector.GetEntityAsync(connectionId);
 
-        // Assert
         result.ShouldBe(connection);
     }
 
     [Fact]
     public void GetEntityName_ReturnsConnectionName()
     {
-        // Arrange
-        var connection = new AIConnection
+        _connector.GetEntityName(NewConnection(null)).ShouldBe("Test Connection");
+    }
+
+    private static AIConnection NewConnection(object? settings) => new()
+    {
+        Alias = "test-connection",
+        Name = "Test Connection",
+        ProviderId = ProviderId,
+        Settings = settings
+    };
+
+    private static JsonElement Json(object value) => JsonSerializer.SerializeToElement(value);
+
+    private async Task<AIConnectionArtifact> ExportAsync(object? settings)
+    {
+        var connection = NewConnection(settings);
+        var artifact = await _connector.GetArtifactAsync(new GuidUdi("umbraco-ai-connection", connection.Id), connection);
+        artifact.ShouldNotBeNull();
+        return artifact;
+    }
+
+    private async Task<AIConnection> ImportAsync(JsonElement artifactSettings, AIConnection? existing, bool sourceIsActive = true)
+    {
+        var id = existing?.Id ?? Guid.NewGuid();
+        var artifact = new AIConnectionArtifact(new GuidUdi("umbraco-ai-connection", id))
         {
             Alias = "test-connection",
             Name = "Test Connection",
-            ProviderId = "test-provider"
+            ProviderId = ProviderId,
+            Settings = artifactSettings,
+            IsActive = sourceIsActive
         };
 
-        // Act
-        var name = _connector.GetEntityName(connection);
+        var state = new ArtifactDeployState<AIConnectionArtifact, AIConnection>(artifact, existing, _connector, 1);
+        await _connector.ProcessAsync(state, Mock.Of<IDeployContext>(), 1);
 
-        // Assert
-        name.ShouldBe("Test Connection");
+        state.Entity.ShouldNotBeNull();
+        return state.Entity;
     }
+
+    private static Dictionary<string, JsonElement> ReadSettings(AIConnectionArtifact? artifact)
+    {
+        artifact.ShouldNotBeNull();
+        artifact.Settings.ShouldNotBeNull();
+        return new Dictionary<string, JsonElement>(
+            JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(artifact.Settings.Value)!,
+            StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static Dictionary<string, JsonElement> SavedSettings(AIConnection connection)
+        => new(JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(JsonSerializer.Serialize(connection.Settings))!,
+            StringComparer.OrdinalIgnoreCase);
 }

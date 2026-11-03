@@ -51,9 +51,8 @@ Configure deployment behavior in `appsettings.json`:
     "AI": {
       "Deploy": {
         "Connections": {
-          "IgnoreEncrypted": true,
-          "IgnoreSensitive": true,
-          "IgnoreSettings": []
+          "IgnoreSettings": [],
+          "IncludeSensitiveSettings": []
         }
       }
     }
@@ -61,13 +60,23 @@ Configure deployment behavior in `appsettings.json`:
 }
 ```
 
-### Settings Filtering
+### Sensitive Settings
 
-Control which connection settings are deployed:
+Sensitive settings (fields a provider marks `[AIField(IsSensitive = true)]`, such as API keys and client secrets) are never written to a deploy artifact, or read from one, as a literal value:
 
-- **IgnoreEncrypted** - Block encrypted values (`ENC:...`), allow `$` config references
-- **IgnoreSensitive** - Block all sensitive fields (marked with `[AIField(IsSensitive = true)]`)
-- **IgnoreSettings** - Block specific field names (highest precedence)
+- **Configuration references are deployed.** A `$Umbraco:AI:Secrets:...` reference only names a setting, so it's safe to commit, and each environment resolves it from its own configuration. This is the recommended way to deploy credentials.
+- **Encrypted values are never deployed.** Each environment has its own encryption keys, so an encrypted value can't be read anywhere else.
+- **The target environment keeps its own values.** A deploy never clears a secret already set on the target.
+- **A connection that arrives without a required secret is imported inactive.** Set the value on that environment, then activate the connection.
+
+The same rule applies to sensitive fields in profile capability settings, guardrail rule configuration and context resource settings.
+
+Two settings fine-tune what's deployed (both matched case-insensitively):
+
+- **IgnoreSettings** - Connection setting names never to deploy, whatever their value (configuration references included). Takes precedence over `IncludeSensitiveSettings`.
+- **IncludeSensitiveSettings** - Sensitive connection setting names whose literal values may be deployed. **These values are written in plain text to the artifact on disk, and so to source control.** Prefer a configuration reference.
+
+`IgnoreEncrypted` and `IgnoreSensitive` are obsolete and have no effect.
 
 **Example: Using Configuration References**
 

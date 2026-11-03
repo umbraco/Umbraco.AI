@@ -85,11 +85,18 @@ internal sealed class EFCoreAIConversationRepository : IAIConversationRepository
 
             var total = await query.CountAsync(cancellationToken);
 
+            // HasActiveShares is computed in the same projection (a correlated subquery, not a
+            // follow-up query per conversation) to avoid an N+1 — ARCHITECTURE.md decision 6.
             var items = await query
                 .OrderByDescending(c => c.LastMessageAt ?? c.DateCreated)
                 .ThenByDescending(c => c.DateCreated)
                 .Skip(skip)
                 .Take(take)
+                .Select(c => new
+                {
+                    Conversation = c,
+                    HasActiveShares = db.ConversationShares.Any(s => s.ConversationId == c.Id && s.DateRevoked == null),
+                })
                 .ToListAsync(cancellationToken);
 
             return (items, total);
@@ -98,7 +105,12 @@ internal sealed class EFCoreAIConversationRepository : IAIConversationRepository
 
         // The sidebar list doesn't need per-conversation resources — build with an empty set to avoid
         // an N+1 resource load. GetByIdAsync loads them for the single-conversation views.
-        return (result.items.Select(e => _factory.BuildDomain(e, [])).ToList(), result.total);
+        return (result.items.Select(e =>
+        {
+            var conversation = _factory.BuildDomain(e.Conversation, []);
+            conversation.HasActiveShares = e.HasActiveShares;
+            return conversation;
+        }).ToList(), result.total);
     }
 
     public async Task<bool> ExistsByProjectAsync(Guid userKey, Guid projectId, CancellationToken cancellationToken = default)

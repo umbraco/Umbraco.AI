@@ -39,6 +39,10 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<AIConversationEntityFactory>();
         builder.Services.AddSingleton<IAIConversationRepository, EFCoreAIConversationRepository>();
 
+        // Conversation share repository (EF Core) — see IAIConversationShareRepository's doc comment
+        // for why this stays separate from the conversation repository above.
+        builder.Services.AddSingleton<IAIConversationShareRepository, EFCoreAIConversationShareRepository>();
+
         // Tell the file store's retention sweep that a persisted conversation's attachments should not
         // age out on a fixed clock — see ConversationFileThreadLifecycleProvider.
         builder.AIFileThreadLifecycleProviders().Append<ConversationFileThreadLifecycleProvider>();

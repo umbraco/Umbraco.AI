@@ -1,4 +1,8 @@
-import { UAI_CONVERSATION_ENTITY_TYPE } from "../constants.js";
+import {
+    UAI_CONVERSATION_ENTITY_TYPE,
+    UAI_CONVERSATION_SHARED_FLAG,
+    UAI_CONVERSATION_SHARED_WITH_ME_FLAG,
+} from "../constants.js";
 import {
     UaiConversationStateCondition,
     UAI_CONVERSATION_STATE_CONDITION,
@@ -6,6 +10,7 @@ import {
 } from "./entity/conversation-state.conditions.js";
 import { UAI_RENAME_CONVERSATION_MODAL_ALIAS } from "./modal/rename-conversation-modal.token.js";
 import { UAI_PROJECT_PICKER_MODAL_ALIAS } from "./modal/project-picker-modal.token.js";
+import { UAI_SHARE_PICKER_MODAL_ALIAS } from "./modal/share-picker-modal.token.js";
 
 const forConversation = { forEntityTypes: [UAI_CONVERSATION_ENTITY_TYPE] };
 
@@ -23,8 +28,9 @@ const action = (name: keyof typeof import("./entity-actions/conversation.actions
 
 /**
  * Conversation entity extensions: the ⋯-menu entity actions rendered by each sidebar tree item
- * (pin/unpin, rename, move, archive/unarchive, delete), their pin/archive state conditions, and the
- * rename modal. The per-node conversation context (provided by the tree item) drives the conditions.
+ * (pin/unpin, rename, move, archive/unarchive, delete), their pin/archive state conditions, the
+ * "shared" entity-sign badge, and the rename/project-picker/share-picker modals. The per-node
+ * conversation context (provided by the tree item) drives the conditions.
  */
 export const conversationManifests: UmbExtensionManifest[] = [
     {
@@ -39,12 +45,51 @@ export const conversationManifests: UmbExtensionManifest[] = [
         name: "Project Picker Modal",
         element: () => import("./modal/project-picker-modal.element.js"),
     },
+    {
+        type: "modal",
+        alias: UAI_SHARE_PICKER_MODAL_ALIAS,
+        name: "Share Picker Modal",
+        element: () => import("./modal/share-picker-modal.element.js"),
+    },
 
     {
         type: "condition",
         alias: UAI_CONVERSATION_STATE_CONDITION,
         name: "Conversation State Condition",
         api: UaiConversationStateCondition,
+    },
+
+    {
+        type: "entitySign",
+        kind: "icon",
+        alias: "Uai.CopilotWorkspace.EntitySign.Conversation.IsShared",
+        name: "Is Shared Conversation Entity Sign",
+        weight: 1000,
+        ...forConversation,
+        forEntityFlags: [UAI_CONVERSATION_SHARED_FLAG],
+        meta: {
+            iconName: "icon-share",
+            label: "#uaiCopilotWorkspace_sharedBadgeLabel",
+            iconColorAlias: "green",
+        },
+    },
+    {
+        type: "entitySign",
+        kind: "icon",
+        alias: "Uai.CopilotWorkspace.EntitySign.SharedWithMe",
+        name: "Shared With Me Entity Sign",
+        weight: 1000,
+        ...forConversation,
+        forEntityFlags: [UAI_CONVERSATION_SHARED_WITH_ME_FLAG],
+        api: () => import("./shared-with-me-sign.api.js"),
+        // The static meta.label is unused once the api's reactive `label` observable resolves (the bundle
+        // prefers `sign.api.label` over `meta.label` — see entity-sign-bundle.element.js's #gotProperties);
+        // it only matters as a harmless fallback if the api fails to load.
+        meta: {
+            iconName: "icon-share",
+            iconColorAlias: "green",
+            label: "",
+        },
     },
 
     {

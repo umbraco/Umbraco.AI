@@ -6,6 +6,6 @@
   <ItemGroup>
     <!-- 17.6.0 is the first Umbraco.AI release with the public AIConnection(Guid id), AIProfile(Guid id),
          AIContext(Guid id) and AIGuardrail(Guid id) constructors the service connectors create entities with. -->
-    <PackageVersion Update="Umbraco.AI.Startup" Version="[17.6.0, 17.999.999)" />
+    <PackageVersion Update="Umbraco.AI.Startup" Version="[17.6.1, 17.999.999)" />
   </ItemGroup>
 </Project>

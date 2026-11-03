@@ -1,6 +1,8 @@
 using System.ComponentModel;
 
+using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Core.Tools.Scopes;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Web;
@@ -28,18 +30,38 @@ public class GetContentByRouteTool : AIToolBase<GetContentByRouteArgs>
 {
     private readonly IUmbracoContextFactory _umbracoContextFactory;
     private readonly IDocumentUrlService _documentUrlService;
+    private readonly IUmbracoReadAuthorizer _readAuthorizer;
 
     /// <summary>
     /// Initializes a new instance of <see cref="GetContentByRouteTool"/>.
     /// </summary>
     /// <param name="umbracoContextFactory">The Umbraco context factory.</param>
     /// <param name="documentUrlService">The document URL service for route resolution.</param>
+    [Obsolete("Use the constructor that accepts an IUmbracoReadAuthorizer. Will be removed in v20.")]
     public GetContentByRouteTool(
         IUmbracoContextFactory umbracoContextFactory,
         IDocumentUrlService documentUrlService)
+        : this(
+            umbracoContextFactory,
+            documentUrlService,
+            StaticServiceProvider.Instance.GetRequiredService<IUmbracoReadAuthorizer>())
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of <see cref="GetContentByRouteTool"/>.
+    /// </summary>
+    /// <param name="umbracoContextFactory">The Umbraco context factory.</param>
+    /// <param name="documentUrlService">The document URL service for route resolution.</param>
+    /// <param name="readAuthorizer">Authorizes the read against the acting user's access.</param>
+    public GetContentByRouteTool(
+        IUmbracoContextFactory umbracoContextFactory,
+        IDocumentUrlService documentUrlService,
+        IUmbracoReadAuthorizer readAuthorizer)
     {
         _umbracoContextFactory = umbracoContextFactory;
         _documentUrlService = documentUrlService;
+        _readAuthorizer = readAuthorizer;
     }
 
     /// <inheritdoc />
@@ -50,12 +72,12 @@ public class GetContentByRouteTool : AIToolBase<GetContentByRouteArgs>
         "Returns the same detailed content as get_umbraco_content.";
 
     /// <inheritdoc />
-    protected override Task<object> ExecuteAsync(GetContentByRouteArgs args, CancellationToken cancellationToken = default)
+    protected override async Task<object> ExecuteAsync(GetContentByRouteArgs args, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(args.Route))
         {
-            return Task.FromResult<object>(new GetUmbracoContentResult(
-                false, null, "Route cannot be empty."));
+            return new GetUmbracoContentResult(
+                false, null, "Route cannot be empty.");
         }
 
         // Ensure UmbracoContext exists — not automatically created for backoffice API requests, and
@@ -73,21 +95,22 @@ public class GetContentByRouteTool : AIToolBase<GetContentByRouteArgs>
             null,
             false);
 
-        if (documentKey is null)
+        // Not readable is reported the same as not found, so the tool doesn't reveal what exists.
+        if (documentKey is null || !await _readAuthorizer.CanReadContentAsync(documentKey.Value))
         {
-            return Task.FromResult<object>(new GetUmbracoContentResult(
-                false, null, $"No published content was found at route '{route}'."));
+            return new GetUmbracoContentResult(
+                false, null, $"No published content was found at route '{route}'.");
         }
 
         var content = contextReference.UmbracoContext.Content?.GetById(documentKey.Value);
         if (content is null)
         {
-            return Task.FromResult<object>(new GetUmbracoContentResult(
-                false, null, $"Content resolved from route '{route}' could not be loaded from the published cache."));
+            return new GetUmbracoContentResult(
+                false, null, $"Content resolved from route '{route}' could not be loaded from the published cache.");
         }
 
         var item = ContentToolHelpers.BuildContentItem(content, args.Culture);
 
-        return Task.FromResult<object>(new GetUmbracoContentResult(true, item, null));
+        return new GetUmbracoContentResult(true, item, null);
     }
 }

@@ -2,7 +2,7 @@
 # WorktreeCreate hook for Claude Code
 #
 # Replaces the default git worktree creation to:
-#   1. Use feature/<name> branch naming (gitflow convention)
+#   1. Use topic/<name> branch naming (vN/topic/<name> on version-prefixed repos)
 #   2. Copy files specified in .worktreeinclude to the new worktree
 #
 # Input (JSON on stdin): { "name": "<slug>", "cwd": "<project-root>", ... }
@@ -62,42 +62,44 @@ fi
 WORKTREE_DIR="$GIT_ROOT/.claude/worktrees"
 
 # --- Determine branch name and worktree directory name ---
-# Version-prefixed branch models (vN/feature/<name>) are supported but OPTIONAL:
+# Version-prefixed branch models (vN/topic/<name>) are supported but OPTIONAL:
 # projects that don't use them get no version and fall through to plain
-# feature/<name>. VERSION (e.g. "v18") is discovered from two signals, in order:
+# topic/<name>. VERSION (e.g. "v18") is discovered from two signals, in order:
 #   1. An explicit leading token in the name: "v17/add-streaming"
 #   2. The current HEAD branch, if it is version-prefixed: "v18/dev" -> "v18"
-# The directory slug flattens slashes to dashes and drops the feature/ segment.
+# The directory slug flattens slashes to dashes and drops the topic/ segment.
 VERSION=""
 if [[ "$NAME" == */* ]]; then
   # Name already contains a slash.
-  if [[ "$NAME" =~ ^v[0-9]+/(feature|hotfix|release)/.+ ]] || [[ "$NAME" =~ ^v[0-9]+/(dev|main)$ ]]; then
+  if [[ "$NAME" =~ ^v[0-9]+/(topic|feature|hotfix|release)/.+ ]] || [[ "$NAME" =~ ^v[0-9]+/(dev|main)$ ]]; then
     # Already a fully-qualified version branch (e.g. PR checkout) -> literal.
+    # feature/ is the old name for topic/, kept so older branches still check out.
     BRANCH_NAME="$NAME"
   elif [[ "$NAME" =~ ^(v[0-9]+)/(.+)$ ]]; then
-    # Version-prefixed short name: v17/add-streaming -> v17/feature/add-streaming
+    # Version-prefixed short name: v17/add-streaming -> v17/topic/add-streaming
     VERSION="${BASH_REMATCH[1]}"
-    BRANCH_NAME="$VERSION/feature/${BASH_REMATCH[2]}"
+    BRANCH_NAME="$VERSION/topic/${BASH_REMATCH[2]}"
   else
     # Any other explicit branch (e.g. user/patch) -> literal.
     BRANCH_NAME="$NAME"
   fi
 else
   # No slash: short name. Infer the version from the current branch if it is
-  # version-prefixed; otherwise keep the plain feature/ convention.
+  # version-prefixed; otherwise keep the plain topic/ convention.
   CURRENT_BRANCH=$(git -C "$GIT_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null) || true
   if [[ "$CURRENT_BRANCH" =~ ^(v[0-9]+)/ ]]; then
     VERSION="${BASH_REMATCH[1]}"
-    BRANCH_NAME="$VERSION/feature/$NAME"
+    BRANCH_NAME="$VERSION/topic/$NAME"
   else
-    BRANCH_NAME="feature/$NAME"
+    BRANCH_NAME="topic/$NAME"
   fi
 fi
 
-# Slug: drop the feature/ segment for short dir names, flatten remaining slashes.
-#   feature/add-streaming     -> add-streaming
-#   v18/feature/add-streaming -> v18-add-streaming
-WORKTREE_SLUG=$(printf '%s' "$BRANCH_NAME" | sed -E 's#(^|/)feature/#\1#')
+# Slug: drop the topic/ (or legacy feature/) segment for short dir names,
+# flatten remaining slashes.
+#   topic/add-streaming     -> add-streaming
+#   v18/topic/add-streaming -> v18-add-streaming
+WORKTREE_SLUG=$(printf '%s' "$BRANCH_NAME" | sed -E 's#(^|/)(topic|feature)/#\1#')
 WORKTREE_SLUG="${WORKTREE_SLUG//\//-}"
 WORKTREE_PATH="$WORKTREE_DIR/$WORKTREE_SLUG"
 

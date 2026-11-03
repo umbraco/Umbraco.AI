@@ -1,6 +1,8 @@
 using System.ComponentModel;
 
+using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Core.Tools.Scopes;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.Web;
 using Umbraco.Extensions;
@@ -34,14 +36,27 @@ public record GetUmbracoContentChildrenArgs(
 public class GetUmbracoContentChildrenTool : AIToolBase<GetUmbracoContentChildrenArgs>
 {
     private readonly IUmbracoContextFactory _umbracoContextFactory;
+    private readonly IUmbracoReadAuthorizer _readAuthorizer;
 
     /// <summary>
     /// Initializes a new instance of <see cref="GetUmbracoContentChildrenTool"/>.
     /// </summary>
     /// <param name="umbracoContextFactory">The Umbraco context factory.</param>
+    [Obsolete("Use the constructor that accepts an IUmbracoReadAuthorizer. Will be removed in v20.")]
     public GetUmbracoContentChildrenTool(IUmbracoContextFactory umbracoContextFactory)
+        : this(umbracoContextFactory, StaticServiceProvider.Instance.GetRequiredService<IUmbracoReadAuthorizer>())
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of <see cref="GetUmbracoContentChildrenTool"/>.
+    /// </summary>
+    /// <param name="umbracoContextFactory">The Umbraco context factory.</param>
+    /// <param name="readAuthorizer">Limits results to what the acting user's content tree shows.</param>
+    public GetUmbracoContentChildrenTool(IUmbracoContextFactory umbracoContextFactory, IUmbracoReadAuthorizer readAuthorizer)
     {
         _umbracoContextFactory = umbracoContextFactory;
+        _readAuthorizer = readAuthorizer;
     }
 
     /// <inheritdoc />
@@ -53,12 +68,12 @@ public class GetUmbracoContentChildrenTool : AIToolBase<GetUmbracoContentChildre
         "Use get_umbraco_content with a child's key to get its full property values.";
 
     /// <inheritdoc />
-    protected override Task<object> ExecuteAsync(GetUmbracoContentChildrenArgs args, CancellationToken cancellationToken = default)
+    protected override async Task<object> ExecuteAsync(GetUmbracoContentChildrenArgs args, CancellationToken cancellationToken = default)
     {
         if (args.ParentKey == Guid.Empty)
         {
-            return Task.FromResult<object>(new GetUmbracoContentChildrenResult(
-                false, [], 0, "Parent key cannot be empty."));
+            return new GetUmbracoContentChildrenResult(
+                false, [], 0, "Parent key cannot be empty.");
         }
 
         // Ensure UmbracoContext exists — not automatically created for backoffice API requests, and
@@ -66,11 +81,12 @@ public class GetUmbracoContentChildrenTool : AIToolBase<GetUmbracoContentChildre
         // A no-op if a context is already ambient.
         using var contextReference = _umbracoContextFactory.EnsureUmbracoContext();
 
+        // A parent the user's tree doesn't show is reported the same as not found.
         var parent = contextReference.UmbracoContext.Content?.GetById(args.ParentKey);
-        if (parent is null)
+        if (parent is null || !await _readAuthorizer.CanSeeContentInTreeAsync(parent.Key, parent.Path))
         {
-            return Task.FromResult<object>(new GetUmbracoContentChildrenResult(
-                false, [], 0, $"Parent content with key '{args.ParentKey}' was not found or is not published."));
+            return new GetUmbracoContentChildrenResult(
+                false, [], 0, $"Parent content with key '{args.ParentKey}' was not found or is not published.");
         }
 
         IEnumerable<IPublishedContent> children = parent.Children() ?? [];
@@ -82,8 +98,16 @@ public class GetUmbracoContentChildrenTool : AIToolBase<GetUmbracoContentChildre
                 c.ContentType.Alias.Equals(args.ContentTypeFilter, StringComparison.OrdinalIgnoreCase));
         }
 
-        // Materialize once, then count and page from the same list
-        var allChildren = children.ToList();
+        // Materialize once, keeping only what the user's tree shows, then count and page from the same list
+        var allChildren = new List<IPublishedContent>();
+        foreach (IPublishedContent child in children)
+        {
+            if (await _readAuthorizer.CanSeeContentInTreeAsync(child.Key, child.Path))
+            {
+                allChildren.Add(child);
+            }
+        }
+
         var totalCount = allChildren.Count;
         var skip = Math.Max(args.Skip ?? 0, 0);
         var take = Math.Clamp(args.Take ?? 20, 1, 50);
@@ -100,8 +124,8 @@ public class GetUmbracoContentChildrenTool : AIToolBase<GetUmbracoContentChildre
                 c.SortOrder))
             .ToList();
 
-        return Task.FromResult<object>(new GetUmbracoContentChildrenResult(
-            true, pagedChildren, totalCount, null));
+        return new GetUmbracoContentChildrenResult(
+            true, pagedChildren, totalCount, null);
     }
 }
 

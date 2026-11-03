@@ -38,5 +38,11 @@
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
             <_Parameter1>Umbraco.AI.Agent.Copilot.Workspace.Tests.Unit</_Parameter1>
         </AssemblyAttribute>
+        <!-- Lets Moq (Castle DynamicProxy) construct mocks of internal types (e.g. ILogger<T> for an
+             internal T) from this assembly. A name-only grant is enough here — the public-key form is
+             only needed when the *granting* assembly itself is strong-named/signed, which this one isn't. -->
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>DynamicProxyGenAssembly2</_Parameter1>
+        </AssemblyAttribute>
     </ItemGroup>
 </Project>

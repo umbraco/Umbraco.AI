@@ -15,6 +15,7 @@
     <ItemGroup>
         <PackageReference Include="coverlet.collector" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="Microsoft.Data.Sqlite" />
         <PackageReference Include="Moq" />
         <PackageReference Include="Shouldly" />
         <PackageReference Include="xunit" />
@@ -31,6 +32,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\Umbraco.AI.Agent.Copilot.Workspace.Web\Umbraco.AI.Agent.Copilot.Workspace.Web.csproj" />
+        <ProjectReference Include="..\..\src\Umbraco.AI.Agent.Conversations.Persistence\Umbraco.AI.Agent.Conversations.Persistence.csproj" />
     </ItemGroup>
 
 </Project>

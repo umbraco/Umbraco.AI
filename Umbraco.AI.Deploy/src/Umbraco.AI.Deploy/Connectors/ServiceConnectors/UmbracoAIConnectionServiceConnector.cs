@@ -1,11 +1,15 @@
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.EditableModels;
+using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Deploy.Artifacts;
 using Umbraco.AI.Deploy.Configuration;
 using Umbraco.Cms.Core;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Deploy;
 
 namespace Umbraco.AI.Deploy.Connectors.ServiceConnectors;
@@ -13,16 +17,53 @@ namespace Umbraco.AI.Deploy.Connectors.ServiceConnectors;
 /// <summary>
 /// Service connector for Umbraco AI Connections, responsible for synchronizing AIConnection entities with their
 /// corresponding AIConnectionArtifact during deploy operations. This connector handles retrieval, artifact creation,
-/// and processing of AI Connections while ensuring sensitive settings are filtered according to configuration.
+/// and processing of AI Connections while ensuring sensitive settings never cross an environment boundary.
 /// </summary>
-/// <param name="connectionService"></param>
-/// <param name="settingsAccessor"></param>
 [UdiDefinition(UmbracoAIConstants.UdiEntityType.Connection, UdiType.GuidUdi)]
-public class UmbracoAIConnectionServiceConnector(
-    IAIConnectionService connectionService,
-    UmbracoAIDeploySettingsAccessor settingsAccessor)
-    : UmbracoAIEntityServiceConnectorBase<AIConnectionArtifact, AIConnection>(settingsAccessor)
+public class UmbracoAIConnectionServiceConnector
+    : UmbracoAIEntityServiceConnectorBase<AIConnectionArtifact, AIConnection>
 {
+    /// <summary>
+    /// The value given to a required sensitive field that the target environment has no value for, so the
+    /// connection can still be imported. The connection is imported inactive while this value is in place.
+    /// </summary>
+    internal const string MissingSecretPlaceholder = "UMBRACO_AI_DEPLOY_SECRET_NOT_SET";
+
+    private readonly IAIConnectionService _connectionService;
+    private readonly AIProviderCollection _providers;
+    private readonly ILogger<UmbracoAIConnectionServiceConnector> _logger;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UmbracoAIConnectionServiceConnector"/> class.
+    /// </summary>
+    [Obsolete("Use the constructor that accepts an AIProviderCollection and ILogger. Will be removed in v20.")]
+    public UmbracoAIConnectionServiceConnector(
+        IAIConnectionService connectionService,
+        UmbracoAIDeploySettingsAccessor settingsAccessor)
+        : this(
+            connectionService,
+            settingsAccessor,
+            StaticServiceProvider.Instance.GetRequiredService<AIProviderCollection>(),
+            StaticServiceProvider.Instance.GetService<ILogger<UmbracoAIConnectionServiceConnector>>()
+                ?? NullLogger<UmbracoAIConnectionServiceConnector>.Instance)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UmbracoAIConnectionServiceConnector"/> class.
+    /// </summary>
+    public UmbracoAIConnectionServiceConnector(
+        IAIConnectionService connectionService,
+        UmbracoAIDeploySettingsAccessor settingsAccessor,
+        AIProviderCollection providers,
+        ILogger<UmbracoAIConnectionServiceConnector> logger)
+        : base(settingsAccessor)
+    {
+        _connectionService = connectionService;
+        _providers = providers;
+        _logger = logger;
+    }
+
     /// <inheritdoc />
     protected override int[] ProcessPasses => [1];
 
@@ -37,12 +78,12 @@ public class UmbracoAIConnectionServiceConnector(
 
     /// <inheritdoc />
     public override Task<AIConnection?> GetEntityAsync(Guid id, CancellationToken cancellationToken = default)
-        => connectionService.GetConnectionAsync(id, cancellationToken);
+        => _connectionService.GetConnectionAsync(id, cancellationToken);
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<AIConnection> GetEntitiesAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var connections = await connectionService.GetConnectionsAsync(null, cancellationToken);
+        var connections = await _connectionService.GetConnectionsAsync(null, cancellationToken);
         foreach (var connection in connections)
         {
             yield return connection;
@@ -66,15 +107,14 @@ public class UmbracoAIConnectionServiceConnector(
 
         var dependencies = new ArtifactDependencyCollection();
 
-        // Filter sensitive settings before serialization
-        var filteredSettings = FilterSensitiveSettings(entity.Settings);
+        Dictionary<string, JsonElement>? filteredSettings = FilterSettings(entity.Settings, GetSettingsSchema(entity.ProviderId));
 
         var artifact = new AIConnectionArtifact(udi, dependencies)
         {
             Alias = entity.Alias,
             Name = entity.Name,
             ProviderId = entity.ProviderId,
-            Settings = filteredSettings,
+            Settings = filteredSettings is null ? null : JsonSerializer.SerializeToElement(filteredSettings),
             IsActive = entity.IsActive
         };
 
@@ -104,12 +144,15 @@ public class UmbracoAIConnectionServiceConnector(
         CancellationToken cancellationToken)
     {
         var artifact = state.Artifact;
+        AIEditableModelSchema? schema = GetSettingsSchema(artifact.ProviderId);
 
-        // Deserialize settings from JsonElement to Dictionary
-        Dictionary<string, object?>? settings = null;
-        if (artifact.Settings.HasValue)
+        // The same rule as export, so an artifact written before it existed can't carry a secret in.
+        Dictionary<string, JsonElement>? settings = FilterSettings(artifact.Settings, schema);
+
+        var placeholderFields = new List<string>();
+        if (settings is not null)
         {
-            settings = artifact.Settings.Value.Deserialize<Dictionary<string, object?>>();
+            placeholderFields = MergeTargetSecrets(settings, state.Entity?.Settings, schema);
         }
 
         // Create new connection or update existing one
@@ -124,84 +167,61 @@ public class UmbracoAIConnectionServiceConnector(
         // Update properties from artifact
         connection.Alias = artifact.Alias!;
         connection.Name = artifact.Name;
-        connection.Settings = settings;
-        connection.IsActive = artifact.IsActive;
+        connection.Settings = settings?.ToDictionary(kvp => kvp.Key, kvp => (object?)kvp.Value);
 
-        state.Entity = await connectionService.SaveConnectionAsync(connection, cancellationToken);
+        // A connection holding a placeholder secret stays inactive until someone sets the real value here.
+        connection.IsActive = artifact.IsActive && placeholderFields.Count == 0;
+
+        if (placeholderFields.Count > 0)
+        {
+            _logger.LogWarning(
+                "AI connection '{Alias}' was deployed without a value for {Fields}, which this environment doesn't have. "
+                + "It has been imported inactive. Set the value(s) on this environment and activate the connection.",
+                connection.Alias,
+                string.Join(", ", placeholderFields));
+        }
+
+        state.Entity = await _connectionService.SaveConnectionAsync(connection, cancellationToken);
     }
 
     /// <summary>
-    /// Filters sensitive settings before deployment using three-layer filtering:
-    /// 1. IgnoreSettings (highest precedence) - specific field names
-    /// 2. IgnoreSensitive - fields marked [AIField(IsSensitive=true)]
-    /// 3. IgnoreEncrypted - encrypted values (ENC:...) but allows $ references
+    /// Fills in sensitive fields the artifact doesn't carry: from the target's own existing value when there
+    /// is one, otherwise (for a required field) with <see cref="MissingSecretPlaceholder"/>.
     /// </summary>
-    private JsonElement? FilterSensitiveSettings(object? settings)
+    /// <returns>The keys of the fields left holding the placeholder.</returns>
+    private static List<string> MergeTargetSecrets(
+        Dictionary<string, JsonElement> settings,
+        object? targetSettings,
+        AIEditableModelSchema? schema)
     {
-        if (settings == null)
-        {
-            return null;
-        }
+        UmbracoAISensitiveSettingsFilter.KeepTargetSensitiveValues(settings, targetSettings, schema);
 
-        // Convert settings to dictionary for filtering
-        Dictionary<string, object?>? settingsDict;
-        if (settings is Dictionary<string, object?> dict)
+        var placeholderFields = new List<string>();
+        foreach (AIEditableModelField field in UmbracoAISensitiveSettingsFilter.GetSensitiveFields(schema))
         {
-            settingsDict = dict;
-        }
-        else
-        {
-            var json = JsonSerializer.SerializeToElement(settings);
-            settingsDict = json.Deserialize<Dictionary<string, object?>>();
-        }
-
-        if (settingsDict == null)
-        {
-            return null;
-        }
-
-        // Get settings type for attribute checking
-        var settingsType = settings.GetType();
-
-        var filtered = settingsDict
-            .Where(kvp =>
+            bool hasValue = settings.TryGetValue(field.Key, out JsonElement value) && !UmbracoAISensitiveSettingsFilter.IsEmpty(value);
+            if (!hasValue && UmbracoAISensitiveSettingsFilter.IsRequired(field))
             {
-                var key = kvp.Key;
-                var value = kvp.Value?.ToString();
+                value = JsonSerializer.SerializeToElement(MissingSecretPlaceholder);
+                settings[field.Key] = value;
+            }
 
-                // Layer 1: IgnoreSettings - highest precedence, always block these specific fields
-                if (_settingsAccessor.Settings.Connections.IgnoreSettings.Contains(key))
-                {
-                    return false;
-                }
+            if (value.ValueKind == JsonValueKind.String && value.GetString() == MissingSecretPlaceholder)
+            {
+                placeholderFields.Add(field.Key);
+            }
+        }
 
-                // Check if field is marked [AIField(IsSensitive = true)]
-                var property = settingsType.GetProperty(key, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-                var fieldAttr = property?.GetCustomAttribute<AIFieldAttribute>();
-                bool isFieldMarkedSensitive = fieldAttr?.IsSensitive == true;
-
-                // Layer 2: IgnoreSensitive - block sensitive fields entirely (including $ refs)
-                if (_settingsAccessor.Settings.Connections.IgnoreSensitive && isFieldMarkedSensitive)
-                {
-                    return false;
-                }
-
-                bool isEncryptedValue = value?.StartsWith("ENC:") == true;
-
-                // Layer 3: IgnoreEncrypted - block encrypted values.
-                // Configuration references ($Umbraco:AI:Secrets:ApiKey) are never encrypted, so they
-                // are not caught here and reach the include below. This used to read
-                // "return isConfigReference" to express that, but a value can only be one or the
-                // other — an "ENC:" value never also starts with "$" — so it always meant false.
-                if (_settingsAccessor.Settings.Connections.IgnoreEncrypted && isEncryptedValue)
-                {
-                    return false;
-                }
-
-                return true;  // Include all other fields, config references among them
-            })
-            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-
-        return JsonSerializer.SerializeToElement(filtered);
+        return placeholderFields;
     }
+
+    private Dictionary<string, JsonElement>? FilterSettings(object? settings, AIEditableModelSchema? schema)
+        => UmbracoAISensitiveSettingsFilter.Filter(
+            settings,
+            schema,
+            _settingsAccessor.Settings.Connections.IgnoreSettings,
+            _settingsAccessor.Settings.Connections.IncludeSensitiveSettings);
+
+    private AIEditableModelSchema? GetSettingsSchema(string providerId)
+        => _providers.GetById(providerId)?.GetSettingsSchema();
 }

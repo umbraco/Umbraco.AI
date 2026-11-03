@@ -82,9 +82,17 @@ export type ConversationResponseModel = {
     resources: Array<ContextResourceModel>;
     isPinned: boolean;
     isArchived: boolean;
+    hasActiveShares: boolean;
     dateCreated: string;
     dateModified: string;
     lastMessageAt?: string | null;
+};
+
+export type ConversationShareResponseModel = {
+    userKey: string;
+    userName: string;
+    scopeMode: string;
+    dateShared: string;
 };
 
 export type CreateConversationRequestModel = {
@@ -123,6 +131,11 @@ export type PagedProjectResponseModel = {
     items: Array<ProjectResponseModel>;
 };
 
+export type PagedSharedConversationSummaryResponseModel = {
+    total: number;
+    items: Array<SharedConversationSummaryResponseModel>;
+};
+
 export type ProblemDetails = {
     type?: string | null;
     title?: string | null;
@@ -149,6 +162,33 @@ export type ProjectResponseModel = {
     resources: Array<ContextResourceModel>;
     dateCreated: string;
     dateModified: string;
+};
+
+export type ShareConversationRequestModel = {
+    recipientUserKeys: Array<string>;
+    scopeMode: string;
+};
+
+export type SharedConversationResponseModel = {
+    id: string;
+    title?: string | null;
+    agentIdOrAlias?: string | null;
+    profileId?: string | null;
+    ownerDisplayName: string;
+    contextIds: Array<string>;
+    resources: Array<ContextResourceModel>;
+    messages: Array<MessageResponseModel>;
+    dateCreated: string;
+    dateModified: string;
+    lastMessageAt?: string | null;
+};
+
+export type SharedConversationSummaryResponseModel = {
+    conversationId: string;
+    title?: string | null;
+    ownerDisplayName: string;
+    scopeMode: string;
+    dateShared: string;
 };
 
 export type UpdateConversationRequestModel = {
@@ -413,6 +453,182 @@ export type TruncateAfterLastUserMessageResponses = {
 };
 
 export type TruncateAfterLastUserMessageResponse = TruncateAfterLastUserMessageResponses[keyof TruncateAfterLastUserMessageResponses];
+
+export type GetSharedViewData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/conversations/{id}/shared-view';
+};
+
+export type GetSharedViewErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * The authenticated user does not have access to this resource
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetSharedViewError = GetSharedViewErrors[keyof GetSharedViewErrors];
+
+export type GetSharedViewResponses = {
+    /**
+     * OK
+     */
+    200: SharedConversationResponseModel;
+};
+
+export type GetSharedViewResponse = GetSharedViewResponses[keyof GetSharedViewResponses];
+
+export type GetSharesData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/conversations/{id}/shares';
+};
+
+export type GetSharesErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * The authenticated user does not have access to this resource
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type GetSharesError = GetSharesErrors[keyof GetSharesErrors];
+
+export type GetSharesResponses = {
+    /**
+     * OK
+     */
+    200: Array<ConversationShareResponseModel>;
+};
+
+export type GetSharesResponse = GetSharesResponses[keyof GetSharesResponses];
+
+export type ShareData = {
+    body?: ShareConversationRequestModel;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/conversations/{id}/shares';
+};
+
+export type ShareErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * The authenticated user does not have access to this resource
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type ShareError = ShareErrors[keyof ShareErrors];
+
+export type ShareResponses = {
+    /**
+     * OK
+     */
+    200: Array<ConversationShareResponseModel>;
+};
+
+export type ShareResponse = ShareResponses[keyof ShareResponses];
+
+export type RevokeData = {
+    body?: never;
+    path: {
+        id: string;
+        userKey: string;
+    };
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/conversations/{id}/shares/{userKey}';
+};
+
+export type RevokeErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * The authenticated user does not have access to this resource
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type RevokeError = RevokeErrors[keyof RevokeErrors];
+
+export type RevokeResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type RevokeResponse = RevokeResponses[keyof RevokeResponses];
+
+export type GetSharedWithMeData = {
+    body?: never;
+    path?: never;
+    query?: {
+        search?: string;
+        skip?: number;
+        take?: number;
+    };
+    url: '/umbraco/ai/management/api/v1/conversations/shared-with-me';
+};
+
+export type GetSharedWithMeErrors = {
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * The authenticated user does not have access to this resource
+     */
+    403: unknown;
+};
+
+export type GetSharedWithMeResponses = {
+    /**
+     * OK
+     */
+    200: PagedSharedConversationSummaryResponseModel;
+};
+
+export type GetSharedWithMeResponse = GetSharedWithMeResponses[keyof GetSharedWithMeResponses];
 
 export type GetAll2Data = {
     body?: never;

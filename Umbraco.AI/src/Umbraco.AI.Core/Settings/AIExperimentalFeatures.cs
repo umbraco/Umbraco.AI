@@ -22,6 +22,7 @@ internal sealed class AIExperimentalFeatures : IAIExperimentalFeatures
             // Experimental capabilities — gated by their feature flag (default off).
             AICapability.ImageGeneration => _options.CurrentValue.ImageGeneration,
             AICapability.Decision => _options.CurrentValue.Decision,
+            AICapability.Extraction => _options.CurrentValue.Extraction,
 
             // Everything else is always enabled.
             _ => true,

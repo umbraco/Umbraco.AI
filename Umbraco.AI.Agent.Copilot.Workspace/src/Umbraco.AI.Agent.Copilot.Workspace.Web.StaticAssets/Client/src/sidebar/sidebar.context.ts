@@ -12,13 +12,16 @@ import {
     type UaiArchivedConversation,
     type UaiSidebarModel,
 } from "../conversation/grouping.js";
-import type { ConversationResponseModel } from "../conversation/types.js";
+import type { ConversationResponseModel, SharedConversationSummaryResponseModel } from "../conversation/types.js";
 import { UAI_CONVERSATION_ENTITY_TYPE, UAI_PROJECT_ENTITY_TYPE } from "../constants.js";
 
 const EMPTY_MODEL: UaiSidebarModel = { pinned: [], projects: [], recent: [], isEmpty: true };
 
 /** Upper bound on the archived conversations fetched for the recycle-bin node (single, unpaged load). */
 const ARCHIVED_TAKE = 200;
+
+/** Upper bound on the shared-with-me conversations fetched for the sidebar group (single, unpaged load). */
+const SHARED_WITH_ME_TAKE = 200;
 
 /**
  * Section-scoped sidebar data context (provided by the shell). Owns conversation + project loading,
@@ -37,6 +40,7 @@ export class UaiCopilotWorkspaceSidebarContext extends UmbContextBase {
 
     #model = new UmbObjectState<UaiSidebarModel>(EMPTY_MODEL);
     #archived = new UmbArrayState<UaiArchivedConversation>([], (a) => a.conversation.id);
+    #sharedWithMe = new UmbArrayState<SharedConversationSummaryResponseModel>([], (c) => c.conversationId);
     #search = new UmbStringState("");
     #activePath = new UmbStringState(window.location.pathname);
 
@@ -46,6 +50,8 @@ export class UaiCopilotWorkspaceSidebarContext extends UmbContextBase {
     readonly recent = this.#model.asObservablePart((m) => m.recent);
     /** Archived conversations for the recycle-bin node — flat, most-recent-first, project name resolved. */
     readonly archived = this.#archived.asObservable();
+    /** Conversations shared with the current user by someone else (SC-17), independent of ownership. */
+    readonly sharedWithMe = this.#sharedWithMe.asObservable();
     readonly search = this.#search.asObservable();
     /** Current router path, for active highlighting across all group menus. */
     readonly activePath = this.#activePath.asObservable();
@@ -67,6 +73,7 @@ export class UaiCopilotWorkspaceSidebarContext extends UmbContextBase {
         void this.#loadProjects();
         void this.#load();
         void this.#loadArchived();
+        void this.#loadSharedWithMe();
     }
 
     override destroy(): void {
@@ -115,6 +122,18 @@ export class UaiCopilotWorkspaceSidebarContext extends UmbContextBase {
         // buildArchivedList filters to the archived subset itself, so store the raw page as-is.
         this.#archivedRaw = data?.items ?? [];
         this.#recomputeArchived();
+    }
+
+    /**
+     * Loads the conversations shared with the current user (STORIES.md US3). A single, unpaged load,
+     * independent of the owned-conversations search — no local event re-fires this: a share created or
+     * revoked by the *owner* happens in a different user's session, so there is nothing to react to on
+     * this side. AC3 ("revoked shares disappear when I open the sidebar") is satisfied by loading fresh
+     * on each section mount, same as every other slice here.
+     */
+    async #loadSharedWithMe(): Promise<void> {
+        const { data } = await this.#conversationRepository.requestSharedWithMe(0, SHARED_WITH_ME_TAKE);
+        this.#sharedWithMe.setValue(data?.items ?? []);
     }
 
     async #loadProjects(): Promise<void> {

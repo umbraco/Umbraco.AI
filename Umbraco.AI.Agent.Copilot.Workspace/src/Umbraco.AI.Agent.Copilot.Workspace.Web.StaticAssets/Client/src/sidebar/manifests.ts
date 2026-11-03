@@ -3,6 +3,7 @@ import {
     UAI_PINNED_MENU_ALIAS,
     UAI_PROJECTS_MENU_ALIAS,
     UAI_RECENT_MENU_ALIAS,
+    UAI_SHARED_WITH_ME_MENU_ALIAS,
 } from "../constants.js";
 import {
     UaiSidebarGroupNotEmptyCondition,
@@ -13,9 +14,9 @@ const sectionCondition = { alias: "Umb.Condition.SectionAlias", match: UAI_COPIL
 
 /**
  * Sidebar composition, mirroring the AI section: a header app (search + create), then Pinned /
- * Projects / Recent as stacked `sectionSidebarApp`s, each backed by a `menu` whose custom element
- * renders that slice of the shared sidebar context. Projects is a `menuWithEntityActions` so its
- * header hosts the + New project action; every group hides when its slice is empty.
+ * Projects / Recent / Shared with me as stacked `sectionSidebarApp`s, each backed by a `menu` whose
+ * custom element renders that slice of the shared sidebar context. Projects is a `menuWithEntityActions`
+ * so its header hosts the + New project action; every group hides when its slice is empty.
  */
 export const sidebarManifests: UmbExtensionManifest[] = [
     {
@@ -54,6 +55,12 @@ export const sidebarManifests: UmbExtensionManifest[] = [
         name: "Recent Menu",
         element: () => import("./menu/recent-menu.element.js"),
     },
+    {
+        type: "menu",
+        alias: UAI_SHARED_WITH_ME_MENU_ALIAS,
+        name: "Shared With Me Menu",
+        element: () => import("./menu/shared-with-me-menu.element.js"),
+    },
 
     // Group apps
     {
@@ -82,6 +89,17 @@ export const sidebarManifests: UmbExtensionManifest[] = [
         weight: 200,
         meta: { label: "#uaiCopilotWorkspace_treeRecentHeading", menu: UAI_RECENT_MENU_ALIAS },
         conditions: [sectionCondition, { alias: UAI_SIDEBAR_GROUP_NOT_EMPTY_CONDITION, match: "recent" }],
+    },
+    {
+        type: "sectionSidebarApp",
+        kind: "menu",
+        alias: "Uai.CopilotWorkspace.SidebarApp.SharedWithMe",
+        name: "Shared With Me Sidebar Group",
+        // Below Recent (200), above the Archived footer (100) — the "other conversations" catch-all,
+        // sitting just above the recycle bin rather than parallel-weighted with Pinned/Recent.
+        weight: 150,
+        meta: { label: "#uaiCopilotWorkspace_groupSharedWithMe", menu: UAI_SHARED_WITH_ME_MENU_ALIAS },
+        conditions: [sectionCondition, { alias: UAI_SIDEBAR_GROUP_NOT_EMPTY_CONDITION, match: "sharedWithMe" }],
     },
 
     // Archived (recycle-bin) foot: a single self-gating custom element (renders nothing when there are

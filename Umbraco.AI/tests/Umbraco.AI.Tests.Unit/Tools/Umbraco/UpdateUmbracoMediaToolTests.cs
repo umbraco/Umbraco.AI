@@ -7,6 +7,8 @@ using Umbraco.AI.Core.Tools.Umbraco;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Models.ContentEditing;
+using Umbraco.Cms.Core.PropertyEditors;
+using Umbraco.Cms.Core.Serialization;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Services.OperationStatus;
 
@@ -22,10 +24,10 @@ public class UpdateUmbracoMediaToolTests
     {
         _mediaEditingServiceMock = new Mock<IMediaEditingService>();
         _authorizerMock = new Mock<IUmbracoWriteAuthorizer>();
-        _tool = new UpdateUmbracoMediaTool(_mediaEditingServiceMock.Object, _authorizerMock.Object);
+        _tool = new UpdateUmbracoMediaTool(_mediaEditingServiceMock.Object, _authorizerMock.Object, new PropertyEditorCollection(new DataEditorCollection(() => [])), Mock.Of<IJsonSerializer>());
     }
 
-    private static Mock<IMedia> CreateMediaMock(Guid key, string name, string mediaTypeAlias)
+    private static Mock<IMedia> CreateMediaMock(Guid key, string name, string mediaTypeAlias, IEnumerable<IProperty>? properties = null)
     {
         var mediaTypeMock = new Mock<ISimpleContentType>();
         mediaTypeMock.Setup(x => x.Alias).Returns(mediaTypeAlias);
@@ -36,8 +38,46 @@ public class UpdateUmbracoMediaToolTests
         mediaMock.Setup(x => x.ContentType).Returns(mediaTypeMock.Object);
         mediaMock.Setup(x => x.CreateDate).Returns(DateTime.UtcNow);
         mediaMock.Setup(x => x.UpdateDate).Returns(DateTime.UtcNow);
-        mediaMock.Setup(x => x.Properties).Returns(new PropertyCollection());
+        mediaMock.Setup(x => x.Properties).Returns(new PropertyCollection(properties ?? []));
         return mediaMock;
+    }
+
+    private static IProperty CreatePropertyMock(string alias, object? value)
+    {
+        var propertyTypeMock = new Mock<IPropertyType>();
+        propertyTypeMock.Setup(x => x.Alias).Returns(alias);
+        propertyTypeMock.Setup(x => x.PropertyEditorAlias).Returns("Umbraco.Unknown");
+
+        var propertyMock = new Mock<IProperty>();
+        propertyMock.Setup(x => x.Alias).Returns(alias);
+        propertyMock.Setup(x => x.PropertyType).Returns(propertyTypeMock.Object);
+        propertyMock.Setup(x => x.GetValue(It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<bool>())).Returns(value);
+        return propertyMock.Object;
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RenameOnly_SendsBackEveryPropertySoTheFileSurvives()
+    {
+        // The CMS clears every property missing from an update, so a rename that sent no properties
+        // emptied umbracoFile and the media item lost its file.
+        var userKey = Guid.NewGuid();
+        var key = Guid.NewGuid();
+        _authorizerMock.Setup(x => x.AuthorizeMediaAsync(key)).ReturnsAsync(UmbracoWriteAuthorizationResult.Allowed(userKey));
+        var existing = CreateMediaMock(key, "Logo", "image", [CreatePropertyMock("umbracoFile", "/media/abc/logo.png"), CreatePropertyMock("altText", "Our logo")]);
+        _mediaEditingServiceMock.Setup(x => x.GetAsync(key)).ReturnsAsync(existing.Object);
+
+        MediaUpdateModel? capturedModel = null;
+        _mediaEditingServiceMock
+            .Setup(x => x.UpdateAsync(key, It.IsAny<MediaUpdateModel>(), userKey))
+            .Callback<Guid, MediaUpdateModel, Guid>((_, model, _) => capturedModel = model)
+            .ReturnsAsync(Attempt<MediaUpdateResult, ContentEditingOperationStatus>.Succeed(
+                ContentEditingOperationStatus.Success, new MediaUpdateResult { Content = existing.Object }));
+
+        await _tool.ExecuteAsync(new UpdateUmbracoMediaArgs(key, "New logo", null), CancellationToken.None);
+
+        capturedModel.ShouldNotBeNull();
+        capturedModel!.Properties.Select(p => p.Alias).ShouldBe(new[] { "umbracoFile", "altText" });
+        capturedModel.Properties.Single(p => p.Alias == "umbracoFile").Value.ShouldBe("/media/abc/logo.png");
     }
 
     [Fact]
@@ -78,6 +118,7 @@ public class UpdateUmbracoMediaToolTests
         var args = new UpdateUmbracoMediaArgs(key, "New Name", propertyValues);
 
         _authorizerMock.Setup(x => x.AuthorizeMediaAsync(key)).ReturnsAsync(UmbracoWriteAuthorizationResult.Allowed(userKey));
+        _mediaEditingServiceMock.Setup(x => x.GetAsync(key)).ReturnsAsync(CreateMediaMock(key, "Old Name", "image").Object);
         var updatedMediaMock = CreateMediaMock(key, "New Name", "image");
 
         MediaUpdateModel? capturedModel = null;

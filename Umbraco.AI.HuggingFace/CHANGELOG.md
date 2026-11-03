@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.HuggingFace will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.0.5](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.HuggingFace@18.0.4...Umbraco.AI.HuggingFace@18.0.5) (2026-11-03)
+
+### Internal
+
+* Bump to align with Umbraco.AI 18.7.0.
+
 ## [18.0.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.HuggingFace@18.0.3...Umbraco.AI.HuggingFace@18.0.4) (2026-10-19)
 
 ### Internal

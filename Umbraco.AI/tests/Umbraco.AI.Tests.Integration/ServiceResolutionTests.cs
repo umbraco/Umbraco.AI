@@ -5,6 +5,7 @@ using Umbraco.AI.Core.Connections;
 using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Core.Decision;
 using Umbraco.AI.Core.Embeddings;
+using Umbraco.AI.Core.Extraction;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Providers;
@@ -21,6 +22,7 @@ using Umbraco.Cms.Core.Cache;
 using Umbraco.Cms.Core.Events;
 
 #pragma warning disable UMBRACOAI_DECISION // Exercises the experimental decision capability's DI wiring
+#pragma warning disable UMBRACOAI_EXTRACTION // Exercises the experimental extraction capability's DI wiring
 
 namespace Umbraco.AI.Tests.Integration;
 
@@ -117,6 +119,22 @@ public class ServiceResolutionTests : IDisposable
     public void IAIDecisionClientFactory_CanBeResolved()
     {
         var factory = _serviceProvider.GetService<IAIDecisionClientFactory>();
+
+        factory.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void IAIExtractionService_CanBeResolved()
+    {
+        var service = _serviceProvider.GetService<IAIExtractionService>();
+
+        service.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void IAIExtractionClientFactory_CanBeResolved()
+    {
+        var factory = _serviceProvider.GetService<IAIExtractionClientFactory>();
 
         factory.ShouldNotBeNull();
     }
@@ -287,6 +305,8 @@ public class ServiceResolutionTests : IDisposable
 #pragma warning restore UMBRACOAI_IMAGEGEN
         services.AddSingleton<AIDecisionMiddlewareCollection>(
             _ => new AIDecisionMiddlewareCollection(() => Enumerable.Empty<IAIDecisionMiddleware>()));
+        services.AddSingleton<AIExtractionMiddlewareCollection>(
+            _ => new AIExtractionMiddlewareCollection(() => Enumerable.Empty<IAIExtractionMiddleware>()));
 
         // Runtime context infrastructure
         services.AddHttpContextAccessor();
@@ -339,6 +359,7 @@ public class ServiceResolutionTests : IDisposable
         services.AddSingleton<Umbraco.AI.Core.ImageGeneration.IAIImageGeneratorFactory, Umbraco.AI.Core.ImageGeneration.AIImageGeneratorFactory>();
 #pragma warning restore UMBRACOAI_IMAGEGEN
         services.AddSingleton<IAIDecisionClientFactory, AIDecisionClientFactory>();
+        services.AddSingleton<IAIExtractionClientFactory, AIExtractionClientFactory>();
 
         // Tool system (empty collection / no scopes for the integration DI smoke test)
         services.AddSingleton(new AIToolScopeCollection(() => []));
@@ -352,6 +373,7 @@ public class ServiceResolutionTests : IDisposable
         services.AddSingleton<Umbraco.AI.Core.ImageGeneration.IAIImageGenerationService, Umbraco.AI.Core.ImageGeneration.AIImageGenerationService>();
 #pragma warning restore UMBRACOAI_IMAGEGEN
         services.AddSingleton<IAIDecisionService, AIDecisionService>();
+        services.AddSingleton<IAIExtractionService, AIExtractionService>();
 
         // Required for options
         services.AddLogging();

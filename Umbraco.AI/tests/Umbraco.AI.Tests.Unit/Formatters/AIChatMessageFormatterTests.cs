@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.AuditLog;
 
@@ -174,7 +175,7 @@ public class AIChatMessageFormatterTests
     public void FormatChatMessage_WithLargeArguments_Truncates()
     {
         // Arrange
-        var largeValue = new string('x', 600);
+        var largeValue = new string('x', 1100);
         var functionCall = new FunctionCallContent(
             callId: "tc_001",
             name: "process",
@@ -194,7 +195,7 @@ public class AIChatMessageFormatterTests
     public void FormatChatMessage_WithLargeResult_Truncates()
     {
         // Arrange
-        var largeResult = new string('y', 1200);
+        var largeResult = new string('y', 4200);
         var functionResult = new FunctionResultContent(
             callId: "tc_001",
             result: largeResult);
@@ -207,6 +208,72 @@ public class AIChatMessageFormatterTests
         // Assert
         result.ShouldContain("(truncated,");
         result.ShouldContain("chars)");
+    }
+
+    #endregion
+
+    #region Redaction and Escaping
+
+    [Fact]
+    public void FormatChatMessage_WithRedactor_RedactsResultBeforeTruncating()
+    {
+        // Arrange
+        var largeResult = new string('y', 980) + " secret-abcdefghijklmnopqrstuvwxyz1234";
+        var message = new ChatMessage(ChatRole.Tool, new List<AIContent>
+        {
+            new FunctionResultContent(callId: "tc_001", result: largeResult)
+        });
+
+        // Act
+        var result = AIChatMessageFormatter.FormatChatMessage(
+            message,
+            value => Regex.Replace(value, @"secret-\w+", "[REDACTED]"),
+            new AIAuditLogOptions { MaxToolResultLength = 1000 });
+
+        // Assert
+        result.ShouldNotContain("secret-");
+        result.ShouldContain("[REDACTED]");
+    }
+
+    [Fact]
+    public void FormatChatMessage_WithEscapableCharacters_WritesThemAsIs()
+    {
+        // Arrange
+        var message = new ChatMessage(ChatRole.Assistant, new List<AIContent>
+        {
+            new FunctionCallContent(
+                callId: "tc_001",
+                name: "send",
+                arguments: new Dictionary<string, object?> { ["to"] = "jørgen+news@example.dk" })
+        });
+
+        // Act
+        var result = AIChatMessageFormatter.FormatChatMessage(message);
+
+        // Assert
+        result.ShouldContain("send({\"to\":\"jørgen+news@example.dk\"})");
+    }
+
+    #endregion
+
+    #region Length Limits
+
+    [Fact]
+    public void FormatChatMessage_WithLoweredResultLimit_TruncatesAtIt()
+    {
+        // Arrange
+        var message = new ChatMessage(ChatRole.Tool, new List<AIContent>
+        {
+            new FunctionResultContent(callId: "tc_001", result: new string('y', 50))
+        });
+
+        // Act
+        var result = AIChatMessageFormatter.FormatChatMessage(
+            message,
+            options: new AIAuditLogOptions { MaxToolResultLength = 10 });
+
+        // Assert
+        result.ShouldContain("[tool:tc_001] -> yyyyyyyyyy... (truncated, 50 chars)");
     }
 
     #endregion

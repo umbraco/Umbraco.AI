@@ -1,10 +1,12 @@
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Decision;
+using Umbraco.AI.Core.Extraction;
 using Umbraco.AI.Core.Models;
 
 #pragma warning disable MEAI001 // ISpeechToTextClient / IImageGenerator are experimental in M.E.AI
 #pragma warning disable UMBRACOAI_IMAGEGEN // Wraps the experimental image-generation capability
 #pragma warning disable UMBRACOAI_DECISION // Wraps the experimental decision capability
+#pragma warning disable UMBRACOAI_EXTRACTION // Wraps the experimental extraction capability
 
 namespace Umbraco.AI.Core.Providers;
 
@@ -94,6 +96,31 @@ internal sealed class AIConfiguredDecisionCapability(IAIDecisionCapability inner
 
     /// <inheritdoc />
     public Task<IAIDecisionClient> CreateClientAsync(
+        object? capabilitySettings,
+        string? modelId,
+        CancellationToken cancellationToken)
+        => inner.CreateClientAsync(settings, capabilitySettings, modelId, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<AIModelDescriptor>> GetModelsAsync(CancellationToken cancellationToken = default)
+        => inner.GetModelsAsync(settings, cancellationToken);
+}
+
+/// <summary>
+/// Decorator that wraps an extraction capability with resolved settings.
+/// </summary>
+internal sealed class AIConfiguredExtractionCapability(IAIExtractionCapability inner, object settings)
+    : IAIConfiguredExtractionCapability
+{
+    /// <inheritdoc />
+    public AICapability Kind => inner.Kind;
+
+    /// <inheritdoc />
+    public Task<IAIExtractionClient> CreateClientAsync(string? modelId = null, CancellationToken cancellationToken = default)
+        => inner.CreateClientAsync(settings, modelId, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<IAIExtractionClient> CreateClientAsync(
         object? capabilitySettings,
         string? modelId,
         CancellationToken cancellationToken)

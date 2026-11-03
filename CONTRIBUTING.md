@@ -71,7 +71,7 @@ Branch names are version-prefixed so that each major version (which tracks the U
 | --------------------------- | ------------------------------------ | ----------------------------------- |
 | `vN/dev`                    | Active development for version N     | `v18/dev`                           |
 | `vN/main`                   | Last released state for version N    | `v18/main`                          |
-| `vN/feature/<anything>`     | Feature or fix branch for version N  | `v18/feature/add-embeddings`        |
+| `vN/topic/<anything>`       | Any work branch for version N        | `v18/topic/add-embeddings`          |
 | `vN/release/<anything>`     | Release preparation for version N    | `v18/release/2026.06.1`             |
 | `vN/hotfix/<anything>`      | Hotfix branch for version N          | `v17/hotfix/2026.06.1`              |
 | `claude/<anything>`         | Claude Code automation branches      | `claude/add-streaming-abc123`       |
@@ -98,19 +98,24 @@ The GitHub default branch always points to the latest version's `dev` (currently
 
 - Example: `v17/hotfix/2026.01.1` for the first hotfix in January 2026 on v17
 
-**Feature branches:** `vN/feature/<descriptive-name>`
+**Topic branches:** `vN/topic/<descriptive-name>`
 
-- Example: `v18/feature/add-streaming-support`
-- Example: `v17/feature/backport-split-view-fix`
+Use a topic branch for any piece of work: a feature, a fix, a refactor, docs or tooling.
+
+- Example: `v18/topic/add-streaming-support`
+- Example: `v17/topic/backport-split-view-fix`
+
+`vN/feature/<name>` is the old name for this. Branches already open under it still push and build, but
+new branches should use `vN/topic/`.
 
 ### Examples
 
 **Correct:**
 
 ```bash
-v18/feature/add-streaming-support
-v18/feature/improve-context-handling
-v17/feature/backport-split-view-fix
+v18/topic/add-streaming-support
+v18/topic/improve-context-handling
+v17/topic/backport-split-view-fix
 v18/release/2026.01.1      # Calendar-based (recommended)
 v17/hotfix/2026.01.1       # Calendar-based with sequence
 ```
@@ -118,7 +123,7 @@ v17/hotfix/2026.01.1       # Calendar-based with sequence
 **Incorrect:**
 
 ```bash
-feature/add-streaming       # Missing version prefix
+topic/add-streaming         # Missing version prefix
 release/2026.01             # Missing version prefix
 dev                         # Bare dev (no longer valid)
 main                        # Bare main (no longer valid)
@@ -130,7 +135,7 @@ support/17.x                # Old maintenance convention
 Branch naming is enforced at two levels:
 
 1. **Git Hooks** (`.githooks/pre-push`): Local validation before push — blocks pushes from branches that don't match the `vN/` convention
-2. **Azure DevOps CI/CD**: Trigger patterns only run on `v*/dev`, `v*/main`, `v*/release/*`, `v*/hotfix/*`, `v*/feature/*`
+2. **Azure DevOps CI/CD**: Trigger patterns only run on `v*/dev`, `v*/main`, `v*/release/*`, `v*/hotfix/*`, `v*/topic/*` (plus the old `v*/feature/*`)
 
 ### Git Hooks for Release Manifest Protection
 
@@ -156,10 +161,10 @@ This ensures:
 ### Feature Development (Single Product)
 
 ```bash
-# 1. Create feature branch from the appropriate vN/dev
+# 1. Create a topic branch from the appropriate vN/dev
 git checkout v18/dev
 git pull origin v18/dev
-git checkout -b v18/feature/add-embeddings
+git checkout -b v18/topic/add-embeddings
 
 # 2. Make changes in the product directory
 # Edit: Umbraco.AI/src/Umbraco.AI.Core/...
@@ -179,7 +184,7 @@ git commit -m "feat(core): add embedding support
 Implements IChatClient.EmbeddAsync using M.E.AI abstractions"
 
 # 6. Push and create PR targeting vN/dev
-git push -u origin v18/feature/add-embeddings
+git push -u origin v18/topic/add-embeddings
 ```
 
 ### Feature Development (Cross-Product)
@@ -187,9 +192,9 @@ git push -u origin v18/feature/add-embeddings
 When a feature spans multiple products (e.g., Core + Agent):
 
 ```bash
-# 1. Create feature branch from the appropriate vN/dev
+# 1. Create a topic branch from the appropriate vN/dev
 git checkout v18/dev
-git checkout -b v18/feature/shared-context
+git checkout -b v18/topic/shared-context
 
 # 2. Make changes to both products
 # Edit: Umbraco.AI/src/Umbraco.AI.Core/...
@@ -210,7 +215,7 @@ git commit -m "feat(core,agent): add shared context handling
 - Agent: Implement context sharing between agents"
 
 # 6. Push and create PR targeting vN/dev
-git push -u origin v18/feature/shared-context
+git push -u origin v18/topic/shared-context
 ```
 
 ### Backport Workflow
@@ -221,13 +226,13 @@ When a fix or feature also applies to an older supported version:
 # 1. Branch from the older version's dev — NOT from v18/dev
 git checkout v17/dev
 git pull origin v17/dev
-git checkout -b v17/feature/backport-split-view-fix
+git checkout -b v17/topic/backport-split-view-fix
 
 # 2. Apply the fix (cherry-pick or re-implement)
 git cherry-pick <commit-sha>
 
 # 3. Push and create PR targeting v17/dev
-git push -u origin v17/feature/backport-split-view-fix
+git push -u origin v17/topic/backport-split-view-fix
 ```
 
 Do **not** forward-merge `v17/dev` into `v18/dev` — each version line is maintained independently.
@@ -348,7 +353,7 @@ Closes #123
 
 Before submitting a PR:
 
-- [ ] Branch name follows convention (`vN/feature/<anything>`)
+- [ ] Branch name follows convention (`vN/topic/<anything>`)
 - [ ] PR targets the correct `vN/dev` base branch
 - [ ] Code follows [coding standards](CLAUDE.md#coding-standards)
 - [ ] All tests pass
@@ -380,7 +385,7 @@ git pull origin v18/dev
 git checkout -b v18/release/2026.06.1
 ```
 
-Or use the `/release-management` skill which handles this automatically.
+Or use the `/release-prepare` skill which handles this automatically.
 
 #### 2. Define Release Manifest
 
@@ -429,33 +434,27 @@ git push -u origin v18/release/2026.06.1
 Azure DevOps detects the `vN/release/*` branch pattern:
 
 - Enforces `release-manifest.json` (CI fails if any changed product is missing from the list)
-- Builds and packs only the listed products
-- Publishes two artifacts:
+- Builds and tests, then packs only the listed products
+- Publishes three artifacts:
     - `all-nuget-packages` - Contains all NuGet packages (.nupkg)
     - `all-npm-packages` - Contains all npm packages (.tgz)
-- Publishes `pack-manifest` artifact - Contains metadata for each package (name, version, type)
+    - `pack-manifest` - Contains metadata for each package (name, version, type)
 
-#### 5. Release Pipeline Deployment
+A push never publishes anything. Publishing is a separate run, below.
 
-The Azure DevOps **release pipeline** automatically triggers after the build completes:
+#### 5. Publish a Pre-Release (Optional)
 
-1. **Download Artifacts**
-    - Downloads `all-nuget-packages`, `all-npm-packages`, and `pack-manifest` artifacts
+To test before going public, queue a run of the `Umbraco.AI` pipeline on the release branch with **Publish packages to** set to `prerelease`. It publishes the NuGet packages to the **MyGet** prereleases feed, with no approval step.
 
-2. **Deploy Packages**
-    - Deploys NuGet packages to **MyGet** (pre-release feed)
-    - Deploys npm packages to **npm registry** with `@next` tag
-
-3. **Tag Git Repository**
-    - Reads `pack-manifest` to get each package name and version
-    - Creates git tag for each deployed package: `[Product_Name]@[Version]`
-    - Examples: `Umbraco.AI@18.1.0`, `Umbraco.AI.OpenAI@18.0.1`
+```bash
+/release-publish   # asks for the target; choose prerelease
+```
 
 **MyGet URL:** `https://www.myget.org/F/umbraco-ai/api/v3/index.json`
 
 #### 6. Test Pre-Release
 
-Before production deployment, validate the pre-release packages work correctly:
+Validate the pre-release packages work correctly:
 
 **Option A: Automated Test Site (Recommended)**
 
@@ -477,20 +476,31 @@ dotnet nuget add source https://www.myget.org/F/umbraco-ai/api/v3/index.json -n 
 dotnet add package Umbraco.AI.Core --version 18.1.0-*
 ```
 
-#### 7. Production Release Pipeline
+#### 7. Publish the Release
 
-Once testing passes, trigger the production release from Azure DevOps. The release pipeline:
+Queue a run of the `Umbraco.AI` pipeline on the release branch with **Publish packages to** set to `release`, by hand in Azure DevOps or with:
 
-1. Deploys NuGet packages to **NuGet.org**
-2. Deploys npm packages with `@latest` tag
-3. Creates git tags: `Umbraco.AI@18.1.0`, `Umbraco.AI.OpenAI@18.0.1`
+```bash
+/release-publish
+```
+
+The run builds, tests and packs as usual, then its **Release** stage waits for approval in the `Umbraco AI Release` environment. Once approved, it:
+
+1. Publishes NuGet packages to **NuGet.org**
+2. Publishes npm packages to **npm**, moving each package's labels only upwards (so a v17 release never takes `latest` from v18)
+3. Creates a git tag per product: `Umbraco.AI@18.1.0`, `Umbraco.AI.OpenAI@18.0.1`
+4. Creates one GitHub release, named `YYYY.MM.N` from the date it was published, which Slack's GitHub app announces
+
+The GitHub release number comes from the publish date, so it can differ from the branch name (for example when a release goes out while another release branch is still open). That's expected.
+
+`release` is refused on any branch other than `vN/release/*` and `vN/hotfix/*`, and with tests skipped.
 
 #### 8. Merge Back and Bump Dev Versions
 
-Use the `/post-release-cleanup` skill to automate this step:
+Use the `/release-cleanup` skill to automate this step:
 
 ```bash
-/post-release-cleanup
+/release-cleanup
 ```
 
 This will:
@@ -556,8 +566,9 @@ git add Umbraco.AI/CHANGELOG.md release-manifest.json Umbraco.AI/version.json
 git commit -m "fix(core): resolve critical issue"
 git push -u origin v17/hotfix/2026.06.1
 
-# 7. After CI builds and release pipeline deploys, run post-release cleanup
-/post-release-cleanup
+# 7. Publish (choose release), approve in Azure, then run post-release cleanup
+/release-publish
+/release-cleanup
 ```
 
 ### Releasing Multiple Products
@@ -805,25 +816,24 @@ git push
 
 ### Overview
 
-The CI/CD pipeline consists of two main stages:
+The `Umbraco.AI` pipeline (`azure-pipelines.yml`) extends Umbraco.Build's shared monorepo template. One pipeline builds, packs and, when asked, publishes:
 
-1. **Build Pipeline** — Triggered by commits to `vN/release/*`, `vN/hotfix/*`, `vN/dev`, `vN/main`, and `vN/feature/*` branches
+1. **On every push** to `vN/release/*`, `vN/hotfix/*`, `vN/dev`, `vN/main` and `vN/topic/*` (plus the old `vN/feature/*`)
     - Builds and tests products
     - Creates NuGet and npm packages
-    - Publishes artifacts for deployment
+    - Publishes them as pipeline artifacts
 
-2. **Release Pipeline** — Triggered by build completion
-    - Downloads artifacts from build pipeline
-    - Deploys packages to package feeds
-    - Tags git repository with package versions
+2. **On a run queued with "Publish packages to"** set to `nightly`, `prerelease` or `release`
+    - `nightly` / `prerelease`: MyGet feeds, no approval
+    - `release`: NuGet.org and npm after approval, then git tags and a GitHub release
 
 ### Build Artifacts
 
-| Artifact Name        | Contents                                             | Used By                             |
-| -------------------- | ---------------------------------------------------- | ----------------------------------- |
-| `all-nuget-packages` | All .nupkg files from the build                      | Release pipeline (NuGet deployment) |
-| `all-npm-packages`   | All .tgz files from the build                        | Release pipeline (npm deployment)   |
-| `pack-manifest`      | JSON metadata for each package (name, version, type) | Release pipeline (git tagging)      |
+| Artifact Name        | Contents                                             | Used By                            |
+| -------------------- | ---------------------------------------------------- | ---------------------------------- |
+| `all-nuget-packages` | All .nupkg files from the build                      | Publish stages (NuGet feeds)       |
+| `all-npm-packages`   | All .tgz files from the build                        | Publish stages (npm)               |
+| `pack-manifest`      | JSON metadata for each package (name, version, type) | Release stage (git tags + release) |
 
 ### Change Detection
 
@@ -832,16 +842,17 @@ The Azure DevOps pipeline uses smart change detection to build only affected pro
 - **`vN/dev` and `vN/main` pushes**: Compare against previous completed build on the same branch
 - **`vN/release/*` branches**: Require `release-manifest.json`; pack only the listed products
 - **`vN/hotfix/*` branches**: Honor manifest if present; otherwise use change detection
-- **`vN/feature/*` branches**: Compare against merge-base with `vN/dev` (where N is extracted from the branch name)
+- **`vN/topic/*` branches**: Compare against merge-base with `vN/dev` (where N is extracted from the branch name)
 
 ### Git Tagging Strategy
 
-The release pipeline automatically creates git tags for traceability:
+The pipeline's Release stage creates git tags for traceability:
 
 | Tag Format            | Example                    | Created When                    |
 | --------------------- | -------------------------- | ------------------------------- |
-| `<Product>@<Version>` | `Umbraco.AI@18.1.0`        | Automated (by release pipeline) |
-| `<Product>@<Version>` | `Umbraco.AI.OpenAI@18.0.1` | Automated (by release pipeline) |
+| `<Product>@<Version>` | `Umbraco.AI@18.1.0`        | Automated (by the Release stage) |
+| `<Product>@<Version>` | `Umbraco.AI.OpenAI@18.0.1` | Automated (by the Release stage) |
+| `YYYY.MM.N`           | `2026.10.12`               | With the GitHub release, numbered by publish date |
 
 Use these tags as base points for hotfix branches or to compare versions:
 

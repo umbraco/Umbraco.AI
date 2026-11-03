@@ -41,7 +41,8 @@ public class RemoveUmbracoContentItemTool(
     IAIPropertyValueDispatcher dispatcher,
     IUmbracoWriteAuthorizer authorizer,
     PropertyEditorCollection propertyEditors,
-    IJsonSerializer jsonSerializer)
+    IJsonSerializer jsonSerializer,
+    ITemplateService templateService)
     : AIToolBase<RemoveUmbracoContentItemArgs>
 {
     private readonly ContentEditorValueReader _valueReader = new(propertyEditors, jsonSerializer);
@@ -59,7 +60,28 @@ public class RemoveUmbracoContentItemTool(
             dispatcher,
             authorizer,
             StaticServiceProvider.Instance.GetRequiredService<PropertyEditorCollection>(),
-            StaticServiceProvider.Instance.GetRequiredService<IJsonSerializer>())
+            StaticServiceProvider.Instance.GetRequiredService<IJsonSerializer>(),
+            StaticServiceProvider.Instance.GetRequiredService<ITemplateService>())
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RemoveUmbracoContentItemTool"/> class.
+    /// </summary>
+    [Obsolete("Use the constructor that accepts an ITemplateService. Will be removed in v20")]
+    public RemoveUmbracoContentItemTool(
+        IContentEditingService contentEditingService,
+        IAIPropertyValueDispatcher dispatcher,
+        IUmbracoWriteAuthorizer authorizer,
+        PropertyEditorCollection propertyEditors,
+        IJsonSerializer jsonSerializer)
+        : this(
+            contentEditingService,
+            dispatcher,
+            authorizer,
+            propertyEditors,
+            jsonSerializer,
+            StaticServiceProvider.Instance.GetRequiredService<ITemplateService>())
     {
     }
 
@@ -78,6 +100,7 @@ public class RemoveUmbracoContentItemTool(
             contentEditingService,
             dispatcher,
             _valueReader,
+            templateService,
             args.Key,
             args.Path,
             AIPropertyOperation.RemoveItem,

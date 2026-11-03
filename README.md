@@ -55,6 +55,7 @@ This is a monorepo containing multiple Umbraco.AI packages:
 | [**Umbraco.AI.FireworksAI**](Umbraco.AI.FireworksAI/)           | Fireworks AI provider                     | `Umbraco.AI.FireworksAI/`      |
 | [**Umbraco.AI.TogetherAI**](Umbraco.AI.TogetherAI/)             | Together AI provider                      | `Umbraco.AI.TogetherAI/`       |
 | [**Umbraco.AI.TypeSafe**](Umbraco.AI.TypeSafe/)             | TypeSafe AI provider (experimental Decision)                      | `Umbraco.AI.TypeSafe/`       |
+| [**Umbraco.AI.Cloudflare**](Umbraco.AI.Cloudflare/)         | Cloudflare AI provider (experimental Extraction)                  | `Umbraco.AI.Cloudflare/`     |
 | [**Umbraco.AI.Alibaba**](Umbraco.AI.Alibaba/)                   | Alibaba Cloud (Qwen) provider             | `Umbraco.AI.Alibaba/`          |
 | [**Umbraco.AI.Moonshot**](Umbraco.AI.Moonshot/)                 | Moonshot AI (Kimi) provider                | `Umbraco.AI.Moonshot/`         |
 | [**Umbraco.AI.OpenRouter**](Umbraco.AI.OpenRouter/)             | OpenRouter provider                        | `Umbraco.AI.OpenRouter/`       |
@@ -126,6 +127,7 @@ dotnet build Umbraco.AI.HuggingFace/Umbraco.AI.HuggingFace.slnx
 dotnet build Umbraco.AI.FireworksAI/Umbraco.AI.FireworksAI.slnx
 dotnet build Umbraco.AI.TogetherAI/Umbraco.AI.TogetherAI.slnx
 dotnet build Umbraco.AI.TypeSafe/Umbraco.AI.TypeSafe.slnx
+dotnet build Umbraco.AI.Cloudflare/Umbraco.AI.Cloudflare.slnx
 dotnet build Umbraco.AI.Alibaba/Umbraco.AI.Alibaba.slnx
 dotnet build Umbraco.AI.Moonshot/Umbraco.AI.Moonshot.slnx
 dotnet build Umbraco.AI.OpenRouter/Umbraco.AI.OpenRouter.slnx
@@ -166,7 +168,7 @@ Umbraco.AI (Core)
     ├── Providers (depend on Core):
     │       OpenAI, Anthropic, Amazon, Google, MicrosoftFoundry,
     │       Mistral, DeepSeek, HuggingFace, FireworksAI, TogetherAI,
-    │       TypeSafe, Alibaba, Moonshot, OpenRouter, ZAI
+    │       TypeSafe, Cloudflare, Alibaba, Moonshot, OpenRouter, ZAI
     ├── Umbraco.AI.Prompt (Add-on - depends on Core)
     │   └── Umbraco.AI.Prompt.Deploy (Deploy - depends on Prompt + Deploy)
     ├── Umbraco.AI.Agent (Add-on - depends on Core)

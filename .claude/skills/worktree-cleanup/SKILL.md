@@ -69,6 +69,6 @@ You are cleaning up a git worktree and its associated local branch after the fea
 
 - Always check we're not inside the worktree before removing it.
 - The worktree directory lives under `.claude/worktrees/<name>` by convention.
-- The branch name is typically `feature/<name>` where `<name>` matches the worktree directory name.
+- The branch name is typically `vN/topic/<name>` (or the older `vN/feature/<name>`), and the worktree directory is `vN-<name>`.
 - If the worktree directory doesn't exist but the git worktree ref is stale, `git worktree prune` handles it.
 - Never delete the `main`, `dev`, or `master` branches.

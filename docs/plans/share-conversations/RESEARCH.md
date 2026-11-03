@@ -3,8 +3,8 @@
 > Source research behind this feature's decisions. Written up before `BRIEF.md`/`DECISION-LOG.md`
 > existed, in response to the CTO asking how conversation sharing could work. The open questions at
 > the bottom were resolved during the planning session that followed — see `BRIEF.md` for the
-> answers (org-only, attachment redaction, "shared with me" list as v1 bar, snapshot-vs-live still
-> TODO for design).
+> current answers (org-only, attachments shown as-is with a share-time disclosure warning, "shared
+> with me" list as v1 bar, every share a snapshot for v1 — live scope deferred).
 
 ## What we have today
 
@@ -134,7 +134,9 @@ This matches what `BRIEF.md` landed on: read-only link share, org-only, plus a
 - Public link (like Claude/ChatGPT) or org-only (like Claude Team/Enterprise)? →
   **Decided: org-only**, no public/anonymous link.
 - Does "read-only" need to include attachments/context resources, or just the message
-  transcript? → **Decided: attachments included, but redacted per-viewer permission** —
-  the harder problem this research didn't anticipate.
+  transcript? → **Decided: attachments included, shown exactly as the owner sees them**,
+  with a plain warning to the owner at share time instead of per-viewer filtering — filtering
+  was tried first and dropped, since message text isn't filtered either and a half-filtered
+  attachment list created confusing gaps without real protection. See `BRIEF.md`.
 - Is there appetite for a later "shared project" phase, or is one-off conversation sharing
   the actual need? → **Deferred**, not ruled out; v1 is conversation-level only.

@@ -1,8 +1,5 @@
 # Brief
 
-> **Status:** Not started — blocked on the Copilot Workspace product itself, which doesn't exist on
-> `v18/dev` yet (only on RC branches).
-
 ## Problem
 
 Copilot Workspace conversations are persisted per-user today — `AIConversationService` enforces
@@ -15,76 +12,64 @@ conversation.
 **Who's it for:** backoffice users sharing with other backoffice users, inside the same CMS
 instance. Not site visitors, not people outside the CMS (no public/anonymous link).
 
-**Why now:** parked as a follow-on idea while exploring the Copilot Workspace conversation model
-that shipped in the (not-yet-merged) Copilot RC. No external customer commitment driving urgency —
-this is a natural next step once persisted conversations exist at all.
+**Why now:** Copilot Workspace has shipped and is live on `v18/dev` (and `v17/dev`) — this is the
+first feature built on top of it.
 
-**What success looks like:** a user can turn sharing on for a conversation, send a colleague to it
-(link + it also shows up in a "shared with me" list for the recipient), the recipient can read it
-but not send messages in it, and the owner can turn sharing off again at any time, immediately
-cutting off access. No qualitative usage target set yet — this is a small internal collaboration
-feature, not a metric-driven one.
+**v1 scope:** the owner shares a conversation with one or more named colleagues, choosing whether
+it's frozen at that point (Snapshot) or keeps including new messages (Live); it shows up in the
+recipient's own "shared with me" list; the recipient gets an email the first time they're shared
+with (reusing Umbraco core's existing email-sending pipeline — not a new notification system); the
+recipient can open and read it, but never send messages into it or edit its attached context. The
+owner can see, from their own side, that a conversation is currently shared and who it's shared
+with, and can revoke that access.
 
-**Decided: the recipient gets an email when first shared with.** Confirmed with the user —
-without it, discovering a share depends on happening to check the sidebar, which undercuts the
-"let's discuss this together" motivation. Reuses Umbraco core's existing generic email-sending
-pipeline (the same one behind forgot-password and content-change alerts) rather than new
-infrastructure. See `ARCHITECTURE.md`/`SPEC.md` for the mechanism.
+**Owner-side visibility is a real requirement, not just the Share action itself.** It's not enough
+that the owner *can* open a "Share" dialog and see the current recipient list there — a
+conversation that's actively shared needs to be visibly distinguishable from one that isn't,
+somewhere the owner naturally looks (their own conversation list), not only inside a dialog they
+have to think to open.
 
 **Constraints:**
 - Builds on `Umbraco.AI.Agent.Copilot.Workspace` (`Conversations.Core` / `.Persistence` /
-  `.Persistence.{SqlServer,Sqlite}` / `.Web` + the `Copilot.Workspace.Web.StaticAssets` frontend).
-  That product does **not exist on `v18/dev` yet** — it's still confined to the Copilot RC release
-  branches (`v18/release/2026.08.1` / `v17/release/2026.08.1`), deliberately held out of dev until
-  that release goes final (see `[[project_copilot_rc_2026_08]]` memory). **Decided: build work
-  waits.** No branch off the RC release line for actual implementation — `feature-build` shouldn't
-  start for this feature until the Copilot RC has merged into `v18/dev` (and `v17/dev`); re-check
-  `[[project_copilot_rc_2026_08]]` (or the RC branches directly) at that point. **Design work
-  (`feature-design`) proceeds now against the code as it exists on the RC branches** (e.g. the
-  `v18-copilot-starter-prompts` worktree, which is branched from the RC line) — reading and
-  reasoning about that code doesn't require a branch of its own, and the conversation model isn't
-  expected to change shape before the RC finalizes. Re-verify against the merged `v18/dev` code
-  once available, in case anything shifted during finalization.
-- **Decided: ships for both `v18` and `v17` at the same time**, matching this repo's normal
-  keep-active-versions-in-sync policy and the fact that Copilot Workspace itself is being built for
-  both lines. Build via the usual Backport Workflow (branch off each `vN/dev` once available) rather
-  than a single cross-version branch.
+  `.Persistence.{SqlServer,Sqlite}` / `.Web` + the `Copilot.Workspace.Web.StaticAssets` frontend),
+  which now exists on `v18/dev`. Re-verify the conversation model against the current `v18/dev`
+  code before designing (it was last checked against the pre-merge RC branches).
+- Ships for both `v18` and `v17` at the same time, matching this repo's normal
+  keep-active-versions-in-sync policy. Build via the usual Backport Workflow (branch off each
+  `vN/dev`) rather than a single cross-version branch.
 - Existing entity-action pattern in the frontend (Pin/Archive on a conversation,
   `conversation/entity-actions/conversation.actions.ts`) is the natural place a "Share" action
   would live, so a new UI action doesn't need an unfamiliar shape.
 
 **Riskiest unknowns:**
-- **Attachment leakage.** A conversation can carry `ContextIds` and `Resources` (attached
-  pages/files, conversation-scoped). Decided requirement: a shared conversation must **redact any
-  attachment the viewer isn't independently allowed to see** via their own permissions, rather than
-  showing everything the owner could see. This is real work — each attachment needs a permission
-  check against the *viewer*, not just "does the conversation exist" — and is the main reason this
-  isn't a one-field change.
-- **Snapshot vs. live scope.** The owner needs to choose, at share time, whether the recipient sees
-  **only messages up to the moment of sharing** (a frozen point) or **also sees messages sent after
-  that** (an evolving share that keeps including new turns). Manual refresh is fine either way — no
-  requirement for live/streaming updates while the viewer has the page open. TODO for `feature-design`:
-  work out how a "shared up to here" cutoff is represented and enforced server-side (a snapshot
-  copy? a stored message-index cutoff on the share record?), since the underlying conversation is
-  still mutable by the owner.
-- Section-grant permission model: need to confirm during design whether "the recipient can open
-  the Copilot Workspace section at all" is a sufficient precondition for accepting a share, or
-  whether a stricter check is needed.
+- **Attachment exposure.** A conversation can carry `ContextIds` and `Resources` (attached
+  pages/files, conversation-scoped). The recipient sees the exact same attachment list the owner
+  sees — no per-viewer filtering. This was considered and deliberately rejected: message text
+  isn't filtered either, so a reply that references an attachment would already describe it
+  regardless, making filtering just the attachment list a half-measure that creates confusing gaps
+  without real protection. Instead, the owner sees a plain warning before sharing: the recipient
+  will see everything referenced in the conversation, including things they might not otherwise
+  have permission to open. This is a disclosed, informed choice, not a silent permission grant.
+- Section-grant permission model: confirm during design whether "the recipient can open the
+  Copilot Workspace section at all" is a sufficient precondition for accepting a share, or whether
+  a stricter check is needed.
 
-**Smallest version worth shipping:** link-based sharing **plus** a "shared with me" list — not
-link-only. Confirmed with the user as the v1 bar, not a stretch goal.
+**Smallest version worth shipping (this is v1):** the owner picks one or more named colleagues
+(not a blanket link) and shares a conversation, choosing Snapshot or Live; the recipient is
+emailed the first time they're shared with and it appears in their "shared with me" list; the
+recipient opens it read-only; the owner can see it's shared and with whom from their own side, and
+can revoke it. Nothing in this feature is deferred to a later phase at this point.
 
 ## Non-goals
 
-- **Live real-time viewing.** The recipient does not need to watch new messages stream in while
-  they have the page open; a manual refresh showing the latest state (per the chosen snapshot/live
-  scope above) is enough. No AG-UI streaming plumbing needed for the viewer side.
-- **Forking/copying.** For v1, a shared conversation is strictly read-only for the recipient —
-  no "save a copy and keep chatting" action. Explicitly deferred, not ruled out forever.
+- **Live real-time *viewing*** (the recipient watching new messages stream in while the page is
+  open) **is still out of scope even though Live *scope* is in.** Live scope means a share keeps
+  including new messages on the next load/refresh — it does not mean the open page updates itself
+  without a reload.
+- **Forking/copying.** A shared conversation is strictly read-only for the recipient — no "save a
+  copy and keep chatting" action. Deferred, not ruled out.
 - **Multi-writer / collaborative editing.** Only the owner can ever send messages into their own
-  conversation. Two people typing into the same conversation is out of scope entirely (this was
-  ruled out earlier in favor of the read-only-link approach — see the killed
-  full-collaboration alternative below).
+  conversation. Two people typing into the same conversation is out of scope entirely.
 - **Public/anonymous access.** No unauthenticated link, no sharing outside the CMS login boundary.
 - **Commenting or discussion threads attached to the shared conversation itself.** The "discuss it
   together" use case is expected to happen elsewhere (Slack, Teams, in person) — the feature only
@@ -95,6 +80,6 @@ link-only. Confirmed with the user as the v1 bar, not a stretch goal.
 ## Kill criteria
 
 If a real privacy or compliance concern surfaces once this is designed in more detail (e.g. the
-attachment-redaction check turns out to be infeasible to do reliably, or shared content is found to
-routinely include personal data that shouldn't cross even an internal share), stop and re-scope
-rather than ship something that quietly over-shares.
+disclosure-warning approach to attachment exposure is found to be insufficient, or shared content
+is found to routinely include personal data that shouldn't cross even an internal share), stop and
+re-scope rather than ship something that quietly over-shares.

@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Agent.Copilot.Workspace will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.3.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot.Workspace@18.2.0...Umbraco.AI.Agent.Copilot.Workspace@18.3.0) (2026-11-03)
+
+### feat
+
+* **conversations:** Share a Copilot Workspace conversation with other backoffice users. Choose a Snapshot (frozen at that point) or Live share; recipients find it under "Shared with me", get an email the first time, and can read but not reply. Owners see which conversations are shared and can revoke access ([3213d16](https://github.com/umbraco/Umbraco.AI/commit/3213d1621fbaf1eed78c7bfba021953bd7a0d0dd))
+
 ## [18.2.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot.Workspace@18.1.0...Umbraco.AI.Agent.Copilot.Workspace@18.2.0) (2026-10-19)
 
 ### feat

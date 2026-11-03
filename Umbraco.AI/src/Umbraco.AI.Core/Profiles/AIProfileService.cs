@@ -89,6 +89,7 @@ internal sealed class AIProfileService : IAIProfileService
             AICapability.SpeechToText => _options.DefaultSpeechToTextProfileAlias,
             AICapability.ImageGeneration => _options.DefaultImageGenerationProfileAlias,
             AICapability.Decision => _options.DefaultDecisionProfileAlias,
+            AICapability.Extraction => _options.DefaultExtractionProfileAlias,
             _ => null
         };
 
@@ -110,6 +111,7 @@ internal sealed class AIProfileService : IAIProfileService
             AICapability.SpeechToText => settings.DefaultSpeechToTextProfileId,
             AICapability.ImageGeneration => settings.DefaultImageGenerationProfileId,
             AICapability.Decision => settings.DefaultDecisionProfileId,
+            AICapability.Extraction => settings.DefaultExtractionProfileId,
             _ => throw new NotSupportedException($"AI capability '{capability}' is not supported.")
         };
 
@@ -130,6 +132,7 @@ internal sealed class AIProfileService : IAIProfileService
             AICapability.SpeechToText => _options.DefaultSpeechToTextProfileAlias,
             AICapability.ImageGeneration => _options.DefaultImageGenerationProfileAlias,
             AICapability.Decision => _options.DefaultDecisionProfileAlias,
+            AICapability.Extraction => _options.DefaultExtractionProfileAlias,
             _ => null
         };
 
@@ -178,7 +181,7 @@ internal sealed class AIProfileService : IAIProfileService
         {
             throw new InvalidOperationException(
                 $"The '{profile.Capability}' capability is experimental and not enabled. " +
-                "Enable it under 'Umbraco:AI:Experimental' to create profiles for it.");
+                $"Enable it with 'Umbraco:AI:Experimental:{profile.Capability}' to create profiles for it.");
         }
 
         // Generate new ID if needed

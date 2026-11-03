@@ -280,6 +280,34 @@ export type CreateTestRequestModel = {
     tags: Array<string>;
 };
 
+export type DateExtractionAnswerModel = {
+    $type: 'date';
+    value?: null | string;
+    confidence?: null | number;
+    nullProbability?: null | number;
+    isFound: boolean;
+};
+
+export type DateExtractionFieldModel = {
+    $type: 'date';
+    id: string;
+    instructions: string;
+};
+
+export type DateTimeExtractionAnswerModel = {
+    $type: 'datetime';
+    value?: null | string;
+    confidence?: null | number;
+    nullProbability?: null | number;
+    isFound: boolean;
+};
+
+export type DateTimeExtractionFieldModel = {
+    $type: 'datetime';
+    id: string;
+    instructions: string;
+};
+
 export type DecisionOptionModel = {
     key: string;
     description?: null | string;
@@ -311,6 +339,24 @@ export type DecisionScoreLevelModel = {
 
 export type DisclosureSettingsResponseModel = {
     noticeMode: string;
+};
+
+export type DurationExtractionAnswerModel = {
+    $type: 'duration';
+    value?: null | number;
+    unit: string;
+    confidence?: null | number;
+    nullProbability?: null | number;
+    isFound: boolean;
+};
+
+export type DurationExtractionFieldModel = {
+    $type: 'duration';
+    unit: string;
+    decimals?: null | number;
+    integer: boolean;
+    id: string;
+    instructions: string;
 };
 
 export type EditableModelFieldModel = {
@@ -366,6 +412,62 @@ export type EntityVersionResponseModel = {
     dateAuthored: string;
     authoredByUserId?: null | string;
     changeDescription?: null | string;
+};
+
+export type ExtractionAnswerModel = ({
+    $type?: 'text';
+} & TextExtractionAnswerModel) | ({
+    $type?: 'number';
+} & NumberExtractionAnswerModel) | ({
+    $type?: 'date';
+} & DateExtractionAnswerModel) | ({
+    $type?: 'time';
+} & TimeExtractionAnswerModel) | ({
+    $type?: 'datetime';
+} & DateTimeExtractionAnswerModel) | ({
+    $type?: 'duration';
+} & DurationExtractionAnswerModel) | ({
+    $type?: 'list';
+} & ListExtractionAnswerModel);
+
+export type ExtractionFieldModel = ({
+    $type?: 'text';
+} & TextExtractionFieldModel) | ({
+    $type?: 'number';
+} & NumberExtractionFieldModel) | ({
+    $type?: 'date';
+} & DateExtractionFieldModel) | ({
+    $type?: 'time';
+} & TimeExtractionFieldModel) | ({
+    $type?: 'datetime';
+} & DateTimeExtractionFieldModel) | ({
+    $type?: 'duration';
+} & DurationExtractionFieldModel) | ({
+    $type?: 'list';
+} & ListExtractionFieldModel);
+
+export type ExtractionProfileSettingsModel = {
+    $type: 'extraction';
+};
+
+export type ExtractionSpanModel = {
+    start: number;
+    end: number;
+};
+
+export type ExtractRequestModel = {
+    profileIdOrAlias?: null | string;
+    state?: null | string;
+    referenceDate?: null | string;
+    fields: Array<ExtractionFieldModel>;
+};
+
+export type ExtractResponseModel = {
+    answers: {
+        [key: string]: ExtractionAnswerModel;
+    };
+    modelId?: null | string;
+    usage?: null | UsageModel;
 };
 
 export type GeneratedImageModel = {
@@ -492,6 +594,22 @@ export type KnowledgeSetResponseModel = {
     itemCount: number;
 };
 
+export type ListExtractionAnswerModel = {
+    $type: 'list';
+    values: Array<string>;
+    spans: Array<ExtractionSpanModel>;
+    confidence?: null | number;
+    nullProbability?: null | number;
+    isFound: boolean;
+};
+
+export type ListExtractionFieldModel = {
+    $type: 'list';
+    itemType?: null | string;
+    id: string;
+    instructions: string;
+};
+
 export type ModelDescriptorResponseModel = {
     model: null | ModelRefModel;
     name: string;
@@ -503,6 +621,23 @@ export type ModelDescriptorResponseModel = {
 export type ModelRefModel = {
     providerId: string;
     modelId: string;
+};
+
+export type NumberExtractionAnswerModel = {
+    $type: 'number';
+    value?: null | number;
+    confidence?: null | number;
+    nullProbability?: null | number;
+    isFound: boolean;
+};
+
+export type NumberExtractionFieldModel = {
+    $type: 'number';
+    decimals?: null | number;
+    integer: boolean;
+    unit?: null | string;
+    id: string;
+    instructions: string;
 };
 
 export type PagedAuditLogItemResponseModel = {
@@ -583,7 +718,9 @@ export type ProfileSettingsModel = ({
     $type?: 'imageGeneration';
 } & ImageGenerationProfileSettingsModel) | ({
     $type?: 'decision';
-} & DecisionProfileSettingsModel);
+} & DecisionProfileSettingsModel) | ({
+    $type?: 'extraction';
+} & ExtractionProfileSettingsModel);
 
 export type PropertyValueOperationRequestModel = {
     path: Array<unknown>;
@@ -661,6 +798,7 @@ export type SettingsResponseModel = {
     defaultSpeechToTextProfileId?: null | string;
     defaultImageGenerationProfileId?: null | string;
     defaultDecisionProfileId?: null | string;
+    defaultExtractionProfileId?: null | string;
     disclosureNoticeMode: string;
 };
 
@@ -962,6 +1100,35 @@ export type TextChatContentPartModel = {
     text: string;
 };
 
+export type TextExtractionAnswerModel = {
+    $type: 'text';
+    value?: null | string;
+    span?: null | ExtractionSpanModel;
+    confidence?: null | number;
+    nullProbability?: null | number;
+    isFound: boolean;
+};
+
+export type TextExtractionFieldModel = {
+    $type: 'text';
+    id: string;
+    instructions: string;
+};
+
+export type TimeExtractionAnswerModel = {
+    $type: 'time';
+    value?: null | string;
+    confidence?: null | number;
+    nullProbability?: null | number;
+    isFound: boolean;
+};
+
+export type TimeExtractionFieldModel = {
+    $type: 'time';
+    id: string;
+    instructions: string;
+};
+
 export type ToolItemResponseModel = {
     id: string;
     name: string;
@@ -1016,6 +1183,7 @@ export type UpdateSettingsRequestModel = {
     defaultSpeechToTextProfileId?: null | string;
     defaultImageGenerationProfileId?: null | string;
     defaultDecisionProfileId?: null | string;
+    defaultExtractionProfileId?: null | string;
     disclosureNoticeMode?: null | string;
 };
 
@@ -2039,6 +2207,39 @@ export type GenerateEmbeddingsResponses = {
 
 export type GenerateEmbeddingsResponse = GenerateEmbeddingsResponses[keyof GenerateEmbeddingsResponses];
 
+export type ExtractData = {
+    body: ExtractRequestModel;
+    path?: never;
+    query?: never;
+    url: '/umbraco/ai/management/api/v1/extraction/extract';
+};
+
+export type ExtractErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * The resource is protected and requires an authentication token
+     */
+    401: unknown;
+    /**
+     * Not Found
+     */
+    404: ProblemDetails;
+};
+
+export type ExtractError = ExtractErrors[keyof ExtractErrors];
+
+export type ExtractResponses = {
+    /**
+     * OK
+     */
+    200: ExtractResponseModel;
+};
+
+export type ExtractResponse = ExtractResponses[keyof ExtractResponses];
+
 export type GetAllGuardrailEvaluatorsData = {
     body?: never;
     path?: never;
@@ -2651,10 +2852,16 @@ export type UpdateSettingsData = {
 
 export type UpdateSettingsErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * The resource is protected and requires an authentication token
      */
     401: unknown;
 };
+
+export type UpdateSettingsError = UpdateSettingsErrors[keyof UpdateSettingsErrors];
 
 export type UpdateSettingsResponses = {
     /**

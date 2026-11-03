@@ -28,7 +28,7 @@ The user provides a PR number, `#number`, or a full GitHub PR URL as the argumen
    git fetch origin <branch-name>
    ```
 
-4. **Enter the worktree** using `EnterWorktree` with `name` set to the PR's branch name (e.g., `feature/add-streaming`). The branch name contains a `/`, so the worktree hook will treat it as an explicit branch and track the remote.
+4. **Enter the worktree** using `EnterWorktree` with `name` set to the PR's branch name (e.g., `v18/topic/add-streaming`). The branch name contains a `/`, so the worktree hook will treat it as an explicit branch and track the remote.
 
 5. **Show a summary** to the user:
    - PR title and number
@@ -39,6 +39,6 @@ The user provides a PR number, `#number`, or a full GitHub PR URL as the argumen
 
 ## Important
 
-- The worktree hook handles the `/` convention: branch names with `/` are used as-is (no `feature/` prefix added).
+- The worktree hook handles the `/` convention: branch names with `/` are used as-is (no `topic/` prefix added).
 - If the PR branch doesn't exist on origin, report the error clearly.
 - Do NOT modify any files or make commits. This is a read-only checkout for review.

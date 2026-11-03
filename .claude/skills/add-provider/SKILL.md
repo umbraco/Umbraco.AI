@@ -63,11 +63,11 @@ Skip unusual capabilities (moderation, OCR, image gen) unless Umbraco.AI.Core ha
 
 ## 3. Set up an isolated worktree
 
-Branches are version-prefixed (`vN/dev`, `vN/main`, `vN/feature/<name>`, …) — see the root `CLAUDE.md` Branch Model. A new provider is a feature, so it targets a single version line's `vN/feature/<name>` branch, normally cut from the latest active line's `vN/dev` (currently `v18/dev`) unless the user asks to start from an older supported line instead.
+Branches are version-prefixed (`vN/dev`, `vN/main`, `vN/topic/<name>`, …) — see the root `CLAUDE.md` Branch Model. A new provider targets a single version line's `vN/topic/<name>` branch, normally cut from the latest active line's `vN/dev` (currently `v18/dev`) unless the user asks to start from an older supported line instead.
 
 Per the repo's mandatory worktree workflow, use the `EnterWorktree` tool rather than a bare `git checkout -b`:
 
-1. `EnterWorktree` with a descriptive name (e.g. `add-<provider-id>-provider`) — this creates `vN/feature/add-<provider-id>-provider` off the current default branch and switches the session into it.
+1. `EnterWorktree` with a descriptive name (e.g. `add-<provider-id>-provider`) — this creates `vN/topic/add-<provider-id>-provider` off the current default branch and switches the session into it.
 2. If it branched from the wrong version line (it follows whatever branch/default was current, not necessarily the latest), exit and remove it, `git checkout vN/dev` (the intended line) in the original checkout, then `EnterWorktree` again.
 3. Keep a tracking task open (`Worktree: <name>` — path + branch) per `CLAUDE.local.md` so the location survives context compression.
 
@@ -212,7 +212,7 @@ These edits are mandatory. Missing any one means CI or the demo site won't pick 
 
 - `.github/ISSUE_TEMPLATE/01_bug_report.yml` / `.github/DISCUSSION_TEMPLATE/ideas.yml` — list only Core + OpenAI + Anthropic + a few add-ons. Google/Amazon/MicrosoftFoundry/Mistral aren't there either. Needs a separate coordinated cleanup.
 - `.github/workflows/auto-labeler.yml` — same rationale.
-- `.github/actions/pack-product/action.yml` and `.azure-pipelines/templates/*.yml` — parametric, no hard-coded provider list.
+- `.github/actions/pack-product/action.yml` and the shared pack stage in umbraco/Umbraco.Build — parametric, no hard-coded provider list.
 - `release-manifest.json` — only required on `release/*` branches; the release skill picks up new products automatically.
 
 ## 6. Build + test
@@ -257,7 +257,7 @@ git commit -m "feat(<provider-id>): Add <ProviderName> AI provider"
 git add azure-pipelines.yml scripts/install-demo-site.{sh,ps1} scripts/install-package-test-site.{sh,ps1}
 git commit -m "chore(<provider-id>,ci): Register <ProviderName> in install scripts and CI pipeline"
 
-git push -u origin vN/feature/add-<provider-id>-provider
+git push -u origin vN/topic/add-<provider-id>-provider
 ```
 
 Commitlint enforces: sentence-case subject, scope declared in a `changelog.config.json`, valid types. Your new `<provider-id>` scope is picked up automatically from the `changelog.config.json` you added.

@@ -1,6 +1,8 @@
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Umbraco.AI.Core.AuditLog;
+using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers.Errors;
 using Umbraco.AI.Core.TaskQueue;
 
@@ -119,6 +121,124 @@ public class AIAuditLogServiceTests
 
         audit.ParentAuditLogId.ShouldBe(parentId);
     }
+
+    [Fact]
+    public async Task QueueRecordAuditLogFailureAsync_WithEmailAtResultLimit_RedactsBeforeTruncating()
+    {
+        // The 1,000-character result limit falls inside the email's local part. Truncating first
+        // would store "jane.longername.fir", which no email pattern matches once the @ is cut off.
+        var service = CreateService(new AIAuditLogOptions
+        {
+            RedactionPatterns = [@"[\w.+-]+@[\w-]+\.[\w.]+"],
+            MaxToolResultLength = 1000,
+        });
+        var result = new string('y', 980) + " jane.longername.firstpart@example.com";
+        var prompt = new AIAuditPrompt
+        {
+            Capability = AICapability.Chat,
+            Data = new List<ChatMessage>
+            {
+                new(ChatRole.Tool, [new FunctionResultContent("tc_001", result)]),
+            },
+        };
+        var audit = new AIAuditLog { Id = Guid.NewGuid() };
+
+        await service.QueueRecordAuditLogFailureAsync(audit, prompt, new InvalidOperationException("boom"));
+
+        audit.PromptSnapshot.ShouldNotBeNull();
+        audit.PromptSnapshot.ShouldNotContain("jane.");
+        audit.PromptSnapshot.ShouldContain("[REDACTED]");
+    }
+
+    [Fact]
+    public async Task QueueRecordAuditLogFailureAsync_WithEscapableCharactersInArguments_RedactsThem()
+    {
+        // The default JSON encoder writes + as \u002B, which would hide this address from the pattern.
+        var service = CreateService(new AIAuditLogOptions
+        {
+            RedactionPatterns = [@"[\w.+-]+@[\w-]+\.[\w.]+"],
+        });
+        var prompt = new AIAuditPrompt
+        {
+            Capability = AICapability.Chat,
+            Data = new List<ChatMessage>
+            {
+                new(ChatRole.Assistant,
+                [
+                    new FunctionCallContent("tc_001", "send", new Dictionary<string, object?> { ["to"] = "jane+news@example.com" }),
+                ]),
+            },
+        };
+        var audit = new AIAuditLog { Id = Guid.NewGuid() };
+
+        await service.QueueRecordAuditLogFailureAsync(audit, prompt, new InvalidOperationException("boom"));
+
+        audit.PromptSnapshot.ShouldNotBeNull();
+        audit.PromptSnapshot.ShouldNotContain("example.com");
+        audit.PromptSnapshot.ShouldContain("send({\"to\":\"[REDACTED]\"})");
+    }
+
+    [Fact]
+    public async Task QueueRecordAuditLogFailureAsync_WithDefaultResultLimit_KeepsCommerceSizedResults()
+    {
+        var service = CreateService(new AIAuditLogOptions());
+        var result = new string('y', 2000);
+        var audit = new AIAuditLog { Id = Guid.NewGuid() };
+
+        await service.QueueRecordAuditLogFailureAsync(audit, CreateToolResultPrompt(result), new InvalidOperationException("boom"));
+
+        audit.PromptSnapshot.ShouldNotBeNull();
+        audit.PromptSnapshot.ShouldContain(result);
+        audit.PromptSnapshot.ShouldNotContain("(truncated,");
+    }
+
+    [Fact]
+    public async Task QueueRecordAuditLogFailureAsync_WithLoweredArgumentsLimit_TruncatesAtIt()
+    {
+        var service = CreateService(new AIAuditLogOptions { MaxToolArgumentsLength = 20 });
+        var prompt = new AIAuditPrompt
+        {
+            Capability = AICapability.Chat,
+            Data = new List<ChatMessage>
+            {
+                new(ChatRole.Assistant,
+                [
+                    new FunctionCallContent("tc_001", "search", new Dictionary<string, object?> { ["query"] = new string('x', 100) }),
+                ]),
+            },
+        };
+        var audit = new AIAuditLog { Id = Guid.NewGuid() };
+
+        await service.QueueRecordAuditLogFailureAsync(audit, prompt, new InvalidOperationException("boom"));
+
+        audit.PromptSnapshot.ShouldNotBeNull();
+        audit.PromptSnapshot.ShouldContain("search({\"query\":\"xxxxxxxxxx... (truncated, 112 chars)");
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public async Task QueueRecordAuditLogFailureAsync_WithResultLimitDisabled_KeepsFullResult(int maxLength)
+    {
+        var service = CreateService(new AIAuditLogOptions { MaxToolResultLength = maxLength });
+        var result = new string('y', 20000);
+        var audit = new AIAuditLog { Id = Guid.NewGuid() };
+
+        await service.QueueRecordAuditLogFailureAsync(audit, CreateToolResultPrompt(result), new InvalidOperationException("boom"));
+
+        audit.PromptSnapshot.ShouldNotBeNull();
+        audit.PromptSnapshot.ShouldContain(result);
+        audit.PromptSnapshot.ShouldNotContain("(truncated,");
+    }
+
+    private static AIAuditPrompt CreateToolResultPrompt(string result) => new()
+    {
+        Capability = AICapability.Chat,
+        Data = new List<ChatMessage>
+        {
+            new(ChatRole.Tool, [new FunctionResultContent("tc_001", result)]),
+        },
+    };
 
     private AIAuditLogService CreateService(AIAuditLogOptions options)
     {

@@ -25,7 +25,7 @@ public class RemoveUmbracoContentItemToolTests
 
     public RemoveUmbracoContentItemToolTests()
     {
-        _tool = new RemoveUmbracoContentItemTool(_contentEditingServiceMock.Object, _dispatcherMock.Object, _authorizerMock.Object, new PropertyEditorCollection(new DataEditorCollection(() => [])), Mock.Of<IJsonSerializer>());
+        _tool = new RemoveUmbracoContentItemTool(_contentEditingServiceMock.Object, _dispatcherMock.Object, _authorizerMock.Object, new PropertyEditorCollection(new DataEditorCollection(() => [])), Mock.Of<IJsonSerializer>(), Mock.Of<ITemplateService>());
     }
 
     [Fact]

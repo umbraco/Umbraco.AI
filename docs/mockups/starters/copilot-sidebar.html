@@ -1,0 +1,171 @@
+<!doctype html>
+<!--
+  Project starter: the contextual Copilot sidebar — a docked panel over whatever the editor is
+  working on (not a full section; compare docs/mockups/starters/copilot-workspace.html for that).
+  Copied from, at commit c6643b80c76a1025009838ff1d993e7c52901b27:
+    Umbraco.AI.Agent.Copilot/src/.../copilot/components/sidebar/copilot-sidebar.element.ts
+      (fixed right panel, 450px, slides over the page — doesn't push a split-panel column like
+      Copilot Workspace's menu area does)
+
+  The page behind the panel is only context — a plain content editor, trimmed down. Replace the
+  panel's message thread/content for a feature's own screen; the page behind rarely needs to change.
+-->
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Mockup: Copilot sidebar</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@umbraco-ui/uui@2/dist/themes/light.css">
+	<link rel="stylesheet" href="_mockup.css">
+	<script type="module" src="_mockup.js"></script>
+	<style>
+		/* ---- Copilot sidebar's own chrome, not in the general starter CSS ---- */
+		.copilot-sidebar {
+			position: fixed;
+			top: 60px; /* below the app header, matching the real panel sitting over the page content */
+			right: 0;
+			bottom: 0;
+			width: 450px;
+			max-width: 90vw;
+			background: var(--uui-color-surface);
+			border-left: 1px solid var(--uui-color-border);
+			display: flex;
+			flex-direction: column;
+			z-index: 5;
+		}
+		.copilot-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 0 var(--uui-size-space-4) 0 var(--uui-size-space-5);
+			border-bottom: 1px solid var(--uui-color-border);
+			background: var(--uui-color-surface-alt);
+			height: 60px;
+			box-sizing: border-box;
+			flex: none;
+		}
+		.copilot-header-title {
+			font-weight: 600;
+			margin: 0;
+		}
+		.copilot-header-actions {
+			display: flex;
+			gap: var(--uui-size-space-1);
+		}
+		.copilot-length-meter {
+			height: 2px;
+			background: var(--uui-color-surface-alt);
+			flex: none;
+		}
+		.copilot-length-meter-fill {
+			height: 100%;
+			width: 35%;
+			background: var(--uui-color-default);
+			opacity: 0.35;
+		}
+		.copilot-content {
+			flex: 1;
+			overflow: auto;
+			display: flex;
+			flex-direction: column;
+			gap: var(--uui-size-space-5);
+			padding: var(--uui-size-layout-1);
+		}
+		.copilot-msg {
+			display: flex;
+			flex-direction: column;
+		}
+		.copilot-msg.user {
+			align-items: flex-end;
+		}
+		.copilot-bubble {
+			max-width: 85%;
+			padding: var(--uui-size-space-4) var(--uui-size-space-5);
+			border-radius: var(--uui-border-radius-3, 12px);
+			line-height: 1.5;
+		}
+		.copilot-msg.user .copilot-bubble {
+			background: var(--uui-color-current);
+			color: var(--uui-color-current-contrast);
+		}
+		.copilot-msg.assistant .copilot-bubble {
+			background: var(--uui-color-surface-alt);
+		}
+		.copilot-composer {
+			flex: none;
+			display: flex;
+			gap: var(--uui-size-space-3);
+			align-items: flex-end;
+			padding: var(--uui-size-space-5);
+			border-top: 1px solid var(--uui-color-border);
+		}
+		.copilot-composer uui-textarea {
+			flex: 1;
+		}
+		/* Trimmed-down content editor behind the panel, for context only. */
+		.page-behind .property {
+			max-width: 860px;
+		}
+	</style>
+</head>
+<body class="uui-font uui-text">
+	<header class="app-header">
+		<span class="logo">Umbraco</span>
+		<uui-tab-group class="sections">
+			<uui-tab label="Content" active>Content</uui-tab>
+			<uui-tab label="Media">Media</uui-tab>
+			<uui-tab label="Settings">Settings</uui-tab>
+		</uui-tab-group>
+		<div class="apps">
+			<uui-button look="primary" compact label="User"><uui-avatar name="Matt Brailsford"></uui-avatar></uui-button>
+		</div>
+	</header>
+
+	<div class="section">
+		<nav class="section-sidebar">
+			<h3>Content</h3>
+			<uui-menu-item label="Checkout" active>
+				<uui-icon slot="icon" name="icon-document"></uui-icon>
+			</uui-menu-item>
+		</nav>
+		<main class="section-main page-behind">
+			<div class="body-layout">
+				<div class="header">
+					<div class="header-content workspace-header">
+						<uui-icon class="entity-icon" name="icon-document"></uui-icon>
+						<span class="title">Checkout</span>
+					</div>
+				</div>
+				<div class="main">
+					<uui-box class="group" headline="Content">
+						<div class="property">
+							<div><uui-label>Page title</uui-label></div>
+							<div><uui-input label="Page title" value="Checkout"></uui-input></div>
+						</div>
+					</uui-box>
+				</div>
+			</div>
+		</main>
+	</div>
+
+	<aside class="copilot-sidebar">
+		<div class="copilot-header">
+			<h3 class="copilot-header-title">Copilot</h3>
+			<div class="copilot-header-actions">
+				<uui-button compact look="default" label="Clear"><uui-icon name="icon-trash"></uui-icon></uui-button>
+				<uui-button compact look="default" label="Close"><uui-icon name="icon-delete"></uui-icon></uui-button>
+			</div>
+		</div>
+		<div class="copilot-length-meter"><div class="copilot-length-meter-fill"></div></div>
+		<div class="copilot-content">
+			<!-- Replace from here: the feature's own message thread/content for this panel. -->
+			<div class="copilot-msg user"><div class="copilot-bubble">Can you tighten up this page title?</div></div>
+			<div class="copilot-msg assistant"><div class="copilot-bubble">"Checkout" is already pretty tight — did you want something more descriptive, like "Checkout — Review & Pay"?</div></div>
+			<!-- Replace to here. -->
+		</div>
+		<div class="copilot-composer">
+			<uui-textarea label="Message" placeholder="Ask Copilot about this page…" rows="1"></uui-textarea>
+			<uui-button look="primary" label="Send"><uui-icon name="icon-send"></uui-icon></uui-button>
+		</div>
+	</aside>
+</body>
+</html>

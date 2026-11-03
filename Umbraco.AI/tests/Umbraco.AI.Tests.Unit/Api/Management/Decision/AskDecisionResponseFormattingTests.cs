@@ -16,6 +16,7 @@
 // only its service dependencies are mocked, exactly as AskDecisionControllerTests does.
 #pragma warning disable UMBRACOAI_DECISION // Tests the experimental Decision controller
 
+using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
@@ -41,7 +42,13 @@ public class AskDecisionResponseFormattingTests : IAsyncLifetime
         builder.WebHost.UseTestServer();
         builder.Services.AddControllers()
             .AddApplicationPart(typeof(AskDecisionResponseFormattingTests).Assembly)
-            .AddJsonOptions(Umbraco.AI.Web.Constants.ManagementApi.ApiName, _ => { });
+            .AddJsonOptions(Umbraco.AI.Web.Constants.ManagementApi.ApiName, options =>
+            {
+                // Mirror the naming policies UmbracoAIUmbracoBuilderExtensions.AddJsonOptions applies to the
+                // Management API, so key casing is asserted against what real traffic gets.
+                options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+            });
 
         _app = builder.Build();
         _app.MapControllers();
@@ -73,6 +80,19 @@ public class AskDecisionResponseFormattingTests : IAsyncLifetime
     [Fact]
     public async Task ScoreResponse_IncludesTheScoreDiscriminator()
         => (await GetJsonAsync("/decision-response-formatting-test/score")).ShouldContain("\"$type\":\"score\"");
+
+    // Option keys are opaque and compared exactly, so the probabilities must come back keyed by the
+    // same keys the caller sent, not run through the API's camelCase dictionary key policy.
+    [Fact]
+    public async Task ChoiceResponse_KeepsOptionKeyCasingInProbabilities()
+    {
+        var json = await GetJsonAsync("/decision-response-formatting-test/choice-mixed-case");
+
+        // Shouldly's string ShouldContain ignores case by default, which would hide exactly this bug.
+        json.ShouldContain("\"choice\":\"Billing\"", Case.Sensitive);
+        json.ShouldContain("\"Billing\":0.91", Case.Sensitive);
+        json.ShouldContain("\"SALES\":0.09", Case.Sensitive);
+    }
 }
 
 // Mirrors AskDecisionController's [JsonOptionsName]-tagged shape (see AskDecisionRequestFormattingTests'
@@ -111,6 +131,24 @@ public class DecisionResponseFormattingTestController : ControllerBase
             {
                 Instructions = "Which topic?",
                 Options = [new DecisionOptionModel { Key = "seo" }, new DecisionOptionModel { Key = "other" }],
+            });
+    }
+
+    [HttpGet("choice-mixed-case")]
+    public Task<IActionResult> ChoiceMixedCase()
+    {
+        var decisionService = ServiceAnswering(new AIChoiceDecisionAnswer
+        {
+            Choice = "Billing",
+            Probabilities = new Dictionary<string, double> { ["Billing"] = 0.91, ["SALES"] = 0.09 },
+        });
+
+        return AskAsync(
+            decisionService,
+            new ChoiceDecisionQuestionModel
+            {
+                Instructions = "Which team?",
+                Options = [new DecisionOptionModel { Key = "Billing" }, new DecisionOptionModel { Key = "SALES" }],
             });
     }
 

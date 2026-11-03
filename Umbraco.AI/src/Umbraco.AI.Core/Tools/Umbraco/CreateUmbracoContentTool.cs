@@ -82,6 +82,8 @@ public class CreateUmbracoContentTool(
             ParentKey = args.ParentKey,
             Properties = properties,
             Variants = [new VariantModel { Name = args.Name, Culture = args.Culture }],
+            // TemplateKey is deliberately left null: when a new item is first saved with no template,
+            // the CMS assigns the content type's default template itself, the same as a backoffice create.
         };
 
         var attempt = await contentEditingService.CreateAsync(createModel, authResult.UserKey!.Value);

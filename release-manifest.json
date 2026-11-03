@@ -27,6 +27,7 @@
         "Umbraco.AI.ZAI"
     ],
     "exclude": [
+        "Umbraco.AI.Agent.Copilot",
         "Umbraco.AI.Agent.UI"
     ]
 }

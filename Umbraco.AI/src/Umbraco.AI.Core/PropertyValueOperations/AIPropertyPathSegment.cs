@@ -27,7 +27,11 @@ public abstract record AIPropertyPathSegment
     /// <summary>
     /// Creates a block key segment.
     /// </summary>
-    /// <param name="key">The block key (the <c>contentKey</c> of an item in the parent value's <c>contentData</c>).</param>
+    /// <param name="key">
+    /// The block key: the layout <c>key</c> of the item (preferred, and the only unambiguous choice
+    /// when a reusable element repeats), or the <c>contentKey</c> of an item in the parent value's
+    /// <c>contentData</c>. Library (external) content cannot be edited inline.
+    /// </param>
     /// <returns>The new segment.</returns>
     public static AIPropertyPathSegment ForBlock(Guid key) => new BlockKeySegment(key);
 
@@ -40,6 +44,6 @@ public abstract record AIPropertyPathSegment
     /// <summary>
     /// Identifies a block (item) within a collection-shaped property value by its key.
     /// </summary>
-    /// <param name="BlockKey">The block <c>contentKey</c>.</param>
+    /// <param name="BlockKey">The block's layout <c>key</c>, or its <c>contentKey</c>.</param>
     public sealed record BlockKeySegment(Guid BlockKey) : AIPropertyPathSegment;
 }

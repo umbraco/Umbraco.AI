@@ -158,7 +158,7 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher, IAIP
             if (innerContentTypeKey is null)
             {
                 return Fail(AIPropertyValueOperationError.Codes.BlockNotFound,
-                    $"Block '{blockKey}' was not found inside property '{propertyAlias}', or this editor does not support nested items.");
+                    $"Block '{blockKey}' was not found inside property '{propertyAlias}', is shared Library content that cannot be edited inline, or this editor does not support nested items.");
             }
 
             var nextPropertyAlias = ((AIPropertyPathSegment.PropertyAliasSegment)path[i + 2]).Alias;

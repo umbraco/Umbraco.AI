@@ -62,7 +62,7 @@ public sealed class BlockGridPropertyValueHandler : BlockEditorHandlerBase
                 Details: new JsonObject { ["blockKey"] = blockKey.ToString() }));
         }
 
-        return AIValidationResult.Valid;
+        return base.ValidateRemoveItem(value, blockKey, context);
     }
 
     private bool IsNestedInArea(JsonObject envelope, Guid contentKey)
@@ -105,7 +105,8 @@ public sealed class BlockGridPropertyValueHandler : BlockEditorHandlerBase
                     continue;
                 }
 
-                if (BlockEnvelopeOps.GetGuid(itemObj, BlockEnvelopeOps.ContentKeyPropertyName) == contentKey)
+                if (BlockEnvelopeOps.GetGuid(itemObj, BlockEnvelopeOps.KeyPropertyName) == contentKey
+                    || BlockEnvelopeOps.GetGuid(itemObj, BlockEnvelopeOps.ContentKeyPropertyName) == contentKey)
                 {
                     return true;
                 }
@@ -124,8 +125,10 @@ public sealed class BlockGridPropertyValueHandler : BlockEditorHandlerBase
     protected override JsonObject BuildLayoutEntry(Guid contentKey, Guid? settingsKey, AIAddItemArgs args)
     {
         // v1 emits root-level entries with no areas and a sensible default span.
+        // CMS 19 layout items carry their own key; the CMS backfills key = contentKey for legacy items.
         var entry = new JsonObject
         {
+            ["key"] = contentKey,
             ["contentKey"] = contentKey,
             ["areas"] = new JsonArray(),
             ["columnSpan"] = 12,

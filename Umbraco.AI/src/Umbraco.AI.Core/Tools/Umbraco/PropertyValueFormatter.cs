@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Html;
 using Umbraco.Cms.Core.Models.Blocks;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Extensions;
+using CmsConstants = Umbraco.Cms.Core.Constants;
 
 namespace Umbraco.AI.Core.Tools.Umbraco;
 
@@ -62,8 +63,11 @@ internal static partial class PropertyValueFormatter
         return editorAlias switch
         {
             "Umbraco.RichText" or "Umbraco.TinyMCE" => FormatRichText(value),
-            "Umbraco.MediaPicker3" => FormatMediaPicker(value),
-            "Umbraco.MultiNodeTreePicker" => FormatContentPicker(value),
+            CmsConstants.PropertyEditors.Aliases.MediaPicker3
+                or CmsConstants.PropertyEditors.Aliases.SingleMediaPicker => FormatMediaPicker(value),
+            CmsConstants.PropertyEditors.Aliases.MultiNodeTreePicker
+                or CmsConstants.PropertyEditors.Aliases.MultipleDocumentPicker
+                or CmsConstants.PropertyEditors.Aliases.MultipleMemberPicker => FormatContentPicker(value),
             _ => FormatElementOrDefault(value, culture, depth),
         };
     }
@@ -103,7 +107,7 @@ internal static partial class PropertyValueFormatter
 
     private static object? FormatMediaPicker(object? value)
     {
-        // MediaPicker3 typically resolves to IPublishedContent or IEnumerable<IPublishedContent>
+        // MediaPicker3 (and the single media picker) typically resolve to IPublishedContent or IEnumerable<IPublishedContent>
         if (value is IPublishedContent media)
         {
             return new { name = media.Name, url = UrlOrNull(media), mediaType = media.ContentType.Alias };

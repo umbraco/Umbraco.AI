@@ -67,6 +67,46 @@ public class PropertyValueFormatterPickerTests : IDisposable
         value.GetType().GetProperty("url")!.GetValue(value).ShouldBeNull();
     }
 
+    [Theory]
+    [InlineData(CmsConstants.PropertyEditors.Aliases.MediaPicker3)]
+    [InlineData(CmsConstants.PropertyEditors.Aliases.SingleMediaPicker)]
+    public void ExtractProperties_MediaPickers_AreFormattedAsMedia(string editorAlias)
+    {
+        var picked = new Mock<IPublishedContent>();
+        picked.SetupGet(x => x.Name).Returns("Hero");
+        picked.SetupGet(x => x.ContentType).Returns(BuildContentType("Image", PublishedItemType.Media));
+
+        var value = Format(editorAlias, picked.Object);
+
+        value!.GetType().GetProperty("mediaType")!.GetValue(value).ShouldBe("Image");
+        value.GetType().GetProperty("name")!.GetValue(value).ShouldBe("Hero");
+    }
+
+    [Fact]
+    public void ExtractProperties_MultipleDocumentPicker_KeepsTheContentUrl()
+    {
+        var picked = new Mock<IPublishedContent>();
+        picked.SetupGet(x => x.Key).Returns(Guid.NewGuid());
+        picked.SetupGet(x => x.Name).Returns("Home");
+        picked.SetupGet(x => x.ContentType).Returns(BuildContentType("page", PublishedItemType.Content));
+
+        var value = Format(CmsConstants.PropertyEditors.Aliases.MultipleDocumentPicker, new[] { picked.Object });
+
+        var item = ((Array)value!).GetValue(0)!;
+        item.GetType().GetProperty("name")!.GetValue(item).ShouldBe("Home");
+        item.GetType().GetProperty("url")!.GetValue(item).ShouldBe("/url");
+    }
+
+    [Fact]
+    public void ExtractProperties_MultipleMemberPicker_FormatsMembersWithoutAUrl()
+    {
+        var value = Format(CmsConstants.PropertyEditors.Aliases.MultipleMemberPicker, new[] { BuildMember("Jane") });
+
+        var item = ((Array)value!).GetValue(0)!;
+        item.GetType().GetProperty("name")!.GetValue(item).ShouldBe("Jane");
+        item.GetType().GetProperty("url")!.GetValue(item).ShouldBeNull();
+    }
+
     private static IPublishedContent BuildMember(string name)
     {
         var member = new Mock<IPublishedContent>();

@@ -24,9 +24,9 @@ dotnet add package Umbraco.AI.ZAI
 
 ## Requirements
 
-- Umbraco CMS 18.0.0+
-- Umbraco.AI 18.0.0+
-- .NET 10.0
+- Umbraco CMS 19.0.0+
+- Umbraco.AI 19.0.0+
+- .NET 11.0
 - Z.AI API key (from <https://z.ai/model-api>)
 
 ## Configuration

@@ -16,7 +16,7 @@ This guide explains how to contribute to the Umbraco.AI monorepo, covering branc
 
 ### Prerequisites
 
-- .NET 10.0 SDK
+- .NET 11.0 SDK
 - Node.js 24.x
 - Git
 - SQL Server or SQLite (for database development)
@@ -69,10 +69,10 @@ Branch names are version-prefixed so that each major version (which tracks the U
 
 | Pattern                     | Description                          | Example                             |
 | --------------------------- | ------------------------------------ | ----------------------------------- |
-| `vN/dev`                    | Active development for version N     | `v18/dev`                           |
-| `vN/main`                   | Last released state for version N    | `v18/main`                          |
-| `vN/topic/<anything>`       | Any work branch for version N        | `v18/topic/add-embeddings`          |
-| `vN/release/<anything>`     | Release preparation for version N    | `v18/release/2026.06.1`             |
+| `vN/dev`                    | Active development for version N     | `v19/dev`                           |
+| `vN/main`                   | Last released state for version N    | `v19/main`                          |
+| `vN/topic/<anything>`       | Any work branch for version N        | `v19/topic/add-embeddings`          |
+| `vN/release/<anything>`     | Release preparation for version N    | `v19/release/2026.06.1`             |
 | `vN/hotfix/<anything>`      | Hotfix branch for version N          | `v17/hotfix/2026.06.1`              |
 | `claude/<anything>`         | Claude Code automation branches      | `claude/add-streaming-abc123`       |
 
@@ -80,10 +80,11 @@ Branch names are version-prefixed so that each major version (which tracks the U
 
 | CMS Version | AI Branches               | Policy                |
 | ----------- | ------------------------- | --------------------- |
+| v19 (pre-release) | `v19/dev` / `v19/main` | Features + bug fixes  |
 | v18 (STS)   | `v18/dev` / `v18/main`   | Features + bug fixes  |
 | v17 (LTS)   | `v17/dev` / `v17/main`   | Features + bug fixes  |
 
-The GitHub default branch always points to the latest version's `dev` (currently `v18/dev`).
+The GitHub default branch always points to the latest version's `dev` (currently `v18/dev`; it moves to `v19/dev` when v19 ships).
 
 ### Recommended Naming Conventions
 
@@ -92,7 +93,7 @@ The GitHub default branch always points to the latest version's `dev` (currently
 - `N` is the CMS major version
 - `YYYY.MM` = Year and month of the release
 - Trailing `.N` = Incrementing release number within that month
-- Example: `v18/release/2026.01.1` for the first January 2026 release on v18
+- Example: `v19/release/2026.01.1` for the first January 2026 release on v19
 
 **Hotfix branches:** `vN/hotfix/YYYY.MM.N`
 
@@ -102,7 +103,7 @@ The GitHub default branch always points to the latest version's `dev` (currently
 
 Use a topic branch for any piece of work: a feature, a fix, a refactor, docs or tooling.
 
-- Example: `v18/topic/add-streaming-support`
+- Example: `v19/topic/add-streaming-support`
 - Example: `v17/topic/backport-split-view-fix`
 
 `vN/feature/<name>` is the old name for this. Branches already open under it still push and build, but
@@ -113,10 +114,10 @@ new branches should use `vN/topic/`.
 **Correct:**
 
 ```bash
-v18/topic/add-streaming-support
-v18/topic/improve-context-handling
+v19/topic/add-streaming-support
+v19/topic/improve-context-handling
 v17/topic/backport-split-view-fix
-v18/release/2026.01.1      # Calendar-based (recommended)
+v19/release/2026.01.1      # Calendar-based (recommended)
 v17/hotfix/2026.01.1       # Calendar-based with sequence
 ```
 
@@ -162,9 +163,9 @@ This ensures:
 
 ```bash
 # 1. Create a topic branch from the appropriate vN/dev
-git checkout v18/dev
-git pull origin v18/dev
-git checkout -b v18/topic/add-embeddings
+git checkout v19/dev
+git pull origin v19/dev
+git checkout -b v19/topic/add-embeddings
 
 # 2. Make changes in the product directory
 # Edit: Umbraco.AI/src/Umbraco.AI.Core/...
@@ -174,7 +175,7 @@ dotnet build Umbraco.AI/Umbraco.AI.slnx
 dotnet test Umbraco.AI/Umbraco.AI.slnx
 
 # 4. Test in demo site
-cd demos/v18/Umbraco.AI.DemoSite
+cd demos/v19/Umbraco.AI.DemoSite
 dotnet run
 
 # 5. Commit changes
@@ -184,7 +185,7 @@ git commit -m "feat(core): add embedding support
 Implements IChatClient.EmbeddAsync using M.E.AI abstractions"
 
 # 6. Push and create PR targeting vN/dev
-git push -u origin v18/topic/add-embeddings
+git push -u origin v19/topic/add-embeddings
 ```
 
 ### Feature Development (Cross-Product)
@@ -193,8 +194,8 @@ When a feature spans multiple products (e.g., Core + Agent):
 
 ```bash
 # 1. Create a topic branch from the appropriate vN/dev
-git checkout v18/dev
-git checkout -b v18/topic/shared-context
+git checkout v19/dev
+git checkout -b v19/topic/shared-context
 
 # 2. Make changes to both products
 # Edit: Umbraco.AI/src/Umbraco.AI.Core/...
@@ -204,7 +205,7 @@ git checkout -b v18/topic/shared-context
 dotnet build Umbraco.AI.local.slnx
 
 # 4. Test in demo site
-cd demos/v18/Umbraco.AI.DemoSite
+cd demos/v19/Umbraco.AI.DemoSite
 dotnet run
 
 # 5. Commit atomic changes
@@ -215,7 +216,7 @@ git commit -m "feat(core,agent): add shared context handling
 - Agent: Implement context sharing between agents"
 
 # 6. Push and create PR targeting vN/dev
-git push -u origin v18/topic/shared-context
+git push -u origin v19/topic/shared-context
 ```
 
 ### Backport Workflow
@@ -223,7 +224,7 @@ git push -u origin v18/topic/shared-context
 When a fix or feature also applies to an older supported version:
 
 ```bash
-# 1. Branch from the older version's dev — NOT from v18/dev
+# 1. Branch from the older version's dev — NOT from v19/dev
 git checkout v17/dev
 git pull origin v17/dev
 git checkout -b v17/topic/backport-split-view-fix
@@ -235,7 +236,7 @@ git cherry-pick <commit-sha>
 git push -u origin v17/topic/backport-split-view-fix
 ```
 
-Do **not** forward-merge `v17/dev` into `v18/dev` — each version line is maintained independently.
+Do **not** forward-merge `v17/dev` into `v19/dev` — each version line is maintained independently.
 
 ### Frontend Development
 
@@ -295,7 +296,7 @@ npm run build:agent
 dotnet pack Umbraco.AI.Agent/Umbraco.AI.Agent.slnx
 ```
 
-**Why this matters:** if you skip step 2, the resulting `*.Web.StaticAssets.nupkg` will contain only `lib/net10.0/*.dll` — its `staticwebassets/` folder will be empty. The backoffice composers will register at runtime but no UI will render, and there is no build-time signal that anything is wrong.
+**Why this matters:** if you skip step 2, the resulting `*.Web.StaticAssets.nupkg` will contain only `lib/net11.0/*.dll` — its `staticwebassets/` folder will be empty. The backoffice composers will register at runtime but no UI will render, and there is no build-time signal that anything is wrong.
 
 **Frontend dependency order:** `npm run build` runs the workspace targets sequentially (`core → prompt → agent → agent-ui → copilot`). When packing an add-on locally, build `core` first if you haven't already, since add-on frontends consume the core bundle.
 
@@ -371,7 +372,7 @@ Before submitting a PR:
 
 ## Release Process
 
-Each product is versioned and released independently using Nerdbank.GitVersioning (NBGV). Package major versions track the Umbraco CMS major version — all v18 packages ship as `18.x.x`, all v17 packages as `17.x.x`.
+Each product is versioned and released independently using Nerdbank.GitVersioning (NBGV). Package major versions track the Umbraco CMS major version — all v19 packages ship as `19.x.x`, all v18 packages as `18.x.x`, all v17 packages as `17.x.x`.
 
 ### Release Workflow
 
@@ -380,9 +381,9 @@ Each product is versioned and released independently using Nerdbank.GitVersionin
 Branch from the appropriate `vN/dev`:
 
 ```bash
-git checkout v18/dev
-git pull origin v18/dev
-git checkout -b v18/release/2026.06.1
+git checkout v19/dev
+git pull origin v19/dev
+git checkout -b v19/release/2026.06.1
 ```
 
 Or use the `/release-prepare` skill which handles this automatically.
@@ -426,7 +427,7 @@ Edit each product's `version.json` in the manifest:
 ```bash
 git add release-manifest.json Umbraco.AI/version.json
 git commit -m "chore(release): prepare 2026.06.1"
-git push -u origin v18/release/2026.06.1
+git push -u origin v19/release/2026.06.1
 ```
 
 #### 4. CI/CD Build Pipeline
@@ -487,7 +488,7 @@ Queue a run of the `Umbraco.AI` pipeline on the release branch with **Publish pa
 The run builds, tests and packs as usual, then its **Release** stage waits for approval in the `Umbraco AI Release` environment. Once approved, it:
 
 1. Publishes NuGet packages to **NuGet.org**
-2. Publishes npm packages to **npm**, moving each package's labels only upwards (so a v17 release never takes `latest` from v18)
+2. Publishes npm packages to **npm**, moving each package's labels only upwards (so a v17 release never takes `latest` from v19)
 3. Creates a git tag per product: `Umbraco.AI@18.1.0`, `Umbraco.AI.OpenAI@18.0.1`
 4. Creates one GitHub release, named `YYYY.MM.N` from the date it was published, which Slack's GitHub app announces
 
@@ -515,21 +516,21 @@ This will:
 
 ```bash
 # Merge to vN/main
-git checkout v18/main
-git pull origin v18/main
-git merge v18/release/2026.06.1 --no-ff
-git push origin v18/main
+git checkout v19/main
+git pull origin v19/main
+git merge v19/release/2026.06.1 --no-ff
+git push origin v19/main
 
 # Merge vN/main to vN/dev and bump versions
-git checkout v18/dev
-git pull origin v18/dev
-git merge v18/main --no-ff
+git checkout v19/dev
+git pull origin v19/dev
+git merge v19/main --no-ff
 # Bump version.json for each released product (patch increment)
-git push origin v18/dev
+git push origin v19/dev
 
 # Clean up release branch
-git branch -d v18/release/2026.06.1
-git push origin --delete v18/release/2026.06.1
+git branch -d v19/release/2026.06.1
+git push origin --delete v19/release/2026.06.1
 ```
 
 **Automatic Cleanup:** When you merge to `vN/main` or `vN/dev`, the `post-merge` git hook automatically removes `release-manifest.json` and commits the cleanup.
@@ -706,7 +707,7 @@ npm run changelog -- --product=Umbraco.AI --unreleased
 1. **Create release branch:**
 
     ```bash
-    git checkout -b v18/release/2026.06.1
+    git checkout -b v19/release/2026.06.1
     ```
 
 2. **Create release manifest:**
@@ -744,7 +745,7 @@ npm run changelog -- --product=Umbraco.AI --unreleased
 8. **Push release branch:**
 
     ```bash
-    git push -u origin v18/release/2026.06.1
+    git push -u origin v19/release/2026.06.1
     ```
 
 9. **Azure DevOps validates and builds** — changelog validation runs automatically on `vN/release/*` and `vN/hotfix/*` branches.

@@ -170,12 +170,12 @@ Web follows Umbraco CMS Management API conventions:
 
 ## Target Framework
 
-- .NET 10.0 (`net10.0`)
+- .NET 11.0 (`net11.0`)
 - Uses Central Package Management (`Directory.Packages.props`)
 - Nullable reference types enabled
 
 ## Dependencies
 
-- Umbraco CMS 18.x
-- Umbraco.AI 18.x
-- Entity Framework Core 10.x
+- Umbraco CMS 19.x
+- Umbraco.AI 19.x
+- Entity Framework Core 11.x

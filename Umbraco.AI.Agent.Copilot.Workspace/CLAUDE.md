@@ -146,13 +146,13 @@ Follows the same barrel-export registration pattern as every other Umbraco.AI fr
 
 ## Target Framework
 
-- .NET 10.0 (`net10.0`)
+- .NET 11.0 (`net11.0`)
 - Uses Central Package Management (`Directory.Packages.props`)
 - Nullable reference types enabled
 
 ## Dependencies
 
-- Umbraco CMS 18.x
-- Umbraco.AI 18.x
-- Umbraco.AI.Agent 18.x
-- Entity Framework Core 10.x
+- Umbraco CMS 19.x
+- Umbraco.AI 19.x
+- Umbraco.AI.Agent 19.x
+- Entity Framework Core 11.x

@@ -12,9 +12,9 @@ and score decisions, without prompting a chat model and parsing text.
 
 ### Requirements
 
-- Umbraco CMS 18.0.0+
-- Umbraco.AI 18.6.0+
-- .NET 10.0
+- Umbraco CMS 19.0.0+
+- Umbraco.AI 19.0.0+
+- .NET 11.0
 - TypeSafe AI API key
 - The `Umbraco:AI:Experimental:Decision` feature flag enabled
 

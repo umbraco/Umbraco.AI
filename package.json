@@ -65,11 +65,11 @@
         "@hey-api/openapi-ts": "^0.99.0"
     },
     "peerDependencyVersions": {
-        "@umbraco-ai/core": "^18.7.0",
-        "@umbraco-ai/agent": "^18.4.2",
-        "@umbraco-ai/agent-ui": "^18.3.0",
-        "@umbraco-ai/agent-copilot": "^18.2.0",
-        "@umbraco-ai/agent-copilot-workspace": "^18.3.0",
+        "@umbraco-ai/core": "^19.0.0-beta.1",
+        "@umbraco-ai/agent": "^19.0.0-beta.1",
+        "@umbraco-ai/agent-ui": "^19.0.0-beta.1",
+        "@umbraco-ai/agent-copilot": "^19.0.0-beta.1",
+        "@umbraco-ai/agent-copilot-workspace": "^19.0.0-beta.1",
         "@umbraco-cms/backoffice": "^19.0.0-beta1"
     },
     "_comment_peerDependencyVersions": "Default peer dependency version ranges for npm packages. Products can override by defining peerDependencies in their own package.json. Should be kept in sync with minimum versions in Directory.Packages.props."

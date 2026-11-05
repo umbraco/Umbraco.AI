@@ -5,7 +5,7 @@ type: gotcha
 ---
 
 When a public Management API controller needs a new constructor dependency, keep the old
-public constructor. Mark it `[Obsolete("... Will be removed in v20.")]` and have it chain to
+public constructor. Mark it `[Obsolete("... Will be removed in vX.")]` (X per the root `CLAUDE.md` rule) and have it chain to
 the new one, resolving the new dependency via
 `StaticServiceProvider.Instance.GetRequiredService<T>()`. Put `[ActivatorUtilitiesConstructor]`
 on the new constructor.

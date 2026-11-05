@@ -180,7 +180,7 @@ export class UaiFrontendToolRepository {
         "@umbraco-ai/core": "*",
         "@umbraco-ai/agent": "*",
         "@umbraco-ai/agent-ui": "*",
-        "@umbraco-cms/backoffice": "^18.0.0-rc2"
+        "@umbraco-cms/backoffice": "^19.0.0-beta1"
     }
 }
 ```
@@ -296,13 +296,13 @@ This package is frontend-only. Testing approaches:
 ### Debugging Copilot
 
 1. Build copilot: `npm run build:copilot`
-2. Run demo site: `dotnet run --project demos/v18/Umbraco.AI.DemoSite`
+2. Run demo site: `dotnet run --project demos/v19/Umbraco.AI.DemoSite`
 3. Open browser dev tools to see console logs
 4. Check Network tab for AG-UI streaming requests
 
 ## Target Framework
 
-- .NET 10.0 (`net10.0`)
+- .NET 11.0 (`net11.0`)
 - Uses Central Package Management (`Directory.Packages.props`)
 - TypeScript 5.x
 - Vite 7.x for bundling

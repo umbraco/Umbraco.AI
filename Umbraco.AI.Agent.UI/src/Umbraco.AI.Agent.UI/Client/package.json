@@ -16,7 +16,7 @@
         "test": "vitest run"
     },
     "dependencies": {
-        "@umbraco-ai/agent": "^18.0.0",
+        "@umbraco-ai/agent": "^19.0.0-beta.1",
         "@umbraco-cms/backoffice": "^19.0.0-beta1",
         "rxjs": "^7.8.2"
     },

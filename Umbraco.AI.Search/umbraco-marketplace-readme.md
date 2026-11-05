@@ -14,8 +14,8 @@ AI-powered semantic vector search for Umbraco CMS - find content by meaning, not
 
 ### Requirements
 
-- Umbraco CMS 17.0.0+
+- Umbraco CMS 19.0.0+
 - Umbraco.Cms.Search 1.0.0+
 - Umbraco.AI 1.0.0+
-- .NET 10.0
+- .NET 11.0
 - An embedding-capable AI provider (e.g. Umbraco.AI.OpenAI)

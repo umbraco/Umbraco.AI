@@ -113,13 +113,13 @@ floor (1.22.0), so matching on the base is now an option.
 
 ## Dependencies
 
-- Umbraco CMS 18.x
-- Umbraco.AI 18.x
+- Umbraco CMS 19.x
+- Umbraco.AI 19.x
 - Google.GenAI
 
 ## Target Framework
 
-- .NET 10.0 (`net10.0`)
+- .NET 11.0 (`net11.0`)
 - Uses Central Package Management (`Directory.Packages.props`)
 - Nullable reference types enabled
 

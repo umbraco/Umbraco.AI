@@ -85,13 +85,13 @@ Live model IDs are fetched dynamically from `GET /models`, not hard-coded. As of
 
 ## Dependencies
 
-- Umbraco CMS 18.x
-- Umbraco.AI 18.x
+- Umbraco CMS 19.x
+- Umbraco.AI 19.x
 - Microsoft.Extensions.AI.OpenAI (transitively brings the `OpenAI` .NET SDK)
 
 ## Target Framework
 
-- .NET 10.0 (`net10.0`)
+- .NET 11.0 (`net11.0`)
 - Uses Central Package Management (`Directory.Packages.props`)
 - Nullable reference types enabled
 

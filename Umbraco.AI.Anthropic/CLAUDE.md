@@ -103,13 +103,13 @@ Values prefixed with `$` are resolved from `IConfiguration` (e.g., `"$Umbraco:AI
 
 ## Dependencies
 
-- Umbraco CMS 18.x
-- Umbraco.AI 18.x
+- Umbraco CMS 19.x
+- Umbraco.AI 19.x
 - Anthropic SDK
 
 ## Target Framework
 
-- .NET 10.0 (`net10.0`)
+- .NET 11.0 (`net11.0`)
 - Uses Central Package Management (`Directory.Packages.props`)
 - Nullable reference types enabled
 

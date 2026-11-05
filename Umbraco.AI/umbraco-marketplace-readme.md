@@ -16,6 +16,6 @@ The official AI integration layer for Umbraco CMS - connect to any AI provider t
 
 ### Requirements
 
-- Umbraco CMS 17.0.0+
-- .NET 10.0
+- Umbraco CMS 19.0.0+
+- .NET 11.0
 - At least one provider package (e.g., Umbraco.AI.OpenAI)

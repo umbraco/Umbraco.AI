@@ -26,8 +26,8 @@ public class ToolCallGraderConfig
     [AIField(
         Label = "Validation Mode",
         Description = "How to validate tool calls",
-        EditorUiAlias = "Umb.PropertyEditorUi.Dropdown",
-        EditorConfig = "[{\"alias\":\"multiple\",\"value\":false},{\"alias\":\"items\",\"value\":[\"Any\",\"All\",\"Exact\",\"None\"]}]",
+        EditorUiAlias = "Umb.PropertyEditorUi.Dropdown.Single",
+        EditorConfig = "[{\"alias\":\"items\",\"value\":[\"Any\",\"All\",\"Exact\",\"None\"]}]",
         SortOrder = 2)]
     [JsonConverter(typeof(DropdownStringJsonConverter))]
     public string ValidationMode { get; set; } = "Any";

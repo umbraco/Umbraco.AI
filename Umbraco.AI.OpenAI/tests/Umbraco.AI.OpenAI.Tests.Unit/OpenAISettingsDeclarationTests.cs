@@ -33,6 +33,18 @@ public class OpenAISettingsDeclarationTests
     }
 
     [Theory]
+    [InlineData(typeof(OpenAIChatCapabilitySettings), nameof(OpenAIChatCapabilitySettings.ReasoningEffort))]
+    [InlineData(typeof(OpenAIImageCapabilitySettings), nameof(OpenAIImageCapabilitySettings.Quality))]
+    [InlineData(typeof(OpenAIImageCapabilitySettings), nameof(OpenAIImageCapabilitySettings.Style))]
+    public void SingleChoiceSettings_UseTheSingleChoiceDropdown(Type settings, string property)
+    {
+        // CMS 19's plain Dropdown UI is always multi-select; single choice is its own UI alias.
+        var field = settings.GetProperty(property)!.GetCustomAttribute<AIFieldAttribute>()!;
+
+        field.EditorUiAlias.ShouldBe("Umb.PropertyEditorUi.Dropdown.Single");
+    }
+
+    [Theory]
     [InlineData("o3-mini")]
     [InlineData("gpt-5.6")]
     [InlineData("gpt-6-luna")]

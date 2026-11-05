@@ -358,6 +358,8 @@ public static partial class UmbracoBuilderExtensions
         services.AddSingleton<IAIUsageRecordingService, AIUsageRecordingService>();
         services.AddSingleton<IAIUsageAggregationService, AIUsageAggregationService>();
         services.AddSingleton<IAIUsageAnalyticsService, AIUsageAnalyticsService>();
+        services.AddSingleton<IAIUsageStatisticsReader, AIUsageStatisticsReader>();
+        services.AddSingleton<IAIUsageOverviewService, AIUsageOverviewService>();
 
         // Background jobs for analytics aggregation and cleanup
         services.AddRecurringBackgroundJob<AIUsageHourlyAggregationJob>();

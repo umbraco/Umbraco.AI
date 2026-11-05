@@ -152,10 +152,10 @@ public class AIUsageAnalyticsServiceTests
             .ReturnsAsync((DateTime from, DateTime to, CancellationToken _) =>
                 _records.Where(r => r.Timestamp >= from && r.Timestamp < to).ToList());
 
-        return new AIUsageAnalyticsService(
+        return new AIUsageAnalyticsService(new AIUsageStatisticsReader(
             records.Object,
             statistics.Object,
-            NullLogger<AIUsageAnalyticsService>.Instance);
+            NullLogger<AIUsageStatisticsReader>.Instance));
     }
 
     private void AddDaily(DateTime day, int requests) => _daily.Add(Statistics(day, requests));

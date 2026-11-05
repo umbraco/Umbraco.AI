@@ -38,6 +38,7 @@ public class UsageSummaryController : AnalyticsControllerBase
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Summary statistics for the period.</returns>
     [HttpGet("usage-summary")]
+    [Obsolete("Will be removed in v21")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(UsageSummaryResponseModel), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

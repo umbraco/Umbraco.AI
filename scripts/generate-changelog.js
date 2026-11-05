@@ -12,9 +12,23 @@ function loadConventionalChangelog() {
     return _ConventionalChangelogPromise;
 }
 
+// Products parked on this version line (scripts/parked-products.txt) are not discovered
+function loadParkedProducts() {
+    const file = path.join(__dirname, "parked-products.txt");
+    if (!fs.existsSync(file)) return new Set();
+    return new Set(
+        fs
+            .readFileSync(file, "utf-8")
+            .split(/\r?\n/)
+            .map((l) => l.trim())
+            .filter((l) => l && !l.startsWith("#")),
+    );
+}
+
 // Discover products by convention
 function discoverProducts(rootDir) {
     const products = {};
+    const parked = loadParkedProducts();
 
     // Find all directories matching Umbraco.AI* pattern
     const entries = fs.readdirSync(rootDir, { withFileTypes: true });
@@ -22,6 +36,7 @@ function discoverProducts(rootDir) {
     for (const entry of entries) {
         if (!entry.isDirectory()) continue;
         if (!entry.name.startsWith("Umbraco.AI")) continue;
+        if (parked.has(entry.name)) continue;
 
         const productDir = path.join(rootDir, entry.name);
         const configPath = path.join(productDir, "changelog.config.json");

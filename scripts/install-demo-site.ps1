@@ -193,7 +193,8 @@ if ($cleanVersion) {
 } else {
     dotnet add package Clean
 }
-dotnet add package Umbraco.Automate --version "$VersionMajor.*-*"
+# Parked on the v19 line (no v19 Umbraco.Automate yet, docs/upgrades/v19.md Blockers).
+# dotnet add package Umbraco.Automate --version "$VersionMajor.*-*"
 Pop-Location
 
 # Step 3.3: Set fixed port for consistent development
@@ -216,12 +217,13 @@ $seedDataDestPath = "$DemoSiteDir\SeedData\UmbracoAISeedData.cs"
 New-Item -ItemType Directory -Path (Split-Path $seedDataDestPath) -Force | Out-Null
 Copy-Item -Path $seedDataSourcePath -Destination $seedDataDestPath -Force
 
-# Step 3.6: Configure Umbraco.Automate to share the Umbraco database
-Write-Host "Configuring Umbraco.Automate to share Umbraco database..." -ForegroundColor Green
-$appSettingsPath = "$DemoSiteDir\appsettings.json"
-$appSettings = Get-Content $appSettingsPath -Raw | ConvertFrom-Json
-$appSettings.Umbraco | Add-Member -NotePropertyName "Automate" -NotePropertyValue ([PSCustomObject]@{ UseNamedConnectionString = "umbracoDbDSN" }) -Force
-$appSettings | ConvertTo-Json -Depth 10 | Set-Content $appSettingsPath -Encoding UTF8
+# Parked on the v19 line (docs/upgrades/v19.md, Blockers). Uncomment with the Automate steps.
+# # Step 3.6: Configure Umbraco.Automate to share the Umbraco database
+# Write-Host "Configuring Umbraco.Automate to share Umbraco database..." -ForegroundColor Green
+# $appSettingsPath = "$DemoSiteDir\appsettings.json"
+# $appSettings = Get-Content $appSettingsPath -Raw | ConvertFrom-Json
+# $appSettings.Umbraco | Add-Member -NotePropertyName "Automate" -NotePropertyValue ([PSCustomObject]@{ UseNamedConnectionString = "umbracoDbDSN" }) -Force
+# $appSettings | ConvertTo-Json -Depth 10 | Set-Content $appSettingsPath -Encoding UTF8
 
 # Step 4: Create unified solution
 Write-Host "Creating unified solution..." -ForegroundColor Green
@@ -317,18 +319,19 @@ Add-ProductProjects -ProductFolder "Umbraco.AI.Agent.Copilot.Workspace" -Solutio
 Write-Host "Adding Umbraco.AI.Search projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.Search" -SolutionFolder "Addons/Search"
 
-Write-Host "Adding Umbraco.AI.Automate projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.AI.Automate" -SolutionFolder "Addons/Automate"
-
-# Step 8: Add deploy projects
-Write-Host "Adding Umbraco.AI.Deploy projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.AI.Deploy" -SolutionFolder "Deploy"
-
-Write-Host "Adding Umbraco.AI.Prompt.Deploy projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.AI.Prompt.Deploy" -SolutionFolder "Deploy"
-
-Write-Host "Adding Umbraco.AI.Agent.Deploy projects..." -ForegroundColor Green
-Add-ProductProjects -ProductFolder "Umbraco.AI.Agent.Deploy" -SolutionFolder "Deploy"
+# Parked on the v19 line until Deploy/Automate ship v19 (docs/upgrades/v19.md, Blockers). Uncomment to re-add.
+# Write-Host "Adding Umbraco.AI.Automate projects..." -ForegroundColor Green
+# Add-ProductProjects -ProductFolder "Umbraco.AI.Automate" -SolutionFolder "Addons/Automate"
+#
+# # Step 8: Add deploy projects
+# Write-Host "Adding Umbraco.AI.Deploy projects..." -ForegroundColor Green
+# Add-ProductProjects -ProductFolder "Umbraco.AI.Deploy" -SolutionFolder "Deploy"
+#
+# Write-Host "Adding Umbraco.AI.Prompt.Deploy projects..." -ForegroundColor Green
+# Add-ProductProjects -ProductFolder "Umbraco.AI.Prompt.Deploy" -SolutionFolder "Deploy"
+#
+# Write-Host "Adding Umbraco.AI.Agent.Deploy projects..." -ForegroundColor Green
+# Add-ProductProjects -ProductFolder "Umbraco.AI.Agent.Deploy" -SolutionFolder "Deploy"
 
 # Step 11: Add demo site to solution
 Write-Host "Adding demo site to solution..." -ForegroundColor Green
@@ -456,10 +459,11 @@ if (Test-Path "Umbraco.AI.Agent.Copilot.Workspace\src\Umbraco.AI.Agent.Copilot.W
 #     dotnet add $demoProject reference "Umbraco.AI.Search\src\Umbraco.AI.Search.Startup\Umbraco.AI.Search.Startup.csproj"
 # }
 
-# Automate add-on (single project — no Startup separation)
-if (Test-Path "Umbraco.AI.Automate\src\Umbraco.AI.Automate\Umbraco.AI.Automate.csproj") {
-    dotnet add $demoProject reference "Umbraco.AI.Automate\src\Umbraco.AI.Automate\Umbraco.AI.Automate.csproj"
-}
+# Parked on the v19 line (docs/upgrades/v19.md, Blockers). Uncomment to re-add.
+# # Automate add-on (single project — no Startup separation)
+# if (Test-Path "Umbraco.AI.Automate\src\Umbraco.AI.Automate\Umbraco.AI.Automate.csproj") {
+#     dotnet add $demoProject reference "Umbraco.AI.Automate\src\Umbraco.AI.Automate\Umbraco.AI.Automate.csproj"
+# }
 
 Write-Host ""
 Write-Host "=== Setup Complete! ===" -ForegroundColor Green

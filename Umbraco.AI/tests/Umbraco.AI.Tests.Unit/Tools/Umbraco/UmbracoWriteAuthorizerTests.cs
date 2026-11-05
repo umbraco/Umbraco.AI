@@ -92,6 +92,27 @@ public class UmbracoWriteAuthorizerTests
         result.IsAuthorized.ShouldBeFalse();
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task AuthorizeContentAsync_ReportsInvariantForVariantAccessFromUserGroups(bool groupGrantsAccess)
+    {
+        var groupMock = new Mock<IReadOnlyUserGroup>();
+        groupMock.Setup(x => x.HasAccessToInvariantForVariant).Returns(groupGrantsAccess);
+        var user = CreateUserMock(Guid.NewGuid());
+        user.Setup(x => x.Groups).Returns([groupMock.Object]);
+        var contentKey = Guid.NewGuid();
+        SetCurrentUser(user.Object);
+        _contentPermissionAuthorizerMock
+            .Setup(x => x.IsDeniedAsync(user.Object, contentKey, "Umb.Document.Update"))
+            .ReturnsAsync(false);
+
+        var result = await _authorizer.AuthorizeContentAsync("Umb.Document.Update", contentKey);
+
+        result.IsAuthorized.ShouldBeTrue();
+        result.HasInvariantForVariantAccess.ShouldBe(groupGrantsAccess);
+    }
+
     [Fact]
     public async Task AuthorizeContentAsync_NoCurrentUser_ReturnsDenied()
     {

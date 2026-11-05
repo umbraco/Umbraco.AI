@@ -116,6 +116,12 @@ public class UpdateUmbracoContentTool(
 
         var explicitAliases = (args.PropertyValues ?? []).Keys.ToHashSet();
 
+        if (InvariantForVariantGuard.GetDenialMessage(
+                authResult, existing.ContentType.VariesByCulture(), existing.Properties.Select(p => p.PropertyType), explicitAliases) is { } invariantDenial)
+        {
+            return new UpdateUmbracoContentResult(false, null, invariantDenial);
+        }
+
         var properties = (args.PropertyValues ?? [])
             .Select(kvp => new PropertyValueModel
             {

@@ -1,5 +1,6 @@
 using Umbraco.Cms.Core.Security;
 using Umbraco.Cms.Core.Security.Authorization;
+using Umbraco.Cms.Core.Models;
 
 namespace Umbraco.AI.Core.Tools.Umbraco;
 
@@ -8,9 +9,19 @@ namespace Umbraco.AI.Core.Tools.Umbraco;
 /// </summary>
 public sealed record UmbracoWriteAuthorizationResult(bool IsAuthorized, Guid? UserKey, string? Message)
 {
+    /// <summary>
+    /// Whether the acting user may edit shared (culture-invariant) properties on culture-variant content.
+    /// CMS 19 grants this per user group; without it the CMS silently reverts such edits instead of
+    /// failing, so write tools that touch shared properties must check this and refuse.
+    /// </summary>
+    public bool HasInvariantForVariantAccess { get; init; } = true;
+
     public static UmbracoWriteAuthorizationResult Denied(string message) => new(false, null, message);
 
     public static UmbracoWriteAuthorizationResult Allowed(Guid userKey) => new(true, userKey, null);
+
+    public static UmbracoWriteAuthorizationResult Allowed(Guid userKey, bool hasInvariantForVariantAccess) =>
+        new(true, userKey, null) { HasInvariantForVariantAccess = hasInvariantForVariantAccess };
 }
 
 /// <summary>
@@ -82,7 +93,7 @@ public sealed class UmbracoWriteAuthorizer(
             }
         }
 
-        return UmbracoWriteAuthorizationResult.Allowed(user.Key);
+        return UmbracoWriteAuthorizationResult.Allowed(user.Key, user.HasAccessToInvariantForVariant());
     }
 
     public async Task<UmbracoWriteAuthorizationResult> AuthorizeMediaAsync(Guid? mediaKey)

@@ -25,6 +25,14 @@ namespace Umbraco.AI.Core.Tools.Umbraco;
 internal sealed class ContentEditorValueReader(PropertyEditorCollection propertyEditors, IJsonSerializer jsonSerializer)
 {
     /// <summary>
+    /// Whether the CMS merges partial values for this property on save (block and rich text editors on an
+    /// invariant property), keeping culture-variant block data while reverting shared data.
+    /// </summary>
+    public bool CanMergePartialValues(IProperty property)
+        => propertyEditors.TryGet(property.PropertyType.PropertyEditorAlias, out var editor)
+            && editor.CanMergePartialPropertyValues(property.PropertyType);
+
+    /// <summary>
     /// Gets the property's value in editor format, as a <see cref="JsonNode"/>.
     /// </summary>
     public JsonNode? GetEditorValueNode(IProperty property, string? culture, string? segment)

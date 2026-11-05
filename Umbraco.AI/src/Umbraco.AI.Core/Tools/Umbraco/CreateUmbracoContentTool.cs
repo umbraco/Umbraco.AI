@@ -5,6 +5,7 @@ using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.Cms.Core.Actions;
 using Umbraco.Cms.Core.Models.ContentEditing;
 using Umbraco.Cms.Core.Services;
+using Umbraco.Extensions;
 
 namespace Umbraco.AI.Core.Tools.Umbraco;
 
@@ -70,6 +71,12 @@ public class CreateUmbracoContentTool(
         if (contentType is null)
         {
             return new CreateUmbracoContentResult(false, null, $"Content type '{args.ContentTypeAlias}' was not found.");
+        }
+
+        if (InvariantForVariantGuard.GetDenialMessage(
+                authResult, contentType.VariesByCulture(), contentType.CompositionPropertyTypes, (args.PropertyValues ?? []).Keys) is { } invariantDenial)
+        {
+            return new CreateUmbracoContentResult(false, null, invariantDenial);
         }
 
         var properties = (args.PropertyValues ?? [])

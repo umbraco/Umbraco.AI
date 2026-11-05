@@ -555,6 +555,45 @@ public class AIPropertyValueDispatcherTests
         values["nl-NL"].ShouldBe("Goedendag");
     }
 
+    [Theory]
+    [InlineData(ContentVariation.Culture, true)]
+    [InlineData(ContentVariation.Nothing, false)]
+    public async Task DispatchAsync_SetValue_InBlock_ReportsWhetherNestedPropertyVariesByCulture(ContentVariation textVariations, bool expected)
+    {
+        var (dispatcher, elementTypeKey) = BuildBlockListDispatcher(textVariations);
+        var blockKey = Guid.NewGuid();
+        var request = new AIPropertyValueDispatchRequest(
+            Path: [AIPropertyPathSegment.ForProperty("blocks"), AIPropertyPathSegment.ForBlock(blockKey), AIPropertyPathSegment.ForProperty("text")],
+            Operation: AIPropertyOperation.SetValue,
+            Args: new JsonObject { ["value"] = "x" },
+            RootValue: BuildBlockListValue(blockKey, elementTypeKey, ("nl-NL", "Hallo")),
+            DocumentMetadata: VariantMetadata("nl-NL"));
+
+        var result = await dispatcher.DispatchAsync(request);
+
+        result.Success.ShouldBeTrue();
+        result.NestedVariesByCulture.ShouldBe(expected);
+    }
+
+    [Fact]
+    public async Task DispatchAsync_SetValue_AtRoot_LeavesNestedVariesByCultureUnset()
+    {
+        var dispatcher = BuildDispatcher(
+            handlers: [new FakePropertyValueHandler(TestEditor)],
+            rootProperties: new Dictionary<string, string> { ["contentBlocks"] = TestEditor });
+        var request = new AIPropertyValueDispatchRequest(
+            Path: [AIPropertyPathSegment.ForProperty("contentBlocks")],
+            Operation: AIPropertyOperation.SetValue,
+            Args: new JsonObject { ["value"] = "x" },
+            RootValue: null,
+            DocumentMetadata: Metadata);
+
+        var result = await dispatcher.DispatchAsync(request);
+
+        result.Success.ShouldBeTrue();
+        result.NestedVariesByCulture.ShouldBeNull();
+    }
+
     [Fact]
     public async Task DispatchAsync_SetValue_InBlock_ExplicitVariant_TakesPrecedenceOverFirstDocumentVariant()
     {
@@ -656,6 +695,56 @@ public class AIPropertyValueDispatcherTests
         var nlContent = (JsonArray)items["nl-NL"]["contentData"]!;
         nlContent.Count.ShouldBe(1);
         nlContent[0]!["key"]!.GetValue<Guid>().ShouldBe(result.BlockKey!.Value);
+    }
+
+    [Theory]
+    [InlineData(ContentVariation.Nothing, ContentVariation.Culture, false)]
+    [InlineData(ContentVariation.Culture, ContentVariation.Nothing, true)]
+    public async Task DispatchAsync_SetValue_TwoBlockLevels_NestedVariesByCultureComesFromFirstNestedProperty(
+        ContentVariation firstNestedVariations, ContentVariation leafVariations, bool expected)
+    {
+        // The flag must reflect the first property below the root, not the leaf and not a later level.
+        var outerElementKey = Guid.NewGuid();
+        var innerElementKey = Guid.NewGuid();
+        var contentTypeService = BuildContentTypeServiceWithPropertyTypes(
+            (RootContentTypeKey, [("blocks", "Umbraco.BlockList", ContentVariation.Nothing)]),
+            (outerElementKey, [("items", "Umbraco.BlockList", firstNestedVariations)]),
+            (innerElementKey, [("text", "Umbraco.TextBox", leafVariations)]));
+        var dispatcher = BuildDispatcher(
+            handlers: [new BlockListPropertyValueHandler(contentTypeService)],
+            contentTypeService: contentTypeService);
+
+        var outerBlockKey = Guid.NewGuid();
+        var innerBlockKey = Guid.NewGuid();
+        var leafCulture = leafVariations.HasFlag(ContentVariation.Culture) ? "nl-NL" : null;
+        var innerItems = BuildBlockListValue(innerBlockKey, innerElementKey, (leafCulture, "Hallo"));
+        var rootValue = BuildBlockListValue(outerBlockKey, outerElementKey);
+        ((JsonArray)rootValue["contentData"]![0]!["values"]!).Add(new JsonObject
+        {
+            ["alias"] = "items",
+            ["culture"] = firstNestedVariations.HasFlag(ContentVariation.Culture) ? "nl-NL" : null,
+            ["segment"] = null,
+            ["value"] = innerItems,
+        });
+
+        var request = new AIPropertyValueDispatchRequest(
+            Path:
+            [
+                AIPropertyPathSegment.ForProperty("blocks"),
+                AIPropertyPathSegment.ForBlock(outerBlockKey),
+                AIPropertyPathSegment.ForProperty("items"),
+                AIPropertyPathSegment.ForBlock(innerBlockKey),
+                AIPropertyPathSegment.ForProperty("text"),
+            ],
+            Operation: AIPropertyOperation.SetValue,
+            Args: new JsonObject { ["value"] = "Goedendag" },
+            RootValue: rootValue,
+            DocumentMetadata: VariantMetadata("nl-NL"));
+
+        var result = await dispatcher.DispatchAsync(request);
+
+        result.Success.ShouldBeTrue();
+        result.NestedVariesByCulture.ShouldBe(expected);
     }
 
     private static AIDocumentMetadata VariantMetadata(params string[] cultures) => new(

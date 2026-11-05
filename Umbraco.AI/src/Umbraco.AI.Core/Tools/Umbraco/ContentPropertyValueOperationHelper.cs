@@ -135,6 +135,23 @@ internal static class ContentPropertyValueOperationHelper
             return ContentPropertyValueOperationOutcome.Fail(dispatchResult.Error!.Message);
         }
 
+        // Shared data on culture-variant content: the CMS reverts such edits without an error unless the user's
+        // group has the invariant-for-variant permission, so refuse here. Block and rich text editors are
+        // merged by the CMS instead, keeping culture-variant values inside blocks.
+        if (!authResult.HasInvariantForVariantAccess
+            && content.ContentType.VariesByCulture()
+            && rootProperty is { } sharedRoot
+            && !sharedRoot.PropertyType.VariesByCulture())
+        {
+            var invariantDenial = valueReader.CanMergePartialValues(sharedRoot)
+                ? InvariantForVariantGuard.GetMergeDenialMessage(rootAlias, dispatchResult.NestedVariesByCulture)
+                : InvariantForVariantGuard.GetDenialMessage(authResult, true, [sharedRoot.PropertyType], [rootAlias]);
+            if (invariantDenial is not null)
+            {
+                return ContentPropertyValueOperationOutcome.Fail(invariantDenial);
+            }
+        }
+
         var properties = new List<PropertyValueModel>
         {
             new()

@@ -10,10 +10,17 @@ internal sealed class CapturingHttpMessageHandler : HttpMessageHandler
 {
     public List<string> RequestBodies { get; } = [];
 
+    /// <summary>The headers of every request, lower-cased names mapped to their joined values.</summary>
+    public List<Dictionary<string, string>> RequestHeaders { get; } = [];
+
     protected override async Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,
         CancellationToken cancellationToken)
     {
+        RequestHeaders.Add(request.Headers.ToDictionary(
+            h => h.Key.ToLowerInvariant(),
+            h => string.Join(",", h.Value)));
+
         if (request.Content is not null)
         {
             RequestBodies.Add(await request.Content.ReadAsStringAsync(cancellationToken));

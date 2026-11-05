@@ -1,4 +1,5 @@
 using Anthropic;
+using Anthropic.Core;
 using Anthropic.Models.Models;
 using Microsoft.Extensions.Caching.Memory;
 using Umbraco.AI.Anthropic.Errors;
@@ -175,13 +176,23 @@ public class AnthropicProvider : AIProviderBase<AnthropicProviderSettings>
             throw new InvalidOperationException("Anthropic API key is required.");
         }
 
-        return string.IsNullOrWhiteSpace(settings.Endpoint)
-            ? new AnthropicClient { ApiKey = settings.ApiKey }
-            : new AnthropicClient
-            {
-                ApiKey = settings.ApiKey,
-                BaseUrl = settings.Endpoint
-            };
+        // SDK 13 sends ApiKey as "Authorization: Bearer" instead of "X-Api-Key". Anthropic's API accepts
+        // either, but the Endpoint setting commonly points at a gateway or proxy written for X-Api-Key (and
+        // defaults to the public API), so the key keeps going out in that header, as it did before. Both
+        // credentials are nulled so nothing is picked up from the environment alongside it.
+        var options = new ClientOptions
+        {
+            ApiKey = null,
+            AuthToken = null,
+            ExtraHeaders = new Dictionary<string, string> { ["X-Api-Key"] = settings.ApiKey },
+        };
+
+        if (!string.IsNullOrWhiteSpace(settings.Endpoint))
+        {
+            options.BaseUrl = settings.Endpoint;
+        }
+
+        return new AnthropicClient(options);
     }
 
     private static string GetCacheKey(AnthropicProviderSettings settings)

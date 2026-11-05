@@ -18,6 +18,7 @@ using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.DependencyInjection;
+using Umbraco.Cms.Core.Extensions;
 using Umbraco.Cms.Core.Hosting;
 using Umbraco.Cms.Core.IO;
 using Umbraco.Cms.Core.Security;
@@ -84,11 +85,9 @@ public static class UmbracoBuilderExtensions
             var ioHelper = factory.GetRequiredService<IIOHelper>();
             var hostingEnvironment = factory.GetRequiredService<IHostingEnvironment>();
 
-            // The path is content-root-relative and tilde-prefixed, so it needs Umbraco's mapper. The
-            // suggested IHostEnvironment replacement does not exist in the CMS version we target.
-#pragma warning disable CS0618 // MapPathContentRoot - no replacement available on this CMS version
-            var rootPath = hostingEnvironment.MapPathContentRoot(Constants.SystemDirectories.ConversationFiles);
-#pragma warning restore CS0618
+            // The path is content-root-relative and tilde-prefixed, so it needs Umbraco's content-root mapper.
+            var rootPath = factory.GetRequiredService<Microsoft.Extensions.Hosting.IHostEnvironment>()
+                .MapPathContentRoot(Constants.SystemDirectories.ConversationFiles);
 
             // PhysicalFileSystem requires a non-empty root URL, but this file system is deliberately
             // not addressable and the store never asks it for a URL.

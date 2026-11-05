@@ -1,8 +1,9 @@
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Shouldly;
 using Umbraco.AI.Agent.Core.FileStore;
-using Umbraco.Cms.Core.Hosting;
+using Umbraco.Cms.Core.Extensions;
 using Umbraco.Cms.Core.IO;
 using Xunit;
 using AgentConstants = Umbraco.AI.Agent.Core.Constants;
@@ -70,13 +71,11 @@ public class AIFileStoreLocationTests
         var contentRoot = Path.Combine(Path.GetTempPath(), "uai-agent-location-test");
         var webRoot = Path.Combine(contentRoot, "wwwroot");
 
-        var hostingEnvironment = new Mock<IHostingEnvironment>();
-        hostingEnvironment
-            .Setup(x => x.MapPathContentRoot(It.IsAny<string>()))
-            .Returns<string>(p => Path.Combine(contentRoot, p.TrimStart('~', '/').Replace('/', Path.DirectorySeparatorChar)));
+        var hostEnvironment = new Mock<IHostEnvironment>();
+        hostEnvironment.SetupGet(x => x.ContentRootPath).Returns(contentRoot);
 
         // Act
-        var resolved = hostingEnvironment.Object
+        var resolved = hostEnvironment.Object
             .MapPathContentRoot(AgentConstants.SystemDirectories.ConversationFiles);
 
         // Assert

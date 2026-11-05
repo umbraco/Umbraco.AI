@@ -7,7 +7,7 @@ import { UmbMemberTypeDetailRepository } from "@umbraco-cms/backoffice/member-ty
 import type {
     UmbPropertyTypeModel,
     UmbPropertyTypeContainerModel,
-    UmbContentTypeModel,
+    UmbContentTypeDetailModel,
 } from "@umbraco-cms/backoffice/content-type";
 import type { UmbPropertyValueData, UmbPropertyDatasetElement } from "@umbraco-cms/backoffice/property";
 import type { UmbRoute, UmbRouterSlotChangeEvent, UmbRouterSlotInitEvent } from "@umbraco-cms/backoffice/router";
@@ -361,22 +361,22 @@ export class UaiCmsMockEntityEditorElement extends UmbLitElement {
     #getTypeFetcher() {
         switch (this.entityType) {
             case "document":
-                return async (unique: string): Promise<UmbContentTypeModel | undefined> => {
+                return async (unique: string): Promise<UmbContentTypeDetailModel | undefined> => {
                     this.#documentTypeRepo ??= new UmbDocumentTypeDetailRepository(this);
                     const { data } = await this.#documentTypeRepo.requestByUnique(unique);
-                    return data as UmbContentTypeModel | undefined;
+                    return data as UmbContentTypeDetailModel | undefined;
                 };
             case "media":
-                return async (unique: string): Promise<UmbContentTypeModel | undefined> => {
+                return async (unique: string): Promise<UmbContentTypeDetailModel | undefined> => {
                     this.#mediaTypeRepo ??= new UmbMediaTypeDetailRepository(this);
                     const { data } = await this.#mediaTypeRepo.requestByUnique(unique);
-                    return data as UmbContentTypeModel | undefined;
+                    return data as UmbContentTypeDetailModel | undefined;
                 };
             case "member":
-                return async (unique: string): Promise<UmbContentTypeModel | undefined> => {
+                return async (unique: string): Promise<UmbContentTypeDetailModel | undefined> => {
                     this.#memberTypeRepo ??= new UmbMemberTypeDetailRepository(this);
                     const { data } = await this.#memberTypeRepo.requestByUnique(unique);
-                    return data as UmbContentTypeModel | undefined;
+                    return data as UmbContentTypeDetailModel | undefined;
                 };
         }
         return undefined;

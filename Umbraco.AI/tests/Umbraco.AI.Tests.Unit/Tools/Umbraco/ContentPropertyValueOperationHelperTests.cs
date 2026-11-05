@@ -417,12 +417,11 @@ public class ContentPropertyValueOperationHelperTests
         property.Value.ShouldBe("new value");
 
         // ContentEditingServiceBase.TryGetAndValidateContentType requires an invariant Variants entry
-        // (Culture and Segment both null) for an invariant content type, or the whole update fails with
+        // (Culture null) for an invariant content type, or the whole update fails with
         // ContentTypeCultureVarianceMismatch even though nothing here changes the name.
         var variant = capturedModel.Variants.Single();
         variant.Name.ShouldBe("Home");
         variant.Culture.ShouldBeNull();
-        variant.Segment.ShouldBeNull();
     }
 
     [Fact]

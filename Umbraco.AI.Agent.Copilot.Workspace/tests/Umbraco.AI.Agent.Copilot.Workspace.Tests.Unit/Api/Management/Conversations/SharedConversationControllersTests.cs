@@ -271,6 +271,6 @@ public class SharedConversationControllersTests
                 new SharedConversationMapDefinition(),
                 new ProjectMapDefinition(),
             }),
-            Mock.Of<ICoreScopeProvider>(),
+            TestCoreScopeProvider.Create(),
             NullLogger<UmbracoMapper>.Instance);
 }

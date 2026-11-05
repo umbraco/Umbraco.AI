@@ -15,7 +15,7 @@ public class EntityVersionMappingTests
         // Arrange
         var mapper = new UmbracoMapper(
             new MapDefinitionCollection(() => [new CommonMapDefinition()]),
-            Mock.Of<ICoreScopeProvider>(),
+            global::Umbraco.AI.Tests.Common.TestCoreScopeProvider.Create(),
             NullLogger<UmbracoMapper>.Instance);
         var version = new AIEntityVersion
         {

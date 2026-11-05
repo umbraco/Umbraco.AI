@@ -11,7 +11,7 @@ using Umbraco.AI.Search.Core.Configuration;
 using Umbraco.AI.Search.Core.Search;
 using Umbraco.AI.Search.Core.VectorStore;
 using Umbraco.Cms.Core.Models;
-using Umbraco.Cms.Search.Core.Models.Indexing;
+using Umbraco.Cms.Core.Search.Indexing;
 using Xunit;
 
 namespace Umbraco.AI.Search.Tests.Unit.Search;

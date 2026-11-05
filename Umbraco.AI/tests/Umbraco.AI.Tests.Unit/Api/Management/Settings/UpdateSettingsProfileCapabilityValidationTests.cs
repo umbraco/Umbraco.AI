@@ -20,7 +20,7 @@ public class UpdateSettingsProfileCapabilityValidationTests
 {
     private static UmbracoMapper CreateMapper() => new(
         new MapDefinitionCollection(() => new IMapDefinition[] { new SettingsMapDefinition() }),
-        Mock.Of<ICoreScopeProvider>(),
+        global::Umbraco.AI.Tests.Common.TestCoreScopeProvider.Create(),
         NullLogger<UmbracoMapper>.Instance);
 
     public static IEnumerable<object[]> AllSlots()

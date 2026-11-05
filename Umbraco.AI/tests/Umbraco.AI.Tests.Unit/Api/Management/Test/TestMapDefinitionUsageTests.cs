@@ -43,7 +43,7 @@ public class TestMapDefinitionUsageTests
         {
             var mapper = new UmbracoMapper(
                 new MapDefinitionCollection(() => new IMapDefinition[] { new TestMapDefinition() }),
-                Mock.Of<ICoreScopeProvider>(),
+                global::Umbraco.AI.Tests.Common.TestCoreScopeProvider.Create(),
                 NullLogger<UmbracoMapper>.Instance);
 
             var run = new AITestRun

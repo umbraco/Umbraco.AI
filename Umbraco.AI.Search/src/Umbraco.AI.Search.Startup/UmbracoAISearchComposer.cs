@@ -11,9 +11,9 @@ using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Infrastructure.Telemetry.Interfaces;
-using Umbraco.Cms.Search.Core.Configuration;
+using Umbraco.Cms.Core.Search.Configuration;
+using Umbraco.Cms.Core.Search.Indexing;
 using Umbraco.Cms.Search.Core.DependencyInjection;
-using Umbraco.Cms.Search.Core.Services.ContentIndexing;
 
 namespace Umbraco.AI.Search.Startup;
 
@@ -30,6 +30,9 @@ public sealed class UmbracoAISearchComposer : IComposer
 {
     public void Compose(IUmbracoBuilder builder)
     {
+        // The CMS's own composers call this explicitly too; it is idempotent.
+        builder.AddSearchCore();
+
         builder.Services.AddSingleton<IAITokenCounter, WordBasedAITokenCounter>();
         builder.Services.AddSingleton<IAITextChunker, RecursiveAITextChunker>();
 
@@ -58,7 +61,5 @@ public sealed class UmbracoAISearchComposer : IComposer
 
         // Usage telemetry - contributes anonymous aggregate counts to the CMS telemetry report
         builder.Services.AddTransient<IDetailedTelemetryProvider, AISearchUsageTelemetryProvider>();
-
-        builder.AddSearchCore();
     }
 }

@@ -10,7 +10,7 @@
     },
     "dependencies": {
         "@umbraco-ai/core": "*",
-        "@umbraco-cms/backoffice": "^18.0.0"
+        "@umbraco-cms/backoffice": "^19.0.0-beta1"
     },
     "devDependencies": {
         "@hey-api/openapi-ts": "^0.97.0",

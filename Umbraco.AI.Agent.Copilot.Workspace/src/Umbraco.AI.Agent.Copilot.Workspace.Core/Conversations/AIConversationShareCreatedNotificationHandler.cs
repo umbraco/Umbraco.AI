@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Umbraco.AI.Agent.Conversations.Core.Conversations;
 using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Hosting;
-using Umbraco.Cms.Core.IO;
 using Umbraco.Cms.Core.Mail;
 using Umbraco.Cms.Core.Models.Email;
 using Umbraco.Cms.Core.Models.Membership;
@@ -29,20 +28,17 @@ internal sealed class AIConversationShareCreatedNotificationHandler
     private readonly IUserService _userService;
     private readonly IEmailSender _emailSender;
     private readonly IHostingEnvironment _hostingEnvironment;
-    private readonly IIOHelper _ioHelper;
     private readonly ILogger<AIConversationShareCreatedNotificationHandler> _logger;
 
     public AIConversationShareCreatedNotificationHandler(
         IUserService userService,
         IEmailSender emailSender,
         IHostingEnvironment hostingEnvironment,
-        IIOHelper ioHelper,
         ILogger<AIConversationShareCreatedNotificationHandler> logger)
     {
         _userService = userService;
         _emailSender = emailSender;
         _hostingEnvironment = hostingEnvironment;
-        _ioHelper = ioHelper;
         _logger = logger;
     }
 
@@ -134,7 +130,7 @@ internal sealed class AIConversationShareCreatedNotificationHandler
     /// </summary>
     private string BuildConversationUrl(Guid conversationId)
     {
-        var umbracoPath = _ioHelper.ResolveUrl(Umbraco.Cms.Core.Constants.System.DefaultUmbracoPath).TrimEnd('/');
+        var umbracoPath = _hostingEnvironment.ToAbsolute(Umbraco.Cms.Core.Constants.System.DefaultUmbracoPath).TrimEnd('/');
         var relativePath =
             $"{umbracoPath}/section/{CopilotWorkspaceConstants.Sections.CopilotWorkspacePathname}/conversation/{Uri.EscapeDataString(conversationId.ToString())}";
 

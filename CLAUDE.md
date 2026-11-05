@@ -538,7 +538,7 @@ makes wrong.
   `17/ai-in-umbraco/`)
 - Submitting: a PR to the docs repo, separate from the code PR
 
-A local clone's path is personal, so it goes in `CLAUDE.local.md` as `Package docs source: <path>`.
+A local clone's path is personal, so it goes in `CLAUDE.local.md` as `Umbraco docs source: <path>`.
 
 ## Feature workflow
 

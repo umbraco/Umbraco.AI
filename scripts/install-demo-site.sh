@@ -194,14 +194,20 @@ open(path, 'w').write(content)
 
 # Step 3.2: Install Clean starter kit and Umbraco.Automate
 # Clean's major version does not match CMS major — map explicitly and add new entries as needed.
+# No Clean release targets CMS 19 yet (latest, 8.x, depends on CMS 18) -- skip it there.
+# Replace the "19)" line once a CMS 19 compatible Clean ships.
+SKIP_CLEAN=false
 case "$VERSION_MAJOR" in
     17) CLEAN_VERSION="7.*" ;;
     18) CLEAN_VERSION="8.*" ;;
+    19) CLEAN_VERSION=""; SKIP_CLEAN=true ;;
     *) CLEAN_VERSION="" ;;
 esac
-echo "Installing Clean starter kit..."
 pushd "$DEMO_SITE_DIR" > /dev/null
-if [ -n "$CLEAN_VERSION" ]; then
+if [ "$SKIP_CLEAN" = true ]; then
+    echo "Skipping Clean starter kit: no release supports CMS v$VERSION_MAJOR yet."
+elif [ -n "$CLEAN_VERSION" ]; then
+    echo "Installing Clean starter kit..."
     dotnet add package Clean --version "$CLEAN_VERSION"
 else
     echo "Warning: No Clean version mapping for v$VERSION_MAJOR, using latest stable."

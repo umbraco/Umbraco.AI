@@ -178,19 +178,23 @@ $csprojXml.Save($csprojPath)
 
 # Step 3.2: Install Clean starter kit and Umbraco.Automate
 # Clean's major version does not match CMS major — map explicitly and add new entries as needed.
+# No Clean release targets CMS 19 yet (latest, 8.x, depends on CMS 18) -- skip it there.
+# An empty value means "no compatible Clean yet": replace the "19" entry once one ships.
 $cleanVersionMap = @{
     "17" = "7.*"
     "18" = "8.*"
+    "19" = ""
 }
 $cleanVersion = $cleanVersionMap["$VersionMajor"]
-if (-not $cleanVersion) {
-    Write-Host "Warning: No Clean version mapping for v$VersionMajor, using latest stable." -ForegroundColor Yellow
-}
-Write-Host "Installing Clean starter kit..." -ForegroundColor Green
+$skipClean = $cleanVersionMap.ContainsKey("$VersionMajor") -and [string]::IsNullOrEmpty($cleanVersion)
 Push-Location $DemoSiteDir
-if ($cleanVersion) {
+if ($skipClean) {
+    Write-Host "Skipping Clean starter kit: no release supports CMS v$VersionMajor yet." -ForegroundColor Yellow
+} elseif ($cleanVersion) {
+    Write-Host "Installing Clean starter kit..." -ForegroundColor Green
     dotnet add package Clean --version $cleanVersion
 } else {
+    Write-Host "Warning: No Clean version mapping for v$VersionMajor, using latest stable." -ForegroundColor Yellow
     dotnet add package Clean
 }
 # Parked on the v19 line (no v19 Umbraco.Automate yet, docs/upgrades/v19.md Blockers).

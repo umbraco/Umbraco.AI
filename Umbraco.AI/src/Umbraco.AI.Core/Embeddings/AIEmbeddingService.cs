@@ -37,64 +37,6 @@ internal sealed class AIEmbeddingService : IAIEmbeddingService
         _contributors = contributors;
     }
 
-    #pragma warning disable CS0618 // Obsolete members - implementing the deprecated interface methods
-
-    public Task<Embedding<float>> GenerateEmbeddingAsync(
-        string value,
-        EmbeddingGenerationOptions? options = null,
-        CancellationToken cancellationToken = default)
-        => GenerateEmbeddingAsync(
-            b => ConfigureLegacy(b, profileId: null, options),
-            value, cancellationToken);
-
-    public Task<Embedding<float>> GenerateEmbeddingAsync(
-        Guid profileId,
-        string value,
-        EmbeddingGenerationOptions? options = null,
-        CancellationToken cancellationToken = default)
-        => GenerateEmbeddingAsync(
-            b => ConfigureLegacy(b, profileId, options),
-            value, cancellationToken);
-
-    public Task<GeneratedEmbeddings<Embedding<float>>> GenerateEmbeddingsAsync(
-        IEnumerable<string> values,
-        EmbeddingGenerationOptions? options = null,
-        CancellationToken cancellationToken = default)
-        => GenerateEmbeddingsAsync(
-            b => ConfigureLegacy(b, profileId: null, options),
-            values, cancellationToken);
-
-    public Task<GeneratedEmbeddings<Embedding<float>>> GenerateEmbeddingsAsync(
-        Guid profileId,
-        IEnumerable<string> values,
-        EmbeddingGenerationOptions? options = null,
-        CancellationToken cancellationToken = default)
-        => GenerateEmbeddingsAsync(
-            b => ConfigureLegacy(b, profileId, options),
-            values, cancellationToken);
-
-    public Task<IEmbeddingGenerator<string, Embedding<float>>> GetEmbeddingGeneratorAsync(
-        Guid? profileId = null,
-        CancellationToken cancellationToken = default)
-        => CreateEmbeddingGeneratorAsync(
-            b => ConfigureLegacy(b, profileId, options: null),
-            cancellationToken);
-
-    #pragma warning restore CS0618
-
-    private static void ConfigureLegacy(AIEmbeddingBuilder builder, Guid? profileId, EmbeddingGenerationOptions? options)
-    {
-        builder.WithAlias("embedding");
-        if (profileId.HasValue)
-        {
-            builder.WithProfile(profileId.Value);
-        }
-        if (options is not null)
-        {
-            builder.WithEmbeddingOptions(options);
-        }
-    }
-
     public async Task<Embedding<float>> GenerateEmbeddingAsync(
         Action<AIEmbeddingBuilder> configure,
         string value,

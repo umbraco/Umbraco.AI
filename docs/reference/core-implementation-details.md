@@ -497,35 +497,21 @@ The main service for chat completions:
 ```csharp
 public interface IAIChatService
 {
-    // Get response using default profile
-    Task<ChatResponse> GetResponseAsync(
+    // Get a response; the builder picks the profile (or the default), options and tools
+    Task<ChatResponse> GetChatResponseAsync(
+        Action<AIChatBuilder> configure,
         IEnumerable<ChatMessage> messages,
-        ChatOptions? options = null,
         CancellationToken cancellationToken = default);
 
-    // Get response using specific profile
-    Task<ChatResponse> GetResponseAsync(
-        Guid profileId,
+    // Streaming response
+    IAsyncEnumerable<ChatResponseUpdate> StreamChatResponseAsync(
+        Action<AIChatBuilder> configure,
         IEnumerable<ChatMessage> messages,
-        ChatOptions? options = null,
-        CancellationToken cancellationToken = default);
-
-    // Streaming response using default profile
-    IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
-        IEnumerable<ChatMessage> messages,
-        ChatOptions? options = null,
-        CancellationToken cancellationToken = default);
-
-    // Streaming response using specific profile
-    IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
-        Guid profileId,
-        IEnumerable<ChatMessage> messages,
-        ChatOptions? options = null,
         CancellationToken cancellationToken = default);
 
     // Get configured client for advanced scenarios
-    Task<IChatClient> GetChatClientAsync(
-        Guid? profileId = null,
+    Task<IChatClient> CreateChatClientAsync(
+        Action<AIChatBuilder> configure,
         CancellationToken cancellationToken = default);
 }
 ```
@@ -558,8 +544,10 @@ public class MyService
             new ChatMessage(ChatRole.User, $"Summarize this: {content}")
         };
 
-        var response = await _chatService.GetResponseAsync(messages);
-        return response.Message.Text ?? string.Empty;
+        var response = await _chatService.GetChatResponseAsync(
+            b => b.WithAlias("summary"),
+            messages);
+        return response.Text;
     }
 }
 ```
@@ -929,7 +917,7 @@ OpenAPI documentation is automatically generated:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ 1. Application calls IAIChatService.GetResponseAsync()          │
+│ 1. Application calls IAIChatService.GetChatResponseAsync()          │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼

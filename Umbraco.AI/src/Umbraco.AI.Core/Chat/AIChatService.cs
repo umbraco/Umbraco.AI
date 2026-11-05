@@ -54,64 +54,6 @@ internal sealed class AIChatService : IAIChatService
         _functionFactory = functionFactory;
     }
 
-    #pragma warning disable CS0618 // Obsolete members - implementing the deprecated interface methods
-
-    public Task<ChatResponse> GetChatResponseAsync(
-        IEnumerable<ChatMessage> messages,
-        ChatOptions? options = null,
-        CancellationToken cancellationToken = default)
-        => GetChatResponseAsync(
-            b => ConfigureLegacyChat(b, profileId: null, options),
-            messages, cancellationToken);
-
-    public Task<ChatResponse> GetChatResponseAsync(
-        Guid profileId,
-        IEnumerable<ChatMessage> messages,
-        ChatOptions? options = null,
-        CancellationToken cancellationToken = default)
-        => GetChatResponseAsync(
-            b => ConfigureLegacyChat(b, profileId, options),
-            messages, cancellationToken);
-
-    public IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseAsync(
-        IEnumerable<ChatMessage> messages,
-        ChatOptions? options = null,
-        CancellationToken cancellationToken = default)
-        => StreamChatResponseAsync(
-            b => ConfigureLegacyChat(b, profileId: null, options),
-            messages, cancellationToken);
-
-    public IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseAsync(
-        Guid profileId,
-        IEnumerable<ChatMessage> messages,
-        ChatOptions? options = null,
-        CancellationToken cancellationToken = default)
-        => StreamChatResponseAsync(
-            b => ConfigureLegacyChat(b, profileId, options),
-            messages, cancellationToken);
-
-    public Task<IChatClient> GetChatClientAsync(
-        Guid? profileId = null,
-        CancellationToken cancellationToken = default)
-        => CreateChatClientAsync(
-            b => ConfigureLegacyChat(b, profileId, options: null),
-            cancellationToken);
-
-    #pragma warning restore CS0618
-
-    private static void ConfigureLegacyChat(AIChatBuilder builder, Guid? profileId, ChatOptions? options)
-    {
-        builder.WithAlias("chat");
-        if (profileId.HasValue)
-        {
-            builder.WithProfile(profileId.Value);
-        }
-        if (options is not null)
-        {
-            builder.WithChatOptions(options);
-        }
-    }
-
     public async Task<ChatResponse> GetChatResponseAsync(
         Action<AIChatBuilder> configure,
         IEnumerable<ChatMessage> messages,

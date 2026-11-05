@@ -1,5 +1,4 @@
 #pragma warning disable MEAI001 // ISpeechToTextClient is experimental in M.E.AI
-#pragma warning disable CS0618 // Tests for deprecated API surface — will be removed with the methods in v3
 
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Guardrails;
@@ -66,7 +65,7 @@ public class AISpeechToTextServiceTests
             contributorCollection);
     }
 
-    #region TranscribeAsync - Default profile (legacy)
+    #region TranscribeAsync - Default profile
 
     [Fact]
     public async Task TranscribeAsync_WithDefaultProfile_UsesDefaultProfile()
@@ -92,7 +91,7 @@ public class AISpeechToTextServiceTests
             .ReturnsAsync(fakeClient);
 
         // Act
-        var result = await _service.TranscribeAsync(audioStream);
+        var result = await _service.TranscribeAsync(b => b.WithAlias("test"), audioStream);
 
         // Assert
         result.ShouldNotBeNull();
@@ -104,7 +103,7 @@ public class AISpeechToTextServiceTests
 
     #endregion
 
-    #region TranscribeAsync - By profile ID (legacy)
+    #region TranscribeAsync - By profile ID
 
     [Fact]
     public async Task TranscribeAsync_WithProfileId_UsesSpecifiedProfile()
@@ -131,7 +130,7 @@ public class AISpeechToTextServiceTests
             .ReturnsAsync(fakeClient);
 
         // Act
-        var result = await _service.TranscribeAsync(profileId, audioStream);
+        var result = await _service.TranscribeAsync(b => b.WithAlias("test").WithProfile(profileId), audioStream);
 
         // Assert
         result.ShouldNotBeNull();
@@ -153,7 +152,7 @@ public class AISpeechToTextServiceTests
             .ReturnsAsync((AIProfile?)null);
 
         // Act
-        var act = () => _service.TranscribeAsync(profileId, audioStream);
+        var act = () => _service.TranscribeAsync(b => b.WithAlias("test").WithProfile(profileId), audioStream);
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
@@ -178,7 +177,7 @@ public class AISpeechToTextServiceTests
             .ReturnsAsync(chatProfile);
 
         // Act
-        var act = () => _service.TranscribeAsync(profileId, audioStream);
+        var act = () => _service.TranscribeAsync(b => b.WithAlias("test").WithProfile(profileId), audioStream);
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
@@ -212,7 +211,7 @@ public class AISpeechToTextServiceTests
             .ReturnsAsync(fakeClient);
 
         // Act
-        await _service.TranscribeAsync(audioStream, callerOptions);
+        await _service.TranscribeAsync(b => b.WithAlias("test").WithSpeechToTextOptions(callerOptions), audioStream);
 
         // Assert
         fakeClient.ReceivedOptions.Count.ShouldBe(1);
@@ -242,7 +241,7 @@ public class AISpeechToTextServiceTests
             .ReturnsAsync(fakeClient);
 
         // Act
-        await _service.TranscribeAsync(audioStream, null);
+        await _service.TranscribeAsync(b => b.WithAlias("test"), audioStream);
 
         // Assert
         fakeClient.ReceivedOptions.Count.ShouldBe(1);
@@ -252,10 +251,10 @@ public class AISpeechToTextServiceTests
 
     #endregion
 
-    #region GetSpeechToTextClientAsync (legacy)
+    #region CreateSpeechToTextClientAsync
 
     [Fact]
-    public async Task GetSpeechToTextClientAsync_WithNullProfileId_UsesDefaultProfile()
+    public async Task CreateSpeechToTextClientAsync_WithNullProfileId_UsesDefaultProfile()
     {
         // Arrange
         var defaultProfile = new AIProfileBuilder()
@@ -274,7 +273,7 @@ public class AISpeechToTextServiceTests
             .ReturnsAsync(fakeClient);
 
         // Act
-        var client = await _service.GetSpeechToTextClientAsync();
+        var client = await _service.CreateSpeechToTextClientAsync(b => b.WithAlias("test"));
 
         // Assert — wrapped in ScopedInlineSpeechToTextClient, not the raw fake
         client.ShouldNotBeNull();
@@ -284,7 +283,7 @@ public class AISpeechToTextServiceTests
     }
 
     [Fact]
-    public async Task GetSpeechToTextClientAsync_WithProfileId_UsesSpecifiedProfile()
+    public async Task CreateSpeechToTextClientAsync_WithProfileId_UsesSpecifiedProfile()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -305,7 +304,7 @@ public class AISpeechToTextServiceTests
             .ReturnsAsync(fakeClient);
 
         // Act
-        var client = await _service.GetSpeechToTextClientAsync(profileId);
+        var client = await _service.CreateSpeechToTextClientAsync(b => b.WithAlias("test").WithProfile(profileId));
 
         // Assert — wrapped in ScopedInlineSpeechToTextClient, not the raw fake
         client.ShouldNotBeNull();

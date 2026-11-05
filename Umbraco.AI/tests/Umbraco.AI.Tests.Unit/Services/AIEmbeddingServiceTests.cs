@@ -11,8 +11,6 @@ using Umbraco.Cms.Core.Notifications;
 
 namespace Umbraco.AI.Tests.Unit.Services;
 
-#pragma warning disable CS0618 // Tests for deprecated API surface — will be removed with the methods in v3
-
 public class AIEmbeddingServiceTests
 {
     private readonly Mock<IAIEmbeddingGeneratorFactory> _generatorFactoryMock;
@@ -88,7 +86,7 @@ public class AIEmbeddingServiceTests
             .ReturnsAsync(fakeGenerator);
 
         // Act
-        var embedding = await _service.GenerateEmbeddingAsync(value);
+        var embedding = await _service.GenerateEmbeddingAsync(b => b.WithAlias("test"), value);
 
         // Assert
         embedding.ShouldNotBeNull();
@@ -126,7 +124,7 @@ public class AIEmbeddingServiceTests
             .ReturnsAsync(fakeGenerator);
 
         // Act
-        var embedding = await _service.GenerateEmbeddingAsync(profileId, value);
+        var embedding = await _service.GenerateEmbeddingAsync(b => b.WithAlias("test").WithProfile(profileId), value);
 
         // Assert
         embedding.ShouldNotBeNull();
@@ -148,7 +146,7 @@ public class AIEmbeddingServiceTests
             .ReturnsAsync((AIProfile?)null);
 
         // Act
-        var act = () => _service.GenerateEmbeddingAsync(profileId, value);
+        var act = () => _service.GenerateEmbeddingAsync(b => b.WithAlias("test").WithProfile(profileId), value);
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
@@ -173,7 +171,7 @@ public class AIEmbeddingServiceTests
             .ReturnsAsync(chatProfile);
 
         // Act
-        var act = () => _service.GenerateEmbeddingAsync(profileId, value);
+        var act = () => _service.GenerateEmbeddingAsync(b => b.WithAlias("test").WithProfile(profileId), value);
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
@@ -207,7 +205,7 @@ public class AIEmbeddingServiceTests
             .ReturnsAsync(fakeGenerator);
 
         // Act
-        var embeddings = await _service.GenerateEmbeddingsAsync(values);
+        var embeddings = await _service.GenerateEmbeddingsAsync(b => b.WithAlias("test"), values);
 
         // Assert
         embeddings.ShouldNotBeNull();
@@ -239,7 +237,7 @@ public class AIEmbeddingServiceTests
             .ReturnsAsync(fakeGenerator);
 
         // Act
-        var embeddings = await _service.GenerateEmbeddingsAsync(values);
+        var embeddings = await _service.GenerateEmbeddingsAsync(b => b.WithAlias("test"), values);
 
         // Assert
         embeddings.ShouldNotBeNull();
@@ -278,7 +276,7 @@ public class AIEmbeddingServiceTests
             .ReturnsAsync(fakeGenerator);
 
         // Act
-        var embeddings = await _service.GenerateEmbeddingsAsync(profileId, values);
+        var embeddings = await _service.GenerateEmbeddingsAsync(b => b.WithAlias("test").WithProfile(profileId), values);
 
         // Assert
         embeddings.ShouldNotBeNull();
@@ -300,7 +298,7 @@ public class AIEmbeddingServiceTests
             .ReturnsAsync((AIProfile?)null);
 
         // Act
-        var act = () => _service.GenerateEmbeddingsAsync(profileId, values);
+        var act = () => _service.GenerateEmbeddingsAsync(b => b.WithAlias("test").WithProfile(profileId), values);
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
@@ -325,7 +323,7 @@ public class AIEmbeddingServiceTests
             .ReturnsAsync(chatProfile);
 
         // Act
-        var act = () => _service.GenerateEmbeddingsAsync(profileId, values);
+        var act = () => _service.GenerateEmbeddingsAsync(b => b.WithAlias("test").WithProfile(profileId), values);
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
@@ -425,7 +423,7 @@ public class AIEmbeddingServiceTests
             .ReturnsAsync(fakeGenerator);
 
         // Act
-        await _service.GenerateEmbeddingsAsync(values, callerOptions);
+        await _service.GenerateEmbeddingsAsync(b => b.WithAlias("test").WithEmbeddingOptions(callerOptions), values);
 
         // Assert
         fakeGenerator.ReceivedOptions.Count.ShouldBe(1);
@@ -457,7 +455,7 @@ public class AIEmbeddingServiceTests
             .ReturnsAsync(fakeGenerator);
 
         // Act
-        await _service.GenerateEmbeddingsAsync(values, null);
+        await _service.GenerateEmbeddingsAsync(b => b.WithAlias("test"), values);
 
         // Assert
         fakeGenerator.ReceivedOptions.Count.ShouldBe(1);
@@ -493,7 +491,7 @@ public class AIEmbeddingServiceTests
             .ReturnsAsync(fakeGenerator);
 
         // Act
-        await _service.GenerateEmbeddingsAsync(values, callerOptions);
+        await _service.GenerateEmbeddingsAsync(b => b.WithAlias("test").WithEmbeddingOptions(callerOptions), values);
 
         // Assert
         var receivedOptions = fakeGenerator.ReceivedOptions[0];
@@ -502,10 +500,10 @@ public class AIEmbeddingServiceTests
 
     #endregion
 
-    #region GetEmbeddingGeneratorAsync
+    #region CreateEmbeddingGeneratorAsync
 
     [Fact]
-    public async Task GetEmbeddingGeneratorAsync_WithNullProfileId_UsesDefaultProfile()
+    public async Task CreateEmbeddingGeneratorAsync_WithNullProfileId_UsesDefaultProfile()
     {
         // Arrange
         var defaultProfile = new AIProfileBuilder()
@@ -524,7 +522,7 @@ public class AIEmbeddingServiceTests
             .ReturnsAsync(fakeGenerator);
 
         // Act
-        var generator = await _service.GetEmbeddingGeneratorAsync();
+        var generator = await _service.CreateEmbeddingGeneratorAsync(b => b.WithAlias("test"));
 
         // Assert — wrapped in ScopedInlineEmbeddingGenerator, not the raw fake
         generator.ShouldNotBeNull();
@@ -534,7 +532,7 @@ public class AIEmbeddingServiceTests
     }
 
     [Fact]
-    public async Task GetEmbeddingGeneratorAsync_WithProfileId_UsesSpecifiedProfile()
+    public async Task CreateEmbeddingGeneratorAsync_WithProfileId_UsesSpecifiedProfile()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -555,7 +553,7 @@ public class AIEmbeddingServiceTests
             .ReturnsAsync(fakeGenerator);
 
         // Act
-        var generator = await _service.GetEmbeddingGeneratorAsync(profileId);
+        var generator = await _service.CreateEmbeddingGeneratorAsync(b => b.WithAlias("test").WithProfile(profileId));
 
         // Assert — wrapped in ScopedInlineEmbeddingGenerator, not the raw fake
         generator.ShouldNotBeNull();
@@ -565,7 +563,7 @@ public class AIEmbeddingServiceTests
     }
 
     [Fact]
-    public async Task GetEmbeddingGeneratorAsync_WithNonExistentProfileId_ThrowsInvalidOperationException()
+    public async Task CreateEmbeddingGeneratorAsync_WithNonExistentProfileId_ThrowsInvalidOperationException()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -575,7 +573,7 @@ public class AIEmbeddingServiceTests
             .ReturnsAsync((AIProfile?)null);
 
         // Act
-        var act = () => _service.GetEmbeddingGeneratorAsync(profileId);
+        var act = () => _service.CreateEmbeddingGeneratorAsync(b => b.WithAlias("test").WithProfile(profileId));
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);
@@ -583,7 +581,7 @@ public class AIEmbeddingServiceTests
     }
 
     [Fact]
-    public async Task GetEmbeddingGeneratorAsync_WithChatProfile_ThrowsInvalidOperationException()
+    public async Task CreateEmbeddingGeneratorAsync_WithChatProfile_ThrowsInvalidOperationException()
     {
         // Arrange
         var profileId = Guid.NewGuid();
@@ -598,7 +596,7 @@ public class AIEmbeddingServiceTests
             .ReturnsAsync(chatProfile);
 
         // Act
-        var act = () => _service.GetEmbeddingGeneratorAsync(profileId);
+        var act = () => _service.CreateEmbeddingGeneratorAsync(b => b.WithAlias("test").WithProfile(profileId));
 
         // Assert
         var exception = await Should.ThrowAsync<InvalidOperationException>(act);

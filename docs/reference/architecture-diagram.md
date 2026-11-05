@@ -131,7 +131,7 @@ The core architecture follows a clear hierarchy:
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                            AI REQUEST                                       │
 │  Actual chat/embedding call using configured profile                       │
-│  • IAIChatService.GetResponseAsync()                                       │
+│  • IAIChatService.GetChatResponseAsync()                                   │
 │  • IAIEmbeddingService.GenerateEmbeddingAsync()                           │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```

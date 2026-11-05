@@ -26,8 +26,6 @@ namespace Umbraco.AI.Tests.Integration;
 /// End-to-end service flow tests that verify the complete pipeline works correctly
 /// using real services (not mocks) with fake providers.
 /// </summary>
-#pragma warning disable CS0618 // Integration tests for deprecated API surface — validates delegation works
-
 public class EndToEndServiceFlowTests : IDisposable
 {
     private readonly ServiceProvider _serviceProvider;
@@ -106,7 +104,7 @@ public class EndToEndServiceFlowTests : IDisposable
             new(ChatRole.User, "Hello, world!")
         };
 
-        var response = await _chatService.GetChatResponseAsync(messages);
+        var response = await _chatService.GetChatResponseAsync(b => b.WithAlias("e2e-test"), messages);
 
         // Assert
         response.ShouldNotBeNull();
@@ -151,7 +149,7 @@ public class EndToEndServiceFlowTests : IDisposable
             new(ChatRole.User, "Hello from specific profile!")
         };
 
-        var response = await _chatService.GetChatResponseAsync(profileId, messages);
+        var response = await _chatService.GetChatResponseAsync(b => b.WithAlias("e2e-test").WithProfile(profileId), messages);
 
         // Assert
         response.ShouldNotBeNull();
@@ -197,7 +195,7 @@ public class EndToEndServiceFlowTests : IDisposable
             new(ChatRole.User, "Test message")
         };
 
-        var response = await _chatService.GetChatResponseAsync(messages);
+        var response = await _chatService.GetChatResponseAsync(b => b.WithAlias("e2e-test"), messages);
 
         // Assert - The fact that we get a response means settings were resolved successfully
         response.ShouldNotBeNull();
@@ -239,7 +237,7 @@ public class EndToEndServiceFlowTests : IDisposable
         };
 
         var updates = new List<ChatResponseUpdate>();
-        await foreach (var update in _chatService.GetStreamingChatResponseAsync(messages))
+        await foreach (var update in _chatService.StreamChatResponseAsync(b => b.WithAlias("e2e-test"), messages))
         {
             updates.Add(update);
         }
@@ -321,7 +319,7 @@ public class EndToEndServiceFlowTests : IDisposable
 
         // Act & Assert
         await Should.ThrowAsync<InvalidOperationException>(
-            async () => await _chatService.GetChatResponseAsync(nonExistentProfileId, messages));
+            async () => await _chatService.GetChatResponseAsync(b => b.WithAlias("e2e-test").WithProfile(nonExistentProfileId), messages));
     }
 
     [Fact]
@@ -359,7 +357,7 @@ public class EndToEndServiceFlowTests : IDisposable
         };
 
         var exception = await Should.ThrowAsync<InvalidOperationException>(
-            async () => await _chatService.GetChatResponseAsync(profileId, messages));
+            async () => await _chatService.GetChatResponseAsync(b => b.WithAlias("e2e-test").WithProfile(profileId), messages));
 
         exception.Message.ShouldContain("not active");
     }
@@ -388,7 +386,7 @@ public class EndToEndServiceFlowTests : IDisposable
         };
 
         var exception = await Should.ThrowAsync<InvalidOperationException>(
-            async () => await _chatService.GetChatResponseAsync(profileId, messages));
+            async () => await _chatService.GetChatResponseAsync(b => b.WithAlias("e2e-test").WithProfile(profileId), messages));
 
         exception.Message.ShouldContain("not found");
     }

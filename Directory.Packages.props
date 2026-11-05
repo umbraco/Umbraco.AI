@@ -23,6 +23,12 @@
     <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.Sqlite" Version="[19.0.0-beta1, 19.999.999)" />
   </ItemGroup>
 
+  <!-- Umbraco Analytics UI: shared analytics components. Nightly only for now. Its nightly versions put a
+       second hyphen before "alpha", which sorts below 19.0.0-alpha, so the lower bound is the exact build. -->
+  <ItemGroup>
+    <PackageVersion Include="Umbraco.Analytics.UI" Version="[19.0.0--alpha.1.preview.240.g817cdf6, 19.999.999)" />
+  </ItemGroup>
+
   <!-- Umbraco Deploy. -->
   <ItemGroup>
     <PackageVersion Include="Umbraco.Deploy.Infrastructure" Version="[18.0.0, 18.999.999)" />

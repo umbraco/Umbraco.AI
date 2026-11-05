@@ -61,7 +61,7 @@
         "monaco-editor": {
             "dompurify": "^3.4.16"
         },
-        "@hey-api/openapi-ts": "0.97.3"
+        "@hey-api/openapi-ts": "^0.99.0"
     },
     "peerDependencyVersions": {
         "@umbraco-ai/core": "^18.7.0",

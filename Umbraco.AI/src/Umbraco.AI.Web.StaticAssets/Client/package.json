@@ -21,9 +21,10 @@
         "diff": "^9.0.0"
     },
     "devDependencies": {
-        "@hey-api/openapi-ts": "^0.97.0",
+        "@hey-api/openapi-ts": "^0.99.0",
         "@microsoft/api-extractor": "^7.55.1",
         "@umbraco-ui/uui": "^2.0.0-rc.2",
+        "@umbraco/analytics-ui": "19.0.0-alpha.1.g817cdf6",
         "chalk": "^5.6.0",
         "cross-env": "^10.0.0",
         "happy-dom": "^20.10.6",

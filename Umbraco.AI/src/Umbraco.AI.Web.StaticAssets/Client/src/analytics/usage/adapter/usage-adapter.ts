@@ -39,6 +39,8 @@ export interface UaiUsageTiles {
     successRate: UaiUsageTile;
     /** Seconds. */
     averageDuration: UaiUsageTile;
+    /** The part of the input tokens served from a provider's cache. No value when no provider reported it. */
+    cachedInputTokens: UaiUsageTile;
 }
 
 const successRateOf = (counts: UsageCountsModel) => (counts.requests ? counts.succeeded / counts.requests : undefined);
@@ -60,7 +62,7 @@ function tile(
     };
 }
 
-/** The six tiles of the page. Without a response (not loaded yet, or failed) every tile has no data. */
+/** The tiles of the page. Without a response (not loaded yet, or failed) every tile has no data. */
 export function mapUsageTiles(response?: UsageOverviewResponseModel | null): UaiUsageTiles {
     const current = response?.current.totals;
     const previous = response?.previous?.totals;
@@ -74,6 +76,7 @@ export function mapUsageTiles(response?: UsageOverviewResponseModel | null): Uai
         totalTokens: of((c) => c.totalTokens),
         successRate: of(successRateOf),
         averageDuration: of(averageDurationOf),
+        cachedInputTokens: of((c) => c.cachedInputTokens ?? undefined),
     };
 }
 
@@ -207,6 +210,8 @@ export interface UaiUsageBreakdownRow extends Record<string, unknown> {
     name: string;
     requests: number;
     totalTokens: number;
+    /** Undefined when no provider reported cached input for the row. */
+    cachedInputTokens: number | undefined;
     /** A fraction: 0.97 is 97%. */
     successRate: number;
     /** Milliseconds per request. */
@@ -219,21 +224,28 @@ function rowOf(row: UsageBreakdownRowModel, counts: UsageCountsModel): UaiUsageB
         name: row.name || row.key,
         requests: counts.requests,
         totalTokens: counts.totalTokens,
+        cachedInputTokens: counts.cachedInputTokens ?? undefined,
         successRate: successRateOf(counts) ?? 0,
         averageDurationMs: counts.requests ? counts.durationMs / counts.requests : 0,
     };
 }
+
+/** What the breakdown table loads: a page of rows, and whether any usage in the range reported cached input. */
+export type UaiUsageBreakdownResult = UauiTableServerResult & {
+    rows: UaiUsageBreakdownRow[];
+    compareRows: UaiUsageBreakdownRow[];
+    /** From the totals across every row, so it does not change as the editor pages or searches. */
+    reportsCachedInput: boolean;
+};
 
 /**
  * A page of breakdown rows for `UauiTableServerController`. The compare rows are the same keys in the
  * comparison period. `stats` carries each share column's total across every row before the search; the
  * largest value is left for the table to work out from the page.
  */
-export function mapBreakdownResult(response: UsageBreakdownResponseModel): UauiTableServerResult & {
-    rows: UaiUsageBreakdownRow[];
-    compareRows: UaiUsageBreakdownRow[];
-} {
+export function mapBreakdownResult(response: UsageBreakdownResponseModel): UaiUsageBreakdownResult {
     return {
+        reportsCachedInput: response.totals.cachedInputTokens != null,
         rows: response.items.map((item) => rowOf(item, item.current)),
         compareRows: response.items.flatMap((item) => (item.previous ? [rowOf(item, item.previous)] : [])),
         totalRows: response.total,

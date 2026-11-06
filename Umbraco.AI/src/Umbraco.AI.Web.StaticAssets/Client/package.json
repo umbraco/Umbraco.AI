@@ -17,7 +17,6 @@
     },
     "dependencies": {
         "@umbraco-cms/backoffice": "^19.0.0-beta1",
-        "chart.js": "^4.5.1",
         "diff": "^9.0.0"
     },
     "devDependencies": {

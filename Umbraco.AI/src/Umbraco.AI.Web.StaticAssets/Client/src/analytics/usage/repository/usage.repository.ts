@@ -1,53 +1,34 @@
-import {
-    AnalyticsService,
-    UsageBreakdownItemModel,
-    UsageSummaryResponseModel,
-    UsageTimeSeriesPointModel,
-} from "../../../api";
-import { UaiAnalyticsQueryParams } from "../../types.js";
+import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
+import { tryExecute } from "@umbraco-cms/backoffice/resources";
+import { AnalyticsService } from "../../../api/sdk.gen.js";
+import type {
+    GetUsageBreakdownData,
+    GetUsageOverviewData,
+    UsageBreakdownResponseModel,
+    UsageOverviewResponseModel,
+} from "../../../api/types.gen.js";
 
-export class UaiAnalyticsUsageRepository {
-    async getSummary(params: UaiAnalyticsQueryParams): Promise<UsageSummaryResponseModel> {
-        const { data } = await AnalyticsService.getUsageSummary({
-            query: params,
-        });
-        return data!;
+/** Loads the usage dashboard's two endpoints. A failure comes back as `error`, never thrown. */
+export class UaiUsageRepository {
+    #host: UmbControllerHost;
+
+    constructor(host: UmbControllerHost) {
+        this.#host = host;
     }
 
-    async getTimeSeries(params: UaiAnalyticsQueryParams): Promise<UsageTimeSeriesPointModel[]> {
-        const { data } = await AnalyticsService.getUsageTimeSeries({
-            query: params,
-        });
-        return data!;
+    async getOverview(
+        query: GetUsageOverviewData["query"],
+        signal?: AbortSignal,
+    ): Promise<{ data?: UsageOverviewResponseModel; error?: unknown }> {
+        const { data, error } = await tryExecute(this.#host, AnalyticsService.getUsageOverview({ query, signal }));
+        return error || !data ? { error: error ?? new Error("No usage overview returned") } : { data };
     }
 
-    async getBreakdownByProvider(params: UaiAnalyticsQueryParams): Promise<UsageBreakdownItemModel[]> {
-        const { data } = await AnalyticsService.getUsageBreakdownByProvider({
-            query: params,
-        });
-        return data!;
-    }
-
-    async getBreakdownByModel(params: UaiAnalyticsQueryParams): Promise<UsageBreakdownItemModel[]> {
-        const { data } = await AnalyticsService.getUsageBreakdownByModel({
-            query: params,
-        });
-        return data!;
-    }
-
-    async getBreakdownByProfile(params: UaiAnalyticsQueryParams): Promise<UsageBreakdownItemModel[]> {
-        const { data } = await AnalyticsService.getUsageBreakdownByProfile({
-            query: params,
-        });
-        return data!;
-    }
-
-    async getBreakdownByUser(params: UaiAnalyticsQueryParams): Promise<UsageBreakdownItemModel[]> {
-        const { data } = await AnalyticsService.getUsageBreakdownByUser({
-            query: params,
-        });
-        return data!;
+    async getBreakdown(
+        query: GetUsageBreakdownData["query"],
+        signal?: AbortSignal,
+    ): Promise<{ data?: UsageBreakdownResponseModel; error?: unknown }> {
+        const { data, error } = await tryExecute(this.#host, AnalyticsService.getUsageBreakdown({ query, signal }));
+        return error || !data ? { error: error ?? new Error("No usage breakdown returned") } : { data };
     }
 }
-
-export const usageRepository = new UaiAnalyticsUsageRepository();

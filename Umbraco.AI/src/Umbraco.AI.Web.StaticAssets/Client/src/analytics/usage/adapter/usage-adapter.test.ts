@@ -67,6 +67,17 @@ describe("usage tiles", () => {
         expect(tiles.averageDuration.value).toBeUndefined();
     });
 
+    it("has a cached input tile only when a provider reported it, with its compare value", () => {
+        const none = mapUsageTiles({ current: period({ totals: counts({ requests: 4 }) }) });
+        const some = mapUsageTiles({
+            current: period({ totals: counts({ requests: 4, cachedInputTokens: 30 }) }),
+            previous: period({ totals: counts({ requests: 2, cachedInputTokens: 10 }) }),
+        });
+
+        expect(none.cachedInputTokens.value).toBeUndefined();
+        expect(some.cachedInputTokens).toEqual({ value: 30, previous: 10, noData: false });
+    });
+
     it("works out the success rate as a fraction and the average duration in seconds", () => {
         const response: UsageOverviewResponseModel = {
             current: period({
@@ -389,6 +400,38 @@ describe("usage breakdown", () => {
             averageDurationMs: 2000,
         });
         expect(rows[1].name).toBe("Content assistant");
+    });
+
+    it("carries cached input tokens on a row and its compare row, and none when not reported", () => {
+        const withCache: UsageBreakdownResponseModel = {
+            ...response,
+            items: [
+                {
+                    ...response.items[0],
+                    current: counts({ requests: 10, cachedInputTokens: 120 }),
+                    previous: counts({ requests: 8, cachedInputTokens: 0 }),
+                },
+                { ...response.items[1], current: counts({ requests: 1 }), previous: null },
+            ],
+        };
+
+        const { rows, compareRows } = mapBreakdownResult(withCache);
+
+        expect(rows[0].cachedInputTokens).toBe(120);
+        expect(compareRows[0].cachedInputTokens).toBe(0);
+        expect(rows[1].cachedInputTokens).toBeUndefined();
+    });
+
+    it("says whether cached input was reported from the totals, not from the page's rows", () => {
+        const notReported = mapBreakdownResult({ ...response, totals: counts({ requests: 5 }) });
+        const reported = mapBreakdownResult({
+            ...response,
+            totals: counts({ requests: 5, cachedInputTokens: 0 }),
+            items: [],
+        });
+
+        expect(notReported.reportsCachedInput).toBe(false);
+        expect(reported.reportsCachedInput).toBe(true);
     });
 
     it("gives a row with no requests a zero rate and average", () => {

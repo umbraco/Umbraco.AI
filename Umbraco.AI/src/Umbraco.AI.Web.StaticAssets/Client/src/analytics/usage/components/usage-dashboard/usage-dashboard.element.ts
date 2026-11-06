@@ -3,18 +3,16 @@ import {
     UauiTableServerController,
     uauiFormatDateRange,
     uauiGroupByOptions,
-    uauiPresetRange,
 } from "@umbraco/analytics-ui";
 import type {
     UauiCompare,
-    UauiDatePreset,
     UauiDateRange,
     UauiGroupBy,
     UauiTableColumn,
     UauiTableServerState,
     UauiToggleGroupChangeDetail,
 } from "@umbraco/analytics-ui";
-import { css, customElement, html, nothing, ref, state } from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, ref, state } from "@umbraco-cms/backoffice/external/lit";
 import type { PropertyValues } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
@@ -26,6 +24,7 @@ import {
     mapUsageTiles,
     toUsageBreakdownQuery,
     toUsageOverviewQuery,
+    usageChartKind,
 } from "../../adapter/usage-adapter.js";
 import type {
     UaiUsageBreakdownDimension,
@@ -37,24 +36,15 @@ import type {
     UaiUsageSeriesId,
     UaiUsageTile,
 } from "../../adapter/usage-adapter.js";
-import { usageLocalDate } from "../../adapter/usage-time-zone.js";
+import { UAI_ANALYTICS_WORKSPACE_CONTEXT } from "../../../workspace/analytics-root/analytics-workspace.context-token.js";
+import { defaultUsageDateRange, isSameUsageDateRange } from "../../usage-date-range.js";
+import type { UaiUsageDateRange } from "../../usage-date-range.js";
 import { UaiUsageRepository } from "../../repository/usage.repository.js";
 
 const COMPACT: Intl.NumberFormatOptions = { notation: "compact", maximumFractionDigits: 1 };
 const PERCENT: Intl.NumberFormatOptions = { style: "percent", maximumFractionDigits: 1 };
 const SECONDS: Intl.NumberFormatOptions = { style: "unit", unit: "second", maximumFractionDigits: 2 };
 const MILLISECONDS: Intl.NumberFormatOptions = { style: "unit", unit: "millisecond", maximumFractionDigits: 0 };
-
-// Today and Yesterday are opt-in presets: they are what makes the hourly bars reachable.
-const PRESETS: UauiDatePreset[] = [
-    { id: "today" },
-    { id: "yesterday" },
-    { id: "last-7-days" },
-    { id: "last-30-days" },
-    { id: "this-month" },
-    { id: "last-month" },
-    { id: "last-year" },
-];
 
 const DIMENSION_LABEL_KEYS: Record<UaiUsageBreakdownDimension, string> = {
     provider: "uaiUsage_dimensionProvider",
@@ -69,6 +59,8 @@ const SERIES_LABEL_KEYS: Record<UaiUsageSeriesId, string> = {
     input: "uaiUsage_seriesInput",
     cachedInput: "uaiUsage_cachedInput",
     output: "uaiUsage_seriesOutput",
+    successRate: "uaiUsage_successRate",
+    averageDuration: "uaiUsage_averageDuration",
 };
 
 const METRIC_LABEL_KEYS: Record<UaiUsageMetric, string> = {
@@ -76,6 +68,17 @@ const METRIC_LABEL_KEYS: Record<UaiUsageMetric, string> = {
     inputTokens: "uaiUsage_inputTokens",
     outputTokens: "uaiUsage_outputTokens",
     totalTokens: "uaiUsage_totalTokens",
+    successRate: "uaiUsage_successRate",
+    averageDuration: "uaiUsage_averageDuration",
+};
+
+const METRIC_FORMATS: Record<UaiUsageMetric, Intl.NumberFormatOptions> = {
+    requests: COMPACT,
+    inputTokens: COMPACT,
+    outputTokens: COMPACT,
+    totalTokens: COMPACT,
+    successRate: PERCENT,
+    averageDuration: SECONDS,
 };
 
 // The server names usage with no recorded model, provider or profile `unknown` and usage with no user `anonymous`.
@@ -84,17 +87,12 @@ const PLACEHOLDER_KEY_TERMS: Record<string, string> = {
     anonymous: "uaiUsage_anonymous",
 };
 
-const initialRange = (): UauiDateRange => ({
-    ...uauiPresetRange("last-7-days", usageLocalDate(new Date()))!,
-    preset: "last-7-days",
-});
-
 @customElement("uai-usage-dashboard")
 export class UaiUsageDashboardElement extends UmbLitElement {
     #repository = new UaiUsageRepository(this);
     #overviewAbort?: AbortController;
 
-    @state() private _range: UauiDateRange = initialRange();
+    @state() private _range: UauiDateRange = defaultUsageDateRange().range;
     @state() private _compare?: UauiCompare;
     @state() private _groupBy: UauiGroupBy = "day";
     @state() private _groupByOptions: UauiGroupBy[] = uauiGroupByOptions(this._range);
@@ -119,6 +117,15 @@ export class UaiUsageDashboardElement extends UmbLitElement {
         pageSize: 10,
         load: (state, signal) => this.#loadBreakdown(state, signal),
     });
+
+    constructor() {
+        super();
+        // The header's picker sets the range on the workspace context. The first value is the default this
+        // element already holds, so only a different range reloads.
+        this.consumeContext(UAI_ANALYTICS_WORKSPACE_CONTEXT, (context) => {
+            this.observe(context?.dateRange, (dateRange) => dateRange && this.#onDateRange(dateRange));
+        });
+    }
 
     override connectedCallback() {
         super.connectedCallback();
@@ -201,9 +208,10 @@ export class UaiUsageDashboardElement extends UmbLitElement {
     }
 
     // The range changed: both parts reload and the table goes back to page 1.
-    #onDateRange(event: CustomEvent<{ value: UauiDateRange; compare?: UauiCompare }>) {
-        this._range = event.detail.value;
-        this._compare = event.detail.compare;
+    #onDateRange(dateRange: UaiUsageDateRange) {
+        if (isSameUsageDateRange(dateRange, { range: this._range, compare: this._compare })) return;
+        this._range = dateRange.range;
+        this._compare = dateRange.compare;
         // Hour is only offered for short ranges; when the chosen option is gone, take the first one.
         this._groupByOptions = uauiGroupByOptions(this._range);
         if (!this._groupByOptions.includes(this._groupBy)) this._groupBy = this._groupByOptions[0];
@@ -236,11 +244,13 @@ export class UaiUsageDashboardElement extends UmbLitElement {
             label=${this.localize.term(METRIC_LABEL_KEYS[metric])}
             icon=${icon}
             .value=${tile.value}
-            .valueFormat=${COMPACT}
+            .valueFormat=${METRIC_FORMATS[metric]}
             .previous=${tile.previous}
             ?no-data=${this.#noData(tile)}
             ?loading=${this._loading}
             ?error=${this._error}
+            .deltaUnit=${metric === "successRate" ? "points" : "percent"}
+            .lowerIsBetter=${metric === "averageDuration"}
             selectable
             .deselectable=${false}
             .selected=${this._metric === metric}
@@ -250,48 +260,14 @@ export class UaiUsageDashboardElement extends UmbLitElement {
 
     #renderTiles() {
         const tiles = mapUsageTiles(this._overview);
-        // The cached tile holds its place, loading, until an overview says whether cached input is reported.
-        const showCachedTile = !this._overview || tiles.cachedInputTokens.value !== undefined;
         return html`<div class="tiles-container">
             <div class="tiles">
                 ${this.#renderMetricTile("requests", "icon-chart", tiles.requests)}
                 ${this.#renderMetricTile("inputTokens", "icon-inbox", tiles.inputTokens)}
                 ${this.#renderMetricTile("outputTokens", "icon-navigation-right", tiles.outputTokens)}
                 ${this.#renderMetricTile("totalTokens", "icon-coins", tiles.totalTokens)}
-                <uaui-kpi-tile
-                    label=${this.localize.term("uaiUsage_successRate")}
-                    icon="icon-check"
-                    .value=${tiles.successRate.value}
-                    .valueFormat=${PERCENT}
-                    .previous=${tiles.successRate.previous}
-                    ?no-data=${this.#noData(tiles.successRate)}
-                    delta-unit="points"
-                    ?loading=${this._loading}
-                    ?error=${this._error}
-                ></uaui-kpi-tile>
-                <uaui-kpi-tile
-                    label=${this.localize.term("uaiUsage_averageDuration")}
-                    icon="icon-time"
-                    .value=${tiles.averageDuration.value}
-                    .valueFormat=${SECONDS}
-                    .previous=${tiles.averageDuration.previous}
-                    ?no-data=${this.#noData(tiles.averageDuration)}
-                    lower-is-better
-                    ?loading=${this._loading}
-                    ?error=${this._error}
-                ></uaui-kpi-tile>
-                ${showCachedTile
-                    ? html`<uaui-kpi-tile
-                          label=${this.localize.term("uaiUsage_cachedInput")}
-                          icon="icon-flash"
-                          .value=${tiles.cachedInputTokens.value}
-                          .valueFormat=${COMPACT}
-                          .previous=${tiles.cachedInputTokens.previous}
-                          ?no-data=${this.#noData(tiles.cachedInputTokens)}
-                          ?loading=${this._loading}
-                          ?error=${this._error}
-                      ></uaui-kpi-tile>`
-                    : nothing}
+                ${this.#renderMetricTile("successRate", "icon-check", tiles.successRate)}
+                ${this.#renderMetricTile("averageDuration", "icon-time", tiles.averageDuration)}
             </div>
         </div>`;
     }
@@ -361,15 +337,6 @@ export class UaiUsageDashboardElement extends UmbLitElement {
         const breakdownLabel = this.localize.term("uaiUsage_breakdown");
 
         return html`
-            <div class="toolbar">
-                <uaui-date-range
-                    .presets=${PRESETS}
-                    .value=${this._range}
-                    .compare=${this._compare}
-                    @change=${this.#onDateRange}
-                ></uaui-date-range>
-            </div>
-
             ${this.#renderTiles()}
 
             <uui-box
@@ -384,7 +351,9 @@ export class UaiUsageDashboardElement extends UmbLitElement {
                     @change=${this.#onGroupBy}
                 ></uaui-group-by>
                 <uaui-time-series-chart
-                    kind="stacked-bar"
+                    .kind=${usageChartKind(this._metric)}
+                    .valueFormat=${METRIC_FORMATS[this._metric]}
+                    .lowerIsBetter=${this._metric === "averageDuration"}
                     .series=${this._chart.series}
                     .compareSeries=${this._chart.compareSeries}
                     .range=${this._range}
@@ -429,17 +398,13 @@ export class UaiUsageDashboardElement extends UmbLitElement {
                 gap: var(--uui-size-4);
                 padding: var(--uui-size-layout-1);
             }
-            .toolbar {
-                display: flex;
-                justify-content: flex-end;
-            }
-            /* Four across (4 + 3 with the cached tile, 4 + 2 without), then two, then one, by the width of the view. */
+            /* Three across, then two, then one, by the width of the view. */
             .tiles-container {
                 container-type: inline-size;
             }
             .tiles {
                 display: grid;
-                grid-template-columns: repeat(4, minmax(0, 1fr));
+                grid-template-columns: repeat(3, minmax(0, 1fr));
                 gap: var(--uui-size-space-4);
             }
             @container (max-width: 700px) {

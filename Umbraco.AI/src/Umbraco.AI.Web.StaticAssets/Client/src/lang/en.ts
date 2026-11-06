@@ -208,6 +208,9 @@ export default {
         entityPublishLabel: "Publish Entity",
         entityPublishDescription: "Save and publish content to the public site",
     },
+    uaiAnalytics: {
+        title: "Analytics",
+    },
     uaiUsage: {
         requests: "Requests",
         inputTokens: "Input tokens",

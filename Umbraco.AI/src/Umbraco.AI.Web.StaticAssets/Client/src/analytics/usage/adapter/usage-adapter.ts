@@ -39,8 +39,6 @@ export interface UaiUsageTiles {
     successRate: UaiUsageTile;
     /** Seconds. */
     averageDuration: UaiUsageTile;
-    /** The part of the input tokens served from a provider's cache. No value when no provider reported it. */
-    cachedInputTokens: UaiUsageTile;
 }
 
 const successRateOf = (counts: UsageCountsModel) => (counts.requests ? counts.succeeded / counts.requests : undefined);
@@ -76,22 +74,50 @@ export function mapUsageTiles(response?: UsageOverviewResponseModel | null): Uai
         totalTokens: of((c) => c.totalTokens),
         successRate: of(successRateOf),
         averageDuration: of(averageDurationOf),
-        cachedInputTokens: of((c) => c.cachedInputTokens ?? undefined),
     };
 }
 
-/** The metrics a tile can pick for the chart: the four that can be stacked. */
-export type UaiUsageMetric = "requests" | "inputTokens" | "outputTokens" | "totalTokens";
+/** The metrics a tile can pick for the chart. */
+export type UaiUsageMetric =
+    | "requests"
+    | "inputTokens"
+    | "outputTokens"
+    | "totalTokens"
+    | "successRate"
+    | "averageDuration";
 
-/** The ids of the series a metric stacks into. The caller turns them into labels. */
-export type UaiUsageSeriesId = "succeeded" | "failed" | "input" | "cachedInput" | "output";
+/** The ids of the series a metric draws. The caller turns them into labels. */
+export type UaiUsageSeriesId =
+    | "succeeded"
+    | "failed"
+    | "input"
+    | "cachedInput"
+    | "output"
+    | "successRate"
+    | "averageDuration";
+
+/**
+ * How a metric is drawn: counts stack as bars, a rate is a line, and an average is plain bars (stacking would
+ * add a "Total" of averages to the tooltip).
+ */
+export function usageChartKind(metric: UaiUsageMetric): "stacked-bar" | "bar" | "line" {
+    switch (metric) {
+        case "successRate":
+            return "line";
+        case "averageDuration":
+            return "bar";
+        default:
+            return "stacked-bar";
+    }
+}
 
 type Bucket = UsageOverviewPeriodModel["buckets"][number];
 
 interface Stack {
     id: UaiUsageSeriesId;
     color: UauiSeries["color"];
-    of: (bucket: Bucket) => number;
+    /** Undefined leaves the bucket out of the series: there is nothing to draw, which is not the same as 0. */
+    of: (bucket: Bucket) => number | undefined;
 }
 
 // Cached input is null when no provider reported it. A period with no figure shows one plain input stack.
@@ -120,6 +146,14 @@ function stacksOf(metric: UaiUsageMetric, splitCachedInput: boolean): Stack[] {
                 { id: "input", color: 1, of: (b) => b.inputTokens },
                 { id: "output", color: 2, of: (b) => b.outputTokens },
             ];
+        case "successRate":
+            // A fraction, worked out as the tile does. A bucket with no requests has no rate: it is left out
+            // rather than drawn as 0. The chart then bridges or leaves the empty bucket (umbraco/Umbraco.Analytics.UI#42).
+            return [{ id: "successRate", color: 1, of: successRateOf }];
+        case "averageDuration":
+            // Seconds per request, as the tile. A bucket with no requests is left out for the same reason as the
+            // success rate (umbraco/Umbraco.Analytics.UI#42).
+            return [{ id: "averageDuration", color: 1, of: averageDurationOf }];
     }
 }
 
@@ -142,7 +176,10 @@ export function mapUsageSeries(
         id: stack.id,
         label: labelOf(stack.id),
         color: stack.color,
-        points: buckets.map((bucket) => ({ date: bucket.start, value: stack.of(bucket) })),
+        points: buckets.flatMap((bucket) => {
+            const value = stack.of(bucket);
+            return value === undefined ? [] : [{ date: bucket.start, value }];
+        }),
     }));
 }
 

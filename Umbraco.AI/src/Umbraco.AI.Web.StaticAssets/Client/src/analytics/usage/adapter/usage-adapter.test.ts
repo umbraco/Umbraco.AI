@@ -12,6 +12,7 @@ import {
     mapUsageSeries,
     mapUsageTiles,
     toUsageBreakdownQuery,
+    usageChartKind,
     toUsageOverviewQuery,
 } from "./usage-adapter.js";
 import { resolveUsageTimeZone, usageLocalDate } from "./usage-time-zone.js";
@@ -65,17 +66,6 @@ describe("usage tiles", () => {
         expect(tiles.requests).toEqual({ value: 0, previous: undefined, noData: true });
         expect(tiles.successRate).toEqual({ value: undefined, previous: undefined, noData: true });
         expect(tiles.averageDuration.value).toBeUndefined();
-    });
-
-    it("has a cached input tile only when a provider reported it, with its compare value", () => {
-        const none = mapUsageTiles({ current: period({ totals: counts({ requests: 4 }) }) });
-        const some = mapUsageTiles({
-            current: period({ totals: counts({ requests: 4, cachedInputTokens: 30 }) }),
-            previous: period({ totals: counts({ requests: 2, cachedInputTokens: 10 }) }),
-        });
-
-        expect(none.cachedInputTokens.value).toBeUndefined();
-        expect(some.cachedInputTokens).toEqual({ value: 30, previous: 10, noData: false });
     });
 
     it("works out the success rate as a fraction and the average duration in seconds", () => {
@@ -223,6 +213,77 @@ describe("usage series", () => {
         const [succeeded] = mapUsageSeries("requests", period(), (id) => `label:${id}`);
 
         expect(succeeded.label).toBe("label:succeeded");
+    });
+});
+
+describe("usage rate and average metrics", () => {
+    const days = period({
+        buckets: [
+            bucket("2026-11-02", { requests: 4, succeeded: 3, failed: 1, durationMs: 8_000 }),
+            bucket("2026-11-03"),
+            bucket("2026-11-04", { requests: 2, succeeded: 2, durationMs: 1_000 }),
+        ],
+    });
+
+    it("draws the success rate as a line of fractions", () => {
+        const [series, ...rest] = mapUsageSeries("successRate", days);
+
+        expect(rest).toEqual([]);
+        expect(usageChartKind("successRate")).toBe("line");
+        expect(series.id).toBe("successRate");
+        expect(values(series)).toEqual([0.75, 1]);
+    });
+
+    it("leaves a bucket with no requests out of the success rate rather than drawing 0", () => {
+        const [series] = mapUsageSeries("successRate", days);
+
+        expect(dates(series)).toEqual(["2026-11-02", "2026-11-04"]);
+    });
+
+    it("draws the average duration as bars of seconds per request, with no point for a bucket without requests", () => {
+        const [series] = mapUsageSeries("averageDuration", days);
+
+        expect(usageChartKind("averageDuration")).toBe("bar");
+        expect(dates(series)).toEqual(["2026-11-02", "2026-11-04"]);
+        expect(values(series)).toEqual([2, 0.5]);
+    });
+
+    it("applies the same rules to the compare period, keeping its own dates", () => {
+        const response: UsageOverviewResponseModel = {
+            current: days,
+            previous: period({
+                buckets: [
+                    bucket("2026-10-30", { requests: 2, succeeded: 1, failed: 1, durationMs: 4_000 }),
+                    bucket("2026-10-31"),
+                    bucket("2026-11-01"),
+                ],
+            }),
+        };
+
+        const rate = mapUsageChart("successRate", response);
+        const duration = mapUsageChart("averageDuration", response);
+
+        expect(values(rate.compareSeries[0])).toEqual([0.5]);
+        expect(dates(rate.compareSeries[0])).toEqual(["2026-10-30"]);
+        expect(values(duration.compareSeries[0])).toEqual([2]);
+        expect(rate.compareSeries[0].id).toBe(rate.series[0].id);
+    });
+
+    it("maps hourly buckets, leaving the quiet hours out", () => {
+        const hourly = period({ hourlyBuckets: hoursOf("2026-11-05", { 9: 4, 13: 2 }) });
+
+        const [rate] = mapUsageSeries("successRate", hourly);
+        const [duration] = mapUsageSeries("averageDuration", hourly);
+
+        expect(dates(rate)).toEqual(["2026-11-05T09:00:00+01:00", "2026-11-05T13:00:00+01:00"]);
+        expect(values(rate)).toEqual([1, 1]);
+        expect(values(duration)).toEqual([0, 0]);
+    });
+
+    it("localizes the new series through the label callback", () => {
+        const [series] = mapUsageSeries("successRate", days, (id) => `label:${id}`);
+
+        expect(series.label).toBe("label:successRate");
     });
 });
 

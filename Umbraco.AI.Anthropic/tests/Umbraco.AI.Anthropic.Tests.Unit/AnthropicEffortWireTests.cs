@@ -152,12 +152,12 @@ public class AnthropicEffortWireTests
         await SendAndIgnoreFailureAsync(chatClient, options);
 
         // Assert — everything except model and max tokens is still applied from ChatOptions, so setting a
-        // provider setting neither drops the profile's temperature nor bypasses a decorator that filters
-        // the sampling parameters for models which reject them (see #265).
+        // provider setting does not drop the instructions. The sampling parameters never go out: API
+        // version 2026-10-21 removed them and the SDK's adapter ignores them.
         var body = handler.RequestBodies.ShouldHaveSingleItem();
         body.ShouldContain("\"output_config\":{\"effort\":\"medium\"}");
-        body.ShouldContain("\"temperature\":0.5");
-        body.ShouldContain("\"top_p\":0.8999999");
+        body.ShouldNotContain("temperature");
+        body.ShouldNotContain("top_p");
         body.ShouldContain("be terse");
     }
 

@@ -83,20 +83,6 @@ export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
         },
         signal: AbortSignal,
     ): Promise<void> {
-        // Lift resume entries out of forwardedProps (where UaiAgentClient stashes them) into
-        // the typed body.resume field the server actually reads. `resume` IS a first-class
-        // RunAgentInput field in the AG-UI draft interrupt spec
-        // (https://docs.ag-ui.com/concepts/interrupts), but the installed @ag-ui/client SDK
-        // predates that draft and its RunAgentInput type has no resume slot — so UaiAgentClient
-        // ferries the entries across that boundary via forwardedProps as a temporary shim. Once
-        // the SDK adds resume to RunAgentInput (umbraco/Umbraco.AI#210), set it directly and drop
-        // this lift. The server ignores forwardedProps.resume, so we strip it from the forwarded
-        // props here rather than sending it redundantly alongside body.resume. Other entries
-        // (e.g. `previousAgentId`, which UaiAgentClient merges in next to `resume` for `auto`
-        // agents) have no typed body field and pass through in otherForwardedProps unchanged.
-        const { resume, ...otherForwardedProps } =
-            (input.forwardedProps as { resume?: AGUIResumeEntryModel[] } | undefined) ?? {};
-
         // Convert AG-UI RunAgentInput to hey-api AGUIRunRequestModel
         const body: AGUIRunRequestModel = {
             threadId: input.threadId,
@@ -105,9 +91,8 @@ export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
             tools: input.tools?.map((tool) => this.#toAGUITool(tool)),
             state: input.state,
             context: input.context?.map((ctx) => this.#toAGUIContext(ctx)),
-            resume: resume?.length ? resume : undefined,
-            // Forward only genuine props — not the resume we just lifted out.
-            forwardedProps: Object.keys(otherForwardedProps).length > 0 ? otherForwardedProps : undefined,
+            resume: input.resume?.length ? (input.resume as AGUIResumeEntryModel[]) : undefined,
+            forwardedProps: input.forwardedProps,
         };
 
         const result = this.#runner

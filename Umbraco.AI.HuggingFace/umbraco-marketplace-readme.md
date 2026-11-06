@@ -13,7 +13,7 @@ Hugging Face provider for Umbraco.AI — connect to hundreds of open-weights mod
 
 ### Requirements
 
-- Umbraco CMS 17.0.0+
+- Umbraco CMS 19.0.0+
 - Umbraco.AI 1.0.0+
-- .NET 10.0
+- .NET 11.0
 - A Hugging Face access token with Inference Providers permissions

@@ -41,8 +41,8 @@ if [ "$valid_branch" = false ]; then
     echo "  claude/<anything>" >&2
     echo "" >&2
     echo "Examples:" >&2
-    echo "  v18/dev" >&2
-    echo "  v18/topic/add-caching" >&2
+    echo "  v19/dev" >&2
+    echo "  v19/topic/add-caching" >&2
     echo "  v17/release/2026.01" >&2
     echo "  v17/hotfix/2026.01.1" >&2
     echo "========================================" >&2

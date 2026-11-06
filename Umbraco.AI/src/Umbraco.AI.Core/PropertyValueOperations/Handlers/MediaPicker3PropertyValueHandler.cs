@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using CmsConstants = Umbraco.Cms.Core.Constants;
 
 namespace Umbraco.AI.Core.PropertyValueOperations.Handlers;
 
@@ -11,28 +12,43 @@ namespace Umbraco.AI.Core.PropertyValueOperations.Handlers;
 /// item content types or nested properties, so descent operations are not supported and
 /// <see cref="GetItemContentTypeKey"/> always returns <c>null</c>.
 /// </remarks>
-public sealed class MediaPicker3PropertyValueHandler : IAIPropertyValueHandler
+public class MediaPicker3PropertyValueHandler : IAIPropertyValueHandler
 {
-    private const string EditorSchemaAlias = "Umbraco.MediaPicker3";
-
     /// <inheritdoc />
-    public string ForPropertyEditorSchemaAlias => EditorSchemaAlias;
+    public string ForPropertyEditorSchemaAlias => EditorAlias;
+
+    /// <summary>
+    /// The editor alias this handler serves; also names the editor in error messages.
+    /// </summary>
+    private protected virtual string EditorAlias => CmsConstants.PropertyEditors.Aliases.MediaPicker3;
+
+    /// <summary>
+    /// The most items the editor can hold, or <c>null</c> when it has no fixed limit.
+    /// </summary>
+    private protected virtual int? MaxItems => null;
 
     /// <inheritdoc />
     public AIValidationResult ValidateAddItem(JsonNode? value, AIAddItemArgs args, AIPropertyValueOperationContext context)
     {
+        if (MaxItems is int maxItems && AsArray(value).Count >= maxItems)
+        {
+            return AIValidationResult.Invalid(new AIPropertyValueOperationError(
+                AIPropertyValueOperationError.Codes.SchemaMismatch,
+                $"{EditorAlias} holds at most {maxItems} media item. Remove the existing one or use set_value to replace it."));
+        }
+
         if (args.Values is null)
         {
             return AIValidationResult.Invalid(new AIPropertyValueOperationError(
                 AIPropertyValueOperationError.Codes.SchemaMismatch,
-                "MediaPicker3 AddItem requires 'values' with at least 'mediaKey'."));
+                $"{EditorAlias} AddItem requires 'values' with at least 'mediaKey'."));
         }
 
         if (!args.Values.ContainsKey("mediaKey") || args.Values["mediaKey"] is null)
         {
             return AIValidationResult.Invalid(new AIPropertyValueOperationError(
                 AIPropertyValueOperationError.Codes.SchemaMismatch,
-                "MediaPicker3 AddItem requires 'values.mediaKey' (the media item's GUID)."));
+                $"{EditorAlias} AddItem requires 'values.mediaKey' (the media item's GUID)."));
         }
 
         return AIValidationResult.Valid;
@@ -180,7 +196,7 @@ public sealed class MediaPicker3PropertyValueHandler : IAIPropertyValueHandler
         AIVariantId? variantId,
         AIPropertyValueOperationContext context,
         CancellationToken cancellationToken = default)
-        => throw new InvalidOperationException("MediaPicker3 items do not have nested properties.");
+        => throw new InvalidOperationException($"{EditorAlias} items do not have nested properties.");
 
     private static JsonArray AsArray(JsonNode? value)
         => value is JsonArray arr ? arr : new JsonArray();

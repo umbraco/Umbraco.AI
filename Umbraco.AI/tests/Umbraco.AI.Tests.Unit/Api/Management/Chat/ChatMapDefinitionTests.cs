@@ -23,7 +23,7 @@ public class ChatMapDefinitionTests
                 new ChatMapDefinition(),
                 new UsageDetailsMapDefinition()
             }),
-            Mock.Of<ICoreScopeProvider>(),
+            global::Umbraco.AI.Tests.Common.TestCoreScopeProvider.Create(),
             NullLogger<UmbracoMapper>.Instance);
     }
 

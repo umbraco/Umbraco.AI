@@ -170,6 +170,89 @@ public class BlockListPropertyValueHandlerTests
     }
 
     [Fact]
+    public async Task AddItemAsync_NewLayoutItem_CarriesLayoutKey()
+    {
+        var elementTypeKey = Guid.NewGuid();
+        var handler = new BlockListPropertyValueHandler(BuildContentTypeService(elementTypeKey, "title", "Umbraco.TextBox"));
+
+        var result = await handler.AddItemAsync(null, new AIAddItemArgs(elementTypeKey.ToString(), new JsonObject { ["title"] = "x" }), BuildContext());
+
+        var layout = (JsonArray)((JsonObject)result.Value!)[BlockEnvelopeOps.LayoutPropertyName]![LayoutKey]!;
+        layout[0]!["key"]!.GetValue<Guid>().ShouldBe(result.BlockKey);
+    }
+
+    [Fact]
+    public async Task AddItemAsync_SegmentedVariants_ExposeOncePerCulture()
+    {
+        var elementTypeKey = Guid.NewGuid();
+        var handler = new BlockListPropertyValueHandler(BuildContentTypeService(
+            elementTypeKey, ContentVariation.CultureAndSegment, ("title", ContentVariation.CultureAndSegment)));
+        var context = BuildContext(variants: [new AIVariantId("en-US", null), new AIVariantId("en-US", "vip")]);
+
+        var result = await handler.AddItemAsync(null, new AIAddItemArgs(elementTypeKey.ToString(), new JsonObject { ["title"] = "x" }), context);
+
+        var expose = (JsonArray)((JsonObject)result.Value!)[BlockEnvelopeOps.ExposePropertyName]!;
+        expose.Count.ShouldBe(1);
+        expose[0]!["culture"]!.GetValue<string>().ShouldBe("en-US");
+        ((JsonObject)expose[0]!).ContainsKey("segment").ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task AddItemAsync_CultureAndSegmentProperty_WritesValueWithCultureAndSegment()
+    {
+        var elementTypeKey = Guid.NewGuid();
+        var handler = new BlockListPropertyValueHandler(BuildContentTypeService(
+            elementTypeKey, ContentVariation.CultureAndSegment, ("title", ContentVariation.CultureAndSegment)));
+        var context = BuildContext(variants: [new AIVariantId("en-US", "vip")]);
+
+        var result = await handler.AddItemAsync(null, new AIAddItemArgs(elementTypeKey.ToString(), new JsonObject { ["title"] = "x" }), context);
+
+        var values = (JsonArray)((JsonArray)((JsonObject)result.Value!)[BlockEnvelopeOps.ContentDataPropertyName]!)[0]!["values"]!;
+        values[0]!["culture"]!.GetValue<string>().ShouldBe("en-US");
+        values[0]!["segment"]!.GetValue<string>().ShouldBe("vip");
+    }
+
+    [Fact]
+    public void ValidateRemoveItem_RepeatedContentKey_IsRejected()
+    {
+        var library = Guid.NewGuid();
+        var envelope = BlockEnvelopeOps.Empty(LayoutKey);
+        BlockEnvelopeOps.AddLayoutEntry(envelope, LayoutKey, new JsonObject { ["key"] = Guid.NewGuid(), ["contentKey"] = library, ["isExternalContent"] = true });
+        BlockEnvelopeOps.AddLayoutEntry(envelope, LayoutKey, new JsonObject { ["key"] = Guid.NewGuid(), ["contentKey"] = library, ["isExternalContent"] = true });
+        var handler = new BlockListPropertyValueHandler(new Mock<IContentTypeService>().Object);
+
+        var result = handler.ValidateRemoveItem(envelope, library, BuildContext());
+
+        result.IsValid.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void GetItemContentTypeKey_ExternalBlock_ReturnsNull()
+    {
+        var library = Guid.NewGuid();
+        var layoutKey = Guid.NewGuid();
+        var envelope = BlockEnvelopeOps.Empty(LayoutKey);
+        BlockEnvelopeOps.AddLayoutEntry(envelope, LayoutKey, new JsonObject { ["key"] = layoutKey, ["contentKey"] = library, ["isExternalContent"] = true });
+        var handler = new BlockListPropertyValueHandler(new Mock<IContentTypeService>().Object);
+
+        handler.GetItemContentTypeKey(envelope, layoutKey, BuildContext()).ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task SetItemPropertyValueAsync_ExternalBlock_LeavesEnvelopeUntouched()
+    {
+        var library = Guid.NewGuid();
+        var layoutKey = Guid.NewGuid();
+        var envelope = BlockEnvelopeOps.Empty(LayoutKey);
+        BlockEnvelopeOps.AddLayoutEntry(envelope, LayoutKey, new JsonObject { ["key"] = layoutKey, ["contentKey"] = library, ["isExternalContent"] = true });
+        var handler = new BlockListPropertyValueHandler(new Mock<IContentTypeService>().Object);
+
+        var result = await handler.SetItemPropertyValueAsync(envelope, layoutKey, "title", JsonValue.Create("x"), null, BuildContext());
+
+        ((JsonArray)((JsonObject)result!)[BlockEnvelopeOps.ContentDataPropertyName]!).Count.ShouldBe(0);
+    }
+
+    [Fact]
     public async Task ClearAsync_ReturnsCanonicalEmptyEnvelope()
     {
         var handler = new BlockListPropertyValueHandler(new Mock<IContentTypeService>().Object);

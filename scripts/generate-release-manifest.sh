@@ -5,7 +5,9 @@ set -e
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # Find all Umbraco.AI* folders at root
-mapfile -t PRODUCTS < <(find "$REPO_ROOT" -maxdepth 1 -type d -name "Umbraco.AI*" -printf "%f\n" | sort)
+# Products listed in scripts/parked-products.txt are skipped (see docs/upgrades/v19.md, Blockers).
+PARKED_FILE="$REPO_ROOT/scripts/parked-products.txt"
+mapfile -t PRODUCTS < <(find "$REPO_ROOT" -maxdepth 1 -type d -name "Umbraco.AI*" -printf "%f\n" | sort | grep -v -x -F -f <(grep -v -E '^\s*(#|$)' "$PARKED_FILE" 2>/dev/null | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//') || true)
 
 if [ ${#PRODUCTS[@]} -eq 0 ]; then
     echo "Error: No Umbraco.AI* folders found in repository root" >&2

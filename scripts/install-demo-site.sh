@@ -194,20 +194,27 @@ open(path, 'w').write(content)
 
 # Step 3.2: Install Clean starter kit and Umbraco.Automate
 # Clean's major version does not match CMS major — map explicitly and add new entries as needed.
+# No Clean release targets CMS 19 yet (latest, 8.x, depends on CMS 18) -- skip it there.
+# Replace the "19)" line once a CMS 19 compatible Clean ships.
+SKIP_CLEAN=false
 case "$VERSION_MAJOR" in
     17) CLEAN_VERSION="7.*" ;;
     18) CLEAN_VERSION="8.*" ;;
+    19) CLEAN_VERSION=""; SKIP_CLEAN=true ;;
     *) CLEAN_VERSION="" ;;
 esac
-echo "Installing Clean starter kit..."
 pushd "$DEMO_SITE_DIR" > /dev/null
-if [ -n "$CLEAN_VERSION" ]; then
+if [ "$SKIP_CLEAN" = true ]; then
+    echo "Skipping Clean starter kit: no release supports CMS v$VERSION_MAJOR yet."
+elif [ -n "$CLEAN_VERSION" ]; then
+    echo "Installing Clean starter kit..."
     dotnet add package Clean --version "$CLEAN_VERSION"
 else
     echo "Warning: No Clean version mapping for v$VERSION_MAJOR, using latest stable."
     dotnet add package Clean
 fi
-dotnet add package Umbraco.Automate --version "${VERSION_MAJOR}.*-*"
+# Parked on the v19 line (no v19 Umbraco.Automate yet, docs/upgrades/v19.md Blockers). Re-enable with the Automate steps below.
+# dotnet add package Umbraco.Automate --version "${VERSION_MAJOR}.*-*"
 popd > /dev/null
 
 # Step 3.3: Set fixed port for consistent development
@@ -226,17 +233,18 @@ echo "Adding UmbracoAISeedData..."
 mkdir -p "$DEMO_SITE_DIR/SeedData"
 cp "$SCRIPT_DIR/templates/UmbracoAISeedData.cs" "$DEMO_SITE_DIR/SeedData/UmbracoAISeedData.cs"
 
-# Step 3.6: Configure Umbraco.Automate to share the Umbraco database
-echo "Configuring Umbraco.Automate to share Umbraco database..."
-APP_SETTINGS_PATH="$DEMO_SITE_DIR/appsettings.json"
-node -e "
-const fs = require('fs');
-const path = '${APP_SETTINGS_PATH}';
-const s = JSON.parse(fs.readFileSync(path, 'utf8'));
-s.Umbraco = s.Umbraco || {};
-s.Umbraco.Automate = { UseNamedConnectionString: 'umbracoDbDSN' };
-fs.writeFileSync(path, JSON.stringify(s, null, 2) + '\n', 'utf8');
-"
+# Parked on the v19 line (docs/upgrades/v19.md, Blockers). Uncomment with the Automate steps.
+# # Step 3.6: Configure Umbraco.Automate to share the Umbraco database
+# echo "Configuring Umbraco.Automate to share Umbraco database..."
+# APP_SETTINGS_PATH="$DEMO_SITE_DIR/appsettings.json"
+# node -e "
+# const fs = require('fs');
+# const path = '${APP_SETTINGS_PATH}';
+# const s = JSON.parse(fs.readFileSync(path, 'utf8'));
+# s.Umbraco = s.Umbraco || {};
+# s.Umbraco.Automate = { UseNamedConnectionString: 'umbracoDbDSN' };
+# fs.writeFileSync(path, JSON.stringify(s, null, 2) + '\n', 'utf8');
+# "
 
 # Step 4: Create unified solution
 echo "Creating unified solution..."
@@ -332,18 +340,19 @@ add_product_projects "Umbraco.AI.Agent.Copilot.Workspace" "Addons/CopilotWorkspa
 echo "Adding Umbraco.AI.Search projects..."
 add_product_projects "Umbraco.AI.Search" "Addons/Search"
 
-echo "Adding Umbraco.AI.Automate projects..."
-add_product_projects "Umbraco.AI.Automate" "Addons/Automate"
-
-# Step 8: Add Deploy projects
-echo "Adding Umbraco.AI.Deploy projects..."
-add_product_projects "Umbraco.AI.Deploy" "Deploy"
-
-echo "Adding Umbraco.AI.Prompt.Deploy projects..."
-add_product_projects "Umbraco.AI.Prompt.Deploy" "Deploy"
-
-echo "Adding Umbraco.AI.Agent.Deploy projects..."
-add_product_projects "Umbraco.AI.Agent.Deploy" "Deploy"
+# Parked on the v19 line until Deploy/Automate ship v19 (docs/upgrades/v19.md, Blockers). Uncomment to re-add.
+# echo "Adding Umbraco.AI.Automate projects..."
+# add_product_projects "Umbraco.AI.Automate" "Addons/Automate"
+#
+# # Step 8: Add Deploy projects
+# echo "Adding Umbraco.AI.Deploy projects..."
+# add_product_projects "Umbraco.AI.Deploy" "Deploy"
+#
+# echo "Adding Umbraco.AI.Prompt.Deploy projects..."
+# add_product_projects "Umbraco.AI.Prompt.Deploy" "Deploy"
+#
+# echo "Adding Umbraco.AI.Agent.Deploy projects..."
+# add_product_projects "Umbraco.AI.Agent.Deploy" "Deploy"
 
 # Step 11: Add demo site to solution
 echo "Adding demo site to solution..."
@@ -471,10 +480,11 @@ fi
 #     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Search/src/Umbraco.AI.Search.Startup/Umbraco.AI.Search.Startup.csproj"
 # fi
 
-# Automate add-on (single project — no Startup separation)
-if [ -f "Umbraco.AI.Automate/src/Umbraco.AI.Automate/Umbraco.AI.Automate.csproj" ]; then
-    dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Automate/src/Umbraco.AI.Automate/Umbraco.AI.Automate.csproj"
-fi
+# Parked on the v19 line (docs/upgrades/v19.md, Blockers). Uncomment to re-add.
+# # Automate add-on (single project — no Startup separation)
+# if [ -f "Umbraco.AI.Automate/src/Umbraco.AI.Automate/Umbraco.AI.Automate.csproj" ]; then
+#     dotnet add "$DEMO_PROJECT" reference "Umbraco.AI.Automate/src/Umbraco.AI.Automate/Umbraco.AI.Automate.csproj"
+# fi
 
 echo ""
 echo "========================================="

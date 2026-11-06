@@ -33,10 +33,11 @@
         "test:agent-ui": "npm run test -w @umbraco-ai/agent-ui",
         "test:copilot": "npm run test -w @umbraco-ai/agent-copilot",
         "test:copilot-workspace": "npm run test -w @umbraco-ai/agent-copilot-workspace",
-        "generate-client": "concurrently --names \"core,prompt,agent\" -c \"blue,green,yellow\" \"npm run generate-client:core\" \"npm run generate-client:prompt\" \"npm run generate-client:agent\"",
+        "generate-client": "concurrently --names \"core,prompt,agent,copilot-workspace\" -c \"blue,green,yellow,magenta\" \"npm run generate-client:core\" \"npm run generate-client:prompt\" \"npm run generate-client:agent\" \"npm run generate-client:copilot-workspace\"",
         "generate-client:core": "npm run generate-client -w @umbraco-ai/core",
         "generate-client:prompt": "npm run generate-client -w @umbraco-ai/prompt",
         "generate-client:agent": "npm run generate-client -w @umbraco-ai/agent",
+        "generate-client:copilot-workspace": "npm run generate-client -w @umbraco-ai/agent-copilot-workspace",
         "changelog": "node scripts/generate-changelog.js",
         "changelog:list": "node scripts/generate-changelog.js --list",
         "changelog:all": "node scripts/generate-all-changelogs.js",
@@ -49,7 +50,7 @@
     "devDependencies": {
         "@commitlint/cli": "^20.3.1",
         "@commitlint/config-conventional": "^20.3.1",
-        "@umbraco-cms/backoffice": "^18.0.0",
+        "@umbraco-cms/backoffice": "^19.0.0-beta1",
         "concurrently": "^10.0.5",
         "conventional-changelog": "^7.2.0",
         "conventional-changelog-conventionalcommits": "^9.1.0",
@@ -61,15 +62,15 @@
         "monaco-editor": {
             "dompurify": "^3.4.16"
         },
-        "@hey-api/openapi-ts": "0.97.3"
+        "@hey-api/openapi-ts": "^0.99.0"
     },
     "peerDependencyVersions": {
-        "@umbraco-ai/core": "^18.7.0",
-        "@umbraco-ai/agent": "^18.4.2",
-        "@umbraco-ai/agent-ui": "^18.3.0",
-        "@umbraco-ai/agent-copilot": "^18.2.0",
-        "@umbraco-ai/agent-copilot-workspace": "^18.3.0",
-        "@umbraco-cms/backoffice": "^18.0.0"
+        "@umbraco-ai/core": "^19.0.0-beta.1",
+        "@umbraco-ai/agent": "^19.0.0-beta.1",
+        "@umbraco-ai/agent-ui": "^19.0.0-beta.1",
+        "@umbraco-ai/agent-copilot": "^19.0.0-beta.1",
+        "@umbraco-ai/agent-copilot-workspace": "^19.0.0-beta.1",
+        "@umbraco-cms/backoffice": "^19.0.0-beta1"
     },
     "_comment_peerDependencyVersions": "Default peer dependency version ranges for npm packages. Products can override by defining peerDependencies in their own package.json. Should be kept in sync with minimum versions in Directory.Packages.props."
 }

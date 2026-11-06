@@ -11,7 +11,7 @@ OpenRouter provider for Umbraco.AI — one connection to hundreds of chat models
 
 ### Requirements
 
-- Umbraco CMS 18.0.0+
-- Umbraco.AI 18.0.0+
-- .NET 10.0
+- Umbraco CMS 19.0.0+
+- Umbraco.AI 19.0.0+
+- .NET 11.0
 - OpenRouter API key

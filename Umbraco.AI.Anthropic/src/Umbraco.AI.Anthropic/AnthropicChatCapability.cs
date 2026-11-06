@@ -100,27 +100,20 @@ public class AnthropicChatCapability(
     /// enforces, falling back to the ID-based predicate when the API reported nothing for the model.
     /// </summary>
     /// <remarks>
-    /// The sampling half has no equivalent in the API's response, so it comes from the ID predicate — one
-    /// predicate behind both the dropped parameter and the editor's account of it.
+    /// Sampling is unsupported for every model: API version 2026-10-21, which the SDK sends, removed
+    /// <c>temperature</c>, <c>top_p</c> and <c>top_k</c> and rejects a request carrying any of them, and the
+    /// SDK's chat adapter no longer maps them. Declaring it keeps the editor honest about what is applied.
     /// </remarks>
     private static AIModelSettingsSupport BuildSettingsSupport(string modelId, bool? reportedEffortSupport)
     {
         var supportsEffort = reportedEffortSupport ?? AnthropicModelUtilities.SupportsEffort(modelId);
-        var supportsSampling = AnthropicModelUtilities.SupportsSamplingParameters(modelId);
-
-        if (supportsEffort && supportsSampling)
-        {
-            return AIModelSettingsSupport.Default;
-        }
 
         return new AIModelSettingsSupport
         {
             UnsupportedCapabilitySettings = supportsEffort
                 ? []
                 : [nameof(AnthropicChatCapabilitySettings.Effort)],
-            UnsupportedProfileSettings = supportsSampling
-                ? []
-                : AIProfileSettingKeys.Sampling,
+            UnsupportedProfileSettings = AIProfileSettingKeys.Sampling,
         };
     }
 
@@ -166,11 +159,17 @@ public class AnthropicChatCapability(
         // Wrapped with the block-level cache marker (umbraco/Umbraco.AI#382): the top-level cache_control
         // field ApplyCapabilitySettings sets only reaches roughly the last ~20 blocks of the request, which
         // in a longer conversation with tool calls never reaches back to the system prompt. This wrapper
-        // adds a second breakpoint directly on the last system-role message so the stable prefix (agent
+        // adds a second breakpoint directly on the first system-role message so the stable prefix (agent
         // instructions, context resources -- see AIAgentSystemMessageChatClient) earns its own cache entry
         // independent of how long the conversation tail has grown.
-        return new AnthropicSystemBlockCacheMarkingChatClient(
-                Provider.CreateSdkClient(settings).Beta.AsIChatClient(modelId))
+        //
+        // Wrapped outermost with the system-message hoist: the SDK's adapter now emits a system-role message
+        // that follows other messages as a role "system" entry inside messages, which only some models
+        // accept, so every system message is moved to the leading position (where it becomes part of the
+        // top-level system prompt) before the adapter sees it.
+        return new AnthropicSystemMessageHoistingChatClient(
+                new AnthropicSystemBlockCacheMarkingChatClient(
+                    Provider.CreateSdkClient(settings).Beta.AsIChatClient(modelId)))
             .AsBuilder()
             .ConfigureOptions(options => options.MaxOutputTokens ??= ResolveDefaultMaxTokens(options.ModelId ?? modelId))
             .Build();
@@ -206,7 +205,7 @@ public class AnthropicChatCapability(
     /// <para>
     /// Caching also marks the request's last cacheable block overall (what the top-level field does), as a
     /// second, coarser breakpoint alongside the block-level one <see cref="AnthropicSystemBlockCacheMarkingChatClient"/>
-    /// adds directly on the last system-role message -- the top-level field cannot itself target that
+    /// adds directly on the first system-role message -- the top-level field cannot itself target that
     /// message: the adapter <em>appends</em> the caller's instructions after any <c>System</c> blocks this
     /// factory's representation supplies, so a marker placed here would sit ahead of the content worth
     /// caching, not on it. <c>AnthropicPromptCachingWireTests</c> pins that constraint down; it's the reason

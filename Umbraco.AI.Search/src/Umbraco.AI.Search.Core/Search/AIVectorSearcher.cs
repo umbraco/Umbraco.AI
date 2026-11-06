@@ -6,11 +6,11 @@ using Umbraco.AI.Core.Embeddings;
 using Umbraco.AI.Search.Core.Configuration;
 using Umbraco.AI.Search.Core.VectorStore;
 using Umbraco.Cms.Core.Models;
-using Umbraco.Cms.Search.Core.Models.Searching;
-using Umbraco.Cms.Search.Core.Models.Searching.Faceting;
-using Umbraco.Cms.Search.Core.Models.Searching.Filtering;
-using Umbraco.Cms.Search.Core.Models.Searching.Sorting;
-using Umbraco.Cms.Search.Core.Services;
+using Umbraco.Cms.Core.Search.Querying;
+using Umbraco.Cms.Core.Search.Querying.Faceting;
+using Umbraco.Cms.Core.Search.Querying.Filtering;
+using Umbraco.Cms.Core.Search.Querying.Sorting;
+using Umbraco.Cms.Core.Search;
 
 namespace Umbraco.AI.Search.Core.Search;
 

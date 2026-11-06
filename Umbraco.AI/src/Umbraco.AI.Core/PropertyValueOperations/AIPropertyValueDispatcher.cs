@@ -137,6 +137,7 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher, IAIP
         }
 
         var frames = new List<DescentFrame>();
+        bool? nestedVariesByCulture = null;
         var currentEditorSchemaAlias = rootEditorSchemaAlias;
         var currentValue = request.RootValue;
 
@@ -158,7 +159,7 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher, IAIP
             if (innerContentTypeKey is null)
             {
                 return Fail(AIPropertyValueOperationError.Codes.BlockNotFound,
-                    $"Block '{blockKey}' was not found inside property '{propertyAlias}', or this editor does not support nested items.");
+                    $"Block '{blockKey}' was not found inside property '{propertyAlias}', is shared Library content that cannot be edited inline, or this editor does not support nested items.");
             }
 
             var nextPropertyAlias = ((AIPropertyPathSegment.PropertyAliasSegment)path[i + 2]).Alias;
@@ -180,6 +181,7 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher, IAIP
                 currentValue, blockKey, nextPropertyAlias, itemVariant, context);
 
             currentEditorSchemaAlias = nextPropertyType.PropertyEditorAlias;
+            nestedVariesByCulture ??= nextPropertyType.Variations.HasFlag(ContentVariation.Culture);
         }
 
         var leafResult = await ApplyLeafOperationAsync(
@@ -212,7 +214,7 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher, IAIP
             ascendingPropertyAlias = frame.PropertyAlias;
         }
 
-        return AIPropertyValueDispatchResult.Ok(ascendingValue, leafResult.BlockKey);
+        return AIPropertyValueDispatchResult.Ok(ascendingValue, leafResult.BlockKey) with { NestedVariesByCulture = nestedVariesByCulture };
     }
 
     private async Task<AIPropertyValueDispatchResult> ApplyLeafOperationAsync(

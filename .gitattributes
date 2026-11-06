@@ -4,3 +4,6 @@ release-manifest.json merge=preserve-on-release
 # Git hooks must use LF line endings (CRLF breaks the shebang on macOS/Linux)
 .githooks/* text eol=lf
 .githooks/*.ps1 text eol=crlf
+
+# Read by bash, node and PowerShell; CR would end up in product names
+scripts/parked-products.txt text eol=lf

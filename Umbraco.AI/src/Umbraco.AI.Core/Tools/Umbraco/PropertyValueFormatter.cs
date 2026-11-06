@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Html;
 using Umbraco.Cms.Core.Models.Blocks;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Extensions;
+using CmsConstants = Umbraco.Cms.Core.Constants;
 
 namespace Umbraco.AI.Core.Tools.Umbraco;
 
@@ -62,8 +63,11 @@ internal static partial class PropertyValueFormatter
         return editorAlias switch
         {
             "Umbraco.RichText" or "Umbraco.TinyMCE" => FormatRichText(value),
-            "Umbraco.MediaPicker3" => FormatMediaPicker(value),
-            "Umbraco.MultiNodeTreePicker" => FormatContentPicker(value),
+            CmsConstants.PropertyEditors.Aliases.MediaPicker3
+                or CmsConstants.PropertyEditors.Aliases.SingleMediaPicker => FormatMediaPicker(value),
+            CmsConstants.PropertyEditors.Aliases.MultiNodeTreePicker
+                or CmsConstants.PropertyEditors.Aliases.MultipleDocumentPicker
+                or CmsConstants.PropertyEditors.Aliases.MultipleMemberPicker => FormatContentPicker(value),
             _ => FormatElementOrDefault(value, culture, depth),
         };
     }
@@ -103,15 +107,15 @@ internal static partial class PropertyValueFormatter
 
     private static object? FormatMediaPicker(object? value)
     {
-        // MediaPicker3 typically resolves to IPublishedContent or IEnumerable<IPublishedContent>
+        // MediaPicker3 (and the single media picker) typically resolve to IPublishedContent or IEnumerable<IPublishedContent>
         if (value is IPublishedContent media)
         {
-            return new { name = media.Name, url = media.Url(), mediaType = media.ContentType.Alias };
+            return new { name = media.Name, url = UrlOrNull(media), mediaType = media.ContentType.Alias };
         }
 
         if (value is IEnumerable<IPublishedContent> mediaItems)
         {
-            return mediaItems.Select(m => new { name = m.Name, url = m.Url(), mediaType = m.ContentType.Alias }).ToArray();
+            return mediaItems.Select(m => new { name = m.Name, url = UrlOrNull(m), mediaType = m.ContentType.Alias }).ToArray();
         }
 
         return FormatDefault(value);
@@ -121,16 +125,23 @@ internal static partial class PropertyValueFormatter
     {
         if (value is IPublishedContent content)
         {
-            return new { key = content.Key, name = content.Name, url = content.Url() };
+            return new { key = content.Key, name = content.Name, url = UrlOrNull(content) };
         }
 
         if (value is IEnumerable<IPublishedContent> contentItems)
         {
-            return contentItems.Select(c => new { key = c.Key, name = c.Name, url = c.Url() }).ToArray();
+            return contentItems.Select(c => new { key = c.Key, name = c.Name, url = UrlOrNull(c) }).ToArray();
         }
 
         return FormatDefault(value);
     }
+
+    // The CMS's Url() extension throws for items that aren't content or media, which is what every
+    // item of a member picker is.
+    private static string? UrlOrNull(IPublishedContent item)
+        => item.ContentType.ItemType is PublishedItemType.Content or PublishedItemType.Media
+            ? item.Url()
+            : null;
 
     private static object FormatElement(IPublishedElement element, string? culture, int depth)
     {
@@ -210,12 +221,12 @@ internal static partial class PropertyValueFormatter
         // IPublishedElement = embedded data owned by this property (extract nested properties).
         if (value is IEnumerable<IPublishedContent> contentItems)
         {
-            return contentItems.Select(c => new { key = c.Key, name = c.Name, url = c.Url() }).ToArray();
+            return contentItems.Select(c => new { key = c.Key, name = c.Name, url = UrlOrNull(c) }).ToArray();
         }
 
         if (value is IPublishedContent content)
         {
-            return new { key = content.Key, name = content.Name, url = content.Url() };
+            return new { key = content.Key, name = content.Name, url = UrlOrNull(content) };
         }
 
         // BlockListModel / BlockGridModel / RichTextBlockModel are all collections of items

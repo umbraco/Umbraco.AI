@@ -254,4 +254,29 @@ public class CreateUmbracoContentToolTests
 
         description.ShouldBe($"Create a new 'blogPost' content item named 'Home' under parent {parentKey}.");
     }
+
+    [Fact]
+    public async Task ExecuteAsync_SharedPropertyOnVariantContentType_WithoutInvariantAccess_RefusesWithoutCreating()
+    {
+        var userKey = Guid.NewGuid();
+        _authorizerMock
+            .Setup(x => x.AuthorizeContentAsync(ActionNew.ActionLetter, null, null))
+            .ReturnsAsync(UmbracoWriteAuthorizationResult.Allowed(userKey, false));
+        var sharedType = new Mock<IPropertyType>();
+        sharedType.Setup(x => x.Alias).Returns("shared");
+        sharedType.Setup(x => x.Variations).Returns(ContentVariation.Nothing);
+        var contentType = new Mock<IContentType>();
+        contentType.Setup(x => x.Key).Returns(Guid.NewGuid());
+        contentType.Setup(x => x.Variations).Returns(ContentVariation.Culture);
+        contentType.Setup(x => x.CompositionPropertyTypes).Returns([sharedType.Object]);
+        _contentTypeServiceMock.Setup(x => x.Get("blogPost")).Returns(contentType.Object);
+        var values = new Dictionary<string, JsonElement> { ["shared"] = JsonSerializer.SerializeToElement("x") };
+
+        var result = await _tool.ExecuteAsync(new CreateUmbracoContentArgs(null, "blogPost", "Home", values, "en-US"), CancellationToken.None);
+
+        var typed = result.ShouldBeOfType<CreateUmbracoContentResult>();
+        typed.Success.ShouldBeFalse();
+        typed.Message.ShouldContain("retry without");
+        _contentEditingServiceMock.Verify(x => x.CreateAsync(It.IsAny<ContentCreateModel>(), It.IsAny<Guid>()), Times.Never);
+    }
 }

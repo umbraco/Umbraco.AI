@@ -30,7 +30,7 @@ internal sealed class SseResponseOperationTransformer : IOpenApiOperationTransfo
         operation.Responses["200"] = new OpenApiResponse
         {
             Description = "Server-Sent Events stream",
-            Content = new Dictionary<string, OpenApiMediaType>
+            Content = new Dictionary<string, IOpenApiMediaType>
             {
                 [EventStreamMediaType] = new OpenApiMediaType
                 {

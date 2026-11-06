@@ -30,7 +30,7 @@ Guide users through the complete release preparation process:
 
 ### Phase 1: Change Detection
 
-1. **Find all products** - Discover Umbraco.AI* directories at repo root
+1. **Find all products** - Discover Umbraco.AI* directories at repo root, leaving out products parked in `scripts/parked-products.txt` (see the discovery snippet in Phase 2.5, Step 1)
 
 2. **For each product**, detect changes since last release:
     ```bash
@@ -105,11 +105,15 @@ The downplayed-breaking option in Phase 3 only remains safe because of this casc
 
 #### Step 1 — Build the package → product map (dynamically)
 
+Parked products listed in `scripts/parked-products.txt` are skipped here and everywhere below.
+
 Two-pass map: filesystem first (authoritative), longest-prefix as fallback for anything the filesystem pass missed.
 
 ```bash
-# Discover products: all Umbraco.AI* folders at repo root.
-products=$(find . -maxdepth 1 -type d -name 'Umbraco.AI*' | sed 's|^\./||')
+# Discover products: all Umbraco.AI* folders at repo root, minus parked ones.
+# Parked products (scripts/parked-products.txt) are skipped everywhere: change detection, cascade, validation.
+products=$(find . -maxdepth 1 -type d -name 'Umbraco.AI*' | sed 's|^\./||' | sort \
+  | grep -v -x -F -f <(grep -v -E '^\s*(#|$)' scripts/parked-products.txt | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//') || true)
 
 # Inter-product packages: names from Directory.Packages.props
 # (the "Inter-product dependencies" ItemGroup).

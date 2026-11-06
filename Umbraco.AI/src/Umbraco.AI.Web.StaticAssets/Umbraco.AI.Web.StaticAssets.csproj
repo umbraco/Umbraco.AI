@@ -21,6 +21,11 @@
     </ItemGroup>
 
     <ItemGroup>
+        <!-- Shared analytics components, loaded once per site through the backoffice import map -->
+        <PackageReference Include="Umbraco.Analytics.UI" />
+    </ItemGroup>
+
+    <ItemGroup>
       <Folder Include="wwwroot\" />
     </ItemGroup>
 

@@ -62,13 +62,13 @@ public class FireworksAIProviderSettings
 
 ## Dependencies
 
-- Umbraco CMS 18.x
-- Umbraco.AI 18.x
+- Umbraco CMS 19.x
+- Umbraco.AI 19.x
 - Microsoft.Extensions.AI.OpenAI (OpenAI-compatible client)
 
 ## Target Framework
 
-- .NET 10.0 (`net10.0`)
+- .NET 11.0 (`net11.0`)
 - Uses Central Package Management
 - Nullable reference types enabled
 

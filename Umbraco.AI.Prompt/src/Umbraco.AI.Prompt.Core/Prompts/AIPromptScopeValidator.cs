@@ -138,7 +138,7 @@ internal sealed class AIPromptScopeValidator : IAIPromptScopeValidator
                 return false;
             }
 
-            if (!rule.PropertyEditorUiAliases.Contains(context.PropertyEditorUiAlias, StringComparer.OrdinalIgnoreCase))
+            if (!AIPromptEditorUiAliasMatcher.Matches(rule.PropertyEditorUiAliases, context.PropertyEditorUiAlias))
             {
                 return false;
             }

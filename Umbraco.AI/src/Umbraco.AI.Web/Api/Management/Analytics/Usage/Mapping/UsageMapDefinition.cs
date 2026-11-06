@@ -16,6 +16,15 @@ public class UsageMapDefinition : IMapDefinition
         mapper.Define<AIUsageSummary, UsageSummaryResponseModel>((_, _) => new UsageSummaryResponseModel(), MapToSummaryResponse);
         mapper.Define<AIUsageTimeSeriesPoint, UsageTimeSeriesPointModel>((_, _) => new UsageTimeSeriesPointModel(), MapToTimeSeriesPoint);
         mapper.Define<AIUsageBreakdownItem, UsageBreakdownItemModel>((_, _) => new UsageBreakdownItemModel(), MapToBreakdownItem);
+
+        // Overview and breakdown rows (domain -> response)
+        mapper.Define<AIUsageCounts, UsageCountsModel>((_, _) => new UsageCountsModel(), MapToCounts);
+        mapper.Define<AIUsageBucket, UsageOverviewBucketModel>((_, _) => new UsageOverviewBucketModel(), MapToBucket);
+        mapper.Define<AIUsageHourlyBucket, UsageOverviewHourlyBucketModel>((_, _) => new UsageOverviewHourlyBucketModel(), MapToHourlyBucket);
+        mapper.Define<AIUsageOverviewPeriod, UsageOverviewPeriodModel>((_, _) => new UsageOverviewPeriodModel(), MapToOverviewPeriod);
+        mapper.Define<AIUsageOverview, UsageOverviewResponseModel>((_, _) => new UsageOverviewResponseModel(), MapToOverview);
+        mapper.Define<AIUsageBreakdownRow, UsageBreakdownRowModel>((_, _) => new UsageBreakdownRowModel(), MapToBreakdownRow);
+        mapper.Define<AIUsageBreakdownPage, UsageBreakdownResponseModel>((_, _) => new UsageBreakdownResponseModel(), MapToBreakdownPage);
     }
 
     // Umbraco.Code.MapAll
@@ -54,5 +63,84 @@ public class UsageMapDefinition : IMapDefinition
         target.TotalTokens = source.TotalTokens;
         target.CachedInputTokens = source.CachedInputTokens;
         target.Percentage = source.Percentage;
+    }
+
+    // Umbraco.Code.MapAll
+    private static void MapToCounts(AIUsageCounts source, UsageCountsModel target, MapperContext context)
+    {
+        target.Requests = source.Requests;
+        target.NestedRequests = source.NestedRequests;
+        target.Succeeded = source.Succeeded;
+        target.Failed = source.Failed;
+        target.InputTokens = source.InputTokens;
+        target.CachedInputTokens = source.CachedInputTokens;
+        target.OutputTokens = source.OutputTokens;
+        target.TotalTokens = source.TotalTokens;
+        target.DurationMs = source.DurationMs;
+    }
+
+    // Umbraco.Code.MapAll
+    private static void MapToBucket(AIUsageBucket source, UsageOverviewBucketModel target, MapperContext context)
+    {
+        target.Start = source.Start;
+        target.Requests = source.Requests;
+        target.NestedRequests = source.NestedRequests;
+        target.Succeeded = source.Succeeded;
+        target.Failed = source.Failed;
+        target.InputTokens = source.InputTokens;
+        target.CachedInputTokens = source.CachedInputTokens;
+        target.OutputTokens = source.OutputTokens;
+        target.TotalTokens = source.TotalTokens;
+        target.DurationMs = source.DurationMs;
+    }
+
+    // Umbraco.Code.MapAll
+    private static void MapToHourlyBucket(AIUsageHourlyBucket source, UsageOverviewHourlyBucketModel target, MapperContext context)
+    {
+        target.Start = source.Start;
+        target.Requests = source.Requests;
+        target.NestedRequests = source.NestedRequests;
+        target.Succeeded = source.Succeeded;
+        target.Failed = source.Failed;
+        target.InputTokens = source.InputTokens;
+        target.CachedInputTokens = source.CachedInputTokens;
+        target.OutputTokens = source.OutputTokens;
+        target.TotalTokens = source.TotalTokens;
+        target.DurationMs = source.DurationMs;
+    }
+
+    // Umbraco.Code.MapAll
+    private static void MapToOverviewPeriod(AIUsageOverviewPeriod source, UsageOverviewPeriodModel target, MapperContext context)
+    {
+        target.From = source.From;
+        target.To = source.To;
+        target.Totals = context.Map<UsageCountsModel>(source.Totals)!;
+        target.Buckets = context.MapEnumerable<AIUsageBucket, UsageOverviewBucketModel>(source.Buckets);
+        target.HourlyBuckets = context.MapEnumerable<AIUsageHourlyBucket, UsageOverviewHourlyBucketModel>(source.HourlyBuckets);
+    }
+
+    // Umbraco.Code.MapAll
+    private static void MapToOverview(AIUsageOverview source, UsageOverviewResponseModel target, MapperContext context)
+    {
+        target.Current = context.Map<UsageOverviewPeriodModel>(source.Current)!;
+        target.Previous = source.Previous is null ? null : context.Map<UsageOverviewPeriodModel>(source.Previous);
+    }
+
+    // Umbraco.Code.MapAll
+    private static void MapToBreakdownRow(AIUsageBreakdownRow source, UsageBreakdownRowModel target, MapperContext context)
+    {
+        target.Key = source.Key;
+        target.Name = source.Name;
+        target.Current = context.Map<UsageCountsModel>(source.Current)!;
+        target.Previous = source.Previous is null ? null : context.Map<UsageCountsModel>(source.Previous);
+    }
+
+    // Umbraco.Code.MapAll
+    private static void MapToBreakdownPage(AIUsageBreakdownPage source, UsageBreakdownResponseModel target, MapperContext context)
+    {
+        target.Total = source.Total;
+        target.Items = context.MapEnumerable<AIUsageBreakdownRow, UsageBreakdownRowModel>(source.Items);
+        target.Totals = context.Map<UsageCountsModel>(source.Totals)!;
+        target.PreviousTotals = source.PreviousTotals is null ? null : context.Map<UsageCountsModel>(source.PreviousTotals);
     }
 }

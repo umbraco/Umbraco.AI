@@ -44,8 +44,8 @@ Clairic apart from other models. Every file touching the extraction types carrie
 
 ## Dependencies
 
-- Umbraco CMS 18.x
-- Umbraco.AI 18.x
+- Umbraco CMS 19.x
+- Umbraco.AI 19.x
 
 ## Provider Discovery
 

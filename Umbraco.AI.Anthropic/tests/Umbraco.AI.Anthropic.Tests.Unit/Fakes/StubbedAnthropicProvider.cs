@@ -19,11 +19,9 @@ internal sealed class StubbedAnthropicProvider(
     HttpMessageHandler handler)
     : AnthropicProvider(infrastructure, cache)
 {
+    // Built by the production factory so the real credential and header handling is exercised; only the
+    // transport is swapped for the fake handler.
     internal override global::Anthropic.AnthropicClient CreateSdkClient(AnthropicProviderSettings settings)
-        => new()
-        {
-            ApiKey = "test-key",
-            MaxRetries = 0,
-            HttpClient = new HttpClient(handler),
-        };
+        => (global::Anthropic.AnthropicClient)CreateAnthropicClient(settings)
+            .WithOptions(o => o with { MaxRetries = 0, HttpClient = new HttpClient(handler) });
 }

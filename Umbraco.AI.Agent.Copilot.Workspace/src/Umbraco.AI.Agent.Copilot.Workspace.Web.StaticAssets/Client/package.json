@@ -12,10 +12,10 @@
     "@umbraco-ai/agent": "*",
     "@umbraco-ai/agent-ui": "*",
     "@umbraco-ai/core": "*",
-    "@umbraco-cms/backoffice": "^18.0.0"
+    "@umbraco-cms/backoffice": "^19.0.0-beta1"
   },
   "devDependencies": {
-    "@hey-api/openapi-ts": "^0.97.0",
+    "@hey-api/openapi-ts": "^0.99.0",
     "happy-dom": "^20.10.6",
     "typescript": "^5.9.2",
     "vite": "^8.0.16",

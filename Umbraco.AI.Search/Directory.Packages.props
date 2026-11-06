@@ -4,9 +4,10 @@
   <Import Project="$([MSBuild]::GetPathOfFileAbove(Directory.Packages.props, $(MSBuildThisFileDirectory)..))" />
 
   <ItemGroup>
-    <!-- 18.6.1 is the first Umbraco.AI release with IUmbracoReadAuthorizer, which semantic_search uses to
-         limit results to what the acting user can access. -->
-    <PackageVersion Update="Umbraco.AI.Core" Version="[18.7.0, 18.999.999)" />
-    <PackageVersion Update="Umbraco.AI.Startup" Version="[18.7.0, 18.999.999)" />
+    <!-- Search needs IUmbracoReadAuthorizer (first shipped in Umbraco.AI 18.6.1), which semantic_search
+         uses to limit results to what the acting user can access. Every 19.x release has it, so this
+         matches the root floor; keep it here so the reason stays next to the range. -->
+    <PackageVersion Update="Umbraco.AI.Core" Version="[19.0.0-beta.1, 19.999.999)" />
+    <PackageVersion Update="Umbraco.AI.Startup" Version="[19.0.0-beta.1, 19.999.999)" />
   </ItemGroup>
 </Project>

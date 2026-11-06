@@ -29,6 +29,22 @@ public class RichTextPropertyValueHandlerTests
     }
 
     [Fact]
+    public void ValidateRemoveItem_RepeatedContentKey_IsRejected()
+    {
+        var handler = new RichTextPropertyValueHandler(new Mock<IContentTypeService>().Object);
+        var library = Guid.NewGuid();
+        var blocks = BlockEnvelopeOps.Empty(LayoutKey);
+        BlockEnvelopeOps.AddLayoutEntry(blocks, LayoutKey, new JsonObject { ["key"] = Guid.NewGuid(), ["contentKey"] = library, ["isExternalContent"] = true });
+        BlockEnvelopeOps.AddLayoutEntry(blocks, LayoutKey, new JsonObject { ["key"] = Guid.NewGuid(), ["contentKey"] = library, ["isExternalContent"] = true });
+        var rteValue = new JsonObject { ["markup"] = "<p></p>", ["blocks"] = blocks };
+
+        var result = handler.ValidateRemoveItem(rteValue, library, BuildContext());
+
+        result.IsValid.ShouldBeFalse();
+        result.Error!.Code.ShouldBe(AIPropertyValueOperationError.Codes.InvalidPath);
+    }
+
+    [Fact]
     public async Task RemoveItemAsync_RemovesBlockFromInnerEnvelope()
     {
         var handler = new RichTextPropertyValueHandler(new Mock<IContentTypeService>().Object);

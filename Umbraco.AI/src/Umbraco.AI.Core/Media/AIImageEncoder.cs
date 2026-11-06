@@ -41,6 +41,13 @@ internal static class AIImageEncoder
 
     private static bool HasAlpha(Image image)
     {
+        // Decoders hand back Rgba32 even for opaque files (a plain RGB PNG included), so the pixel type
+        // alone can't say whether anything is transparent: look at the pixels.
+        if (image is Image<Rgba32> rgba)
+        {
+            return HasTransparentPixel(rgba);
+        }
+
         // Prefer the explicit AlphaRepresentation when the decoder populated it.
         var alpha = image.PixelType.AlphaRepresentation;
         if (alpha is PixelAlphaRepresentation.Associated or PixelAlphaRepresentation.Unassociated)
@@ -56,5 +63,26 @@ internal static class AIImageEncoder
         // (notably the PNG decoder leaves it null even for 32-bpp RGBA images). Fall
         // back to the runtime pixel type — any of these formats carries an alpha channel.
         return image is Image<Rgba32> or Image<Bgra32> or Image<Rgba64> or Image<La16> or Image<La32>;
+    }
+
+    private static bool HasTransparentPixel(Image<Rgba32> image)
+    {
+        var found = false;
+        image.ProcessPixelRows(accessor =>
+        {
+            for (var y = 0; y < accessor.Height && !found; y++)
+            {
+                foreach (var pixel in accessor.GetRowSpan(y))
+                {
+                    if (pixel.A != byte.MaxValue)
+                    {
+                        found = true;
+                        return;
+                    }
+                }
+            }
+        });
+
+        return found;
     }
 }

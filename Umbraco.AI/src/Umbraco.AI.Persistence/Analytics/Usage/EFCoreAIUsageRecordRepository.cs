@@ -54,6 +54,7 @@ internal sealed class EFCoreAIUsageRecordRepository : IAIUsageRecordRepository
 
         var entities = await scope.ExecuteWithContextAsync(async db =>
             await db.UsageRecords
+                .AsNoTracking()
                 .Where(r => r.Timestamp >= from && r.Timestamp < to)
                 .OrderBy(r => r.Timestamp)
                 .ToListAsync(ct));

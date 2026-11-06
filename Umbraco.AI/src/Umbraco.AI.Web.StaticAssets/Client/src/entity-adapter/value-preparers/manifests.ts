@@ -32,6 +32,13 @@ export const valuePreparerManifests: ManifestUaiPropertyValuePreparer[] = [
     },
     {
         type: UAI_PROPERTY_VALUE_PREPARER_EXTENSION_TYPE,
+        alias: "UmbracoAI.ValuePreparer.SingleMediaPicker",
+        name: "Single Media Picker Value Preparer",
+        forPropertyEditorSchemaAlias: "Umbraco.MediaPicker.Single",
+        api: () => import("./media-picker-3.preparer.js"),
+    },
+    {
+        type: UAI_PROPERTY_VALUE_PREPARER_EXTENSION_TYPE,
         alias: "UmbracoAI.ValuePreparer.DateTime",
         name: "Date Time Value Preparer",
         forPropertyEditorSchemaAlias: "Umbraco.DateTime",

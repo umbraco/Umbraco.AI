@@ -7,14 +7,23 @@ namespace Umbraco.AI.Core.PropertyValueOperations;
 /// blocks). Operates on JSON envelopes following the canonical Umbraco shape:
 /// <code>
 /// {
-///   "layout":      { "&lt;layoutKey&gt;": [ &lt;layoutEntry&gt;, ... ] },
+///   "layout":      { "&lt;layoutKey&gt;": [ { "key": "...", "contentKey": "...", "isExternalContent": false }, ... ] },
 ///   "contentData":  [ { "key": "...", "contentTypeKey": "...", "values": [...] }, ... ],
 ///   "settingsData": [ ... ],
-///   "expose":       [ { "contentKey": "...", "culture": "...", "segment": "..." }, ... ]
+///   "expose":       [ { "contentKey": "...", "culture": "..." }, ... ]
 /// }
 /// </code>
 /// </summary>
 /// <remarks>
+/// <para>
+/// Since CMS 19 a layout item has its own <c>key</c>: reusable (Library) elements mean the same
+/// <c>contentKey</c> can appear in several layout items, and an item flagged
+/// <c>isExternalContent</c> points at a Library element that is not in <c>contentData</c>.
+/// A block is addressed by its layout <c>key</c> first, falling back to its <c>contentKey</c> (the
+/// CMS backfills <c>key = contentKey</c> for legacy values, so the two coincide for local blocks).
+/// Expose entries are per culture only; segments no longer take part.
+/// </para>
+/// <para>
 /// Helpers never mutate inputs; they always return a new <see cref="JsonObject"/> rebuilt from
 /// scratch. The <c>layoutKey</c> parameter selects the editor's layout dictionary key
 /// (<c>Umbraco.BlockList</c> for block-list, <c>Umbraco.BlockGrid</c> for block-grid). Layout
@@ -28,6 +37,8 @@ internal static class BlockEnvelopeOps
     public const string LayoutPropertyName = "layout";
     public const string ExposePropertyName = "expose";
 
+    public const string KeyPropertyName = "key";
+    public const string IsExternalContentPropertyName = "isExternalContent";
     public const string ContentKeyPropertyName = "contentKey";
     public const string SettingsKeyPropertyName = "settingsKey";
 
@@ -151,46 +162,137 @@ internal static class BlockEnvelopeOps
         layoutObj[layoutKey] = rebuilt;
     }
 
-    /// <summary>Removes all references to the given content key from layout, contentData, settingsData, and expose.</summary>
-    public static void RemoveByContentKey(JsonObject envelope, string layoutKey, Guid contentKey)
-    {
-        // Resolve the matching settings key before we drop the layout entry that links the two.
-        var settingsKeyToRemove = ResolveSettingsKey(envelope, layoutKey, contentKey);
-
-        if (envelope[LayoutPropertyName] is JsonObject layoutObj && layoutObj[layoutKey] is JsonArray layoutArray)
-        {
-            layoutObj[layoutKey] = FilterArray(layoutArray, e => GetGuid(e, ContentKeyPropertyName) != contentKey);
-        }
-
-        if (envelope[ContentDataPropertyName] is JsonArray contentArray)
-        {
-            envelope[ContentDataPropertyName] = FilterArray(contentArray, e => GetGuid(e, "key") != contentKey);
-        }
-
-        if (settingsKeyToRemove is not null && envelope[SettingsDataPropertyName] is JsonArray settingsArray)
-        {
-            envelope[SettingsDataPropertyName] = FilterArray(settingsArray, e => GetGuid(e, "key") != settingsKeyToRemove);
-        }
-
-        if (envelope[ExposePropertyName] is JsonArray exposeArray)
-        {
-            envelope[ExposePropertyName] = FilterArray(exposeArray, e => GetGuid(e, ContentKeyPropertyName) != contentKey);
-        }
-    }
-
-    /// <summary>Reorders a layout entry to the given position. No-op if the key is not present.</summary>
-    public static void MoveInLayout(JsonObject envelope, string layoutKey, Guid contentKey, int newPosition)
+    /// <summary>
+    /// Removes a block: its layout item, and the content/settings data and expose entries that no
+    /// other layout item still references.
+    /// </summary>
+    /// <remarks>
+    /// <paramref name="blockKey"/> is matched against the layout <c>key</c> first (removing just that
+    /// item, so one of several references to a reusable element can go on its own), then against
+    /// <c>contentKey</c> (removing every item that references it).
+    /// </remarks>
+    public static void RemoveByContentKey(JsonObject envelope, string layoutKey, Guid blockKey)
     {
         if (envelope[LayoutPropertyName] is not JsonObject layoutObj || layoutObj[layoutKey] is not JsonArray layoutArray)
         {
             return;
         }
 
+        var removed = SelectLayoutItems(layoutArray, blockKey);
+        if (removed.Count == 0)
+        {
+            return;
+        }
+
+        var kept = FilterArray(layoutArray, e => !removed.Any(r => ReferenceEquals(r, e)));
+        layoutObj[layoutKey] = kept;
+
+        var remaining = AllLayoutItems(kept).ToList();
+
+        var contentKeysToRemove = removed
+            .Select(e => GetGuid(e, ContentKeyPropertyName))
+            .OfType<Guid>()
+            .Where(k => !remaining.Any(r => GetGuid(r, ContentKeyPropertyName) == k))
+            .ToHashSet();
+        var settingsKeysToRemove = removed
+            .Select(e => GetGuid(e, SettingsKeyPropertyName))
+            .OfType<Guid>()
+            .Where(k => !remaining.Any(r => GetGuid(r, SettingsKeyPropertyName) == k))
+            .ToHashSet();
+
+        if (envelope[ContentDataPropertyName] is JsonArray contentArray)
+        {
+            envelope[ContentDataPropertyName] = FilterArray(contentArray, e => GetGuid(e, "key") is not { } k || !contentKeysToRemove.Contains(k));
+        }
+
+        if (envelope[SettingsDataPropertyName] is JsonArray settingsArray)
+        {
+            envelope[SettingsDataPropertyName] = FilterArray(settingsArray, e => GetGuid(e, "key") is not { } k || !settingsKeysToRemove.Contains(k));
+        }
+
+        if (envelope[ExposePropertyName] is JsonArray exposeArray)
+        {
+            envelope[ExposePropertyName] = FilterArray(exposeArray, e => GetGuid(e, ContentKeyPropertyName) is not { } k || !contentKeysToRemove.Contains(k));
+        }
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> when <paramref name="blockKey"/> matches no layout <c>key</c> but several
+    /// root layout items share it as their <c>contentKey</c>, so it cannot name a single block.
+    /// </summary>
+    public static bool IsAmbiguousBlockKey(JsonObject envelope, string layoutKey, Guid blockKey)
+    {
+        if (envelope[LayoutPropertyName] is not JsonObject layoutObj || layoutObj[layoutKey] is not JsonArray layoutArray)
+        {
+            return false;
+        }
+
+        if (layoutArray.Any(e => GetGuid(e, KeyPropertyName) == blockKey))
+        {
+            return false;
+        }
+
+        return layoutArray.Count(e => GetGuid(e, ContentKeyPropertyName) == blockKey) > 1;
+    }
+
+    /// <summary>
+    /// Validates that <paramref name="blockKey"/> names a single block to remove: rejects a
+    /// <c>contentKey</c> shared by several layout items (see <see cref="IsAmbiguousBlockKey"/>).
+    /// </summary>
+    public static AIValidationResult ValidateRemovable(JsonObject envelope, string layoutKey, Guid blockKey)
+        => IsAmbiguousBlockKey(envelope, layoutKey, blockKey)
+            ? AIValidationResult.Invalid(new AIPropertyValueOperationError(
+                AIPropertyValueOperationError.Codes.InvalidPath,
+                $"Block key '{blockKey}' is referenced by more than one layout item. Address the block by its layout 'key' instead.",
+                Details: new JsonObject { ["blockKey"] = blockKey.ToString() }))
+            : AIValidationResult.Valid;
+
+    /// <summary>
+    /// Resolves a block key (layout <c>key</c> or <c>contentKey</c>) to the key of the local
+    /// <c>contentData</c> entry it edits. Returns <c>null</c> when the matching layout item is
+    /// external (Library) content, which has no inline data to edit.
+    /// </summary>
+    public static Guid? ResolveLocalContentKey(JsonObject envelope, Guid blockKey)
+    {
+        if (envelope[LayoutPropertyName] is JsonObject layoutObj)
+        {
+            foreach (var layoutArray in layoutObj.Select(p => p.Value).OfType<JsonArray>())
+            {
+                var byKey = AllLayoutItems(layoutArray).FirstOrDefault(e => GetGuid(e, KeyPropertyName) == blockKey);
+                if (byKey is not null)
+                {
+                    return IsExternalContent(byKey) ? null : GetGuid(byKey, ContentKeyPropertyName);
+                }
+            }
+        }
+
+        return blockKey;
+    }
+
+    /// <summary>Returns <c>true</c> when the layout item points at a Library element rather than inline content.</summary>
+    public static bool IsExternalContent(JsonNode? layoutItem)
+        => layoutItem is JsonObject obj
+           && obj[IsExternalContentPropertyName] is JsonValue value
+           && value.TryGetValue<bool>(out var isExternal)
+           && isExternal;
+
+    /// <summary>Reorders a layout entry to the given position. No-op if the key is not present.</summary>
+    public static void MoveInLayout(JsonObject envelope, string layoutKey, Guid blockKey, int newPosition)
+    {
+        if (envelope[LayoutPropertyName] is not JsonObject layoutObj || layoutObj[layoutKey] is not JsonArray layoutArray)
+        {
+            return;
+        }
+
+        // Layout key first; with a repeated contentKey the first reference moves.
+        var target = layoutArray.FirstOrDefault(e => GetGuid(e, KeyPropertyName) == blockKey)
+                     ?? layoutArray.FirstOrDefault(e => GetGuid(e, ContentKeyPropertyName) == blockKey);
+
         JsonNode? moved = null;
         var rest = new List<JsonNode?>();
         foreach (var entry in layoutArray)
         {
-            if (moved is null && GetGuid(entry, ContentKeyPropertyName) == contentKey)
+            if (moved is null && ReferenceEquals(entry, target))
             {
                 moved = entry?.DeepClone();
                 continue;
@@ -216,29 +318,19 @@ internal static class BlockEnvelopeOps
         layoutObj[layoutKey] = rebuilt;
     }
 
-    /// <summary>Returns the contentTypeKey of the contentData entry with the given key.</summary>
-    public static Guid? FindContentTypeKey(JsonObject envelope, Guid contentKey)
+    /// <summary>Returns the contentTypeKey of the local block addressed by <paramref name="blockKey"/>, or <c>null</c> when it is missing or external.</summary>
+    public static Guid? FindContentTypeKey(JsonObject envelope, Guid blockKey)
+        => FindContentDataEntry(envelope, blockKey) is { } entry ? GetGuid(entry, "contentTypeKey") : null;
+
+    /// <summary>
+    /// Returns the contentData entry of the local block addressed by <paramref name="blockKey"/>
+    /// (layout key or content key; live reference into the envelope). <c>null</c> when the block is
+    /// missing or is external (Library) content.
+    /// </summary>
+    public static JsonObject? FindContentDataEntry(JsonObject envelope, Guid blockKey)
     {
-        if (envelope[ContentDataPropertyName] is not JsonArray array)
-        {
-            return null;
-        }
-
-        foreach (var entry in array)
-        {
-            if (entry is JsonObject obj && GetGuid(obj, "key") == contentKey)
-            {
-                return GetGuid(obj, "contentTypeKey");
-            }
-        }
-
-        return null;
-    }
-
-    /// <summary>Returns the contentData entry with the given key (live reference into the envelope).</summary>
-    public static JsonObject? FindContentDataEntry(JsonObject envelope, Guid contentKey)
-    {
-        if (envelope[ContentDataPropertyName] is not JsonArray array)
+        if (envelope[ContentDataPropertyName] is not JsonArray array
+            || ResolveLocalContentKey(envelope, blockKey) is not { } contentKey)
         {
             return null;
         }
@@ -269,6 +361,7 @@ internal static class BlockEnvelopeOps
             return null;
         }
 
+        JsonNode? defaultSegmentFallback = null;
         JsonNode? invariantFallback = null;
 
         foreach (var entry in values)
@@ -291,13 +384,19 @@ internal static class BlockEnvelopeOps
                 return obj["value"]?.DeepClone();
             }
 
-            if (culture is null && segment is null)
+            // A segment with no value of its own falls back to the same culture's default segment
+            // (CMS 19 fallback), then to the invariant value.
+            if (segment is null && culture is not null && culture == variantId.Culture)
+            {
+                defaultSegmentFallback = obj["value"]?.DeepClone();
+            }
+            else if (culture is null && segment is null)
             {
                 invariantFallback = obj["value"]?.DeepClone();
             }
         }
 
-        return invariantFallback;
+        return defaultSegmentFallback ?? invariantFallback;
     }
 
     /// <summary>
@@ -349,22 +448,37 @@ internal static class BlockEnvelopeOps
         values.Add(newEntry);
     }
 
-    private static Guid? ResolveSettingsKey(JsonObject envelope, string layoutKey, Guid contentKey)
+    // Layout items matching a block key: the one whose layout key equals it, else every item whose
+    // contentKey does (legacy values without keys, or a bare contentKey address).
+    private static List<JsonNode?> SelectLayoutItems(JsonArray layoutArray, Guid blockKey)
     {
-        if (envelope[LayoutPropertyName] is not JsonObject layoutObj || layoutObj[layoutKey] is not JsonArray layoutArray)
-        {
-            return null;
-        }
+        var byKey = layoutArray.Where(e => GetGuid(e, KeyPropertyName) == blockKey).Take(1).ToList();
+        return byKey.Count > 0
+            ? byKey
+            : layoutArray.Where(e => GetGuid(e, ContentKeyPropertyName) == blockKey).ToList();
+    }
 
-        foreach (var entry in layoutArray)
+    // Root items plus block-grid area items, recursively.
+    private static IEnumerable<JsonNode?> AllLayoutItems(JsonArray layoutArray)
+    {
+        foreach (var item in layoutArray)
         {
-            if (entry is JsonObject obj && GetGuid(obj, ContentKeyPropertyName) == contentKey)
+            yield return item;
+
+            if (item is JsonObject obj && obj["areas"] is JsonArray areas)
             {
-                return GetGuid(obj, SettingsKeyPropertyName);
+                foreach (var area in areas.OfType<JsonObject>())
+                {
+                    if (area["items"] is JsonArray areaItems)
+                    {
+                        foreach (var nested in AllLayoutItems(areaItems))
+                        {
+                            yield return nested;
+                        }
+                    }
+                }
             }
         }
-
-        return null;
     }
 
     private static JsonArray FilterArray(JsonArray source, Func<JsonNode?, bool> predicate)

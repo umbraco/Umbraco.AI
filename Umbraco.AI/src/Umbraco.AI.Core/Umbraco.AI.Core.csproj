@@ -9,9 +9,8 @@
         <PackageReference Include="DocumentFormat.OpenXml" />
         <PackageReference Include="Microsoft.Extensions.AI" />
         <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
-        <PackageReference Include="Microsoft.Extensions.Options" />
         <PackageReference Include="System.ClientModel" />
-        <PackageReference Include="SixLabors.ImageSharp" />
+        <PackageReference Include="SixLabors.ImageSharp" ExcludeAssets="build" />
         <PackageReference Include="SmartReader" />
         <PackageReference Include="Umbraco.Cms.Core" />
         <PackageReference Include="Umbraco.Cms.Infrastructure" />

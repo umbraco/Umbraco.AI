@@ -4,11 +4,11 @@ using System.Text.Json.Serialization;
 namespace Umbraco.AI.Core.Serialization;
 
 /// <summary>
-/// JSON converter for <see cref="string"/> properties bound to the Umbraco backoffice dropdown
-/// (<c>Umb.PropertyEditorUi.Dropdown</c>), which serialises its value as an array of strings even when
-/// configured as a single select (<c>multiple: false</c>) — so a field the model declares as a string
-/// arrives as <c>["low"]</c>. Reads the first element when the value is an array, otherwise falls back to
-/// standard string reading.
+/// JSON converter for <see cref="string"/> properties bound to the Umbraco backoffice dropdowns
+/// (<c>Umb.PropertyEditorUi.Dropdown.Single</c>, and <c>Umb.PropertyEditorUi.Dropdown</c> on CMS 18 and
+/// earlier), which serialise their value as an array of strings even when only one choice is allowed — so a
+/// field the model declares as a string arrives as <c>["low"]</c>. Reads the first element when the value is
+/// an array, otherwise falls back to standard string reading, so values saved by an older version still load.
 /// </summary>
 /// <remarks>
 /// An empty array reads as <c>null</c>, which is how the dropdown represents its cleared state. Extra

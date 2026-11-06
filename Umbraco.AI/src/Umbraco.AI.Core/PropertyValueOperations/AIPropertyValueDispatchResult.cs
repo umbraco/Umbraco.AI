@@ -24,6 +24,14 @@ public sealed record AIPropertyValueDispatchResult(
     Guid? BlockKey,
     AIPropertyValueOperationError? Error)
 {
+    /// <summary>
+    /// Gets whether the first property below the root (the one directly inside the root's block) varies by
+    /// culture; <c>null</c> when the target is the root property itself. The CMS keeps a culture-variant block
+    /// value whole when the user cannot edit shared data, and reverts an invariant one whole, so this decides
+    /// whether anything beneath the root survives such a save.
+    /// </summary>
+    public bool? NestedVariesByCulture { get; init; }
+
     /// <summary>Gets a value indicating whether the dispatch succeeded.</summary>
     public bool Success => Error is null;
 

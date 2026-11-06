@@ -11,7 +11,7 @@ Mistral provider for Umbraco.AI - connect directly to Mistral and use their chat
 
 ### Requirements
 
-- Umbraco CMS 17.0.0+
+- Umbraco CMS 19.0.0+
 - Umbraco.AI 1.0.0+
-- .NET 10.0
+- .NET 11.0
 - Mistral API key

@@ -39,7 +39,7 @@ export type { AgentTransport, AgentClientCallbacks, RunFinishedEvent } from "./t
 export { EventType, type AGUITool, type ToolMessage } from "./types.js";
 
 // AG-UI typed events: re-exports of @ag-ui/client's discriminated union members
-// (incl. RunFinishedEvent's native outcome + Interrupt as of 0.0.57). RunErrorEvent
+// (incl. RunFinishedEvent's native outcome + Interrupt). RunErrorEvent
 // remains a local extension that narrows `code` to UaiErrorCategory.
 export type {
     AGUIEvent,

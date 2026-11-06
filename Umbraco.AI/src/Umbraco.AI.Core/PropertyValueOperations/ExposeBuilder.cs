@@ -7,8 +7,8 @@ namespace Umbraco.AI.Core.PropertyValueOperations;
 /// </summary>
 /// <remarks>
 /// Each expose entry asserts that a block's content is "exposed" (visible) for a given
-/// culture/segment combination. Invariant content uses a single entry with both fields
-/// <c>null</c>; variant content uses one entry per active variant.
+/// culture. Invariant content uses a single entry with a <c>null</c> culture; variant content uses
+/// one entry per active culture. Segments are not part of an expose entry (CMS 19).
 /// </remarks>
 internal static class ExposeBuilder
 {
@@ -17,8 +17,9 @@ internal static class ExposeBuilder
     /// </summary>
     /// <param name="contentKey">The block's content key.</param>
     /// <param name="variants">
-    /// The variants to expose for. When the list is empty or only contains invariant entries, a
-    /// single invariant expose entry is returned.
+    /// The variants to expose for. Segments are ignored, so variants sharing a culture yield one
+    /// entry. When the list is empty or only contains invariant entries, a single invariant expose
+    /// entry is returned.
     /// </param>
     public static IEnumerable<JsonObject> Build(Guid contentKey, IReadOnlyList<AIVariantId> variants)
     {
@@ -28,18 +29,16 @@ internal static class ExposeBuilder
             {
                 ["contentKey"] = contentKey,
                 ["culture"] = null,
-                ["segment"] = null,
             };
             yield break;
         }
 
-        foreach (var variant in variants)
+        foreach (var culture in variants.Select(v => v.Culture).Distinct())
         {
             yield return new JsonObject
             {
                 ["contentKey"] = contentKey,
-                ["culture"] = variant.Culture,
-                ["segment"] = variant.Segment,
+                ["culture"] = culture,
             };
         }
     }

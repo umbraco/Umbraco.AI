@@ -17,6 +17,6 @@ AI agent management and runtime for Umbraco.AI - store, manage, and execute conv
 
 ### Requirements
 
-- Umbraco CMS 17.0.0+
+- Umbraco CMS 19.0.0+
 - Umbraco.AI 1.0.0+
-- .NET 10.0
+- .NET 11.0

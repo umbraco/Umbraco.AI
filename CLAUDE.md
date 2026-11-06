@@ -34,6 +34,8 @@ Monorepo for Umbraco.AI and add-on packages. Each product has its own `.slnx`, `
 | Umbraco.AI.OpenRouter | `Umbraco.AI.OpenRouter/` | Provider |
 | Umbraco.AI.ZAI | `Umbraco.AI.ZAI/` | Provider |
 
+**Parked on the v19 line:** `Umbraco.AI.Deploy`, `Umbraco.AI.Prompt.Deploy`, `Umbraco.AI.Agent.Deploy` and `Umbraco.AI.Automate` stay in the tree but are not built or released until Umbraco.Deploy / Umbraco.Automate ship v19 packages. See `scripts/parked-products.txt` and `docs/upgrades/v19.md`.
+
 ### Dependency Tree
 
 ```
@@ -154,7 +156,7 @@ Add-on packages use `workspace:*` to reference local core during dev; replaced w
 
 ## Target Framework & Stack
 
-- .NET 10.0 (`net10.0`), Umbraco CMS 18.x, Central Package Management via `Directory.Packages.props`
+- .NET 11.0 (`net11.0`), Umbraco CMS 19.x (beta), Central Package Management via `Directory.Packages.props`
 - Frontend: Lit + TypeScript + Vite + @hey-api/openapi-ts
 - Frontend source: `src/*/Web.StaticAssets/Client/` -> `wwwroot/App_Plugins/`
 - Database: SQL Server & SQLite via EF Core; migration prefixes: `UmbracoAI_`, `UmbracoAIPrompt_`, `UmbracoAIAgent_`, `UmbracoAISearch_`
@@ -228,6 +230,7 @@ Check [Umbraco CMS LTS/EOL](https://umbraco.com/products/knowledge-center/long-t
 
 | CMS Version | Type | Active Support Until | AI Branches | Current Policy |
 |-------------|------|----------------------|-------------|----------------|
+| v19 | Pre-release (CMS 19 beta; type and support dates not yet published) | TBD | `v19/dev` / `v19/main` | Features + bug fixes |
 | v18 | STS | Mar 2027 | `v18/dev` / `v18/main` | Features + bug fixes |
 | v17 | LTS | Nov 2027 | `v17/dev` / `v17/main` | Features + bug fixes |
 
@@ -257,7 +260,7 @@ When a fix or feature applies to an older supported version:
 Do **not** forward-merge one version line's branches into another's — each version line is maintained independently. Always create a *separate* worktree per version line (with an absolute path — see CLAUDE.local.md) rather than reusing one worktree for both; reusing one has caused a worktree to get created nested inside another.
 
 When backporting **worktree/tooling config**, note that some files hardcode the version line and must
-be rewritten to the target `vN`: `.worktreeinclude` (demo path `demos/v18/`). Leaving `v18` in place
+be rewritten to the target `vN`: `.worktreeinclude` (demo path `demos/vN/`). Leaving the old `vN` in place
 makes worktrees use the wrong branch prefix and PRs target the wrong `vN/dev` base.
 
 ## Release Management
@@ -462,7 +465,8 @@ Never break a public API. When a new method replaces an old one, keep the old si
 **proxy to the new method**, resolving any new parameters via service locator (e.g.
 `StaticServiceProvider.Instance.GetRequiredService<T>()`). Mark the old method `[Obsolete]` with the
 message `"Will be removed in vX"`, where **X = highest supported major version + 2**, the same on
-every active line (v17 and v18 are supported today, so `"Will be removed in v20"` on both). This gives
+every active line (with v19 supported alongside v17 and v18, that's `"Will be removed in v21"`; older
+markers that say v20 stay as they are). This gives
 consumers at least two major versions to migrate, and keeps a backported obsoletion identical to the
 original.
 

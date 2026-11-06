@@ -276,11 +276,8 @@ export {
 } from "@ag-ui/client";
 
 // `outcome` (success | interrupt) and the per-interrupt shape are modelled
-// natively by the SDK as of @ag-ui/client 0.0.57 — we previously carried local
-// extension types (RunFinishedAGUIEvent / AGUIRunOutcome / AGUIInterrupt) to
-// compensate for the older schema that only exposed `result?: any`. The SDK's
-// RunFinishedEvent is re-exported aliased (AGUIRunFinishedEvent) to avoid
-// colliding with the local UI-facing RunFinishedEvent callback type below.
+// natively by the SDK. The SDK's RunFinishedEvent is re-exported aliased
+// (AGUIRunFinishedEvent) to avoid colliding with the local UI-facing RunFinishedEvent callback type below.
 export { type RunFinishedEvent as AGUIRunFinishedEvent } from "@ag-ui/client";
 export { type Interrupt, type RunFinishedOutcome } from "@ag-ui/core";
 

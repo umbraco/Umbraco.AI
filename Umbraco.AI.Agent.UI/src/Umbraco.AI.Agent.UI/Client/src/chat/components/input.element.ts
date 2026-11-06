@@ -76,16 +76,14 @@ export class UaiChatInputElement extends UmbLitElement {
             this.#notificationContext = context;
         });
 
-        this.#temporaryFileConfigRepository.initialized.then(() => {
-            this.observe(
-                this.#temporaryFileConfigRepository.part("allowedUploadedFileExtensions"),
-                (extensions) => (this._allowedExtensions = extensions ?? []),
-            );
-            this.observe(
-                this.#temporaryFileConfigRepository.part("disallowedUploadedFilesExtensions"),
-                (extensions) => (this._disallowedExtensions = extensions ?? []),
-            );
-        });
+        this.observe(
+            this.#temporaryFileConfigRepository.part("allowedUploadedFileExtensions"),
+            (extensions) => (this._allowedExtensions = extensions ?? []),
+        );
+        this.observe(
+            this.#temporaryFileConfigRepository.part("disallowedUploadedFilesExtensions"),
+            (extensions) => (this._disallowedExtensions = extensions ?? []),
+        );
     }
 
     /** Focuses the message composer. Public so a host can focus it (e.g. after switching conversation). */

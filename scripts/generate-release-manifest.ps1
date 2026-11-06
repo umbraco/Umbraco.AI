@@ -21,8 +21,13 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 
 # Find all Umbraco.AI* folders at root
+# Products listed in scripts/parked-products.txt are skipped (see docs/upgrades/v19.md, Blockers).
+$parked = Get-Content (Join-Path $PSScriptRoot "parked-products.txt") -ErrorAction SilentlyContinue |
+    Where-Object { $_.Trim() -and -not $_.TrimStart().StartsWith("#") } |
+    ForEach-Object { $_.Trim() }
 $products = Get-ChildItem -Path $repoRoot -Directory -Filter "Umbraco.AI*" |
     Select-Object -ExpandProperty Name |
+    Where-Object { $parked -notcontains $_ } |
     Sort-Object
 
 if ($products.Count -eq 0) {

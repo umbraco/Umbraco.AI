@@ -51,6 +51,16 @@ public sealed class RichTextPropertyValueHandler : IAIPropertyValueHandler
             "into the embedded block to populate its properties."));
 
     /// <inheritdoc />
+    /// <remarks>
+    /// The same Library element can sit in the inner layout more than once; a bare <c>contentKey</c>
+    /// then cannot name one block, so it is rejected (address the block by its layout <c>key</c>).
+    /// </remarks>
+    public AIValidationResult ValidateRemoveItem(JsonNode? value, Guid blockKey, AIPropertyValueOperationContext context)
+        => value is JsonObject rte && rte[BlocksPropertyName] is JsonObject blocks
+            ? BlockEnvelopeOps.ValidateRemovable(blocks, InnerBlocksLayoutKey, blockKey)
+            : AIValidationResult.Valid;
+
+    /// <inheritdoc />
     public Task<AIAddItemHandlerResult> AddItemAsync(
         JsonNode? value,
         AIAddItemArgs args,

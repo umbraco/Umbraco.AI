@@ -96,7 +96,7 @@ internal sealed class AIUsageOverviewService : IAIUsageOverviewService
 
         var fromUtc = LocalDayStartUtc(from, query.TimeZone);
         var toUtc = LocalDayStartUtc(to.AddDays(1), query.TimeZone);
-        var layered = await _reader.GetTotalsAsync(fromUtc, toUtc, dimension: null, ct);
+        var layered = await _reader.GetTotalsAsync(fromUtc, toUtc, dimension: null, hourlyOnly: false, ct);
 
         var rows = layered.Hourly
             .Select(t => (Date: LocalDate(t.Period, query.TimeZone), Total: t))
@@ -146,7 +146,7 @@ internal sealed class AIUsageOverviewService : IAIUsageOverviewService
         var fromUtc = LocalDayStartUtc(from, timeZone);
         var toUtc = LocalDayStartUtc(to.AddDays(1), timeZone);
 
-        var layered = await _reader.GetTotalsAsync(fromUtc, toUtc, dimension: null, ct);
+        var layered = await _reader.GetTotalsAsync(fromUtc, toUtc, dimension: null, hourlyOnly: true, ct);
         var totalsByHour = layered.Hourly.ToLookup(t => DateTime.SpecifyKind(t.Period, DateTimeKind.Utc));
 
         var firstHour = CeilingToHour(fromUtc);
@@ -192,7 +192,7 @@ internal sealed class AIUsageOverviewService : IAIUsageOverviewService
         var fromUtc = LocalDayStartUtc(from, timeZone);
         var toUtc = LocalDayStartUtc(to.AddDays(1), timeZone);
 
-        var layered = await _reader.GetTotalsAsync(fromUtc, toUtc, dimension, ct);
+        var layered = await _reader.GetTotalsAsync(fromUtc, toUtc, dimension, hourlyOnly: false, ct);
 
         return layered.Hourly
             .Concat(layered.Daily)

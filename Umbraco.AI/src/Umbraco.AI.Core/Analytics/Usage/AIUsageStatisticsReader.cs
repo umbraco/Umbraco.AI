@@ -31,11 +31,16 @@ internal interface IAIUsageStatisticsReader
     /// <param name="from">Start instant (inclusive).</param>
     /// <param name="to">End instant (exclusive).</param>
     /// <param name="dimension">The dimension to group by, or null to group by hour (day for daily rows).</param>
+    /// <param name="hourlyOnly">
+    /// Serve the whole range from hourly rows and raw records, and return no daily rows. For hour-by-hour
+    /// views, where the oldest day that still has hourly rows must not be left to its daily row.
+    /// </param>
     /// <param name="ct">Cancellation token.</param>
     Task<AIUsageLayeredTotals> GetTotalsAsync(
         DateTime from,
         DateTime to,
         AIUsageBreakdownDimension? dimension,
+        bool hourlyOnly,
         CancellationToken ct);
 }
 
@@ -128,6 +133,7 @@ internal sealed class AIUsageStatisticsReader : IAIUsageStatisticsReader
         DateTime from,
         DateTime to,
         AIUsageBreakdownDimension? dimension,
+        bool hourlyOnly,
         CancellationToken ct)
     {
         var firstHourlyPeriod = await _statisticsRepository.GetFirstAggregatedHourlyPeriodAsync(ct);
@@ -137,8 +143,9 @@ internal sealed class AIUsageStatisticsReader : IAIUsageStatisticsReader
         // Daily rows serve only the days before the oldest retained hour (the day it falls in is rolled
         // up already, so is whole in its daily row) and only the days the rollup job has completed.
         // Hourly rows and raw records serve everything from there on.
+        // When only hours are wanted there is no daily layer: every hour still held is served from its hourly row.
         var dailyBoundary = DateTime.MinValue;
-        if (lastDailyPeriod is { } lastDaily)
+        if (!hourlyOnly && lastDailyPeriod is { } lastDaily)
         {
             dailyBoundary = lastDaily.AddDays(1);
             if (firstHourlyPeriod is { } firstHourly)

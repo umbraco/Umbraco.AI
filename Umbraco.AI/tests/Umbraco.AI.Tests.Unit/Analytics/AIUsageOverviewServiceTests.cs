@@ -218,6 +218,62 @@ public class AIUsageOverviewServiceTests
     }
 
     [Fact]
+    public async Task GetOverviewAsync_GroupedByHour_OnTheOldestDayWithHourlyRows_FillsItsHoursEvenThoughTheDayIsRolledUp()
+    {
+        // Arrange: hourly rows start on the 4th at 16:00Z and the nightly rollup has already done that day, so
+        // the day's daily row exists next to the hourly rows that made it up.
+        AddDaily(Utc(2026, 11, 4, 0), requests: 5);
+        AddHourly(Utc(2026, 11, 4, 16), requests: 3);
+        AddHourly(Utc(2026, 11, 4, 17), requests: 2);
+        AddHourly(Utc(2026, 11, 5, 9), requests: 10);
+
+        // Act
+        var period = (await Query(new DateOnly(2026, 11, 4), new DateOnly(2026, 11, 4), TimeZoneInfo.Utc, AIUsageGroupBy.Hour)).Current;
+
+        // Assert: the hours with an hourly row are filled, the others stay zero, and the totals are their sum.
+        period.HourlyBuckets.Count.ShouldBe(24);
+        period.HourlyBuckets[16].Requests.ShouldBe(3);
+        period.HourlyBuckets[17].Requests.ShouldBe(2);
+        period.HourlyBuckets.Count(b => b.Requests > 0).ShouldBe(2);
+        period.Totals.Requests.ShouldBe(5);
+    }
+
+    [Fact]
+    public async Task GetOverviewAsync_GroupedByHour_OnADayThatOnlyHasADailyRow_StaysZero()
+    {
+        // Arrange: the 3rd survives only as a daily row, as hourly rows have been cleaned up before it.
+        AddDaily(Utc(2026, 11, 3, 0), requests: 7);
+        AddHourly(Utc(2026, 11, 4, 16), requests: 3);
+
+        // Act
+        var period = (await Query(new DateOnly(2026, 11, 3), new DateOnly(2026, 11, 3), TimeZoneInfo.Utc, AIUsageGroupBy.Hour)).Current;
+
+        // Assert
+        period.HourlyBuckets.ShouldAllBe(b => b.Requests == 0);
+        period.Totals.Requests.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task GetOverviewAsync_GroupedByDay_OnTheOldestDayWithHourlyRows_StillUsesItsDailyRowOnce()
+    {
+        // Arrange: the same data as the hourly case above.
+        AddDaily(Utc(2026, 11, 4, 0), requests: 5);
+        AddHourly(Utc(2026, 11, 4, 16), requests: 3);
+        AddHourly(Utc(2026, 11, 4, 17), requests: 2);
+        AddHourly(Utc(2026, 11, 5, 9), requests: 10);
+
+        // Act
+        var overview = await Query(new DateOnly(2026, 11, 4), new DateOnly(2026, 11, 5), TimeZoneInfo.Utc);
+
+        // Assert
+        overview.Current.Buckets.Select(b => (b.Start, b.Requests)).ShouldBe(
+        [
+            (new DateOnly(2026, 11, 4), 5),
+            (new DateOnly(2026, 11, 5), 10),
+        ]);
+    }
+
+    [Fact]
     public async Task GetOverviewAsync_IncludesRawRecordsNotAggregatedYet()
     {
         // Arrange: nothing aggregated, one raw record.

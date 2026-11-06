@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Model Picker Mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --surface: #ffffff; --bg: #f3f3f5; --text: #1b264f; --text-alt: #515054; --border: #e9e9eb;
+    --border-strong: #d8d7d9; --header: #1b264f; --focus: #3879ff; --current: #ffe8e6;
+    --warn: #9b5d00; --warn-bg: #fff4e0; --pos: #2a7a3f; --pos-bg: #e6f5ea; --primary: #2bc37c;
+    --default: #1b264f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Lato, sans-serif; font-size: 14px; color: var(--text); background: #8a8a8f; }
+  .backdrop { position: relative; width: 1440px; height: 900px; background: var(--bg); overflow: hidden; }
+  .topbar { height: 60px; background: var(--header); display: flex; align-items: center; padding: 0 24px; gap: 30px; color: #fff; }
+  .logo { width: 30px; height: 30px; border-radius: 50%; border: 3px solid #fff; }
+  .topbar span { opacity: .85; }
+  .shell { display: flex; height: 840px; }
+  .tree { width: 300px; background: #fff; border-right: 1px solid var(--border); padding: 24px; color: var(--text-alt); }
+  .tree h4 { margin: 0 0 16px; color: var(--text); }
+  .tree div { padding: 8px 0; }
+  .main { flex: 1; padding: 24px; filter: blur(0.5px); }
+  .box { background: #fff; border-radius: 6px; border: 1px solid var(--border); padding: 20px; margin-top: 70px; }
+  .field { display: grid; grid-template-columns: 200px 1fr; gap: 24px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .field:last-child { border-bottom: 0; }
+  .field b { display: block; }
+  .field small { color: var(--text-alt); }
+  .fake-input { border: 1px solid var(--border-strong); border-radius: 3px; padding: 9px 12px; color: var(--text-alt); background: #fff; }
+  .scrim { position: absolute; inset: 0; background: rgba(27, 38, 79, .45); }
+  .modal { position: absolute; top: 0; right: 0; bottom: 0; width: 980px; background: var(--bg); box-shadow: -8px 0 24px rgba(0,0,0,.2); display: flex; flex-direction: column; }
+  .modal-head { background: #fff; border-bottom: 1px solid var(--border); padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .modal-head h2 { margin: 0; font-size: 18px; }
+  .modal-head .conn { color: var(--text-alt); font-size: 13px; }
+  .modal-body { flex: 1; padding: 20px 24px; overflow: hidden; }
+  .toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 14px; }
+  .search { flex: 1; border: 1px solid var(--border-strong); border-radius: 3px; padding: 9px 12px; background: #fff; color: var(--text-alt); }
+  .toggle { display: flex; align-items: center; gap: 8px; color: var(--text-alt); font-size: 13px; }
+  .switch { width: 30px; height: 16px; border-radius: 8px; background: var(--border-strong); position: relative; }
+  .switch::after { content: ""; position: absolute; left: 2px; top: 2px; width: 12px; height: 12px; border-radius: 50%; background: #fff; }
+  .cols { border: 1px solid var(--border-strong); border-radius: 3px; padding: 8px 12px; background: #fff; font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  th { text-align: left; font-weight: 700; padding: 12px 14px; border-bottom: 1px solid var(--border-strong); font-size: 13px; white-space: nowrap; }
+  th.num, td.num { text-align: right; }
+  th .sort { color: var(--focus); margin-left: 4px; }
+  th .src { display: block; font-weight: 400; color: var(--text-alt); font-size: 11px; }
+  td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  tr.selected td { background: var(--current); }
+  .name { font-weight: 700; }
+  .id { color: var(--text-alt); font-size: 12px; }
+  .range { display: block; color: var(--text-alt); font-size: 11px; }
+  .tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px; margin-top: 4px; }
+  .tag.warn { color: var(--warn); background: var(--warn-bg); }
+  .tag.pos { color: var(--pos); background: var(--pos-bg); }
+  .tooltip { position: absolute; background: #1b264f; color: #fff; font-size: 12px; padding: 8px 10px; border-radius: 4px; width: 250px; line-height: 1.4; }
+  .tooltip::after { content: ""; position: absolute; left: 20px; top: -6px; border: 6px solid transparent; border-top: 0; border-bottom-color: #1b264f; }
+  .modal-foot { background: #fff; border-top: 1px solid var(--border); padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .note { color: var(--text-alt); font-size: 12px; }
+  .btns { display: flex; gap: 10px; }
+  .btn { padding: 9px 18px; border-radius: 3px; font-weight: 700; border: 1px solid var(--border-strong); background: #fff; }
+  .btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .mock { position: absolute; left: 16px; bottom: 14px; background: #fff; border: 1px dashed var(--border-strong); color: var(--text-alt); font-size: 12px; padding: 6px 10px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<div class="backdrop">
+  <div class="topbar"><div class="logo"></div><span>Content</span><span>Media</span><span>Settings</span><span>AI</span></div>
+  <div class="shell">
+    <div class="tree"><h4>Configuration</h4><div>Connections</div><div>Profiles</div><div>Contexts</div><div>Guardrails</div></div>
+    <div class="main">
+      <div class="box">
+        <div class="field"><div><b>Connection</b><small>Select the AI connection to use</small></div><div class="fake-input">Anthropic</div></div>
+        <div class="field"><div><b>Model</b><small>Select the AI model to use</small></div><div class="fake-input">Choose a model…</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="scrim"></div>
+
+  <div class="modal">
+    <div class="modal-head">
+      <div><h2>Choose a model</h2><div class="conn">Connection: Anthropic · Chat</div></div>
+    </div>
+    <div class="modal-body">
+      <div class="toolbar">
+        <div class="search">Search models</div>
+        <div class="toggle"><div class="switch"></div>Hide models with warnings</div>
+        <div class="cols">Columns ▾</div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th class="num">Context<span class="src">Umbraco AI</span></th>
+            <th class="num">Price / 1M output<span class="src">Pricing package</span></th>
+            <th class="num">Est. CO2e / 1k tokens<span class="sort">▲</span><span class="src">AI Carbon</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="name">Claude 3.5 Haiku</div><div class="id">claude-3-5-haiku-20241022</div><span class="tag warn">Retiring 22-10-2026</span></td>
+            <td class="num">200k</td>
+            <td class="num">$4</td>
+            <td class="num">≈ 48 mg<span class="range">27–70 mg</span></td>
+          </tr>
+          <tr>
+            <td><div class="name">Claude Haiku 4.5</div><div class="id">claude-haiku-4-5-20251001</div><span class="tag pos">Fast</span></td>
+            <td class="num">200k</td>
+            <td class="num">$5</td>
+            <td class="num">≈ 55 mg<span class="range">31–78 mg</span></td>
+          </tr>
+          <tr class="selected">
+            <td><div class="name">Claude Sonnet 4.6</div><div class="id">claude-sonnet-4-6</div></td>
+            <td class="num">200k</td>
+            <td class="num">$15</td>
+            <td class="num">≈ 1.2 g<span class="range">0.96–1.3 g</span></td>
+          </tr>
+          <tr>
+            <td><div class="name">Claude Sonnet 4.5</div><div class="id">claude-sonnet-4-5-20250929</div><span class="tag warn">Retiring 31-03-2027</span></td>
+            <td class="num">200k</td>
+            <td class="num">$15</td>
+            <td class="num">≈ 1.2 g<span class="range">0.96–1.4 g</span></td>
+          </tr>
+          <tr>
+            <td><div class="name">Claude Opus 4.1</div><div class="id">claude-opus-4-1-20250805</div></td>
+            <td class="num">200k</td>
+            <td class="num">$75</td>
+            <td class="num">≈ 5.8 g<span class="range">3.1–8.4 g</span></td>
+          </tr>
+          <tr>
+            <td><div class="name">my-custom-claude</div><div class="id">my-custom-claude-v1</div></td>
+            <td class="num">—</td>
+            <td class="num">—</td>
+            <td class="num" style="color: var(--text-alt)">Not estimated</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="modal-foot">
+      <div class="note">Facts come from installed packages. Values are estimates or list prices and may change.</div>
+      <div class="btns"><div class="btn">Close</div><div class="btn primary">Choose</div></div>
+    </div>
+  </div>
+  <div class="mock">Mockup · illustrative values only</div>
+</div>
+</body>
+</html>

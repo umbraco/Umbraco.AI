@@ -8,6 +8,8 @@ namespace Umbraco.AI.Prompt.Core.Prompts;
 /// </summary>
 public sealed class AIPrompt : IAIVersionableEntity
 {
+    private Guid _id;
+
     /// <summary>
     /// Creates a prompt with no ID. An ID is generated when it is first saved.
     /// </summary>
@@ -31,7 +33,15 @@ public sealed class AIPrompt : IAIVersionableEntity
     /// <summary>
     /// Unique identifier for the prompt.
     /// </summary>
-    public Guid Id { get; internal set; }
+    /// <remarks>
+    /// Leave empty to have an ID generated when the prompt is first saved. Set it when creating a
+    /// prompt that must keep an ID from elsewhere, such as one synced from another environment.
+    /// </remarks>
+    public Guid Id
+    {
+        get => _id;
+        init => _id = value;
+    }
 
     /// <summary>
     /// Unique alias for the prompt (URL-safe identifier).
@@ -133,4 +143,9 @@ public sealed class AIPrompt : IAIVersionableEntity
     /// Starts at 1 and increments with each save operation.
     /// </summary>
     public int Version { get; internal set; } = 1;
+
+    /// <summary>
+    /// Assigns the ID of a new prompt. Used by the service when saving a prompt with no ID.
+    /// </summary>
+    internal void SetId(Guid id) => _id = id;
 }

@@ -20,6 +20,7 @@ import type { UsageOverviewResponseModel } from "../../../../api/types.gen.js";
 import {
     getUsageChartMoment,
     mapBreakdownResult,
+    mapUsageCachedInput,
     mapUsageChart,
     mapUsageTiles,
     toUsageBreakdownQuery,
@@ -239,7 +240,10 @@ export class UaiUsageDashboardElement extends UmbLitElement {
         return !!this._overview && tile.noData;
     }
 
+    // The Input tokens tile adds the period's cached input as a second line. The library keeps the line while
+    // the tile reloads and shows none without a value, so it is only set when a provider reported a figure.
     #renderMetricTile(metric: UaiUsageMetric, icon: string, tile: UaiUsageTile) {
+        const detail = metric === "inputTokens" ? mapUsageCachedInput(this._overview) : undefined;
         return html`<uaui-kpi-tile
             label=${this.localize.term(METRIC_LABEL_KEYS[metric])}
             icon=${icon}
@@ -249,6 +253,8 @@ export class UaiUsageDashboardElement extends UmbLitElement {
             ?no-data=${this.#noData(tile)}
             ?loading=${this._loading}
             ?error=${this._error}
+            .detail=${detail === undefined ? undefined : this.localize.term("uaiUsage_cachedInputDetail")}
+            .detailValue=${detail}
             .deltaUnit=${metric === "successRate" ? "points" : "percent"}
             .lowerIsBetter=${metric === "averageDuration"}
             selectable

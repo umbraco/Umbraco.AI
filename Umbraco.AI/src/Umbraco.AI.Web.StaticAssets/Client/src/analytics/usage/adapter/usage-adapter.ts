@@ -77,6 +77,14 @@ export function mapUsageTiles(response?: UsageOverviewResponseModel | null): Uai
     };
 }
 
+/**
+ * The period's cached input tokens, for the second line of the Input tokens tile. Undefined when no provider
+ * reported a figure, so there is no line (a reported 0 still has one).
+ */
+export function mapUsageCachedInput(response?: UsageOverviewResponseModel | null): number | undefined {
+    return response?.current.totals.cachedInputTokens ?? undefined;
+}
+
 /** The metrics a tile can pick for the chart. */
 export type UaiUsageMetric =
     | "requests"
@@ -147,12 +155,12 @@ function stacksOf(metric: UaiUsageMetric, splitCachedInput: boolean): Stack[] {
                 { id: "output", color: 2, of: (b) => b.outputTokens },
             ];
         case "successRate":
-            // A fraction, worked out as the tile does. A bucket with no requests has no rate: it is left out
-            // rather than drawn as 0. The chart then bridges or leaves the empty bucket (umbraco/Umbraco.Analytics.UI#42).
+            // A fraction, worked out as the tile does. A bucket with no requests has no rate: its point is left
+            // out, which the chart reads as an empty slot (the range keeps every period on the axis and the line
+            // breaks) rather than drawing 0.
             return [{ id: "successRate", color: 1, of: successRateOf }];
         case "averageDuration":
-            // Seconds per request, as the tile. A bucket with no requests is left out for the same reason as the
-            // success rate (umbraco/Umbraco.Analytics.UI#42).
+            // Seconds per request, as the tile. A bucket with no requests is left out, as for the success rate.
             return [{ id: "averageDuration", color: 1, of: averageDurationOf }];
     }
 }

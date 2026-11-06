@@ -220,6 +220,7 @@ export default {
         averageDuration: "Avg duration",
         tokens: "Tokens",
         cachedInput: "Cached input",
+        cachedInputDetail: "{0} cached",
         seriesSucceeded: "Succeeded",
         seriesFailed: "Failed",
         seriesInput: "Input",

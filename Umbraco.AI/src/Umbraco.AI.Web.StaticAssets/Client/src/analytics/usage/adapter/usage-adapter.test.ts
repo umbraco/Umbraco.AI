@@ -8,6 +8,7 @@ import type {
 import {
     getUsageChartMoment,
     mapBreakdownResult,
+    mapUsageCachedInput,
     mapUsageChart,
     mapUsageSeries,
     mapUsageTiles,
@@ -66,6 +67,17 @@ describe("usage tiles", () => {
         expect(tiles.requests).toEqual({ value: 0, previous: undefined, noData: true });
         expect(tiles.successRate).toEqual({ value: undefined, previous: undefined, noData: true });
         expect(tiles.averageDuration.value).toBeUndefined();
+    });
+
+    it("gives the period's cached input only when a provider reported it", () => {
+        const reported = { current: period({ totals: counts({ requests: 4, cachedInputTokens: 30 }) }) };
+        const zero = { current: period({ totals: counts({ requests: 4, cachedInputTokens: 0 }) }) };
+        const none = { current: period({ totals: counts({ requests: 4 }) }) };
+
+        expect(mapUsageCachedInput(reported)).toBe(30);
+        expect(mapUsageCachedInput(zero)).toBe(0);
+        expect(mapUsageCachedInput(none)).toBeUndefined();
+        expect(mapUsageCachedInput(undefined)).toBeUndefined();
     });
 
     it("works out the success rate as a fraction and the average duration in seconds", () => {

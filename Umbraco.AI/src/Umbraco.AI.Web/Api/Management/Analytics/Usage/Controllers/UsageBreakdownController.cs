@@ -38,7 +38,7 @@ public class UsageBreakdownController : AnalyticsControllerBase
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Usage breakdown by provider.</returns>
     [HttpGet("usage-by-provider")]
-    [Obsolete("Will be removed in v21")]
+    [Obsolete("Use the usage-breakdown endpoint instead. Will be removed in v20.")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(IEnumerable<UsageBreakdownItemModel>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -82,7 +82,7 @@ public class UsageBreakdownController : AnalyticsControllerBase
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Usage breakdown by model.</returns>
     [HttpGet("usage-by-model")]
-    [Obsolete("Will be removed in v21")]
+    [Obsolete("Use the usage-breakdown endpoint instead. Will be removed in v20.")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(IEnumerable<UsageBreakdownItemModel>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -126,7 +126,7 @@ public class UsageBreakdownController : AnalyticsControllerBase
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Usage breakdown by profile.</returns>
     [HttpGet("usage-by-profile")]
-    [Obsolete("Will be removed in v21")]
+    [Obsolete("Use the usage-breakdown endpoint instead. Will be removed in v20.")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(IEnumerable<UsageBreakdownItemModel>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -170,7 +170,7 @@ public class UsageBreakdownController : AnalyticsControllerBase
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Usage breakdown by user.</returns>
     [HttpGet("usage-by-user")]
-    [Obsolete("Will be removed in v21")]
+    [Obsolete("Use the usage-breakdown endpoint instead. Will be removed in v20.")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(IEnumerable<UsageBreakdownItemModel>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

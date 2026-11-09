@@ -464,11 +464,12 @@ All extension methods in `Umbraco.AI.Extensions` namespace (or product-specific:
 Never break a public API. When a new method replaces an old one, keep the old signature and have it
 **proxy to the new method**, resolving any new parameters via service locator (e.g.
 `StaticServiceProvider.Instance.GetRequiredService<T>()`). Mark the old method `[Obsolete]` with the
-message `"Will be removed in vX"`, where **X = highest supported major version + 2**, the same on
-every active line (with v19 supported alongside v17 and v18, that's `"Will be removed in v21"`; older
-markers that say v20 stay as they are). This gives
-consumers at least two major versions to migrate, and keeps a backported obsoletion identical to the
-original.
+message `"Will be removed in vX."`, where **X = highest stable release + 2**, the same on every
+active line (with 18 the highest stable release, that's `"Will be removed in v20."`; a pre-release
+major such as a v19 beta doesn't count). Say what replaces it first when there is something
+(`"Use X instead. Will be removed in v20."`), and always name a version, never "a future version".
+This gives consumers at least two major versions to migrate, and keeps a backported obsoletion
+identical to the original.
 
 ### Backoffice UI: mirror an existing editor, don't hand-roll
 

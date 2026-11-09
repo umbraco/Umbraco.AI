@@ -63,7 +63,8 @@ internal static partial class PropertyValueFormatter
 
         return editorAlias switch
         {
-            "Umbraco.RichText" or "Umbraco.TinyMCE" => FormatRichText(value),
+            "Umbraco.RichText" or "Umbraco.TinyMCE"
+                or CmsConstants.PropertyEditors.Aliases.MarkdownEditor => FormatRichText(value),
             CmsConstants.PropertyEditors.Aliases.MediaPicker3
                 or CmsConstants.PropertyEditors.Aliases.SingleMediaPicker => FormatMediaPicker(value),
             CmsConstants.PropertyEditors.Aliases.MultiNodeTreePicker
@@ -75,7 +76,7 @@ internal static partial class PropertyValueFormatter
 
     private static object? FormatRichText(object? value)
     {
-        // RichText values can be IHtmlContent, IHtmlEncodedString, string with HTML, or complex objects
+        // RichText and Markdown values can be IHtmlContent, IHtmlEncodedString, string with HTML, or complex objects
         string? html = null;
 
         if (value is IHtmlContent htmlContent)
@@ -86,7 +87,7 @@ internal static partial class PropertyValueFormatter
         }
         else if (value is IHtmlEncodedString encodedString)
         {
-            // Published rich text is IHtmlEncodedString, which is not IHtmlContent
+            // Published rich text and Markdown (rendered to HTML) are IHtmlEncodedString, which is not IHtmlContent
             html = encodedString.ToHtmlString();
         }
         else if (value is string str)

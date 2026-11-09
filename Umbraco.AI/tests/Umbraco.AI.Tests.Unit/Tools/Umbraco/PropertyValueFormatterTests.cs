@@ -59,6 +59,16 @@ public class PropertyValueFormatterTests
         properties.ShouldHaveSingleItem().Value.ShouldBe("Plain string");
     }
 
+    [Fact]
+    public void ExtractProperties_MarkdownHtmlEncodedString_ReturnsPlainText()
+    {
+        var content = BuildContent("intro", "Umbraco.MarkdownEditor", new HtmlEncodedString("<h1>Title</h1>\n<p>Some <em>text</em></p>"));
+
+        var properties = PropertyValueFormatter.ExtractProperties(content);
+
+        properties.ShouldHaveSingleItem().Value.ShouldBe("Title Some text");
+    }
+
     private static IPublishedContent BuildContent(string alias, string editorAlias, object? value)
     {
         var dataType = new PublishedDataType(1, editorAlias, editorAlias, new Lazy<object?>(() => null));

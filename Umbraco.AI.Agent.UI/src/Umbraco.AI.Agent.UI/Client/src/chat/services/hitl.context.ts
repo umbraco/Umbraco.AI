@@ -28,16 +28,35 @@ export class UaiHitlContext extends UmbControllerBase {
     }
 
     setInterrupt(interrupt: UaiInterruptInfo, context: UaiInterruptContext): void {
+        if (context.signal?.aborted) return;
+
         this.#pendingContext = context;
         this.#targetMessageId$.next(context.lastAssistantMessageId);
         context.setAgentState(undefined);
         this.#interrupt$.next(interrupt);
+
+        // Cancelling the turn takes its approval card with it, so it can't be approved afterwards (#692).
+        // Resuming with no response tells whoever is waiting on the card that it was cancelled.
+        context.signal?.addEventListener(
+            "abort",
+            () => {
+                if (this.#pendingContext !== context) return;
+                this.#clear();
+                context.resume(undefined);
+            },
+            { once: true },
+        );
     }
 
     respond(response: string): void {
+        const context = this.#pendingContext;
+        this.#clear();
+        context?.resume(response);
+    }
+
+    #clear(): void {
         this.#interrupt$.next(undefined);
         this.#targetMessageId$.next(undefined);
-        this.#pendingContext?.resume(response);
         this.#pendingContext = undefined;
     }
 }

@@ -69,14 +69,17 @@ export class UaiFrontendToolExecutor {
 
     /**
      * Execute a list of tool calls sequentially.
+     * @param signal Optional signal for the turn. Once aborted, no further tool runs and nothing more is
+     * published: the run controller has already settled the cancelled tool calls.
      */
-    async execute(toolCalls: UaiToolCallInfo[]): Promise<void> {
+    async execute(toolCalls: UaiToolCallInfo[], signal?: AbortSignal): Promise<void> {
         for (const toolCall of toolCalls) {
-            await this.#executeSingle(toolCall);
+            if (signal?.aborted) return;
+            await this.#executeSingle(toolCall, signal);
         }
     }
 
-    async #executeSingle(toolCall: UaiToolCallInfo): Promise<void> {
+    async #executeSingle(toolCall: UaiToolCallInfo, signal?: AbortSignal): Promise<void> {
         try {
             // Get manifests: tool manifest gates HITL approval; renderer manifest provides display label
             const toolManifest = this.#frontendToolManager.getManifest(toolCall.name);
@@ -84,6 +87,7 @@ export class UaiFrontendToolExecutor {
 
             // Get API from frontend tool manager
             const api = await this.#frontendToolManager.getApi(toolCall.name);
+            if (signal?.aborted) return;
 
             // Parse arguments
             const args = this.#parseArgs(toolCall.arguments);
@@ -93,7 +97,8 @@ export class UaiFrontendToolExecutor {
                 this.#statusUpdates.next({ toolCallId: toolCall.id, status: "awaiting_approval" });
 
                 const label = rendererManifest?.meta.label ?? toolCall.name;
-                const approvalResponse = await this.#requestApproval(toolCall, toolManifest, label, args);
+                const approvalResponse = await this.#requestApproval(toolCall, toolManifest, label, args, signal);
+                if (signal?.aborted) return;
 
                 if (approvalResponse === null) {
                     this.#results.next({
@@ -109,15 +114,19 @@ export class UaiFrontendToolExecutor {
                 }
             }
 
+            if (signal?.aborted) return;
+
             // Publish executing status
             this.#statusUpdates.next({ toolCallId: toolCall.id, status: "executing" });
 
             // Execute the tool
             const result = await api.execute(args);
+            if (signal?.aborted) return;
 
             // Publish success result
             this.#results.next({ toolCallId: toolCall.id, result });
         } catch (error) {
+            if (signal?.aborted) return;
             const errorMessage = error instanceof Error ? error.message : String(error);
             this.#results.next({
                 toolCallId: toolCall.id,
@@ -132,6 +141,7 @@ export class UaiFrontendToolExecutor {
         toolManifest: ManifestUaiAgentFrontendTool,
         label: string,
         args: Record<string, unknown>,
+        signal?: AbortSignal,
     ): Promise<unknown> {
         if (!this.#hitlContext) {
             return undefined;
@@ -194,6 +204,7 @@ export class UaiFrontendToolExecutor {
                     // No-op for frontend approval
                 },
                 messages: [],
+                signal,
             };
 
             this.#hitlContext!.setInterrupt(interrupt, context);

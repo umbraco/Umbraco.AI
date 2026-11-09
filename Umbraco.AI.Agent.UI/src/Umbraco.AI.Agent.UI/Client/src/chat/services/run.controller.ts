@@ -150,7 +150,7 @@ export class UaiRunController extends UmbControllerBase {
     /** Context items to include in the next request */
     #pendingContext: Array<{ description: string; value: string }> = [];
 
-    /** Bumped by {@link abortRun}, so a follow-up run still collecting its context knows it was cancelled. */
+    /** Bumped when {@link abortRun} cancels a running turn, so work that finishes after it (a frontend tool, context collection) doesn't resume the run. */
     #abortCount = 0;
 
     /**
@@ -233,7 +233,9 @@ export class UaiRunController extends UmbControllerBase {
     abortRun(): void {
         if (!this.#client) return;
 
-        this.#abortCount++;
+        // Only a cancel of a run in flight counts. Closing the panel calls this while idle, and a backend
+        // approval left waiting across that must still resume when it's answered.
+        if (this.isRunning) this.#abortCount++;
         this.#client.reset();
         this.#streamingContent.next("");
 
@@ -666,8 +668,14 @@ export class UaiRunController extends UmbControllerBase {
     }
 
     #createInterruptContext(assistantMessageId: string | null, interrupt?: UaiInterruptInfo): UaiInterruptContext {
+        // A frontend tool or approval can finish after the user cancelled the run; resuming then would
+        // start the cancelled run again (#692).
+        const abortCount = this.#abortCount;
         return {
-            resume: (response?: unknown) => void this.#resumeRun(response, interrupt),
+            resume: (response?: unknown) => {
+                if (abortCount !== this.#abortCount) return;
+                void this.#resumeRun(response, interrupt);
+            },
             setAgentState: (state?: UaiAgentState) => this.#agentState.next(state),
             lastAssistantMessageId: assistantMessageId ?? this.#currentAssistantMessageId ?? undefined,
             messages: this.#messages.value,

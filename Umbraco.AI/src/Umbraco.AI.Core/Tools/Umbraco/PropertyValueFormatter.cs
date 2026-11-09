@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Html;
 
 using Umbraco.Cms.Core.Models.Blocks;
 using Umbraco.Cms.Core.Models.PublishedContent;
+using Umbraco.Cms.Core.Strings;
 using Umbraco.Extensions;
 
 namespace Umbraco.AI.Core.Tools.Umbraco;
@@ -70,7 +71,7 @@ internal static partial class PropertyValueFormatter
 
     private static object? FormatRichText(object? value)
     {
-        // RichText values can be IHtmlContent, string with HTML, or complex objects
+        // RichText values can be IHtmlContent, IHtmlEncodedString, string with HTML, or complex objects
         string? html = null;
 
         if (value is IHtmlContent htmlContent)
@@ -78,6 +79,13 @@ internal static partial class PropertyValueFormatter
             using var writer = new System.IO.StringWriter();
             htmlContent.WriteTo(writer, System.Text.Encodings.Web.HtmlEncoder.Default);
             html = writer.ToString();
+        }
+        else if (value is IHtmlEncodedString encodedString)
+        {
+            // Umbraco's published rich text value is an IHtmlEncodedString, which is not an IHtmlContent.
+            // Without this branch it fell through to FormatDefault and serialised as "{}", so agents read
+            // every rich text property back as empty.
+            html = encodedString.ToHtmlString();
         }
         else if (value is string str)
         {

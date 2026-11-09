@@ -1,3 +1,5 @@
+// A new value import from @umbraco/analytics-ui must also be added to the Copilot Workspace
+// test stand-in (Umbraco.AI.Agent.Copilot.Workspace/.../Client/test/analytics-ui.stub.ts).
 import { uauiPresetRange } from "@umbraco/analytics-ui";
 import type { UauiCompare, UauiDatePreset, UauiDateRange } from "@umbraco/analytics-ui";
 import { usageLocalDate } from "./adapter/usage-time-zone.js";

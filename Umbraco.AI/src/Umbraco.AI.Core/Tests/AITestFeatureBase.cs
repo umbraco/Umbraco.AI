@@ -48,7 +48,7 @@ public abstract class AITestFeatureBase<TConfig> : IAITestFeature
     /// <param name="contextResolver">The context resolver.</param>
     /// <param name="schemaBuilder">The schema builder.</param>
     /// <exception cref="InvalidOperationException">Thrown if the class is missing the required attribute.</exception>
-    [Obsolete("Use the constructor that accepts an IAITestFeatureInfrastructure so that test feature configuration supports app-settings ($Config) resolution and validation. This constructor will be removed in a future version.")]
+    [Obsolete("Use the constructor that accepts an IAITestFeatureInfrastructure so that test feature configuration supports app-settings ($Config) resolution and validation. Will be removed in v20.")]
     protected AITestFeatureBase(AITestContextResolver contextResolver, IAIEditableModelSchemaBuilder schemaBuilder)
         : this(contextResolver, schemaBuilder, StaticServiceProvider.Instance.GetRequiredService<IAIEditableModelResolver>())
     {

@@ -1,10 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 import { Observable, type Subscriber } from "rxjs";
 import {
+    UaiFrontendToolExecutor,
     UaiHitlContext,
     UaiRunController,
     UaiToolRendererManager,
     type UaiConversationStrategy,
+    type UaiFrontendToolManager,
     type UaiInterruptContext,
 } from "@umbraco-ai/agent-ui";
 import { UaiAgentClient, type AgentClientCallbacks, type AgentTransport } from "@umbraco-ai/agent";
@@ -42,22 +44,41 @@ function createFakeTransport() {
     return { transport, state, emit: (event: unknown) => subscriber?.next(event) };
 }
 
+const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
 /**
  * Regression coverage for #692: Cancel must stop the run. It used to leave the request streaming, and a
  * frontend tool call at its end was still executed and resumed, so the run carried on.
  */
 describe("Cancel stops the run", () => {
-    it("closes the run's stream so no more events arrive", () => {
+    it("closes the run's stream when its signal is aborted, so no more events arrive", () => {
         const { transport, state, emit } = createFakeTransport();
         const onTextStart = vi.fn();
         const client = new UaiAgentClient(transport, { onTextStart });
+        const turn = new AbortController();
 
-        client.sendMessage([{ id: "u1", role: "user", content: "hi", timestamp: new Date() }]);
-        client.reset();
+        client.sendMessage(
+            [{ id: "u1", role: "user", content: "hi", timestamp: new Date() }],
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            turn.signal,
+        );
+        turn.abort();
         emit({ type: "TEXT_MESSAGE_START", messageId: "m1", role: "assistant" });
 
         expect(state.tornDown).toBe(true);
         expect(onTextStart).not.toHaveBeenCalled();
+    });
+
+    it("aborts the signal the run was sent with", () => {
+        const { controller, sendMessage } = createControllerHarness();
+
+        controller.sendUserMessage("update the meta data");
+        controller.abortRun();
+
+        expect((sendMessage.mock.calls[0][5] as AbortSignal).aborted).toBe(true);
     });
 
     it("does not resume when a frontend tool finishes after Cancel", () => {
@@ -82,6 +103,81 @@ describe("Cancel stops the run", () => {
         resume({ approved: true });
 
         expect(sendMessage).toHaveBeenCalledTimes(2);
+    });
+
+    it("publishes nothing when a running tool finishes after Cancel", async () => {
+        const host = createFakeHost();
+        let finish!: (value: unknown) => void;
+        const execute = vi.fn(() => new Promise((resolve) => (finish = resolve)));
+        const toolManager = {
+            getManifest: () => ({ meta: {} }),
+            getApi: async () => ({ execute }),
+        } as unknown as UaiFrontendToolManager;
+        const executor = new UaiFrontendToolExecutor(new UaiToolRendererManager(host), toolManager);
+        const results = vi.fn();
+        executor.results$.subscribe(results);
+        const turn = new AbortController();
+
+        const running = executor.execute(
+            [{ id: "call-1", name: "set_value", arguments: "{}" }] as Parameters<UaiFrontendToolExecutor["execute"]>[0],
+            turn.signal,
+        );
+        await flush();
+        expect(execute).toHaveBeenCalled();
+
+        turn.abort();
+        finish({ success: true });
+        await running;
+
+        expect(results).not.toHaveBeenCalled();
+    });
+
+    it("gives a tool call paused at Cancel a result, so the next message isn't rejected", () => {
+        const { controller, sendMessage, callbacks } = createControllerHarness();
+
+        controller.sendUserMessage("save the page");
+        callbacks()?.onToolCallStart?.({ id: "call-1", name: "save", arguments: "", status: "pending" });
+        callbacks()?.onToolCallArgsEnd?.("call-1", "{}");
+        callbacks()?.onToolCallEnd?.("call-1");
+        callbacks()?.onRunFinished?.({
+            outcome: "interrupt",
+            interrupt: { id: "call-1", reason: "tool_call", type: "tool_call", title: "", message: "" },
+        });
+        controller.abortRun();
+        controller.sendUserMessage("something else");
+
+        const history = sendMessage.mock.calls[1][0] as Array<{ role: string; toolCallId?: string }>;
+        expect(history.some((msg) => msg.role === "tool" && msg.toolCallId === "call-1")).toBe(true);
+    });
+
+    it("closes a frontend tool's approval card and does not run the tool", async () => {
+        const host = createFakeHost();
+        const hitl = new UaiHitlContext(host);
+        const execute = vi.fn();
+        const toolManager = {
+            getManifest: () => ({ meta: { approval: true } }),
+            getApi: async () => ({ execute }),
+        } as unknown as UaiFrontendToolManager;
+        const executor = new UaiFrontendToolExecutor(new UaiToolRendererManager(host), toolManager, hitl);
+        const results = vi.fn();
+        executor.results$.subscribe(results);
+        let card: unknown;
+        hitl.interrupt$.subscribe((interrupt) => (card = interrupt));
+        const turn = new AbortController();
+
+        const running = executor.execute(
+            [{ id: "call-1", name: "save", arguments: "{}" }] as Parameters<UaiFrontendToolExecutor["execute"]>[0],
+            turn.signal,
+        );
+        await flush();
+        expect(card).toBeDefined();
+
+        turn.abort();
+        await running;
+
+        expect(card).toBeUndefined();
+        expect(execute).not.toHaveBeenCalled();
+        expect(results).not.toHaveBeenCalled();
     });
 });
 
@@ -120,5 +216,11 @@ function createControllerHarness(options: { idleOnInterrupt?: boolean } = {}) {
             interrupt: { id: "approval:call-1", reason, type: reason, title: "", message: "" },
         });
 
-    return { controller, sendMessage, pauseOn, resume: (response?: unknown) => interruptContext?.resume(response) };
+    return {
+        controller,
+        sendMessage,
+        pauseOn,
+        callbacks: () => callbacks,
+        resume: (response?: unknown) => interruptContext?.resume(response),
+    };
 }

@@ -38,6 +38,12 @@ export interface UaiRunControllerConfig {
      * the agent-keyed endpoint. Server-persisted surfaces (Copilot Workspace) inject their own.
      */
     conversationStrategy?: UaiConversationStrategy;
+    /**
+     * Optional request-context collector. When set, the context is collected again before every
+     * follow-up run (frontend tool resume, approval resume, regenerate), so a run that follows a
+     * frontend tool sees the entity as that tool left it, not as it was when the user sent the message.
+     */
+    collectContext?: () => Promise<Array<{ description: string; value: string }>>;
 }
 
 /**
@@ -57,6 +63,7 @@ export class UaiRunController extends UmbControllerBase {
     #subscriptions: Subscription[] = [];
     #handlerRegistry = new UaiInterruptHandlerRegistry();
     #strategy: UaiConversationStrategy;
+    #collectContext?: () => Promise<Array<{ description: string; value: string }>>;
 
     /** ID of the assistant message currently being streamed */
     #currentAssistantMessageId: string | null = null;
@@ -94,6 +101,7 @@ export class UaiRunController extends UmbControllerBase {
         this.#toolRendererManager = config.toolRendererManager;
         this.#frontendToolManager = config.frontendToolManager;
         this.#strategy = config.conversationStrategy ?? new UaiClientOwnedConversationStrategy();
+        this.#collectContext = config.collectContext;
 
         // Create frontend tool executor if frontend tools are available
         if (this.#frontendToolManager) {
@@ -141,6 +149,28 @@ export class UaiRunController extends UmbControllerBase {
 
     /** Context items to include in the next request */
     #pendingContext: Array<{ description: string; value: string }> = [];
+
+    /** Bumped by {@link abortRun}, so a follow-up run still collecting its context knows it was cancelled. */
+    #abortCount = 0;
+
+    /**
+     * Re-collects the request context before a follow-up run. Resending the context captured with the
+     * user's message would show the model the values from before its own frontend tool edits, and it
+     * then applies them again (#688). On failure the previous context is resent, as before.
+     *
+     * Callers only await this when a collector is set, so surfaces without one still send in the same
+     * tick. Returns `false` if the run was aborted while collecting, in which case nothing is sent.
+     */
+    async #refreshPendingContext(): Promise<boolean> {
+        if (!this.#collectContext) return true;
+        const abortCount = this.#abortCount;
+        try {
+            this.#pendingContext = await this.#collectContext();
+        } catch (error) {
+            console.error("Could not refresh the request context; resending the previous one.", error);
+        }
+        return abortCount === this.#abortCount;
+    }
 
     /**
      * The previously-resolved agent ID to send as `forwardedProps.previousAgentId`, when the
@@ -203,6 +233,7 @@ export class UaiRunController extends UmbControllerBase {
     abortRun(): void {
         if (!this.#client) return;
 
+        this.#abortCount++;
         this.#client.reset();
         this.#streamingContent.next("");
 
@@ -297,6 +328,8 @@ export class UaiRunController extends UmbControllerBase {
         this.#currentToolCalls = [];
         this.#currentAssistantMessageId = null;
         this.#errorHandled = false;
+
+        if (this.#collectContext && !(await this.#refreshPendingContext())) return;
 
         const frontendTools = this.#frontendToolManager?.frontendTools ?? [];
         this.#client.sendMessage(
@@ -634,7 +667,7 @@ export class UaiRunController extends UmbControllerBase {
 
     #createInterruptContext(assistantMessageId: string | null, interrupt?: UaiInterruptInfo): UaiInterruptContext {
         return {
-            resume: (response?: unknown) => this.#resumeRun(response, interrupt),
+            resume: (response?: unknown) => void this.#resumeRun(response, interrupt),
             setAgentState: (state?: UaiAgentState) => this.#agentState.next(state),
             lastAssistantMessageId: assistantMessageId ?? this.#currentAssistantMessageId ?? undefined,
             messages: this.#messages.value,
@@ -652,7 +685,7 @@ export class UaiRunController extends UmbControllerBase {
         this.#agentState.next(undefined);
     }
 
-    #resumeRun(response?: unknown, interrupt?: UaiInterruptInfo): void {
+    async #resumeRun(response?: unknown, interrupt?: UaiInterruptInfo): Promise<void> {
         // Backend human_approval interrupts resume via an AG-UI resume entry — NOT a chat
         // message. The decision payload ({ approved: bool }) is correlated server-side by
         // the interrupt id ("approval:<callId>"); the pending tool call is already replayed
@@ -677,6 +710,8 @@ export class UaiRunController extends UmbControllerBase {
             }
 
             this.#agentState.next({ status: "thinking" });
+            if (this.#collectContext && !(await this.#refreshPendingContext())) return;
+
             const frontendTools = this.#frontendToolManager?.frontendTools ?? [];
             this.#client?.sendMessage(
                 this.#strategy.outbound(this.#messages.value),
@@ -691,6 +726,9 @@ export class UaiRunController extends UmbControllerBase {
         // Frontend tool_call / generic resume: the tool result is already appended to the
         // message history (#handleToolResult), so re-sending the messages resumes the run.
         // A non-undefined response is surfaced as a user turn (legacy input-interrupt path).
+        this.#agentState.next({ status: "thinking" });
+        if (this.#collectContext && !(await this.#refreshPendingContext())) return;
+
         if (response !== undefined) {
             const userMessage: UaiChatMessage = {
                 id: crypto.randomUUID(),
@@ -700,7 +738,6 @@ export class UaiRunController extends UmbControllerBase {
             };
             this.#messages.next([...this.#messages.value, userMessage]);
         }
-        this.#agentState.next({ status: "thinking" });
         const frontendTools = this.#frontendToolManager?.frontendTools ?? [];
         this.#client?.sendMessage(
             this.#strategy.outbound(this.#messages.value),

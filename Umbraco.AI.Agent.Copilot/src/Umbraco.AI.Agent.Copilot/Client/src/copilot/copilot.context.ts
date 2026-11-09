@@ -198,6 +198,9 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
                 () => this.#activeHistoryKey,
                 () => this.#selectedAgent.getValue()?.id,
             ),
+            // Re-collected before each follow-up run, so the entity context reflects edits the
+            // frontend tools just made rather than the values from when the user sent the message.
+            collectContext: () => this.#collectRequestContext(),
         });
 
         this.#starterPrompts = new UaiStarterPromptsController(host, {
@@ -506,12 +509,16 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         content: string,
         contentParts?: import("@umbraco-ai/agent-ui").UaiInputContent[],
     ): Promise<void> {
+        const context = await this.#collectRequestContext();
+        this.#runController.sendUserMessage(content, context, contentParts);
+    }
+
+    async #collectRequestContext(): Promise<Array<{ description: string; value: string }>> {
         const items = await this.#requestContextCollector.collect();
-        const context = items.map((item) => ({
+        return items.map((item) => ({
             description: item.description,
             value: item.value ?? "",
         }));
-        this.#runController.sendUserMessage(content, context, contentParts);
     }
 
     abortRun(): void {

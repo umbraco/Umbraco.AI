@@ -16,7 +16,7 @@ namespace Umbraco.AI.Core.EntityAdapter;
 /// }
 /// </code>
 /// </remarks>
-[Obsolete("Entity data is now stored in AISerializedEntity.Data as free-form JSON. This class is kept for reference only.")]
+[Obsolete("Entity data is now stored in AISerializedEntity.Data as free-form JSON. This class is kept for reference only. Will be removed in v19.")]
 public sealed class AISerializedProperty
 {
     /// <summary>

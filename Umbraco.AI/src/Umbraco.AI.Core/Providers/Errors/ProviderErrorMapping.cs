@@ -14,6 +14,9 @@ namespace Umbraco.AI.Core.Providers.Errors;
 /// </summary>
 public static class ProviderErrorMapping
 {
+    private const string OutOfCreditMessage =
+        "The AI service account is out of credit or has reached its usage quota. Check the plan and billing with the provider.";
+
     /// <summary>
     /// The default classification for an exception, walking the inner-exception chain and
     /// recognising the common transport types: <see cref="ClientResultException"/> (the OpenAI SDK
@@ -167,6 +170,11 @@ public static class ProviderErrorMapping
                 "Authentication failed. Check the connection's credentials.",
                 providerCode ?? status.ToString(), rawMessage),
 
+            // Out of credit (e.g. DeepSeek, OpenRouter). Retrying won't help until the account is topped up.
+            402 => new(AIProviderErrorCategory.InvalidRequest,
+                OutOfCreditMessage,
+                providerCode ?? "402", rawMessage),
+
             404 => new(AIProviderErrorCategory.NotFound,
                 "The requested AI model or resource was not found.",
                 providerCode ?? "404", rawMessage),
@@ -174,6 +182,12 @@ public static class ProviderErrorMapping
             408 or 504 => new(AIProviderErrorCategory.Transient,
                 "The AI service took too long to respond. Try again in a moment.",
                 providerCode ?? status.ToString(), rawMessage),
+
+            // OpenAI-compatible APIs also answer an account with no credit left with a 429, but waiting
+            // won't clear it, so it mustn't get the "wait a moment" wording (#702).
+            429 when string.Equals(providerCode, "insufficient_quota", StringComparison.OrdinalIgnoreCase) => new(AIProviderErrorCategory.RateLimited,
+                OutOfCreditMessage,
+                providerCode, rawMessage),
 
             429 => new(AIProviderErrorCategory.RateLimited,
                 "Rate limit reached. Please wait a moment and try again.",

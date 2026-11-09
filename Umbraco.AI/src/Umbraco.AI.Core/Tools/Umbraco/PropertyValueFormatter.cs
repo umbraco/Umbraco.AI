@@ -86,9 +86,7 @@ internal static partial class PropertyValueFormatter
         }
         else if (value is IHtmlEncodedString encodedString)
         {
-            // Umbraco's published rich text value is an IHtmlEncodedString, which is not an IHtmlContent.
-            // Without this branch it fell through to FormatDefault and serialised as "{}", so agents read
-            // every rich text property back as empty.
+            // Published rich text is IHtmlEncodedString, which is not IHtmlContent
             html = encodedString.ToHtmlString();
         }
         else if (value is string str)

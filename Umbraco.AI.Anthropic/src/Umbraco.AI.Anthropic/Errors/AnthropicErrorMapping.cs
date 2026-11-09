@@ -26,6 +26,9 @@ namespace Umbraco.AI.Anthropic.Errors;
 /// </remarks>
 internal static class AnthropicErrorMapping
 {
+    private const string OutOfCreditMessage =
+        "The AI service account is out of credit or has reached its usage quota. Check the plan and billing with the provider.";
+
     /// <summary>
     /// Attempts to classify an Anthropic SDK exception from its SSE error envelope or HTTP status.
     /// </summary>
@@ -82,6 +85,21 @@ internal static class AnthropicErrorMapping
             }
 
             var errorType = typeElement.GetString() ?? string.Empty;
+
+            // Anthropic reports a credit balance too low to make the call as an invalid request, which on
+            // its own reads as a problem with the request rather than the account (#702).
+            if (errorType == "invalid_request_error" &&
+                error.TryGetProperty("message", out var messageElement) &&
+                messageElement.ValueKind == JsonValueKind.String &&
+                messageElement.GetString()?.Contains("credit balance", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                return new AIProviderErrorInfo(
+                    AIProviderErrorCategory.InvalidRequest,
+                    OutOfCreditMessage,
+                    errorType,
+                    exception.Message);
+            }
+
             return MapAnthropicErrorType(errorType, exception.Message);
         }
         catch (JsonException)

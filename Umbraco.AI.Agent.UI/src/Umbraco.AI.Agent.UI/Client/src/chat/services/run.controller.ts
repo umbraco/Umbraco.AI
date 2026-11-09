@@ -150,8 +150,18 @@ export class UaiRunController extends UmbControllerBase {
     /** Context items to include in the next request */
     #pendingContext: Array<{ description: string; value: string }> = [];
 
-    /** Bumped by {@link abortRun}, so a follow-up run still collecting its context knows it was cancelled. */
-    #abortCount = 0;
+    /**
+     * Cancels the current turn: a user message or a regenerate, and every run resumed from it. Aborted by
+     * {@link abortRun}; its signal reaches the request, context collection, frontend tools and approval
+     * cards, so nothing carries on after Cancel (#692).
+     */
+    #turnAbort?: AbortController;
+
+    /** Starts a new turn, with a fresh signal for everything that belongs to it. */
+    #startTurn(): AbortSignal {
+        this.#turnAbort = new AbortController();
+        return this.#turnAbort.signal;
+    }
 
     /**
      * Re-collects the request context before a follow-up run. Resending the context captured with the
@@ -163,13 +173,13 @@ export class UaiRunController extends UmbControllerBase {
      */
     async #refreshPendingContext(): Promise<boolean> {
         if (!this.#collectContext) return true;
-        const abortCount = this.#abortCount;
+        const signal = this.#turnAbort?.signal;
         try {
             this.#pendingContext = await this.#collectContext();
         } catch (error) {
             console.error("Could not refresh the request context; resending the previous one.", error);
         }
-        return abortCount === this.#abortCount;
+        return !signal?.aborted;
     }
 
     /**
@@ -199,6 +209,7 @@ export class UaiRunController extends UmbControllerBase {
         const nextMessages = [...this.#messages.value, userMessage];
         this.#messages.next(nextMessages);
         this.#agentState.next({ status: "thinking" });
+        const signal = this.#startTurn();
 
         const frontendTools = this.#frontendToolManager?.frontendTools ?? [];
         this.#client.sendMessage(
@@ -207,6 +218,7 @@ export class UaiRunController extends UmbControllerBase {
             this.#pendingContext,
             undefined,
             this.#previousAgentIdForRequest(),
+            signal,
         );
     }
 
@@ -233,16 +245,19 @@ export class UaiRunController extends UmbControllerBase {
     abortRun(): void {
         if (!this.#client) return;
 
-        this.#abortCount++;
+        // Only a cancel of a run in flight counts. Closing the panel calls this while idle, and a backend
+        // approval left waiting across that must still resume when it's answered.
+        const wasRunning = this.isRunning;
+        if (wasRunning) this.#turnAbort?.abort();
         this.#client.reset();
         this.#streamingContent.next("");
 
-        // A frontend tool call that was still pending/executing when the run was aborted (e.g.
-        // the user hit Cancel, or the copilot rebound to a different entity, while a tool-call
-        // interrupt was in flight) never got a matching tool-result message. Left as-is, the next
-        // turn resends that tool_use with nothing after it, which providers such as Anthropic
-        // reject outright (#381).
-        this.#reconcileAbortedToolCalls();
+        // A tool call that was still unanswered when the run was aborted (e.g. the user hit Cancel, or
+        // the copilot rebound to a different entity, while a tool-call interrupt or its approval card was
+        // open) never got a matching tool-result message. Left as-is, the next turn resends that tool_use
+        // with nothing after it, which providers reject outright (#381, #692). Not while idle: a waiting
+        // backend approval is answered later.
+        if (wasRunning) this.#reconcileAbortedToolCalls();
 
         this.#agentState.next(undefined);
         this.#currentToolCalls = [];
@@ -252,10 +267,16 @@ export class UaiRunController extends UmbControllerBase {
         // so the next turn keeps sending previousAgentId and sticky doesn't lose its memory.
     }
 
-    /** Marks any still-pending/executing tool call as aborted and appends a matching result. */
+    /**
+     * Marks every tool call without a result as aborted and appends a matching result. Read from the
+     * messages, not #currentToolCalls: a run that paused for a frontend tool has already cleared that.
+     */
     #reconcileAbortedToolCalls(): void {
-        const unresolved = this.#currentToolCalls.filter(
-            (tc) => tc.status === "pending" || tc.status === "executing",
+        const answered = new Set(
+            this.#messages.value.filter((msg) => msg.role === "tool").map((msg) => msg.toolCallId),
+        );
+        const unresolved = this.#messages.value.flatMap((msg) =>
+            msg.role === "assistant" ? (msg.toolCalls ?? []).filter((tc) => !answered.has(tc.id)) : [],
         );
         if (unresolved.length === 0) return;
 
@@ -311,6 +332,7 @@ export class UaiRunController extends UmbControllerBase {
         const truncatedMessages = messages.slice(0, lastUserIndex + 1);
 
         this.#agentState.next({ status: "thinking" });
+        const signal = this.#startTurn();
 
         // Reconcile the durable store BEFORE touching the display: if the truncate fails the thread is
         // left exactly as it was, rather than losing the old answer with no replacement coming.
@@ -329,6 +351,7 @@ export class UaiRunController extends UmbControllerBase {
         this.#currentAssistantMessageId = null;
         this.#errorHandled = false;
 
+        if (signal.aborted) return;
         if (this.#collectContext && !(await this.#refreshPendingContext())) return;
 
         const frontendTools = this.#frontendToolManager?.frontendTools ?? [];
@@ -338,6 +361,7 @@ export class UaiRunController extends UmbControllerBase {
             this.#pendingContext,
             undefined,
             this.#previousAgentIdForRequest(),
+            signal,
         );
     }
 
@@ -666,8 +690,15 @@ export class UaiRunController extends UmbControllerBase {
     }
 
     #createInterruptContext(assistantMessageId: string | null, interrupt?: UaiInterruptInfo): UaiInterruptContext {
+        // A frontend tool or approval can finish after the user cancelled the turn; resuming then would
+        // start the cancelled run again (#692).
+        const signal = this.#turnAbort?.signal;
         return {
-            resume: (response?: unknown) => void this.#resumeRun(response, interrupt),
+            resume: (response?: unknown) => {
+                if (signal?.aborted) return;
+                void this.#resumeRun(response, interrupt);
+            },
+            signal,
             setAgentState: (state?: UaiAgentState) => this.#agentState.next(state),
             lastAssistantMessageId: assistantMessageId ?? this.#currentAssistantMessageId ?? undefined,
             messages: this.#messages.value,
@@ -719,6 +750,7 @@ export class UaiRunController extends UmbControllerBase {
                 this.#pendingContext,
                 [{ interruptId: interrupt.id, status: "resolved", payload }],
                 this.#previousAgentIdForRequest(),
+                this.#turnAbort?.signal,
             );
             return;
         }
@@ -745,6 +777,7 @@ export class UaiRunController extends UmbControllerBase {
             this.#pendingContext,
             undefined,
             this.#previousAgentIdForRequest(),
+            this.#turnAbort?.signal,
         );
     }
 

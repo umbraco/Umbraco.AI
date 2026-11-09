@@ -1,5 +1,7 @@
 using Moq;
+
 using Shouldly;
+
 using Umbraco.AI.Core.Tools.Umbraco;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.Strings;
@@ -13,9 +15,6 @@ public class PropertyValueFormatterTests
     [Fact]
     public void ExtractProperties_RichTextHtmlEncodedString_ReturnsPlainText()
     {
-        // Umbraco's published rich text value is an IHtmlEncodedString, which does not implement
-        // Microsoft.AspNetCore.Html.IHtmlContent. It used to fall through to FormatDefault and
-        // serialise as "{}", so agents read every rich text property back as empty.
         var content = BuildContent("bodyText", RichTextEditorAlias, new HtmlEncodedString("<p>Hello <strong>world</strong></p>"));
 
         var properties = PropertyValueFormatter.ExtractProperties(content);
@@ -61,13 +60,13 @@ public class PropertyValueFormatterTests
     }
 
     [Fact]
-    public void ExtractProperties_NullValue_ReturnsNull()
+    public void ExtractProperties_MarkdownHtmlEncodedString_ReturnsPlainText()
     {
-        var content = BuildContent("bodyText", RichTextEditorAlias, null);
+        var content = BuildContent("intro", "Umbraco.MarkdownEditor", new HtmlEncodedString("<h1>Title</h1>\n<p>Some <em>text</em></p>"));
 
         var properties = PropertyValueFormatter.ExtractProperties(content);
 
-        properties.ShouldHaveSingleItem().Value.ShouldBeNull();
+        properties.ShouldHaveSingleItem().Value.ShouldBe("Title Some text");
     }
 
     private static IPublishedContent BuildContent(string alias, string editorAlias, object? value)

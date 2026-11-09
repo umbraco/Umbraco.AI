@@ -468,6 +468,8 @@ message `"Will be removed in vX."`, where **X = highest stable release + 2**, th
 active line (with 18 the highest stable release, that's `"Will be removed in v20."`; a pre-release
 major such as a v19 beta doesn't count). Say what replaces it first when there is something
 (`"Use X instead. Will be removed in v20."`), and always name a version, never "a future version".
+If a newer line has already removed the member, name that version instead (the 1.x-era members
+removed in v19 say `"Will be removed in v19."` on v17 and v18).
 This gives consumers at least two major versions to migrate, and keeps a backported obsoletion
 identical to the original.
 

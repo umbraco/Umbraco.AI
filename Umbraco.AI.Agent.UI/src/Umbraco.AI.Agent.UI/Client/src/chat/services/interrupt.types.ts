@@ -10,4 +10,10 @@ export interface UaiInterruptContext {
     setAgentState(state?: UaiAgentState): void;
     readonly lastAssistantMessageId?: string;
     readonly messages: readonly UaiChatMessage[];
+    /**
+     * Aborted when the user cancels the turn this interrupt belongs to. Handlers should stop work for it;
+     * {@link resume} does nothing once it's aborted. An approval card shown through UaiHitlContext closes
+     * on abort and calls {@link resume} with no response, meaning cancelled.
+     */
+    readonly signal?: AbortSignal;
 }

@@ -42,7 +42,7 @@ export class UaiToolExecutionHandler implements UaiInterruptHandler {
     }
 
     async #executeAndResume(context: UaiInterruptContext, toolCalls: UaiToolCallInfo[]): Promise<void> {
-        await this.executor.execute(toolCalls);
+        await this.executor.execute(toolCalls, context.signal);
         context.resume();
     }
 }

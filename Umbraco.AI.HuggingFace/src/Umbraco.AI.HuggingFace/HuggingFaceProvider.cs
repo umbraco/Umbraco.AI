@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using Microsoft.Extensions.Caching.Memory;
 using OpenAI;
 using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.Providers.Errors;
 
 namespace Umbraco.AI.HuggingFace;
 
@@ -90,7 +91,8 @@ public class HuggingFaceProvider : AIProviderBase<HuggingFaceProviderSettings>
 
         return new OpenAIClient(credential, new OpenAIClientOptions
         {
-            Endpoint = new Uri(endpoint)
+            Endpoint = new Uri(endpoint),
+            RetryPolicy = AIClientRetryPolicy.Default,
         });
     }
 

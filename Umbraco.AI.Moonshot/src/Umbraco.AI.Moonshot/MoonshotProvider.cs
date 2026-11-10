@@ -2,6 +2,7 @@ using System.ClientModel;
 using Microsoft.Extensions.Caching.Memory;
 using OpenAI;
 using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.Providers.Errors;
 
 namespace Umbraco.AI.Moonshot;
 
@@ -81,7 +82,8 @@ public class MoonshotProvider : AIProviderBase<MoonshotProviderSettings>
 
         return new OpenAIClient(credential, new OpenAIClientOptions
         {
-            Endpoint = new Uri(endpoint)
+            Endpoint = new Uri(endpoint),
+            RetryPolicy = AIClientRetryPolicy.Default,
         });
     }
 

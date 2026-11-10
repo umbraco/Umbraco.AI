@@ -7,6 +7,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using OpenAI;
 using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.Providers.Errors;
 
 namespace Umbraco.AI.MicrosoftFoundry;
 
@@ -184,7 +185,7 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
             {
                 var token = BuildTokenCredential(settings)
                     .GetToken(new Azure.Core.TokenRequestContext([CognitiveServicesScope]), default);
-                return new OpenAIClient(new ApiKeyCredential(token.Token), new OpenAIClientOptions { Endpoint = endpoint });
+                return new OpenAIClient(new ApiKeyCredential(token.Token), new OpenAIClientOptions { Endpoint = endpoint, RetryPolicy = AIClientRetryPolicy.Default });
             }
             catch (Azure.Identity.AuthenticationFailedException ex)
             {
@@ -193,7 +194,7 @@ public class MicrosoftFoundryProvider : AIProviderBase<MicrosoftFoundryProviderS
             }
         }
 
-        return new OpenAIClient(new ApiKeyCredential(settings.ApiKey!), new OpenAIClientOptions { Endpoint = endpoint });
+        return new OpenAIClient(new ApiKeyCredential(settings.ApiKey!), new OpenAIClientOptions { Endpoint = endpoint, RetryPolicy = AIClientRetryPolicy.Default });
     }
 
     /// <summary>

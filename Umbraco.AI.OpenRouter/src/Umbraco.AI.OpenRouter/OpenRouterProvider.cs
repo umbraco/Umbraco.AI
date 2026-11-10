@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using OpenAI;
 using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.Providers.Errors;
 
 namespace Umbraco.AI.OpenRouter;
 
@@ -121,7 +122,7 @@ public class OpenRouterProvider : AIProviderBase<OpenRouterProviderSettings>
                 ? DefaultEndpoint
                 : settings.Endpoint);
 
-        return new OpenAIClient(credential, new OpenAIClientOptions { Endpoint = endpoint });
+        return new OpenAIClient(credential, new OpenAIClientOptions { Endpoint = endpoint, RetryPolicy = AIClientRetryPolicy.Default });
     }
 
     private async Task<IReadOnlyList<OpenRouterModelInfo>> FetchModelsFromApiAsync(

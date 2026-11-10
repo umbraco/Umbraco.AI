@@ -146,10 +146,10 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
             {
                 // A guardrail refusing the input or response is a deliberate policy outcome, not a
                 // fault: tell the user which policy blocked it (as the Management API chat endpoint
-                // already does) rather than a generic "unexpected error". Retrying the same message
-                // won't help, hence InvalidRequest.
+                // already does) rather than a generic "unexpected error". Its own code lets a chat
+                // client drop a response that streamed before a model-based check blocked it (#712).
                 userMessage = blocked.Message;
-                code = AIProviderErrorCategory.InvalidRequest.ToString();
+                code = GuardrailBlockedErrorCode;
                 _logger.LogWarning(
                     "Agent run {RunId} was blocked by a guardrail: {Reason}", request.RunId, blocked.Message);
             }
@@ -431,6 +431,11 @@ internal sealed class AGUIStreamingService : IAGUIStreamingService
     internal const string UserDeniedApprovalReason =
         "The user declined this action in the approval prompt, so it was not carried out. " +
         "Acknowledge that it wasn't done; don't describe it as an error or retry it unless they ask.";
+
+    /// <summary>
+    /// The <c>RUN_ERROR</c> code sent when a guardrail blocks the input or the response.
+    /// </summary>
+    internal const string GuardrailBlockedErrorCode = "GuardrailBlocked";
 
     private const string OutputLimitReachedMessage =
         "The response was cut off because it reached the maximum output tokens. "

@@ -185,7 +185,7 @@ public static class ProviderErrorMapping
 
             // OpenAI-compatible APIs also answer an account with no credit left with a 429, but waiting
             // won't clear it, so it mustn't get the "wait a moment" wording (#702).
-            429 when string.Equals(providerCode, "insufficient_quota", StringComparison.OrdinalIgnoreCase) => new(AIProviderErrorCategory.RateLimited,
+            429 when IsOutOfCredit(status, providerCode) => new(AIProviderErrorCategory.RateLimited,
                 OutOfCreditMessage,
                 providerCode, rawMessage),
 
@@ -220,7 +220,23 @@ public static class ProviderErrorMapping
     {
         try
         {
-            var content = ex.GetRawResponse()?.Content;
+            return TryExtractOpenAIErrorCode(ex.GetRawResponse()?.Content);
+        }
+        catch
+        {
+            // Response already disposed. Fall through.
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Best-effort extraction of an OpenAI-shaped error code (<c>{ "error": { "code": "..." } }</c>)
+    /// from a response body. Returns null when the body is empty, not JSON, or not that shape.
+    /// </summary>
+    internal static string? TryExtractOpenAIErrorCode(BinaryData? content)
+    {
+        try
+        {
             if (content is null || content.ToMemory().IsEmpty)
             {
                 return null;
@@ -237,9 +253,16 @@ public static class ProviderErrorMapping
         }
         catch
         {
-            // Body not JSON, not a known shape, or already disposed. Fall through.
+            // Body not JSON or not a known shape. Fall through.
         }
 
         return null;
     }
+
+    /// <summary>
+    /// Whether an HTTP status and provider code mean the account is out of credit, which retrying
+    /// can't fix.
+    /// </summary>
+    internal static bool IsOutOfCredit(int status, string? providerCode)
+        => status == 429 && string.Equals(providerCode, "insufficient_quota", StringComparison.OrdinalIgnoreCase);
 }

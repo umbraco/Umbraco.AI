@@ -35,10 +35,11 @@ internal static class StepErrorCategoryMapping
         return StepRunErrorCategory.Unknown;
     }
 
-    // OpenAI reports an empty account as a 429 rate limit with this code. Unlike a real rate limit,
-    // waiting does not help: it fails again until someone adds credit, so retrying only adds delay.
+    // OpenAI reports an empty account as a 429 rate limit with one of these codes. Unlike a real rate
+    // limit, waiting does not help: it fails again until someone adds credit, so retrying only adds delay.
     private static bool IsOutOfCredit(AIProviderException providerError)
-        => string.Equals(providerError.ProviderCode, "insufficient_quota", StringComparison.OrdinalIgnoreCase);
+        => string.Equals(providerError.ProviderCode, "insufficient_quota", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(providerError.ProviderCode, "credit_balance_exhausted", StringComparison.OrdinalIgnoreCase);
 
     private static StepRunErrorCategory FromProviderCategory(AIProviderErrorCategory category) => category switch
     {

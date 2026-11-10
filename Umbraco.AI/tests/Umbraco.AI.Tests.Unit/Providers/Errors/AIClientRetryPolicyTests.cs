@@ -13,15 +13,21 @@ public class AIClientRetryPolicyTests
     private const string OutOfCreditBody =
         """{"error":{"message":"You exceeded your current quota.","type":"insufficient_quota","code":"insufficient_quota"}}""";
 
+    // What OpenAI sends today for a prepaid account with no credit left: the old type, a new code.
+    private const string CreditBalanceExhaustedBody =
+        """{"error":{"message":"You have no credits remaining.","type":"insufficient_quota","code":"credit_balance_exhausted"}}""";
+
     private const string RateLimitBody =
         """{"error":{"message":"Rate limit reached.","type":"requests","code":"rate_limit_exceeded"}}""";
 
     [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public async Task Send_OutOfCredit_IsNotRetried(bool streamed)
+    [InlineData(true, OutOfCreditBody)]
+    [InlineData(false, OutOfCreditBody)]
+    [InlineData(true, CreditBalanceExhaustedBody)]
+    [InlineData(false, CreditBalanceExhaustedBody)]
+    public async Task Send_OutOfCredit_IsNotRetried(bool streamed, string body)
     {
-        var handler = new CountingHandler(HttpStatusCode.TooManyRequests, OutOfCreditBody);
+        var handler = new CountingHandler(HttpStatusCode.TooManyRequests, body);
 
         var response = await SendAsync(handler, streamed);
 

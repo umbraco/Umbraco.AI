@@ -4,6 +4,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Caching.Memory;
 using OpenAI;
 using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.Providers.Errors;
 
 namespace Umbraco.AI.TogetherAI;
 
@@ -75,7 +76,8 @@ public class TogetherAIProvider : AIProviderBase<TogetherAIProviderSettings>
 
         return new OpenAIClient(credential, new OpenAIClientOptions
         {
-            Endpoint = new Uri(endpoint)
+            Endpoint = new Uri(endpoint),
+            RetryPolicy = AIClientRetryPolicy.Default,
         });
     }
 

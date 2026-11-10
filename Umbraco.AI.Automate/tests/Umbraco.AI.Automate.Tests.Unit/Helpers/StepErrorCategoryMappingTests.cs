@@ -37,6 +37,7 @@ public class StepErrorCategoryMappingTests
 
     [Theory]
     [InlineData("insufficient_quota", StepRunErrorCategory.ConfigurationError)]
+    [InlineData("credit_balance_exhausted", StepRunErrorCategory.ConfigurationError)]
     [InlineData("rate_limit_exceeded", StepRunErrorCategory.RateLimiting)]
     [InlineData(null, StepRunErrorCategory.RateLimiting)]
     public void FromException_RateLimited_IsTerminalOnlyWhenTheAccountIsOutOfCredit(

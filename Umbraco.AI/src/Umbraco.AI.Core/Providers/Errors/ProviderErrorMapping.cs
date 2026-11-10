@@ -260,9 +260,32 @@ public static class ProviderErrorMapping
     }
 
     /// <summary>
+    /// Classifies an error the provider reported inside its response, such as an
+    /// <see cref="Microsoft.Extensions.AI.ErrorContent"/> streamed mid-response, when the error is one
+    /// that ends the call. Returns null for anything else, which the caller passes on unchanged.
+    /// </summary>
+    /// <remarks>
+    /// OpenAI's Responses API reports an empty account mid-stream, after the HTTP 200, so the SDK
+    /// streams it as an error rather than throwing it (#702).
+    /// </remarks>
+    internal static AIProviderErrorInfo? FromResponseError(string? providerCode, string? message)
+        => IsOutOfCreditCode(providerCode)
+            ? new(AIProviderErrorCategory.RateLimited, OutOfCreditMessage, providerCode, message ?? providerCode!)
+            : null;
+
+    /// <summary>
     /// Whether an HTTP status and provider code mean the account is out of credit, which retrying
     /// can't fix.
     /// </summary>
     internal static bool IsOutOfCredit(int status, string? providerCode)
-        => status == 429 && string.Equals(providerCode, "insufficient_quota", StringComparison.OrdinalIgnoreCase);
+        => status == 429 && IsOutOfCreditCode(providerCode);
+
+    /// <summary>
+    /// Whether a provider code means the account is out of credit. OpenAI used
+    /// <c>insufficient_quota</c> for both; it now sends <c>credit_balance_exhausted</c> as the code for
+    /// a prepaid account with no credit left, and keeps <c>insufficient_quota</c> as the error type.
+    /// </summary>
+    internal static bool IsOutOfCreditCode(string? providerCode)
+        => string.Equals(providerCode, "insufficient_quota", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(providerCode, "credit_balance_exhausted", StringComparison.OrdinalIgnoreCase);
 }

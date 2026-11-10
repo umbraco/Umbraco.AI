@@ -2,6 +2,7 @@ using System.ClientModel;
 using Microsoft.Extensions.Caching.Memory;
 using OpenAI;
 using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.Providers.Errors;
 
 namespace Umbraco.AI.OpenAI;
 
@@ -80,12 +81,13 @@ public class OpenAIProvider : AIProviderBase<OpenAIProviderSettings>
 
         var credential = new ApiKeyCredential(settings.ApiKey);
 
-        return string.IsNullOrWhiteSpace(settings.Endpoint)
-            ? new OpenAIClient(credential)
-            : new OpenAIClient(credential, new OpenAIClientOptions
-            {
-                Endpoint = new Uri(settings.Endpoint)
-            });
+        var options = new OpenAIClientOptions { RetryPolicy = AIClientRetryPolicy.Default };
+        if (!string.IsNullOrWhiteSpace(settings.Endpoint))
+        {
+            options.Endpoint = new Uri(settings.Endpoint);
+        }
+
+        return new OpenAIClient(credential, options);
     }
 
     private static string GetCacheKey(OpenAIProviderSettings settings)

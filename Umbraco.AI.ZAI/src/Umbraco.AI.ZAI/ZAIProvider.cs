@@ -2,6 +2,7 @@ using System.ClientModel;
 using Microsoft.Extensions.Caching.Memory;
 using OpenAI;
 using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.Providers.Errors;
 
 namespace Umbraco.AI.ZAI;
 
@@ -81,7 +82,8 @@ public class ZAIProvider : AIProviderBase<ZAIProviderSettings>
 
         var options = new OpenAIClientOptions
         {
-            Endpoint = new Uri(endpoint)
+            Endpoint = new Uri(endpoint),
+            RetryPolicy = AIClientRetryPolicy.Default,
         };
 
         return new OpenAIClient(credential, options);

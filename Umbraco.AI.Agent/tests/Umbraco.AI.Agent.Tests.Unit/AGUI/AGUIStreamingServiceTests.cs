@@ -501,7 +501,7 @@ public class AGUIStreamingServiceTests
         errorEvent.Message.ShouldContain("blocked by a guardrail policy");
         errorEvent.Message.ShouldContain("Block SSN patterns");
         errorEvent.Message.ShouldNotContain("unexpected error");
-        errorEvent.Code.ShouldBe("InvalidRequest");
+        errorEvent.Code.ShouldBe("GuardrailBlocked");
 
         events.OfType<RunFinishedEvent>().ShouldBeEmpty();
     }

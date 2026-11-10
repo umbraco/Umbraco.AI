@@ -285,9 +285,11 @@ import type { RunErrorEvent as _AGUIRunErrorEvent } from "@ag-ui/client";
 
 /**
  * Normalised error category sent by the backend on RUN_ERROR.
- * Values are produced by `AIProviderErrorCategory.ToString()` server-side.
+ * Values are produced by `AIProviderErrorCategory.ToString()` server-side, plus
+ * `GuardrailBlocked` when a guardrail blocked the input or the response.
  */
 export type UaiErrorCategory =
+    | "GuardrailBlocked"
     | "Unknown"
     | "Transient"
     | "RateLimited"

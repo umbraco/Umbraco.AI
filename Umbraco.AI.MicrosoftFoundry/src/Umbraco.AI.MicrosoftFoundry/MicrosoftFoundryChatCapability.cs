@@ -1,9 +1,14 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Extensions;
+using Umbraco.Cms.Core.DependencyInjection;
+
+#pragma warning disable OPENAI001 // OpenAI Responses API options are experimental in the SDK
 
 namespace Umbraco.AI.MicrosoftFoundry;
 
@@ -105,9 +110,16 @@ public class MicrosoftFoundryChatCapability(MicrosoftFoundryProvider provider, I
         // sampling parameters are stripped for a model that rejects them. See DeclaredSettingsChatClient.
         if (settings.UseResponsesApi)
         {
-            return MicrosoftFoundryProvider.CreateOpenAIClient(settings, logger)
+            var inner = MicrosoftFoundryProvider.CreateOpenAIClient(settings, logger)
                 .GetResponsesClient()
                 .AsIChatClient(model);
+
+            // Run statelessly (no server-side Responses storage) when the caller manages history itself,
+            // so an attached ChatHistoryProvider stays the single source of truth. No-op otherwise.
+            var runtimeContextAccessor = StaticServiceProvider.Instance.GetRequiredService<IAIRuntimeContextAccessor>();
+            var managed = new ClientManagedHistoryChatClient(inner, runtimeContextAccessor);
+
+            return new MicrosoftFoundryIncompleteResponseChatClient(managed);
         }
 
         return MicrosoftFoundryProvider.CreateAzureOpenAIClient(settings)

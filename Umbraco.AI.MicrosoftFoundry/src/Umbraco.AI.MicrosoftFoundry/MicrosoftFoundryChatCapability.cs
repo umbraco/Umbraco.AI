@@ -117,7 +117,9 @@ public class MicrosoftFoundryChatCapability(MicrosoftFoundryProvider provider, I
             // Run statelessly (no server-side Responses storage) when the caller manages history itself,
             // so an attached ChatHistoryProvider stays the single source of truth. No-op otherwise.
             var runtimeContextAccessor = StaticServiceProvider.Instance.GetRequiredService<IAIRuntimeContextAccessor>();
-            return new ClientManagedHistoryChatClient(inner, runtimeContextAccessor);
+            var managed = new ClientManagedHistoryChatClient(inner, runtimeContextAccessor);
+
+            return new MicrosoftFoundryIncompleteResponseChatClient(managed);
         }
 
         return MicrosoftFoundryProvider.CreateAzureOpenAIClient(settings)

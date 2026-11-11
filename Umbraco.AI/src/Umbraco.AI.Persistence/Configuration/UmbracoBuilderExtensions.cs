@@ -84,8 +84,9 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<IAITestRunRepository, EFCoreAITestRunRepository>();
         builder.Services.AddSingleton<IAITestTranscriptRepository, EFCoreAITestTranscriptRepository>();
 
-        // Register migration notification handler
-        builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunAIMigrationNotificationHandler>();
+        // Register migration notification handler. Runs before UmbracoApplicationStartingNotification
+        // so other packages' startup work (e.g. a Deploy import on start) finds the tables in place.
+        builder.AddNotificationAsyncHandler<PostRuntimePremigrationsUpgradeNotification, RunAIMigrationNotificationHandler>();
 
         return builder;
     }

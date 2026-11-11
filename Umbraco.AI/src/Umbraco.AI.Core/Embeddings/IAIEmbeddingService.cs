@@ -12,7 +12,7 @@ public interface IAIEmbeddingService
     /// <summary>
     /// Generates an embedding for a single text value using the default embedding profile.
     /// </summary>
-    [Obsolete("Use GenerateEmbeddingAsync with builder overload for full observability. Will be removed in v3.")]
+    [Obsolete("Use GenerateEmbeddingAsync with builder overload for full observability. Will be removed in v19.")]
     Task<Embedding<float>> GenerateEmbeddingAsync(
         string value,
         EmbeddingGenerationOptions? options = null,
@@ -21,7 +21,7 @@ public interface IAIEmbeddingService
     /// <summary>
     /// Generates an embedding for a single text value using a specific profile.
     /// </summary>
-    [Obsolete("Use GenerateEmbeddingAsync with .WithProfile(profileId) for full observability. Will be removed in v3.")]
+    [Obsolete("Use GenerateEmbeddingAsync with .WithProfile(profileId) for full observability. Will be removed in v19.")]
     Task<Embedding<float>> GenerateEmbeddingAsync(
         Guid profileId,
         string value,
@@ -31,7 +31,7 @@ public interface IAIEmbeddingService
     /// <summary>
     /// Generates embeddings for multiple text values using the default embedding profile.
     /// </summary>
-    [Obsolete("Use GenerateEmbeddingsAsync with builder overload for full observability. Will be removed in v3.")]
+    [Obsolete("Use GenerateEmbeddingsAsync with builder overload for full observability. Will be removed in v19.")]
     Task<GeneratedEmbeddings<Embedding<float>>> GenerateEmbeddingsAsync(
         IEnumerable<string> values,
         EmbeddingGenerationOptions? options = null,
@@ -40,7 +40,7 @@ public interface IAIEmbeddingService
     /// <summary>
     /// Generates embeddings for multiple text values using a specific profile.
     /// </summary>
-    [Obsolete("Use GenerateEmbeddingsAsync with .WithProfile(profileId) for full observability. Will be removed in v3.")]
+    [Obsolete("Use GenerateEmbeddingsAsync with .WithProfile(profileId) for full observability. Will be removed in v19.")]
     Task<GeneratedEmbeddings<Embedding<float>>> GenerateEmbeddingsAsync(
         Guid profileId,
         IEnumerable<string> values,
@@ -50,7 +50,7 @@ public interface IAIEmbeddingService
     /// <summary>
     /// Gets a configured embedding generator for advanced scenarios.
     /// </summary>
-    [Obsolete("Use CreateEmbeddingGeneratorAsync with builder overload for per-call scope management. Will be removed in v3.")]
+    [Obsolete("Use CreateEmbeddingGeneratorAsync with builder overload for per-call scope management. Will be removed in v19.")]
     Task<IEmbeddingGenerator<string, Embedding<float>>> GetEmbeddingGeneratorAsync(
         Guid? profileId = null,
         CancellationToken cancellationToken = default);

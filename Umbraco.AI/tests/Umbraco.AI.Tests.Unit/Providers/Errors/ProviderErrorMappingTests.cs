@@ -101,6 +101,24 @@ public class ProviderErrorMappingTests
         result.ProviderCode.ShouldBe("insufficient_quota");
     }
 
+    [Theory]
+    [InlineData(429, """{"error":{"code":"insufficient_quota"}}""", AIProviderErrorCategory.RateLimited, true)]
+    [InlineData(429, """{"error":{"type":"insufficient_quota","code":"credit_balance_exhausted"}}""", AIProviderErrorCategory.RateLimited, true)]
+    [InlineData(402, null, AIProviderErrorCategory.InvalidRequest, true)]
+    [InlineData(429, """{"error":{"code":"rate_limit_exceeded"}}""", AIProviderErrorCategory.RateLimited, false)]
+    public void FromException_ClientResultException_OnlyOutOfCreditSaysSoInsteadOfWait(
+        int status, string? body, AIProviderErrorCategory expectedCategory, bool outOfCredit)
+    {
+        // An account with no credit left must not be told to wait a moment and retry (#702).
+        var ex = new ClientResultException("upstream failed", new FakePipelineResponse(status, body));
+
+        var result = ProviderErrorMapping.FromException(ex);
+
+        result.Category.ShouldBe(expectedCategory);
+        result.UserMessage.Contains("out of credit").ShouldBe(outOfCredit);
+        result.UserMessage.Contains("wait").ShouldBe(!outOfCredit);
+    }
+
     [Fact]
     public void FromException_ClientResultException_BodyIsNotJson_StillReturnsStatusCode()
     {

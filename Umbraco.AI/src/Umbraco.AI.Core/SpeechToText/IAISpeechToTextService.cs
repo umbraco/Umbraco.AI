@@ -18,7 +18,7 @@ public interface IAISpeechToTextService
     /// <param name="options">Optional speech-to-text options.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>The transcription response.</returns>
-    [Obsolete("Use TranscribeAsync with builder overload for full observability (notifications, telemetry, duration tracking). Will be removed in v3. This method delegates to the builder API with alias 'speech-to-text'.")]
+    [Obsolete("Use TranscribeAsync with builder overload for full observability (notifications, telemetry, duration tracking). Will be removed in v19. This method delegates to the builder API with alias 'speech-to-text'.")]
     Task<SpeechToTextResponse> TranscribeAsync(
         Stream audioStream,
         SpeechToTextOptions? options = null,
@@ -32,7 +32,7 @@ public interface IAISpeechToTextService
     /// <param name="options">Optional speech-to-text options.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>The transcription response.</returns>
-    [Obsolete("Use TranscribeAsync with .WithProfile(profileId) for full observability (notifications, telemetry, duration tracking). Will be removed in v3. This method delegates to the builder API with alias 'speech-to-text'.")]
+    [Obsolete("Use TranscribeAsync with .WithProfile(profileId) for full observability (notifications, telemetry, duration tracking). Will be removed in v19. This method delegates to the builder API with alias 'speech-to-text'.")]
     Task<SpeechToTextResponse> TranscribeAsync(
         Guid profileId,
         Stream audioStream,
@@ -47,7 +47,7 @@ public interface IAISpeechToTextService
     /// <param name="profileId">Optional profile id. If not specified, uses the default speech-to-text profile.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>A configured ISpeechToTextClient instance with middleware applied.</returns>
-    [Obsolete("Use CreateSpeechToTextClientAsync with builder overload for per-call scope management and feature metadata. Will be removed in v3. This method delegates to the builder API with alias 'speech-to-text'.")]
+    [Obsolete("Use CreateSpeechToTextClientAsync with builder overload for per-call scope management and feature metadata. Will be removed in v19. This method delegates to the builder API with alias 'speech-to-text'.")]
     Task<ISpeechToTextClient> GetSpeechToTextClientAsync(
         Guid? profileId = null,
         CancellationToken cancellationToken = default);

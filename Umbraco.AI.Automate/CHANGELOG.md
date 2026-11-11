@@ -5,6 +5,13 @@ All notable changes to Umbraco.AI.Automate will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.2.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Automate@17.2.0...Umbraco.AI.Automate@17.2.1) (2026-11-11)
+
+### fix
+
+* **automate:** Stop retrying a step when the OpenAI account is out of credit ([567c63f](https://github.com/umbraco/Umbraco.AI/commit/567c63fc715c08415c6ebb5b2d2fadd622f13a6b))
+* **core,automate:** Recognise OpenAI's credit_balance_exhausted reply as out of credit ([b7dbc0d](https://github.com/umbraco/Umbraco.AI/commit/b7dbc0db815040cbfe71b6ba1db5c3cd4f70c8e2)), closes [#702](https://github.com/umbraco/Umbraco.AI/issues/702) [#709](https://github.com/umbraco/Umbraco.AI/issues/709)
+
 ## [17.2.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Automate@17.1.0...Umbraco.AI.Automate@17.2.0) (2026-11-03)
 
 ### feat

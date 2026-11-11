@@ -38,6 +38,12 @@ export interface UaiRunControllerConfig {
      * the agent-keyed endpoint. Server-persisted surfaces (Copilot Workspace) inject their own.
      */
     conversationStrategy?: UaiConversationStrategy;
+    /**
+     * Optional request-context collector. When set, the context is collected again before every
+     * follow-up run (frontend tool resume, approval resume, regenerate), so a run that follows a
+     * frontend tool sees the entity as that tool left it, not as it was when the user sent the message.
+     */
+    collectContext?: () => Promise<Array<{ description: string; value: string }>>;
 }
 
 /**
@@ -57,12 +63,22 @@ export class UaiRunController extends UmbControllerBase {
     #subscriptions: Subscription[] = [];
     #handlerRegistry = new UaiInterruptHandlerRegistry();
     #strategy: UaiConversationStrategy;
+    #collectContext?: () => Promise<Array<{ description: string; value: string }>>;
 
     /** ID of the assistant message currently being streamed */
     #currentAssistantMessageId: string | null = null;
 
     /** Tracks whether a RUN_ERROR was already handled for the current run */
     #errorHandled = false;
+
+    /** Messages shown in the chat but never sent to the agent: a blocked turn and its notice (#712). */
+    #localOnlyMessageIds = new Set<string>();
+
+    /**
+     * The user message the current run answers, when nothing of that run is stored yet. A guardrail block
+     * keeps it and everything after it local. Null for a resumed run, whose question is already stored.
+     */
+    #runStartMessageId: string | null = null;
 
     #messages = new BehaviorSubject<UaiChatMessage[]>([]);
     readonly messages$ = this.#messages.asObservable();
@@ -94,6 +110,7 @@ export class UaiRunController extends UmbControllerBase {
         this.#toolRendererManager = config.toolRendererManager;
         this.#frontendToolManager = config.frontendToolManager;
         this.#strategy = config.conversationStrategy ?? new UaiClientOwnedConversationStrategy();
+        this.#collectContext = config.collectContext;
 
         // Create frontend tool executor if frontend tools are available
         if (this.#frontendToolManager) {
@@ -143,6 +160,38 @@ export class UaiRunController extends UmbControllerBase {
     #pendingContext: Array<{ description: string; value: string }> = [];
 
     /**
+     * Cancels the current turn: a user message or a regenerate, and every run resumed from it. Aborted by
+     * {@link abortRun}; its signal reaches the request, context collection, frontend tools and approval
+     * cards, so nothing carries on after Cancel (#692).
+     */
+    #turnAbort?: AbortController;
+
+    /** Starts a new turn, with a fresh signal for everything that belongs to it. */
+    #startTurn(): AbortSignal {
+        this.#turnAbort = new AbortController();
+        return this.#turnAbort.signal;
+    }
+
+    /**
+     * Re-collects the request context before a follow-up run. Resending the context captured with the
+     * user's message would show the model the values from before its own frontend tool edits, and it
+     * then applies them again (#688). On failure the previous context is resent, as before.
+     *
+     * Callers only await this when a collector is set, so surfaces without one still send in the same
+     * tick. Returns `false` if the run was aborted while collecting, in which case nothing is sent.
+     */
+    async #refreshPendingContext(): Promise<boolean> {
+        if (!this.#collectContext) return true;
+        const signal = this.#turnAbort?.signal;
+        try {
+            this.#pendingContext = await this.#collectContext();
+        } catch (error) {
+            console.error("Could not refresh the request context; resending the previous one.", error);
+        }
+        return !signal?.aborted;
+    }
+
+    /**
      * The previously-resolved agent ID to send as `forwardedProps.previousAgentId`, when the
      * current agent is `auto` and a pick already exists. Explicit (non-`auto`) agents never
      * send one.
@@ -168,21 +217,26 @@ export class UaiRunController extends UmbControllerBase {
 
         const nextMessages = [...this.#messages.value, userMessage];
         this.#messages.next(nextMessages);
+        this.#runStartMessageId = userMessage.id;
         this.#agentState.next({ status: "thinking" });
+        const signal = this.#startTurn();
 
         const frontendTools = this.#frontendToolManager?.frontendTools ?? [];
         this.#client.sendMessage(
-            this.#strategy.outbound(nextMessages),
+            this.#outbound(nextMessages),
             frontendTools,
             this.#pendingContext,
             undefined,
             this.#previousAgentIdForRequest(),
+            signal,
         );
     }
 
     /** Starting a new conversation discards the previous auto-selection pick. */
     resetConversation(): void {
         this.#messages.next([]);
+        this.#localOnlyMessageIds.clear();
+        this.#runStartMessageId = null;
         this.#streamingContent.next("");
         this.#agentState.next(undefined);
         this.#currentToolCalls = [];
@@ -203,15 +257,19 @@ export class UaiRunController extends UmbControllerBase {
     abortRun(): void {
         if (!this.#client) return;
 
+        // Only a cancel of a run in flight counts. Closing the panel calls this while idle, and a backend
+        // approval left waiting across that must still resume when it's answered.
+        const wasRunning = this.isRunning;
+        if (wasRunning) this.#turnAbort?.abort();
         this.#client.reset();
         this.#streamingContent.next("");
 
-        // A frontend tool call that was still pending/executing when the run was aborted (e.g.
-        // the user hit Cancel, or the copilot rebound to a different entity, while a tool-call
-        // interrupt was in flight) never got a matching tool-result message. Left as-is, the next
-        // turn resends that tool_use with nothing after it, which providers such as Anthropic
-        // reject outright (#381).
-        this.#reconcileAbortedToolCalls();
+        // A tool call that was still unanswered when the run was aborted (e.g. the user hit Cancel, or
+        // the copilot rebound to a different entity, while a tool-call interrupt or its approval card was
+        // open) never got a matching tool-result message. Left as-is, the next turn resends that tool_use
+        // with nothing after it, which providers reject outright (#381, #692). Not while idle: a waiting
+        // backend approval is answered later.
+        if (wasRunning) this.#reconcileAbortedToolCalls();
 
         this.#agentState.next(undefined);
         this.#currentToolCalls = [];
@@ -221,10 +279,16 @@ export class UaiRunController extends UmbControllerBase {
         // so the next turn keeps sending previousAgentId and sticky doesn't lose its memory.
     }
 
-    /** Marks any still-pending/executing tool call as aborted and appends a matching result. */
+    /**
+     * Marks every tool call without a result as aborted and appends a matching result. Read from the
+     * messages, not #currentToolCalls: a run that paused for a frontend tool has already cleared that.
+     */
     #reconcileAbortedToolCalls(): void {
-        const unresolved = this.#currentToolCalls.filter(
-            (tc) => tc.status === "pending" || tc.status === "executing",
+        const answered = new Set(
+            this.#messages.value.filter((msg) => msg.role === "tool").map((msg) => msg.toolCallId),
+        );
+        const unresolved = this.#messages.value.flatMap((msg) =>
+            msg.role === "assistant" ? (msg.toolCalls ?? []).filter((tc) => !answered.has(tc.id)) : [],
         );
         if (unresolved.length === 0) return;
 
@@ -279,17 +343,27 @@ export class UaiRunController extends UmbControllerBase {
 
         const truncatedMessages = messages.slice(0, lastUserIndex + 1);
 
+        // A message a guardrail blocked never reached the agent or the store, so regenerating it asks it
+        // again: there is no stored answer to truncate, and it is sent as new (#712).
+        const lastUserMessageId = messages[lastUserIndex].id;
+        const reasking = this.#localOnlyMessageIds.has(lastUserMessageId);
+
         this.#agentState.next({ status: "thinking" });
+        const signal = this.#startTurn();
 
         // Reconcile the durable store BEFORE touching the display: if the truncate fails the thread is
         // left exactly as it was, rather than losing the old answer with no replacement coming.
-        try {
-            await this.#strategy.onTruncate?.(truncatedMessages);
-        } catch (error) {
-            console.error("Regenerate aborted: the stored conversation could not be truncated.", error);
-            this.#agentState.next(undefined);
-            return;
+        if (!reasking) {
+            try {
+                await this.#strategy.onTruncate?.(truncatedMessages);
+            } catch (error) {
+                console.error("Regenerate aborted: the stored conversation could not be truncated.", error);
+                this.#agentState.next(undefined);
+                return;
+            }
         }
+
+        this.#runStartMessageId = reasking ? lastUserMessageId : null;
 
         this.#messages.next(truncatedMessages);
 
@@ -298,13 +372,21 @@ export class UaiRunController extends UmbControllerBase {
         this.#currentAssistantMessageId = null;
         this.#errorHandled = false;
 
+        if (signal.aborted) return;
+        if (this.#collectContext && !(await this.#refreshPendingContext())) return;
+
+        if (reasking) {
+            this.#localOnlyMessageIds.delete(lastUserMessageId);
+        }
+
         const frontendTools = this.#frontendToolManager?.frontendTools ?? [];
         this.#client.sendMessage(
-            this.#strategy.outbound(truncatedMessages),
+            this.#outbound(truncatedMessages),
             frontendTools,
             this.#pendingContext,
             undefined,
             this.#previousAgentIdForRequest(),
+            signal,
         );
     }
 
@@ -495,10 +577,14 @@ export class UaiRunController extends UmbControllerBase {
                         this.#strategy.onServerPersistedBoundary?.(lastPersistedMessageId, this.#messages.value);
                     }
                 },
-                onError: (error) => {
+                onError: (error, code) => {
                     console.error("Run error:", error);
                     this.#errorHandled = true;
-                    this.#handleError(error.message);
+                    const blocked = code === "GuardrailBlocked";
+                    if (blocked) {
+                        this.#dropBlockedTurn();
+                    }
+                    this.#handleError(error.message, blocked);
                 },
             },
         );
@@ -633,26 +719,75 @@ export class UaiRunController extends UmbControllerBase {
     }
 
     #createInterruptContext(assistantMessageId: string | null, interrupt?: UaiInterruptInfo): UaiInterruptContext {
+        // A frontend tool or approval can finish after the user cancelled the turn; resuming then would
+        // start the cancelled run again (#692).
+        const signal = this.#turnAbort?.signal;
         return {
-            resume: (response?: unknown) => this.#resumeRun(response, interrupt),
+            resume: (response?: unknown) => {
+                if (signal?.aborted) return;
+                void this.#resumeRun(response, interrupt);
+            },
+            signal,
             setAgentState: (state?: UaiAgentState) => this.#agentState.next(state),
             lastAssistantMessageId: assistantMessageId ?? this.#currentAssistantMessageId ?? undefined,
             messages: this.#messages.value,
         };
     }
 
-    #handleError(error?: string): void {
+    #handleError(error?: string, localOnly = false): void {
         const errorMessage: UaiChatMessage = {
             id: crypto.randomUUID(),
             role: "assistant",
             content: `Error: ${error ?? "An error occurred"}`,
             timestamp: new Date(),
         };
+        if (localOnly) {
+            this.#localOnlyMessageIds.add(errorMessage.id);
+        }
         this.#messages.next([...this.#messages.value, errorMessage]);
         this.#agentState.next(undefined);
     }
 
-    #resumeRun(response?: unknown, interrupt?: UaiInterruptInfo): void {
+    /**
+     * A model-based guardrail can only check a response once it has finished streaming, so the blocked
+     * text is already on screen when the block arrives. Remove it, leaving just the block notice, so it
+     * is neither shown nor sent back to the agent and stored on the next turn (#712).
+     *
+     * The rest of the blocked turn stays on screen but is kept local too: the question and any tool calls
+     * the run made. Nothing of a blocked run is stored, and the agent sent the question again would answer
+     * it again, and be blocked again, instead of answering what was asked next.
+     */
+    #dropBlockedTurn(): void {
+        const messages = this.#messages.value;
+        const start = this.#runStartMessageId ? messages.findIndex((m) => m.id === this.#runStartMessageId) : -1;
+        if (start >= 0) {
+            messages.slice(start).forEach((m) => this.#localOnlyMessageIds.add(m.id));
+        }
+        this.#runStartMessageId = null;
+
+        const blockedMessageId = this.#currentAssistantMessageId;
+        this.#streamingContent.next("");
+        this.#currentAssistantMessageId = null;
+        if (!blockedMessageId) return;
+
+        this.#messages.next(
+            this.#messages.value.flatMap((msg) => {
+                if (msg.id !== blockedMessageId) return [msg];
+                // Only the text was checked. Tool calls the run already made stay, with their results.
+                return msg.toolCalls?.length ? [{ ...msg, content: "" }] : [];
+            }),
+        );
+    }
+
+    /** What the strategy would send, minus anything only meant for the chat display. */
+    #outbound(messages: UaiChatMessage[]): UaiChatMessage[] {
+        return this.#strategy.outbound(messages).filter((msg) => !this.#localOnlyMessageIds.has(msg.id));
+    }
+
+    async #resumeRun(response?: unknown, interrupt?: UaiInterruptInfo): Promise<void> {
+        // The run that paused for this interrupt was stored, so a block from here on only drops the
+        // blocked text, not the question.
+        this.#runStartMessageId = null;
         // Backend human_approval interrupts resume via an AG-UI resume entry — NOT a chat
         // message. The decision payload ({ approved: bool }) is correlated server-side by
         // the interrupt id ("approval:<callId>"); the pending tool call is already replayed
@@ -677,13 +812,16 @@ export class UaiRunController extends UmbControllerBase {
             }
 
             this.#agentState.next({ status: "thinking" });
+            if (this.#collectContext && !(await this.#refreshPendingContext())) return;
+
             const frontendTools = this.#frontendToolManager?.frontendTools ?? [];
             this.#client?.sendMessage(
-                this.#strategy.outbound(this.#messages.value),
+                this.#outbound(this.#messages.value),
                 frontendTools,
                 this.#pendingContext,
                 [{ interruptId: interrupt.id, status: "resolved", payload }],
                 this.#previousAgentIdForRequest(),
+                this.#turnAbort?.signal,
             );
             return;
         }
@@ -691,6 +829,9 @@ export class UaiRunController extends UmbControllerBase {
         // Frontend tool_call / generic resume: the tool result is already appended to the
         // message history (#handleToolResult), so re-sending the messages resumes the run.
         // A non-undefined response is surfaced as a user turn (legacy input-interrupt path).
+        this.#agentState.next({ status: "thinking" });
+        if (this.#collectContext && !(await this.#refreshPendingContext())) return;
+
         if (response !== undefined) {
             const userMessage: UaiChatMessage = {
                 id: crypto.randomUUID(),
@@ -700,14 +841,14 @@ export class UaiRunController extends UmbControllerBase {
             };
             this.#messages.next([...this.#messages.value, userMessage]);
         }
-        this.#agentState.next({ status: "thinking" });
         const frontendTools = this.#frontendToolManager?.frontendTools ?? [];
         this.#client?.sendMessage(
-            this.#strategy.outbound(this.#messages.value),
+            this.#outbound(this.#messages.value),
             frontendTools,
             this.#pendingContext,
             undefined,
             this.#previousAgentIdForRequest(),
+            this.#turnAbort?.signal,
         );
     }
 
@@ -783,6 +924,14 @@ export class UaiRunController extends UmbControllerBase {
                 // (snapshot may have updated file references)
                 contentParts: snapshotMsg.contentParts ?? clientMsg.contentParts,
             };
+        });
+
+        // The snapshot is built from what was sent, which leaves out local-only messages. Keep each one
+        // after the message it followed, so a blocked turn doesn't vanish from the chat.
+        existing.forEach((msg, i) => {
+            if (!this.#localOnlyMessageIds.has(msg.id) || merged.some((m) => m.id === msg.id)) return;
+            const at = i === 0 ? 0 : merged.findIndex((m) => m.id === existing[i - 1].id) + 1;
+            if (i === 0 || at > 0) merged.splice(at, 0, msg);
         });
 
         this.#messages.next(merged);

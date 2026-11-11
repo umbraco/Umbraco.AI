@@ -124,6 +124,8 @@ export class UaiAgentClient {
      * @param resume Optional resume entries for human_approval or tool_call interrupts
      * @param previousAgentId Optional ID of the agent resolved on the previous turn, sent for
      * `auto` agents so the server-side selection chain (e.g. a sticky selector) can see it.
+     * @param signal Optional signal that cancels the run: its request is aborted and no more
+     * events reach the callbacks.
      */
     sendMessage(
         messages: UaiChatMessage[],
@@ -131,7 +133,10 @@ export class UaiAgentClient {
         context?: Array<{ description: string; value: string }>,
         resume?: Array<{ interruptId: string; status: "resolved" | "cancelled"; payload?: unknown }>,
         previousAgentId?: string,
+        signal?: AbortSignal,
     ): void {
+        if (signal?.aborted) return;
+
         const runId = crypto.randomUUID();
 
         // Clear any pending tool args from previous run
@@ -155,7 +160,7 @@ export class UaiAgentClient {
 
         // Subscribe to the transport's event stream
         // Apply transformChunks to convert CHUNK events → START/CONTENT/END events
-        this.#transport
+        const subscription = this.#transport
             .run({
                 threadId: this.#threadId,
                 runId,
@@ -172,6 +177,9 @@ export class UaiAgentClient {
                     this.#callbacks.onError?.(err);
                 },
             });
+
+        // Unsubscribing tears down the transport's stream, which aborts the request (see UaiHttpAgent).
+        signal?.addEventListener("abort", () => subscription.unsubscribe(), { once: true });
     }
 
     /**

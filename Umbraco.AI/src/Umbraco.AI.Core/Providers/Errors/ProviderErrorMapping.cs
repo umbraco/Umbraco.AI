@@ -14,6 +14,9 @@ namespace Umbraco.AI.Core.Providers.Errors;
 /// </summary>
 public static class ProviderErrorMapping
 {
+    private const string OutOfCreditMessage =
+        "The AI service account is out of credit or has reached its usage quota. Check the plan and billing with the provider.";
+
     /// <summary>
     /// The default classification for an exception, walking the inner-exception chain and
     /// recognising the common transport types: <see cref="ClientResultException"/> (the OpenAI SDK
@@ -167,6 +170,11 @@ public static class ProviderErrorMapping
                 "Authentication failed. Check the connection's credentials.",
                 providerCode ?? status.ToString(), rawMessage),
 
+            // Out of credit (e.g. DeepSeek, OpenRouter). Retrying won't help until the account is topped up.
+            402 => new(AIProviderErrorCategory.InvalidRequest,
+                OutOfCreditMessage,
+                providerCode ?? "402", rawMessage),
+
             404 => new(AIProviderErrorCategory.NotFound,
                 "The requested AI model or resource was not found.",
                 providerCode ?? "404", rawMessage),
@@ -174,6 +182,12 @@ public static class ProviderErrorMapping
             408 or 504 => new(AIProviderErrorCategory.Transient,
                 "The AI service took too long to respond. Try again in a moment.",
                 providerCode ?? status.ToString(), rawMessage),
+
+            // OpenAI-compatible APIs also answer an account with no credit left with a 429, but waiting
+            // won't clear it, so it mustn't get the "wait a moment" wording (#702).
+            429 when IsOutOfCredit(status, providerCode) => new(AIProviderErrorCategory.RateLimited,
+                OutOfCreditMessage,
+                providerCode, rawMessage),
 
             429 => new(AIProviderErrorCategory.RateLimited,
                 "Rate limit reached. Please wait a moment and try again.",
@@ -206,7 +220,23 @@ public static class ProviderErrorMapping
     {
         try
         {
-            var content = ex.GetRawResponse()?.Content;
+            return TryExtractOpenAIErrorCode(ex.GetRawResponse()?.Content);
+        }
+        catch
+        {
+            // Response already disposed. Fall through.
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Best-effort extraction of an OpenAI-shaped error code (<c>{ "error": { "code": "..." } }</c>)
+    /// from a response body. Returns null when the body is empty, not JSON, or not that shape.
+    /// </summary>
+    internal static string? TryExtractOpenAIErrorCode(BinaryData? content)
+    {
+        try
+        {
             if (content is null || content.ToMemory().IsEmpty)
             {
                 return null;
@@ -223,9 +253,39 @@ public static class ProviderErrorMapping
         }
         catch
         {
-            // Body not JSON, not a known shape, or already disposed. Fall through.
+            // Body not JSON or not a known shape. Fall through.
         }
 
         return null;
     }
+
+    /// <summary>
+    /// Classifies an error the provider reported inside its response, such as an
+    /// <see cref="Microsoft.Extensions.AI.ErrorContent"/> streamed mid-response, when the error is one
+    /// that ends the call. Returns null for anything else, which the caller passes on unchanged.
+    /// </summary>
+    /// <remarks>
+    /// OpenAI's Responses API reports an empty account mid-stream, after the HTTP 200, so the SDK
+    /// streams it as an error rather than throwing it (#702).
+    /// </remarks>
+    internal static AIProviderErrorInfo? FromResponseError(string? providerCode, string? message)
+        => IsOutOfCreditCode(providerCode)
+            ? new(AIProviderErrorCategory.RateLimited, OutOfCreditMessage, providerCode, message ?? providerCode!)
+            : null;
+
+    /// <summary>
+    /// Whether an HTTP status and provider code mean the account is out of credit, which retrying
+    /// can't fix.
+    /// </summary>
+    internal static bool IsOutOfCredit(int status, string? providerCode)
+        => status == 429 && IsOutOfCreditCode(providerCode);
+
+    /// <summary>
+    /// Whether a provider code means the account is out of credit. OpenAI used
+    /// <c>insufficient_quota</c> for both; it now sends <c>credit_balance_exhausted</c> as the code for
+    /// a prepaid account with no credit left, and keeps <c>insufficient_quota</c> as the error type.
+    /// </summary>
+    internal static bool IsOutOfCreditCode(string? providerCode)
+        => string.Equals(providerCode, "insufficient_quota", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(providerCode, "credit_balance_exhausted", StringComparison.OrdinalIgnoreCase);
 }

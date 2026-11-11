@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using Microsoft.Extensions.AI;
 using Umbraco.AI.Core.Providers;
 using Umbraco.AI.Core.Providers.Errors;
+using Umbraco.AI.Extensions;
 
 namespace Umbraco.AI.Core.Chat;
 
@@ -24,6 +25,12 @@ namespace Umbraco.AI.Core.Chat;
 /// of leaking the runtime's raw cancellation text. An already-classified
 /// <see cref="AIProviderException"/> passes through unchanged so it is never double-wrapped.
 /// </para>
+/// <para>
+/// A provider can also report a failure inside its response as <see cref="ErrorContent"/> instead of
+/// throwing. When that error always ends the call, such as an account with no credit left, it is
+/// thrown here as a classified <see cref="AIProviderException"/>, the same as when the provider
+/// rejects the request outright. Any other <see cref="ErrorContent"/> passes through unchanged.
+/// </para>
 /// </remarks>
 internal sealed class AIErrorClassifyingChatClient : DelegatingChatClient
 {
@@ -41,9 +48,10 @@ internal sealed class AIErrorClassifyingChatClient : DelegatingChatClient
         ChatOptions? options = null,
         CancellationToken cancellationToken = default)
     {
+        ChatResponse response;
         try
         {
-            return await base.GetResponseAsync(messages, options, cancellationToken);
+            response = await base.GetResponseAsync(messages, options, cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -57,6 +65,13 @@ internal sealed class AIErrorClassifyingChatClient : DelegatingChatClient
         {
             throw Classify(ex);
         }
+
+        if (response.GetTerminalProviderError() is { } error && ClassifyResponseError(error) is { } classified)
+        {
+            throw classified;
+        }
+
+        return response;
     }
 
     /// <inheritdoc />
@@ -96,6 +111,16 @@ internal sealed class AIErrorClassifyingChatClient : DelegatingChatClient
                     throw Classify(ex);
                 }
 
+                // Any update, not only the last: an out-of-credit error always ends the call, and the
+                // stream's end isn't known yet.
+                foreach (var content in update.Contents)
+                {
+                    if (content is ErrorContent error && ClassifyResponseError(error) is { } classified)
+                    {
+                        throw classified;
+                    }
+                }
+
                 yield return update;
             }
         }
@@ -107,4 +132,9 @@ internal sealed class AIErrorClassifyingChatClient : DelegatingChatClient
 
     private AIProviderException Classify(Exception ex)
         => new(_provider.ClassifyError(ex), ex);
+
+    private static AIProviderException? ClassifyResponseError(ErrorContent error)
+        => ProviderErrorMapping.FromResponseError(error.ErrorCode, error.Message) is { } info
+            ? new AIProviderException(info)
+            : null;
 }

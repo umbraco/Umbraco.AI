@@ -5,6 +5,20 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.8.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@18.7.0...Umbraco.AI@18.8.0) (2026-11-11)
+
+### feat
+
+* **core:** Add AIClientRetryPolicy that doesn't retry an out-of-credit reply ([2bf1e64](https://github.com/umbraco/Umbraco.AI/commit/2bf1e64cf97e976070e59e06da06503c1076c9a1)), closes [#709](https://github.com/umbraco/Umbraco.AI/issues/709)
+
+### fix
+
+* **agent,agent-ui,core:** Remove a guardrail-blocked answer and keep it out of history ([1755ac3](https://github.com/umbraco/Umbraco.AI/commit/1755ac3d9dde59accb9ce53e6d6ef4a945c1c011)), closes [#712](https://github.com/umbraco/Umbraco.AI/issues/712)
+* **core,automate:** Recognise OpenAI's credit_balance_exhausted reply as out of credit ([96651c8](https://github.com/umbraco/Umbraco.AI/commit/96651c8b962fe3bab511d75c26c68f8a4b768397)), closes [#702](https://github.com/umbraco/Umbraco.AI/issues/702) [#709](https://github.com/umbraco/Umbraco.AI/issues/709)
+* **core:** Read Markdown editor properties as text in get_umbraco_content ([9732e80](https://github.com/umbraco/Umbraco.AI/commit/9732e808aec179803c41c67346a1c590abd26f9f))
+* **core:** Read rich text properties as text in get_umbraco_content ([6449e1f](https://github.com/umbraco/Umbraco.AI/commit/6449e1fbd0f8a4e3fdb54d550a67af4169204430))
+* **core:** Say the account is out of credit instead of "rate limit reached" ([312627f](https://github.com/umbraco/Umbraco.AI/commit/312627fb141925f847b0caf9573173edd69295f8)), closes [#702](https://github.com/umbraco/Umbraco.AI/issues/702)
+
 ## [18.7.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@18.6.1...Umbraco.AI@18.7.0) (2026-11-03)
 
 ### feat

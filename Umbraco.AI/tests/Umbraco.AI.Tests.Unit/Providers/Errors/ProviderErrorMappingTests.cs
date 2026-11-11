@@ -103,6 +103,7 @@ public class ProviderErrorMappingTests
 
     [Theory]
     [InlineData(429, """{"error":{"code":"insufficient_quota"}}""", AIProviderErrorCategory.RateLimited, true)]
+    [InlineData(429, """{"error":{"type":"insufficient_quota","code":"credit_balance_exhausted"}}""", AIProviderErrorCategory.RateLimited, true)]
     [InlineData(402, null, AIProviderErrorCategory.InvalidRequest, true)]
     [InlineData(429, """{"error":{"code":"rate_limit_exceeded"}}""", AIProviderErrorCategory.RateLimited, false)]
     public void FromException_ClientResultException_OnlyOutOfCreditSaysSoInsteadOfWait(

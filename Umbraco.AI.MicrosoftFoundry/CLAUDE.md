@@ -62,6 +62,7 @@ Authentication is determined at runtime based on which settings fields are popul
 - Extends `AIChatCapabilityBase<MicrosoftFoundryProviderSettings>`
 - Default: Creates `IChatClient` using `AzureOpenAIClient.GetChatClient().AsIChatClient()` (Chat Completions API)
 - Opt-in: When `UseResponsesApi` is enabled, uses `OpenAIClient.GetResponsesClient().AsIChatClient()` (Responses API)
+  - Wrapped in `ClientManagedHistoryChatClient` (sends `store: false` when `ContextKeys.ClientManagedChatHistory` is set) and `MicrosoftFoundryIncompleteResponseChatClient` (reports a cut-off stream as `ChatFinishReason.Length`). Both are copies of the OpenAI provider's wrappers, so a fix to one needs the same edit in the other
 - Lists chat models from the models/deployments API
 - Default model: `gpt-4o`
 

@@ -1,8 +1,8 @@
 import { customElement, property, state, css, html } from "@umbraco-cms/backoffice/external/lit";
 import { unsafeHTML, repeat } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { marked } from "@umbraco-cms/backoffice/external/marked";
 import { parseUaiFileUrl, resolveUaiFileObjectUrl } from "@umbraco-ai/agent";
+import { renderChatMarkdown } from "../utils/markdown.js";
 import type {
     UaiChatMessage,
     UaiInputContent,
@@ -110,8 +110,7 @@ export class UaiChatMessageElement extends UmbLitElement {
             return html`<p>${this.message.content}</p>`;
         }
 
-        const htmlContent = marked.parse(this.message.content) as string;
-        return html`<div class="markdown-content">${unsafeHTML(htmlContent)}</div>`;
+        return html`<div class="markdown-content">${unsafeHTML(renderChatMarkdown(this.message.content))}</div>`;
     }
 
     #renderMediaPart(part: UaiInputContent) {

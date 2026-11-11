@@ -279,6 +279,72 @@ participant's token, and the run needs an acting user per message (today only th
 - **Both lines.** Ships on v17 and v18. The SDK targets net10, so no blocker, but it doubles the
   migration and backport work.
 
+## Not yet considered (added 11-11-2026)
+
+Gaps found after the first pass. **Must-fix for phase 1** items are marked; the rest need a
+decision before or during design.
+
+### Security
+
+- **Requests to internal addresses (SSRF). Must-fix for phase 1.** The admin enters a URL and our
+  server calls it, and OAuth discovery follows URLs the server publishes. Block private, loopback
+  and link-local addresses (including cloud metadata endpoints), re-checked after DNS resolution
+  and on redirects. Matters most on Umbraco Cloud.
+- **Sampling (server asks our model to generate). Must-fix for phase 1.** MCP lets a server request
+  completions from the client's model. That spends our tokens and is another injection path. Do
+  not advertise the capability.
+- **Elicitation (server asks the user a question mid-chat).** Either render it safely as a chat
+  card or do not advertise it in v1. Proposed: off in v1.
+- **Emergency off switch.** A per-server "disable now" that applies immediately, including to
+  conversations already in progress.
+- **Guardrails on tool results.** Decide whether existing guardrails also check text returned by
+  external servers, not just user input and model output.
+
+### Things that will break with real servers
+
+- **Tool schemas providers reject. Must-fix for phase 1.** MCP tool input schemas are free-form
+  JSON Schema. OpenAI strict mode already rejected schemas like these (#249), and the Anthropic
+  adapter drops `AdditionalProperties`. Normalise or simplify schemas before they reach the
+  provider, and test against each provider we support.
+- **Tool name clashes.** Two servers can both expose `search`. Prefix tool names with the server
+  alias, and stay within provider name limits (OpenAI: 64 characters, restricted characters).
+- **Huge results.** One CRM call can return thousands of rows. Cap result size before it reaches
+  the model (separate from the audit log limits), and tell the model when a result was cut.
+- **Slow or unavailable servers.** Timeouts, limited retries, and a clear "source unavailable"
+  result instead of failing the whole turn.
+- **Non-text results.** Tools can return images, audio and resource links, not just text. Decide
+  what the chat shows and what is passed to the model.
+
+### Cost and speed
+
+- **Tool lists cost tokens.** Every allowed tool's name, description and schema is sent with every
+  request. 50 tools can add thousands of input tokens per message. Another reason the allowlist
+  matters.
+- **Prompt caching.** User-toggled connections change the tool list between chats, which breaks
+  provider prompt caching. Keep the tool order stable and fixed servers first, so at least the
+  agent's own part stays cacheable.
+- **Rate limits.** External APIs limit calls per account. With a shared account, all editors
+  together can hit that limit. Surface rate-limit errors clearly; consider per-server throttling.
+
+### Environments and Cloud
+
+- **Each environment signs in separately.** Dev, staging and live have different hostnames, so
+  each needs its own OAuth sign-in and its own redirect URI registered with the service. Tokens
+  never move between environments (also covered by the Deploy rule).
+- **Client registration per environment.** Where a service needs a pasted client ID and secret,
+  the admin may need one per environment. The Deploy connector must not carry them.
+
+### Product gaps
+
+- **Agent tests.** Tests that call live external servers give different results each run. Decide
+  whether tests mock MCP tools, skip them, or run them live with a warning.
+- **Old conversations.** Reopening a Workspace conversation after a server was removed or renamed
+  must still show its past tool results and source labels.
+- **Approval cards.** Write approvals must show any tool's arguments readably, since every MCP
+  tool has a different shape.
+- **Usage tracking.** Decide whether MCP calls (count, duration, failures) appear on the AI usage
+  dashboard, not only in the per-call audit.
+
 ## Recommended phasing
 
 1. **Shared-account, read-only.** Registry (HTTP servers, tool allowlist, user group access,

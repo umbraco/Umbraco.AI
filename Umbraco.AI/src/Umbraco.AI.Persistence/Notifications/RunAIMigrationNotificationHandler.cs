@@ -11,8 +11,14 @@ namespace Umbraco.AI.Persistence.Notifications;
 /// <summary>
 /// Notification handler that runs pending EF Core migrations on application startup.
 /// </summary>
+/// <remarks>
+/// Runs on <see cref="PostRuntimePremigrationsUpgradeNotification"/>, before any
+/// <see cref="UmbracoApplicationStartingNotification"/> handler, so startup work in other packages
+/// (such as an Umbraco Deploy import on start) finds the tables in place.
+/// </remarks>
 public class RunAIMigrationNotificationHandler
-    : INotificationAsyncHandler<UmbracoApplicationStartedNotification>
+    : INotificationAsyncHandler<PostRuntimePremigrationsUpgradeNotification>,
+      INotificationAsyncHandler<UmbracoApplicationStartedNotification>
 {
     private readonly IConfiguration _configuration;
     private readonly ILogger<RunAIMigrationNotificationHandler> _logger;
@@ -29,9 +35,19 @@ public class RunAIMigrationNotificationHandler
     }
 
     /// <inheritdoc />
-    public async Task HandleAsync(
+    public Task HandleAsync(
+        PostRuntimePremigrationsUpgradeNotification notification,
+        CancellationToken cancellationToken)
+        => RunMigrationsAsync(cancellationToken);
+
+    /// <inheritdoc />
+    [Obsolete("Use HandleAsync(PostRuntimePremigrationsUpgradeNotification, CancellationToken) instead. Will be removed in v20.")]
+    public Task HandleAsync(
         UmbracoApplicationStartedNotification notification,
         CancellationToken cancellationToken)
+        => RunMigrationsAsync(cancellationToken);
+
+    private async Task RunMigrationsAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -79,8 +95,9 @@ public class RunAIMigrationNotificationHandler
         }
         catch (Exception ex)
         {
+            // Log and keep serving: this runs during CMS boot, so rethrowing would stop the whole
+            // site from starting when only Umbraco.AI is affected.
             _logger.LogError(ex, "Failed to run Umbraco.AI database migrations.");
-            throw;
         }
     }
 }

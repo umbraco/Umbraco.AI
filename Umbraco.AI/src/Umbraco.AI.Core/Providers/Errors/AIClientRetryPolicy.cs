@@ -10,7 +10,7 @@ namespace Umbraco.AI.Core.Providers.Errors;
 /// <remarks>
 /// It retries exactly like <see cref="ClientRetryPolicy"/>, the default for an
 /// <c>OpenAIClient</c>, except for a reply that says the account is out of credit (HTTP 429 with code
-/// <c>insufficient_quota</c>). The default treats every 429 as a rate limit and retries it with
+/// <c>insufficient_quota</c> or <c>credit_balance_exhausted</c>). The default treats every 429 as a rate limit and retries it with
 /// backoff, so an empty account kept the user waiting for an error that was certain from the first
 /// reply. Set it on the client's options:
 /// <code>new OpenAIClientOptions { RetryPolicy = AIClientRetryPolicy.Default }</code>

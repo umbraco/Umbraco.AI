@@ -159,7 +159,7 @@ to behave the same, so the model below follows that pattern.
      per-user-group overrides apply (e.g. "Writers don't get HubSpot on this agent").
    - **Let users add their own connections.** Yes/no. Yes: the agent also uses the servers the user
      turned on for that chat or project. No: only the fixed list, whatever the user has connected.
-     Proposed default: **No**, so a new agent never quietly accepts outside data. Not yet confirmed.
+     Default: **No**, so a new agent never quietly accepts outside data (decided 11-11-2026).
 3. **User (editor).** Connects their own accounts (personal mode) and turns connections on per
    conversation, or per project in Workspace. Only servers their user groups allow are offered. A
    project does not narrow the agent; it says "this project uses HubSpot" for that user's chats.
@@ -308,7 +308,7 @@ participant's token, and the run needs an acting user per message (today only th
 - [x] MCP SDK OAuth or Automate's OpenIddict? MCP SDK (11-11-2026).
 - [x] Global servers, per agent, or per project? Per agent, plus user-added connections where the
       agent allows it (11-11-2026).
-- [ ] Should "Let users add their own connections" default to No on a new agent? Proposed: No.
+- [x] Should "Let users add their own connections" default to No on a new agent? Yes (11-11-2026).
 - [x] MCP writes in contextual Copilot? Blocked, with a hand-off to Workspace (11-11-2026).
 - [ ] Does the registry live in `Umbraco.AI.Agent` (so Automate agents can use it too) or in
       Copilot Workspace? With the agent as the main gate, `Umbraco.AI.Agent` is the natural home.

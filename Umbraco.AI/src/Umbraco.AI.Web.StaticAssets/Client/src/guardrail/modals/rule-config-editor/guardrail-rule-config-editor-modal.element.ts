@@ -1,4 +1,4 @@
-import { css, html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
+import { css, html, customElement, nothing, state } from "@umbraco-cms/backoffice/external/lit";
 import { UmbModalBaseElement } from "@umbraco-cms/backoffice/modal";
 import type {
     UaiGuardrailRuleConfigEditorModalData,
@@ -84,6 +84,18 @@ export class UaiGuardrailRuleConfigEditorModalElement extends UmbModalBaseElemen
             ...this._rule,
             action: select.value as "Block" | "Warn" | "Redact",
         };
+    }
+
+    /**
+     * A model-based evaluator can only check a response once it has finished streaming, so in a
+     * streamed chat the response is on screen before a Block takes effect (#712).
+     */
+    get #showsStreamedResponseNote(): boolean {
+        return (
+            this._evaluator?.type === "ModelBased" &&
+            this._rule.phase === "PostGenerate" &&
+            this._rule.action === "Block"
+        );
     }
 
     get #actionOptions() {
@@ -221,6 +233,17 @@ export class UaiGuardrailRuleConfigEditorModalElement extends UmbModalBaseElemen
                                     @change=${this.#onActionChange}
                                 >
                                 </uui-select>
+                                ${this.#showsStreamedResponseNote
+                                    ? html`<p class="streamed-response-note">
+                                          <uui-icon name="icon-info"></uui-icon>
+                                          <span>
+                                              ${this.localize.termOrDefault(
+                                                  "uaiGuardrail_streamedResponseNote",
+                                                  "In streamed chats, such as the Copilot, the response appears while it is written and this rule checks it once it is complete. If the rule blocks it, the response is removed and replaced with the block message. To stop content before anyone sees it, use a Contains or Regex rule.",
+                                              )}
+                                          </span>
+                                      </p>`
+                                    : nothing}
                             </div>
                         </umb-property-layout>
                     </uui-box>
@@ -262,6 +285,18 @@ export class UaiGuardrailRuleConfigEditorModalElement extends UmbModalBaseElemen
             uui-input,
             uui-select {
                 width: 100%;
+            }
+
+            .streamed-response-note {
+                display: flex;
+                gap: var(--uui-size-space-2);
+                margin: var(--uui-size-space-3) 0 0;
+                color: var(--uui-color-text-alt);
+            }
+
+            .streamed-response-note uui-icon {
+                flex-shrink: 0;
+                margin-top: 2px;
             }
         `,
     ];

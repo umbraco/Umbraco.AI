@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Agent.Copilot.Workspace will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.3.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot.Workspace@18.3.0...Umbraco.AI.Agent.Copilot.Workspace@18.3.1) (2026-11-11)
+
+### fix
+
+* **copilot-workspace:** Require Umbraco.AI.Agent.UI 18.3.1, so Workspace chats get its fixes: Cancel stops the whole run ([#692](https://github.com/umbraco/Umbraco.AI/issues/692)), a guardrail-blocked answer is removed and kept out of the conversation ([#712](https://github.com/umbraco/Umbraco.AI/issues/712)), and follow-up runs after a tool call see fresh page context ([#688](https://github.com/umbraco/Umbraco.AI/issues/688))
+
 ## [18.3.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot.Workspace@18.2.0...Umbraco.AI.Agent.Copilot.Workspace@18.3.0) (2026-11-03)
 
 ### feat

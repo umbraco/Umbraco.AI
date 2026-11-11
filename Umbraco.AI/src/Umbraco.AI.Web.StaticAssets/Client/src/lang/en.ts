@@ -343,6 +343,8 @@ export default {
         ruleNamePlaceholder: "Enter rule name",
         rulePhaseDescription: "When to evaluate this rule (before or after AI generation)",
         ruleActionDescription: "Action to take when the rule is triggered",
+        streamedResponseNote:
+            "In streamed chats, such as the Copilot, the response appears while it is written and this rule checks it once it is complete. If the rule blocks it, the response is removed and replaced with the block message. To stop content before anyone sees it, use a Contains or Regex rule.",
     },
     uaiKeyValueList: {
         keyLabel: "Key",

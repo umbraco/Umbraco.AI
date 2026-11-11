@@ -5,6 +5,14 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.4.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.4.2...Umbraco.AI.Agent@18.4.3) (2026-11-11)
+
+### fix
+
+* **agent,agent-ui,core:** Remove a guardrail-blocked answer and keep it out of history ([1755ac3](https://github.com/umbraco/Umbraco.AI/commit/1755ac3d9dde59accb9ce53e6d6ef4a945c1c011)), closes [#712](https://github.com/umbraco/Umbraco.AI/issues/712)
+* **agent,agent-ui:** Cancel the whole turn with an abort signal ([c0f8a28](https://github.com/umbraco/Umbraco.AI/commit/c0f8a28804334011ee195f17d672f3817e8358e7)), closes [#692](https://github.com/umbraco/Umbraco.AI/issues/692)
+* **agent,agent-ui:** Stop the run when Cancel is pressed ([bb4e41f](https://github.com/umbraco/Umbraco.AI/commit/bb4e41f8a75ec0c2546730b424d10ba49beaac4f)), closes [#692](https://github.com/umbraco/Umbraco.AI/issues/692)
+
 ## [18.4.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.4.1...Umbraco.AI.Agent@18.4.2) (2026-11-03)
 
 ### Internal

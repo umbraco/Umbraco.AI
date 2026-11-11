@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Anthropic will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.1.5](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Anthropic@18.1.4...Umbraco.AI.Anthropic@18.1.5) (2026-11-11)
+
+### fix
+
+* **anthropic:** Say the account is out of credit when the balance is too low ([3c17b4c](https://github.com/umbraco/Umbraco.AI/commit/3c17b4c54cb4017a293bf9005d2c1aca21ec3bd9)), closes [#702](https://github.com/umbraco/Umbraco.AI/issues/702)
+
 ## [18.1.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Anthropic@18.1.3...Umbraco.AI.Anthropic@18.1.4) (2026-11-03)
 
 ### Internal

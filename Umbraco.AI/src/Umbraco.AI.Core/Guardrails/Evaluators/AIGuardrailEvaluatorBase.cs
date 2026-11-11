@@ -41,7 +41,7 @@ public abstract class AIGuardrailEvaluatorBase<TConfig> : IAIGuardrailEvaluator
     /// </summary>
     /// <param name="schemaBuilder">The schema builder.</param>
     /// <exception cref="InvalidOperationException">Thrown if the class is missing the required attribute.</exception>
-    [Obsolete("Use the constructor that accepts an IAIGuardrailEvaluatorInfrastructure so that evaluator configuration supports app-settings ($Config) resolution and validation. This constructor will be removed in a future version.")]
+    [Obsolete("Use the constructor that accepts an IAIGuardrailEvaluatorInfrastructure so that evaluator configuration supports app-settings ($Config) resolution and validation. Will be removed in v20.")]
     protected AIGuardrailEvaluatorBase(IAIEditableModelSchemaBuilder schemaBuilder)
         : this(schemaBuilder, StaticServiceProvider.Instance.GetRequiredService<IAIEditableModelResolver>())
     {

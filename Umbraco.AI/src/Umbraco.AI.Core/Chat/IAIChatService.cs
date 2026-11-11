@@ -19,7 +19,7 @@ public interface IAIChatService
     /// <param name="options">Optional chat options to override profile defaults.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>The chat completion response from the AI model.</returns>
-    [Obsolete("Use GetChatResponseAsync for full observability (notifications, telemetry, duration tracking). Will be removed in v3. This method delegates to the inline API with alias 'chat'.")]
+    [Obsolete("Use GetChatResponseAsync for full observability (notifications, telemetry, duration tracking). Will be removed in v19. This method delegates to the inline API with alias 'chat'.")]
     Task<ChatResponse> GetChatResponseAsync(
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
@@ -35,7 +35,7 @@ public interface IAIChatService
     /// <param name="options">Optional chat options to override profile defaults.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>The chat completion response from the AI model.</returns>
-    [Obsolete("Use GetChatResponseAsync with .WithProfile(profileId) for full observability (notifications, telemetry, duration tracking). Will be removed in v3. This method delegates to the inline API with alias 'chat'.")]
+    [Obsolete("Use GetChatResponseAsync with .WithProfile(profileId) for full observability (notifications, telemetry, duration tracking). Will be removed in v19. This method delegates to the inline API with alias 'chat'.")]
     Task<ChatResponse> GetChatResponseAsync(
         Guid profileId,
         IEnumerable<ChatMessage> messages,
@@ -51,7 +51,7 @@ public interface IAIChatService
     /// <param name="options">Optional chat options to override profile defaults.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>An async stream of streaming chat updates.</returns>
-    [Obsolete("Use StreamChatResponseAsync for full observability (notifications, telemetry, duration tracking). Will be removed in v3. This method delegates to the inline API with alias 'chat'.")]
+    [Obsolete("Use StreamChatResponseAsync for full observability (notifications, telemetry, duration tracking). Will be removed in v19. This method delegates to the inline API with alias 'chat'.")]
     IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseAsync(
         IEnumerable<ChatMessage> messages,
         ChatOptions? options = null,
@@ -67,7 +67,7 @@ public interface IAIChatService
     /// <param name="options">Optional chat options to override profile defaults.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>An async stream of streaming chat updates.</returns>
-    [Obsolete("Use StreamChatResponseAsync with .WithProfile(profileId) for full observability (notifications, telemetry, duration tracking). Will be removed in v3. This method delegates to the inline API with alias 'chat'.")]
+    [Obsolete("Use StreamChatResponseAsync with .WithProfile(profileId) for full observability (notifications, telemetry, duration tracking). Will be removed in v19. This method delegates to the inline API with alias 'chat'.")]
     IAsyncEnumerable<ChatResponseUpdate> GetStreamingChatResponseAsync(
         Guid profileId,
         IEnumerable<ChatMessage> messages,
@@ -83,7 +83,7 @@ public interface IAIChatService
     /// <param name="profileId">Optional profile id. If not specified, uses the default chat profile.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     /// <returns>A configured IChatClient instance with middleware applied.</returns>
-    [Obsolete("Use CreateChatClientAsync for per-call scope management and feature metadata. Will be removed in v3. This method delegates to the inline API with alias 'chat'.")]
+    [Obsolete("Use CreateChatClientAsync for per-call scope management and feature metadata. Will be removed in v19. This method delegates to the inline API with alias 'chat'.")]
     Task<IChatClient> GetChatClientAsync(
         Guid? profileId = null,
         CancellationToken cancellationToken = default);

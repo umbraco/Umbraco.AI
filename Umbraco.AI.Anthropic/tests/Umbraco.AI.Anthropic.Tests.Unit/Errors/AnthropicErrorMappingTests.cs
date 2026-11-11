@@ -62,6 +62,23 @@ public class AnthropicErrorMappingTests
         result.ProviderCode.ShouldBe(errorType);
     }
 
+    [Theory]
+    [InlineData("Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.", true)]
+    [InlineData("max_tokens: Field required", false)]
+    public void TryClassify_InvalidRequest_SaysOutOfCreditOnlyForLowCreditBalance(string errorMessage, bool outOfCredit)
+    {
+        // The shape the SDK throws for a 400, captured from a live call (#702).
+        var message = "Status Code: BadRequest\n{\"type\": \"error\", \"error\": {\"type\": \"invalid_request_error\", \"message\": \""
+                      + errorMessage + "\"}, \"request_id\": \"req_test\"}";
+        var ex = new global::Anthropic.Fakes.FakeAnthropicException(message);
+
+        var result = AnthropicErrorMapping.TryClassify(ex);
+
+        result.ShouldNotBeNull();
+        result.Category.ShouldBe(AIProviderErrorCategory.InvalidRequest);
+        result.UserMessage.Contains("out of credit").ShouldBe(outOfCredit);
+    }
+
     [Fact]
     public void TryClassify_UnknownAnthropicErrorType_FallsBackToUnknown()
     {

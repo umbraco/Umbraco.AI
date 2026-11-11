@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.TogetherAI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.0.6](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.TogetherAI@17.0.5...Umbraco.AI.TogetherAI@17.0.6) (2026-11-11)
+
+### fix
+
+* Stop OpenAI SDK providers retrying an out-of-credit reply 3 times ([499943a](https://github.com/umbraco/Umbraco.AI/commit/499943a6a886b068c2b5bf48eefa80a13b8d09b8)), closes [#709](https://github.com/umbraco/Umbraco.AI/issues/709)
+
 ## [17.0.5](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.TogetherAI@17.0.4...Umbraco.AI.TogetherAI@17.0.5) (2026-11-03)
 
 ### Internal

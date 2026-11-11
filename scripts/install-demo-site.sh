@@ -340,19 +340,19 @@ add_product_projects "Umbraco.AI.Agent.Copilot.Workspace" "Addons/CopilotWorkspa
 echo "Adding Umbraco.AI.Search projects..."
 add_product_projects "Umbraco.AI.Search" "Addons/Search"
 
-# Parked on the v19 line until Deploy/Automate ship v19 (docs/upgrades/v19.md, Blockers). Uncomment to re-add.
+# Parked on the v19 line until Automate ships v19 (docs/upgrades/v19.md, Blockers). Uncomment to re-add.
 # echo "Adding Umbraco.AI.Automate projects..."
 # add_product_projects "Umbraco.AI.Automate" "Addons/Automate"
-#
-# # Step 8: Add Deploy projects
-# echo "Adding Umbraco.AI.Deploy projects..."
-# add_product_projects "Umbraco.AI.Deploy" "Deploy"
-#
-# echo "Adding Umbraco.AI.Prompt.Deploy projects..."
-# add_product_projects "Umbraco.AI.Prompt.Deploy" "Deploy"
-#
-# echo "Adding Umbraco.AI.Agent.Deploy projects..."
-# add_product_projects "Umbraco.AI.Agent.Deploy" "Deploy"
+
+# Step 8: Add Deploy projects
+echo "Adding Umbraco.AI.Deploy projects..."
+add_product_projects "Umbraco.AI.Deploy" "Deploy"
+
+echo "Adding Umbraco.AI.Prompt.Deploy projects..."
+add_product_projects "Umbraco.AI.Prompt.Deploy" "Deploy"
+
+echo "Adding Umbraco.AI.Agent.Deploy projects..."
+add_product_projects "Umbraco.AI.Agent.Deploy" "Deploy"
 
 # Step 11: Add demo site to solution
 echo "Adding demo site to solution..."

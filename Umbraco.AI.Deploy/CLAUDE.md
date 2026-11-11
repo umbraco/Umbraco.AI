@@ -163,15 +163,15 @@ dependencies.Add(new UmbracoAIArtifactDependency(
 
 ## Target Framework
 
-- .NET 10.0 (`net10.0`)
+- .NET 11.0 (`net11.0`)
 - Uses Central Package Management (`Directory.Packages.props`)
 - Nullable reference types enabled
 
 ## Dependencies
 
-- Umbraco CMS 18.x
-- Umbraco.AI 18.x
-- Umbraco Deploy 18.x
+- Umbraco CMS 19.x
+- Umbraco.AI 19.x
+- Umbraco Deploy 19.x
 
 ## Related Packages
 
@@ -228,8 +228,11 @@ Unit tests focus on:
 **Disk-Based (Not UI Transfer):**
 - Entities deployed via git-committed artifacts
 - No "Queue for Transfer" UI
-- Use `RegisterDiskEntityType`, not `RegisterTransferEntityType`
-- Register disk entity types once, in the package's `IAsyncComponent` (e.g. `UmbracoAIDeployComponent`), not in notification handler constructors
+- Use `AddDiskEntityType`, not `AddTransferEntityType`
+- Register disk entity types once, in the package's composer, through Deploy 19's options:
+  `builder.Services.Configure<DeployEntityTypesOptions>(o => o.AddDiskEntityType(...))`.
+  `IDiskEntityService.RegisterDiskEntityType` was removed in Deploy 19. UDI types are still
+  registered in the package's `IAsyncComponent` (e.g. `UmbracoAIDeployComponent`)
 - Configuration managed through backoffice, deployed through git
 
 **Why disk-based?**

@@ -3,20 +3,18 @@ using System.Threading.Tasks;
 using Umbraco.AI.Prompt.Startup.Configuration;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Composing;
-using Umbraco.Deploy.Infrastructure.Disk;
 
 namespace Umbraco.AI.Prompt.Deploy.Composing;
 
 /// <summary>
-/// Component for registering Umbraco AI Prompt Deploy disk entity types.
+/// Component for registering Umbraco AI Prompt Deploy UDI types.
 /// </summary>
-public class UmbracoAIPromptDeployComponent(IDiskEntityService diskEntityService) : IAsyncComponent
+public class UmbracoAIPromptDeployComponent : IAsyncComponent
 {
     /// <inheritdoc />
     public Task InitializeAsync(bool isRestarting, CancellationToken cancellationToken)
     {
         RegisterUdiTypes();
-        RegisterDiskEntityTypes();
 
         return Task.CompletedTask;
     }
@@ -28,11 +26,5 @@ public class UmbracoAIPromptDeployComponent(IDiskEntityService diskEntityService
     private static void RegisterUdiTypes()
     {
         UdiParser.RegisterUdiType(UmbracoAIPromptConstants.UdiEntityType.Prompt, UdiType.GuidUdi);
-    }
-
-    private void RegisterDiskEntityTypes()
-    {
-        // Register disk entity type for deployment
-        diskEntityService.RegisterDiskEntityType(UmbracoAIPromptConstants.UdiEntityType.Prompt);
     }
 }

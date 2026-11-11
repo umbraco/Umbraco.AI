@@ -1,9 +1,11 @@
+using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Startup.Configuration;
 using Umbraco.AI.Agent.Deploy.NotificationHandlers;
 using Umbraco.AI.Deploy.Composing;
 using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.DependencyInjection;
+using Umbraco.Deploy.Infrastructure;
 
 namespace Umbraco.AI.Agent.Deploy.Composing;
 
@@ -17,9 +19,13 @@ public class UmbracoAIAgentDeployComposer : IComposer
     /// <inheritdoc />
     public void Compose(IUmbracoBuilder builder)
     {
-        // Register component for UDI and disk entity type registration
+        // Register component for UDI type registration
         builder.Components()
             .Append<UmbracoAIAgentDeployComponent>();
+
+        // Disk entity type is serialized to UDA files
+        builder.Services.Configure<DeployEntityTypesOptions>(options => options
+            .AddDiskEntityType(UmbracoAIAgentConstants.UdiEntityType.Agent));
 
         // Register agent notification handlers
         builder.AddNotificationAsyncHandler<AIAgentSavedNotification, AIAgentSavedDeployRefresherNotificationAsyncHandler>();

@@ -31,7 +31,7 @@
 
   <!-- Umbraco Deploy. -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.Deploy.Infrastructure" Version="[18.0.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.Deploy.Infrastructure" Version="[19.0.0-beta1, 19.999.999)" />
   </ItemGroup>
 
   <!-- Umbraco Automate -->
@@ -67,7 +67,7 @@
     <PackageVersion Include="Umbraco.AI.Agent.Startup" Version="[19.0.0-beta.1, 19.999.999)" />
     <PackageVersion Include="Umbraco.AI.Agent.UI" Version="[19.0.0-beta.1, 19.999.999)" />
     <PackageVersion Include="Umbraco.AI.Agent.Copilot" Version="[19.0.0-beta.1, 19.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Deploy" Version="[18.4.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Deploy" Version="[19.0.0-beta.1, 19.999.999)" />
     <PackageVersion Include="Umbraco.AI.Automate" Version="[18.2.0, 18.999.999)" />
     <PackageVersion Include="Umbraco.AI.Prompt.Startup" Version="[19.0.0-beta.1, 19.999.999)" />
   </ItemGroup>

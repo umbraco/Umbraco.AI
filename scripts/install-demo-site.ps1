@@ -323,19 +323,19 @@ Add-ProductProjects -ProductFolder "Umbraco.AI.Agent.Copilot.Workspace" -Solutio
 Write-Host "Adding Umbraco.AI.Search projects..." -ForegroundColor Green
 Add-ProductProjects -ProductFolder "Umbraco.AI.Search" -SolutionFolder "Addons/Search"
 
-# Parked on the v19 line until Deploy/Automate ship v19 (docs/upgrades/v19.md, Blockers). Uncomment to re-add.
+# Parked on the v19 line until Automate ships v19 (docs/upgrades/v19.md, Blockers). Uncomment to re-add.
 # Write-Host "Adding Umbraco.AI.Automate projects..." -ForegroundColor Green
 # Add-ProductProjects -ProductFolder "Umbraco.AI.Automate" -SolutionFolder "Addons/Automate"
-#
-# # Step 8: Add deploy projects
-# Write-Host "Adding Umbraco.AI.Deploy projects..." -ForegroundColor Green
-# Add-ProductProjects -ProductFolder "Umbraco.AI.Deploy" -SolutionFolder "Deploy"
-#
-# Write-Host "Adding Umbraco.AI.Prompt.Deploy projects..." -ForegroundColor Green
-# Add-ProductProjects -ProductFolder "Umbraco.AI.Prompt.Deploy" -SolutionFolder "Deploy"
-#
-# Write-Host "Adding Umbraco.AI.Agent.Deploy projects..." -ForegroundColor Green
-# Add-ProductProjects -ProductFolder "Umbraco.AI.Agent.Deploy" -SolutionFolder "Deploy"
+
+# Step 8: Add deploy projects
+Write-Host "Adding Umbraco.AI.Deploy projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Deploy" -SolutionFolder "Deploy"
+
+Write-Host "Adding Umbraco.AI.Prompt.Deploy projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Prompt.Deploy" -SolutionFolder "Deploy"
+
+Write-Host "Adding Umbraco.AI.Agent.Deploy projects..." -ForegroundColor Green
+Add-ProductProjects -ProductFolder "Umbraco.AI.Agent.Deploy" -SolutionFolder "Deploy"
 
 # Step 11: Add demo site to solution
 Write-Host "Adding demo site to solution..." -ForegroundColor Green

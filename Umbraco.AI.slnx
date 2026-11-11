@@ -56,7 +56,7 @@
     <Project Path="Umbraco.AI.Search/src/Umbraco.AI.Search/Umbraco.AI.Search.csproj" />
     <Project Path="Umbraco.AI.Search/tests/Umbraco.AI.Search.Tests.Unit/Umbraco.AI.Search.Tests.Unit.csproj" />
   </Folder>
-  <!-- Parked on the v19 line until Umbraco.Deploy / Umbraco.Automate ship v19 packages (docs/upgrades/v19.md, Blockers). To re-add, uncomment.
+  <!-- Parked on the v19 line until Umbraco.Automate ships v19 packages (docs/upgrades/v19.md, Blockers). To re-add, uncomment.
   <Folder Name="/AddOns/Automate/">
     <Project Path="Umbraco.AI.Automate/src/Umbraco.AI.Automate/Umbraco.AI.Automate.csproj" />
     <Project Path="Umbraco.AI.Automate/tests/Umbraco.AI.Automate.Tests.Unit/Umbraco.AI.Automate.Tests.Unit.csproj" />
@@ -75,7 +75,6 @@
     <Project Path="Umbraco.AI/tests/Umbraco.AI.Tests.Integration/Umbraco.AI.Tests.Integration.csproj" />
     <Project Path="Umbraco.AI/tests/Umbraco.AI.Tests.Unit/Umbraco.AI.Tests.Unit.csproj" />
   </Folder>
-  <!-- Parked on the v19 line until Umbraco.Deploy / Umbraco.Automate ship v19 packages (docs/upgrades/v19.md, Blockers). To re-add, uncomment.
   <Folder Name="/Deploy/">
     <Project Path="Umbraco.AI.Agent.Deploy/src/Umbraco.AI.Agent.Deploy/Umbraco.AI.Agent.Deploy.csproj" />
     <Project Path="Umbraco.AI.Deploy/src/Umbraco.AI.Deploy/Umbraco.AI.Deploy.csproj" />
@@ -84,7 +83,6 @@
     <Project Path="Umbraco.AI.Deploy/tests/Umbraco.AI.Deploy.Tests.Unit/Umbraco.AI.Deploy.Tests.Unit.csproj" />
     <Project Path="Umbraco.AI.Prompt.Deploy/tests/Umbraco.AI.Prompt.Deploy.Tests.Unit/Umbraco.AI.Prompt.Deploy.Tests.Unit.csproj" />
   </Folder>
-  -->
   <Folder Name="/Providers/" />
   <Folder Name="/Providers/Alibaba/">
     <Project Path="Umbraco.AI.Alibaba/src/Umbraco.AI.Alibaba/Umbraco.AI.Alibaba.csproj" />

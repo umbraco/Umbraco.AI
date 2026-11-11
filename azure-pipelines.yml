@@ -75,24 +75,22 @@ parameters:
                 - name: Umbraco.AI.Agent
                   change_var: AgentChanged
                   has_npm: true
-                # Parked on the v19 line until Umbraco.Deploy ships v19 (docs/upgrades/v19.md, Blockers).
-                # Uncomment to re-add.
-                # - name: Umbraco.AI.Deploy
-                #   change_var: DeployChanged
-                #   has_npm: false
+                - name: Umbraco.AI.Deploy
+                  change_var: DeployChanged
+                  has_npm: false
           - level: 2
             products:
                 - name: Umbraco.AI.Agent.UI
                   change_var: AgentUiChanged
                   has_npm: true
-                # Parked on the v19 line until Umbraco.Deploy / Umbraco.Automate ship v19
+                - name: Umbraco.AI.Prompt.Deploy
+                  change_var: PromptDeployChanged
+                  has_npm: false
+                - name: Umbraco.AI.Agent.Deploy
+                  change_var: AgentDeployChanged
+                  has_npm: false
+                # Parked on the v19 line until Umbraco.Automate ships v19
                 # (docs/upgrades/v19.md, Blockers). Uncomment to re-add.
-                # - name: Umbraco.AI.Prompt.Deploy
-                #   change_var: PromptDeployChanged
-                #   has_npm: false
-                # - name: Umbraco.AI.Agent.Deploy
-                #   change_var: AgentDeployChanged
-                #   has_npm: false
                 # - name: Umbraco.AI.Automate
                 #   change_var: AutomateChanged
                 #   has_npm: false

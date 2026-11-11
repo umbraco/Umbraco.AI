@@ -34,7 +34,7 @@ Monorepo for Umbraco.AI and add-on packages. Each product has its own `.slnx`, `
 | Umbraco.AI.OpenRouter | `Umbraco.AI.OpenRouter/` | Provider |
 | Umbraco.AI.ZAI | `Umbraco.AI.ZAI/` | Provider |
 
-**Parked on the v19 line:** `Umbraco.AI.Deploy`, `Umbraco.AI.Prompt.Deploy`, `Umbraco.AI.Agent.Deploy` and `Umbraco.AI.Automate` stay in the tree but are not built or released until Umbraco.Deploy / Umbraco.Automate ship v19 packages. See `scripts/parked-products.txt` and `docs/upgrades/v19.md`.
+**Parked on the v19 line:** `Umbraco.AI.Automate` stays in the tree but is not built or released until Umbraco.Automate ships v19 packages. See `scripts/parked-products.txt` and `docs/upgrades/v19.md`.
 
 ### Dependency Tree
 

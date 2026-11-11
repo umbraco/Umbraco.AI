@@ -108,17 +108,17 @@ public class AIPromptScopeRule
 
 ## Target Framework
 
-- .NET 10.0 (`net10.0`)
+- .NET 11.0 (`net11.0`)
 - Uses Central Package Management (`Directory.Packages.props`)
 - Nullable reference types enabled
 
 ## Dependencies
 
-- Umbraco CMS 18.x
-- Umbraco.AI 18.x
-- Umbraco.AI.Prompt 18.x
-- Umbraco.AI.Deploy 18.x
-- Umbraco Deploy 18.x
+- Umbraco CMS 19.x
+- Umbraco.AI 19.x
+- Umbraco.AI.Prompt 19.x
+- Umbraco.AI.Deploy 19.x
+- Umbraco Deploy 19.x
 
 ## Testing Focus
 

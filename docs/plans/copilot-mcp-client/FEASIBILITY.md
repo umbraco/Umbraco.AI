@@ -1,406 +1,435 @@
 # Feasibility: Copilot as MCP client
 
-> **Status:** Feasibility study, 21-10-2026, checked against `v18/dev`. Source idea:
-> "Copilot as MCP client: external context for Umbraco.AI" (Claude Doc by Filip Bruun Bech-Larsen,
-> 20-10-2026). Not a design. Sections touching personal data are an AI-assisted draft, pending
-> legal/compliance review. **Updated 11-11-2026** with the connection and sign-in decisions (see
-> [Connections and sign-in](#connections-and-sign-in-decided-11-11-2026)).
+> **Status:** Feasibility study. First pass 21-10-2026, decisions and review added 11-11-2026,
+> checked against `v18/dev`. Source idea: "Copilot as MCP client: external context for
+> Umbraco.AI" (Claude Doc by Filip Bruun Bech-Larsen, 20-10-2026). Not a design. Sections
+> touching personal data are an AI-assisted draft, pending legal/compliance review. Dated
+> decisions and review findings: [DECISION-LOG.md](DECISION-LOG.md).
 
-## Verdict
+**Feasible, but bigger than it looks.** Copilot can call outside tools today, but the parts that
+make it safe and usable do not exist yet: a list of approved servers, our own sign-in flow, a
+tool source that works on every route, enforced read-only, and per-call audit.
 
-**Feasible, but bigger than it looks.** The tool pipeline can take an external function today, and
-Copilot Workspace already has the "attach to project, inherit in conversation" shape. What does
-not exist is: a runtime tool source, a server registry, per-user OAuth storage, and per-call audit.
-Those four are the real build.
+> [!IMPORTANT]
+> **6 questions need the team.**
+>
+> 1. Which two servers do we prove it with? We need ones that speak Streamable HTTP. Whether
+>    they allow automatic client registration decides if admins must paste a client ID.\
+>    _If not decided:_ phase 1 can't be scoped or tested against anything real.
+> 2. The server list lives in `Umbraco.AI.Agent` (so the sidebar, Workspace and Automate can all
+>    use it).\
+>    _If not:_ Copilot Workspace owns it, and Automate and the sidebar lose access.
+> 3. Approve adding `ModelContextProtocol` (latest stable 2.4.0). It raises the minimum
+>    `Microsoft.Extensions.AI.Abstractions` to 10.11.0 and other `Microsoft.Extensions.*`
+>    packages to 10.0.14 on both lines (we declare 10.7.0 and 10.0.9 today).\
+>    _If not:_ we write our own MCP client.
+> 4. Legal/DPA review of sending outside personal data (CRM records) to AI providers. Phase 1
+>    already does this through a shared account.\
+>    _If not done:_ phase 1 can't ship.
+> 5. In Workspace, outside text will sit next to Umbraco write tools (create/update content).
+>    Workspace does not block destructive backend tools today. Keep it that way, relying on
+>    approval prompts?\
+>    _If not:_ Workspace needs the same lock as the sidebar, or a narrower one.
+> 6. "A colleague continues a shared conversation, fetching as themselves": fork, multi-writer,
+>    or drop it? The 21-10 update says share-conversations will grow multi-writer, but it isn't
+>    decided.\
+>    _If not decided:_ the acting-user work (see Collaboration) has no target.
 
-**The collaboration half does not stack cleanly on share-conversations.** Share-conversations v1
-makes recipients strictly read-only. The idea's "a colleague continues a shared conversation and
-Copilot fetches as that colleague" needs multi-writer or fork, both explicit non-goals of that
-feature. What *does* stack: source labels, the share-time warning, and a per-server sharing policy.
+**Terms used here.** A _server_ is an MCP server an admin added to Umbraco. A _sign-in_ is a
+stored token for a server. "Connections" in the UI wording below means servers a user turned on.
+None of this is the existing Umbraco.AI **Connections** entity (provider API keys).
 
-## What exists vs. what must be built
+## How it works
 
-| Idea concept | Today | Gap | Size |
-|---|---|---|---|
-| MCP client | No `ModelContextProtocol` reference anywhere (Umbraco.AI or Automate) | Add `ModelContextProtocol` (2.3.0, net10, stable since 1.0.0 on 25-02-2026). New dependency, needs sign-off | S |
-| External tools in a run | `AIAgentFactory.CreateStandardAgentAsync` already accepts `additionalTools` (`AIAgentFactory.cs:71,82,210-217`), but only AG-UI frontend tools fill it | Runtime tool source that resolves attached servers, lists tools, filters by allowlist, wraps them | M |
-| Registry (admin-curated) | Tools are compile-time only (`AIToolCollectionBuilder`, `[AITool]`) | New entity + workspace editor + API + migrations (SQL Server + SQLite) | M |
-| Servers on an agent | Agents already pick tools via `AllowedToolIds` / `AllowedToolScopeIds`, with per-user-group overrides (`AIAgentUserGroupPermissions`) | Each server appears as a tool scope; add the "Let users add their own connections" switch. See [Which servers a run gets](#which-servers-a-run-gets-decided-11-11-2026) | S |
-| User-chosen connections per chat / project | `AIProject` / `AIConversation` carry `ContextIds` + `Resources`; conversation inherits project via `StreamConversationAGUIController.BuildRuntimeContextAsync` (`:300-354`) | Add server ids alongside, same inheritance pattern; a connections toggle in the chat and context panel. Sidebar keeps it per chat only | S–M |
-| Auto agent pick respects connections | Copilot auto pick is an `IAIAgentSelector` chain | New selector step that only picks agents allowing user connections when the user turned some on | S |
-| Shared connection (admin signs in once) | Connections encrypt `IsSensitive` fields (`AISensitiveFieldProtector`). Automate has per-connection OAuth via OpenIddict, but with hand-written handlers per service (e.g. Slack) | Generic OAuth through the MCP SDK: discovery, dynamic client registration, our own callback endpoint, token table, refresh. Moved into phase 1 (see below) | M |
-| Personal connection (per-user OAuth) | None in Umbraco.AI. CMS has no per-user secret store. Automate's OpenIddict OAuth (`IOAuthCredentialsService`) is per-connection, not per-user | Reuses the shared flow; adds the user column in use, a "connect" UI, "not connected" handling, cleanup on user delete. MCP SDK helps (`ClientOAuthOptions.TokenCache`, dynamic client registration), but its redirect delegate assumes an interactive client, so the callback must be our own endpoint | M (on top of shared) |
-| User group access per server | None | Admin picks which user groups may use each server; enforced in the runtime tool source and the "connect" endpoint | S |
-| Read-first, writes opt-in + confirm | HITL exists via `ApprovalRequiredAIFunction`, but auto-wrapping only applies to ids in `AIToolCollection` with `IsDestructive` (`AIAgentFactory.cs:161-204`) | Wrap MCP tools ourselves from registry flags. Do not trust the server's own `readOnlyHint` | S |
-| Audit per external call | No per-tool-call audit row. Tool calls only appear as text inside LLM-call snapshots (`AIChatMessageFormatter`) | `AIToolExecutedNotification` handler (has `RuntimeContext`, `CallId`, args, result, duration) writing structured rows with user, server, tool, conversation | M |
-| Source labels | Tool results persist as full M.E.AI messages in `ContentJson`; `FunctionResultContent.AdditionalProperties` survives the round trip (`ConversationChatHistoryProvider.cs:514-592`) | Stamp server, acting user, fetched-at on the result; render a chip in chat | S |
-| Deployable registry | `Umbraco.AI.Deploy` connectors exist for connections | New connector. Credentials must never travel in Deploy files; the current sensitive-settings handling needs fixing first (tracked internally) | M |
+### Servers and sign-in
 
-Rough total for the non-sharing scope: about the size of Copilot Workspace projects. Sizes are
-relative guesses, not estimates.
+- **One kind of server: remote MCP over Streamable HTTP.** No per-service code like Automate's
+  Slack handlers. MCP servers publish where to sign in, so one flow fits all. Local (stdio)
+  servers would mean launching processes on the web server, which can't work on Umbraco Cloud.
+- **OAuth is in phase 1.** Many hosted servers (HubSpot, Notion and others) only accept OAuth. A
+  static API key or bearer token stays as an option for servers that offer one.
+- **Two sign-in modes per server:**
+    - **Shared account** (phase 1). An admin signs in once. Every allowed editor sees whatever that
+      account can see. We should advise a dedicated service account, not a person's login.
+    - **Each user signs in** (phase 2). Each editor uses their own account and sees only what it
+      can see.
+- **The admin's server list is the only way in.** Each server has a name, URL, sign-in mode,
+  allowed tools (each flagged read or write) and allowed user groups. Editors can't add an
+  address of their own.
+- **User group access is checked on the server,** never just hidden in the UI. The tool source
+  leaves out servers the user's groups don't allow, and the Connect endpoint refuses them.
+
+### We run the sign-in ourselves
+
+The MCP library's own sign-in only finishes inside the request that started it: it keeps the
+secret parts in memory and swaps the login code for a token itself. On Umbraco Cloud the login
+can come back to a different server, or after a restart, and be lost. So we run the browser
+login ourselves and hand the tokens to the library.
+
+```mermaid
+sequenceDiagram
+    actor Admin
+    participant UI as Backoffice
+    participant API as Umbraco (any server)
+    participant DB as Database
+    participant Svc as Service login page
+    Admin->>UI: Click Connect
+    UI->>API: Start sign-in (signed-in backoffice call)
+    API->>API: Find the login page, register if needed
+    API->>DB: Save pending sign-in (state, user, server, secret, expiry)
+    API-->>UI: Login address
+    UI->>Svc: Open popup
+    Admin->>Svc: Sign in and approve
+    Svc->>API: Return with code + state (may hit another server)
+    API->>DB: Look up state, swap code for tokens, save encrypted
+    API-->>UI: Popup closes, server shows "Connected as …"
+```
+
+- **The return page is anonymous** (a browser redirect carries no backoffice login). It trusts
+  only what the pending row says. That row was created by a signed-in admin or editor, and it
+  ties the result to that user and server.
+- **The library then uses the tokens.** Our token store gives it the stored token plus the
+  registered client ID, so it never registers again. One MCP client per user per server, never
+  shared.
+- **One refresh at a time.** Many editors share one token across several web servers. If two
+  refresh at once, the service may cancel both and the server flips to "Needs reconnecting" for
+  everyone. Refresh runs under a database lock. Automate's refresh code has no lock, so copy its
+  shape, not that part. How the library's own refresh goes through the same lock is a design
+  question.
+- **Tokens are tied to the server's URL.** Each token row stores the URL and issuer. Editing the
+  URL marks the server "Needs reconnecting", so an old token is never sent to a new host.
+- **Secrets are never sent back to the browser.** Pasted client secrets and static tokens are
+  write-only from day one. Don't copy the Connections API, which returns decrypted values and
+  only hides them on screen.
+- **Worth copying from Automate** (`Umbraco.Automate.OpenIddict`): credentials in their own table
+  that the server points to by ID, and the cleanup job for sign-ins that were started but never
+  finished.
+
+### Personal sign-in (phase 2)
+
+- **Where editors connect.** Inline in chat when needed: Copilot leaves out that server's tools,
+  says "Connect HubSpot to use this", and shows a Connect button. A "My connections" panel in the
+  user profile is also possible (the CMS lets packages add a user profile app, as Theme and
+  History do). Design confirms whether the popup works from there.
+- **Admin oversight.** The admin sees who has connected and can disconnect anyone.
+- **Cleanup.** A user's tokens go when the user is deleted or disabled. All tokens for a server
+  go when the server is removed.
+- **Acting user.** Calls run as the person who sent the message, not the conversation owner. The
+  run only knows the owner today (`UserKey`).
+- **Background runs.** Automate and scheduled agents have no editor present, so they use shared
+  servers only.
+
+### Which servers a run gets
+
+Servers are not global. One CRM server can add 50+ tools, and each server is another way for
+outside text to steer the model. This follows what users know from Claude and ChatGPT: an admin
+turns a service on (optionally per group), each person connects their own account, and they pick
+connections per chat, while a purpose-built agent can be locked to a fixed set.
+
+```mermaid
+flowchart TD
+    A[Admin allows this tool on the server?] -->|yes| B[User's group allowed on the server?]
+    B -->|yes| C{How does the agent get it?}
+    C -->|In its fixed list| E
+    C -->|User turned it on| D[Agent allows user connections?]
+    D -->|yes| E[Personal mode: user signed in?]
+    E -->|yes, or shared mode| F[Write tool? Check write rules]
+    F -->|read, or write allowed| G[Tool runs]
+```
+
+**Agent settings** (on the agent's Tools tab):
+
+- **Always use these servers.** On for every chat with this agent. The agent's existing
+  per-group overrides apply ("Writers don't get HubSpot on this agent").
+- **Let users add their own connections.** Yes or no, **default No**, so a new agent never
+  quietly accepts outside data.
+
+**Example agents:**
+
+- **Campaign helper:** HubSpot and Analytics fixed, users can't add.
+- **General Copilot:** nothing fixed, users can add.
+- **Content publisher:** nothing fixed, users can't add. It edits content, so it stays sealed
+  off from outside text.
+
+**User choice** (phase 2): editors turn servers on per conversation, or per project in Workspace.
+Only servers their groups allow are offered. A project doesn't narrow the agent; it says "this
+project uses HubSpot" for that user's chats.
+
+**Auto agent pick.** Copilot often picks the agent itself, so a user could turn on HubSpot and
+get an agent that can't use it. Two fixes, together:
+
+- **Filter before picking.** When the user turned servers on, only agents that accept user
+  connections are candidates. This can't be a new step in the `IAIAgentSelector` chain: each
+  step returns one agent or nothing, and the candidate list is fixed before the chain runs. It
+  needs a change to candidate selection, a field for the user's servers on the selection request,
+  and Workspace loading those servers before it picks.
+- **Never ignore a server silently.** If the chosen agent can't use one, the chat says so
+  ("HubSpot isn't available to the Content publisher agent").
+
+The fixed list has the same gap (the picker may never choose the Campaign helper), but that is
+how auto pick already treats every agent setting.
+
+### Where each part works
+
+|                       | Sidebar      | Workspace                    | Automate |
+| --------------------- | ------------ | ---------------------------- | -------- |
+| Fixed servers         | Yes          | Yes                          | Yes      |
+| User-added            | Per chat     | Per chat or project          | No       |
+| Shared sign-in        | Yes          | Yes                          | Yes      |
+| Personal sign-in      | Yes          | Yes                          | No       |
+| Read tools            | Yes          | Yes                          | Yes      |
+| Write tools (phase 2) | **No**       | Personal only, with approval | No       |
+| Source labels         | Live in chat | Live and saved               | Run log  |
+
+Automate has only shared servers, and writes need personal sign-in, so Automate gets no MCP
+writes.
+
+### Write tools (phase 2)
+
+- **Only tools the admin flagged as writes count as writes,** never the server's own
+  `readOnlyHint`. Tools not yet flagged are treated as writes and blocked. This flag ships in
+  phase 1, so phase 1's read-only promise is enforced, not just trusted.
+- **No writes with a shared account.** Every change would show in the outside system as the admin
+  who signed in. Writes need personal sign-in.
+- **Blocked in the sidebar (contextual Copilot).** The sidebar can edit the item on screen through
+  its on-screen tools, but every destructive backend tool is dropped, because those can change any
+  item by ID (`AIAgentFactory.cs:171-205`). MCP tools always run on the backend and always act
+  outside the page, so writes are dropped there too. We can't check that an outside record
+  belongs to the open page; only the model claims it does, and fetched text can steer that claim.
+  Asking for an outside change in the sidebar gets a clear "not from here", pointing to Workspace.
+  `ContextualEditingGuidanceContributor` needs a line about outside systems.
+- **Rejected for now:** a per-server "allow writes in the sidebar, always with approval". Revisit
+  if users ask to edit outside records from the page.
+- **Only read tools are retried.** A timed-out write may still have gone through; retrying could
+  create a duplicate record or send an email twice.
+
+### Audit and personal data
+
+- **The audit log keeps call details, not the returned data.** Who, which server, which tool,
+  when, how long, success or failure. MCP results are left out of the stored AI request
+  snapshots, which every AI section user can read and which are kept 14 days by default.
+- **The audit row is written when a call starts,** then completed. If a turn is cancelled
+  mid-call, the outside system may have changed, and there is still a record.
+- **Stored tokens and fetched results are personal data** under GDPR. Needs legal review (question
+  4 above).
+
+## What must be built
+
+Sizes are relative guesses, not estimates. Phase 1 alone is roughly the size of Copilot Workspace
+projects; the whole non-sharing scope is about twice that.
+
+**MCP library** · S
+
+- Today: no `ModelContextProtocol` reference in Umbraco.AI or Automate.
+- Build: add it, after sign-off (question 3).
+
+**Server list** · M
+
+- Today: tools are compile-time only (`AIToolCollectionBuilder`, `[AITool]`).
+- Build: new entity, workspace editor, Management API, migrations (SQL Server + SQLite), per-tool
+  read/write flags, user group access.
+
+**Sign-in** · M (shared), M more for personal
+
+- Today: Connections encrypt sensitive fields at rest (`AISensitiveFieldProtector`). Automate has
+  per-connection OAuth via OpenIddict, with code per service. CMS has no per-user secret store.
+- Build: our own login flow (above), pending sign-in table, token table with a user column
+  (empty for shared), refresh under a lock, token store for the library. Personal adds the
+  Connect UI, "not connected" handling and cleanup.
+
+**Tool source on every route** · M
+
+- Today: `AIAgentFactory` accepts `additionalTools`, but only AG-UI frontend tools fill it.
+  Inline, programmatic and Automate runs pass nothing, so they would get no MCP tools. Approval
+  wrapping, the approval policy and "one tool call at a time when approval is needed"
+  (`AllowMultipleToolCalls`) only apply to registered tools (`AIAgentFactory.cs:161-244`).
+- Build: resolve servers inside the factory for every route. Apply the run's approval policy,
+  the sidebar lock and the one-at-a-time rule to MCP tools ourselves.
+
+**Servers on an agent** · M
+
+- Today: agents pick tools by tool ID and tool scope, with per-group overrides. Tool scopes are a
+  fixed list built at startup in Umbraco.AI Core.
+- Build: a server picker in the Agent package, with server IDs resolved there (as frontend tools
+  already are), plus the "Let users add" switch. Making servers real tool scopes would need a
+  Core change and a raised Core minimum, so avoid it.
+
+**User-added servers per chat or project** · S–M
+
+- Today: projects and conversations carry `ContextIds` and `Resources`; conversations inherit
+  from their project (`StreamConversationAGUIController.BuildRuntimeContextAsync`).
+- Build: server IDs alongside, same inheritance, and a toggle in the chat and context panel.
+
+**Auto pick respects servers** · M
+
+- Build: candidate filtering and request field as described above.
+
+**Per-call audit** · M
+
+- Today: tool calls only appear as text inside AI request snapshots (`AIChatMessageFormatter`).
+- Build: rows written from `AIToolExecuting` and completed from `AIToolExecuted`, holding call
+  details only. Keep MCP results out of the snapshots.
+
+**Source labels** · M
+
+- Today: tool result extras (`AdditionalProperties`) survive in Workspace's saved history, but
+  the live chat stream sends only the result content, and the library creates the result object
+  itself, so a tool can't add a label to it.
+- Build: stamp labels where results are streamed and saved, and add a field to the chat stream
+  so labels show live in the sidebar and Workspace.
+
+**Deploy** · M
+
+- Today: `Umbraco.AI.Deploy` handles connections; `Umbraco.AI.Agent.Deploy` copies agents.
+- Build: agents refer to servers by alias, and Agent Deploy flags servers missing on the target
+  (needed from phase 1, since agents deploy and servers don't). A server connector comes later.
+  Credentials never travel in Deploy files, and each environment signs in on its own.
 
 ## What M.E.AI and MAF give us
 
-We are on `Microsoft.Extensions.AI` 10.7 and `Microsoft.Agents.AI` (MAF) 1.18. Neither has its own
-MCP *client*. Both offer the same two routes:
+We are on `Microsoft.Extensions.AI` 10.7 and `Microsoft.Agents.AI` (MAF) 1.18. Neither has its
+own MCP client. Two routes exist:
 
-| Route | How | Who calls the MCP server | Fit |
-|---|---|---|---|
-| **Client-side tools** | Official MCP C# SDK: `McpClient.CreateAsync(new HttpClientTransport(...))`, `ListToolsAsync()`. Each `McpClientTool` *is* an M.E.AI `AIFunction`, so it drops into `ChatOptions.Tools` or a MAF agent's tool list unchanged | Our server | **Recommended.** Works with every provider. Runs through our function invoker, so `AIToolExecuting`/`Executed` notifications, `ApprovalRequiredAIFunction`, audit and provenance all apply. Per-user tokens never leave our server |
-| **Provider-hosted** | M.E.AI `HostedMcpServerTool` (`ServerAddress`, `AllowedTools`, `ApprovalMode`, `Headers`); `AsOpenAIResponseTool()` maps it for OpenAI Responses; MAF also exposes Foundry's `MCPToolDefinition` | The AI provider | **Not for v1.** Only some providers support it. The provider calls the CRM with our token, so the token and the fetched data go to the provider directly. Private/intranet servers are unreachable. Calls bypass our invoker, so audit, approval and provenance need separate handling. Matches the reasons in the existing "defer provider-hosted tools" decision |
+- **Our server calls the MCP server (recommended).** The MCP C# SDK's `McpClientTool` is an
+  M.E.AI `AIFunction`, so it drops into a tool list unchanged. It works with every AI provider,
+  runs through our function invoker (so notifications, approval and audit apply), and tokens
+  never leave our server.
+- **The AI provider calls the MCP server (not for v1).** M.E.AI's `HostedMcpServerTool`. Only
+  some providers support it, the provider gets our token and the data, private servers are
+  unreachable, and calls bypass our invoker. Matches the existing "defer provider-hosted tools"
+  decision.
 
-What the libraries do **not** give us, so we still build it: the server registry, per-user token
-storage (the SDK only offers an `ITokenCache` hook), the OAuth callback endpoint, tool allowlists
-enforced on our side, and provenance labels. MAF adds nothing MCP-specific on .NET beyond what the
-SDK and M.E.AI already provide. Its docs say to review and log all data shared with third-party MCP
-servers, which matches the audit requirement.
-
-Not checked yet: whether the Anthropic and Google M.E.AI adapters map `HostedMcpServerTool`. It
-only matters if we ever take the hosted route.
-
-## Connections and sign-in (decided 11-11-2026)
-
-**One connection type.** Every server is a remote MCP server over Streamable HTTP. There are no
-per-service connection types like Automate's (Slack and so on), because MCP standardises sign-in:
-the server publishes where to log in, and the client can often register itself.
-
-**OAuth is phase 1.** Many hosted MCP servers (HubSpot, Notion and others) only accept OAuth, with
-no API key option. A static API key or bearer token stays as an option for servers that offer one.
-
-**Use the MCP SDK's OAuth, not Automate's OpenIddict package.** The SDK already handles server
-discovery and dynamic client registration; OpenIddict would need custom code per service. Patterns
-worth copying from Automate (`Umbraco.Automate.OpenIddict`): the callback controller, credentials
-in their own store that the connection points to by id, refresh on use, and the cleanup job for
-sign-ins that were started but never finished.
-
-### Two sign-in modes per server
-
-| | Shared account | Each user signs in |
-|---|---|---|
-| Who signs in | An admin, once, from the server's editor | Each editor, with their own account |
-| Whose data Copilot sees | Whatever the admin's account can see, for every allowed editor | Only what that editor's own account can see |
-| Token stored against | The server | The user + the server |
-| Phase | 1 | 2 |
-
-### The admin (registry)
-
-- A new "MCP Servers" list in the AI section, next to Connections. Each server has a name, URL,
-  sign-in mode, allowed tools and allowed user groups.
-- "Connect" opens the service's own login page in a popup. Our callback page receives the result.
-  The server then shows who it is connected as, with "Disconnect" and "Reconnect".
-- Where a service does not allow dynamic client registration, the admin pastes a client ID and
-  secret on the server's settings.
-- If a refresh fails, the server shows "Needs reconnecting", and Copilot tells the editor that the
-  source is unavailable.
-
-### User group access
-
-- The admin picks which user groups may use each server. Applies to both sign-in modes.
-- In shared mode this is the main guard, since every allowed editor sees what the admin's account
-  can see.
-- In personal mode it controls who sees a "Connect" button at all.
-- Enforced server-side: the runtime tool source leaves out servers the acting user's groups do not
-  allow, and the connect endpoint refuses them. Never only hidden in the UI.
-
-### Per-user tokens (phase 2)
-
-- **Admin allowlist is the only way in.** Editors can only connect to servers the admin has added
-  and set to "Each user signs in". They cannot enter a server address of their own. The admin still
-  decides which tools are allowed; the editor's account only limits what data comes back.
-- **Where editors connect.** Inline in chat when needed: Copilot leaves out that server's tools,
-  says "Connect HubSpot to use this", and shows a "Connect" button. A "My connections" panel in the
-  user profile is also possible, since the CMS lets packages add a user profile app
-  (`umbUserProfileApp`, as Theme and History do). To confirm in design whether the popup sign-in
-  flow works well from there.
-- **Admin oversight.** The admin can see who has connected to a server and disconnect any user.
-- **Storage.** One MCP client per user per server, never shared. Tokens refresh on use. Our own
-  `ITokenCache` reads and writes the token table for the current user.
-- **Cleanup.** A user's tokens go when the user is deleted or disabled. All tokens for a server go
-  when the server is removed.
-- **Acting user.** Calls run as the person who sent the message, not the conversation owner. Today
-  the run only knows the owner (`UserKey`), so this needs adding.
-- **Background runs.** Automate and scheduled agents have no editor present, so they can only use
-  shared servers.
-- **Personal data.** Stored tokens and fetched results are personal data under GDPR. Needs legal
-  review before release.
-
-### Build phase 1 so phase 2 is an add-on
-
-Per-user can be added later without moving data, if phase 1 already has:
-
-- A sign-in mode setting on each server, with only "Shared account" offered at first.
-- Tokens in their own table with a user column (empty for shared), not inside the server's
-  settings.
-- A token lookup that is told who is asking, even though phase 1 ignores it.
-- User group access on each server.
-
-Skip these and phase 2 means a data migration and reworking the token code.
-
-## Which servers a run gets (decided 11-11-2026)
-
-Servers are **not global**. One CRM server can add 50+ tools, and every server is another way for
-outside text to steer the model, so each one is opt-in. This replaces the source idea's "attach a
-server to a project" as the main mechanism.
-
-**What users expect.** Claude and ChatGPT both work the same way: an admin turns a service on (and
-on their enterprise plans can limit it by role or group), each person connects their own account,
-and they choose which connections to use in a chat. A purpose-built agent can be locked to a fixed
-set (ChatGPT's agent builder picks which app actions the agent may use). Users will expect Copilot
-to behave the same, so the model below follows that pattern.
-
-### Three layers
-
-1. **Server (admin).** Allowed tools and allowed user groups. This is the ceiling; nothing below
-   can add tools or groups the server does not allow.
-2. **Agent (admin).** Two settings, on the agent's Tools tab:
-   - **Always use these servers.** Each server shows as a tool scope next to the agent's other tool
-     groups. These are always on for the agent; the user does nothing. In shared mode they just
-     work; in personal mode the user gets a "Connect" prompt the first time. The agent's existing
-     per-user-group overrides apply (e.g. "Writers don't get HubSpot on this agent").
-   - **Let users add their own connections.** Yes/no. Yes: the agent also uses the servers the user
-     turned on for that chat or project. No: only the fixed list, whatever the user has connected.
-     Default: **No**, so a new agent never quietly accepts outside data (decided 11-11-2026).
-3. **User (editor).** Connects their own accounts (personal mode) and turns connections on per
-   conversation, or per project in Workspace. Only servers their user groups allow are offered. A
-   project does not narrow the agent; it says "this project uses HubSpot" for that user's chats.
-
-| Always use | Let users add | What the agent gets |
-|---|---|---|
-| None | No | No outside servers (today's behaviour) |
-| HubSpot | No | Only HubSpot, always |
-| None | Yes | Only what the user turns on |
-| HubSpot | Yes | HubSpot, plus whatever the user turns on |
-
-Example agents: a **Campaign helper** with HubSpot and Analytics fixed, users can't add; a
-**General Copilot** with nothing fixed, users can add; a **Content publisher** with nothing fixed,
-users can't add, because it edits content and should stay sealed off from outside text.
-
-A tool runs only when every layer agrees: the server allows the tool, the user's group is allowed
-on the server, the agent allows it (fixed, or user-added with the switch on), and in personal mode
-the user has connected.
-
-### Auto agent pick
-
-Copilot often picks the agent automatically, so a user could turn on HubSpot and get an agent with
-"Let users add" off. Two fixes, together:
-
-1. **The picker respects the user's connections.** A new step in the `IAIAgentSelector` chain: if
-   the user turned on connections in this chat, only pick from agents that allow user connections.
-2. **Never ignore a connection silently.** If the chosen agent cannot use a connection, say so in
-   the chat ("HubSpot isn't available to the Content publisher agent"). This covers a hand-picked
-   agent, or no allowed agent fitting the request.
-
-Optional: once the agent is known, grey out connections it cannot use, with a short reason. With
-auto pick that only happens after the message is sent, so fix 2 is still needed.
-
-The fixed list has the same gap (the picker may never choose the Campaign helper), but that is how
-auto pick already works for every agent setting today.
-
-### Sidebar, Workspace and Automate
-
-| | Sidebar | Workspace | Automate |
-|---|---|---|---|
-| Fixed servers on the agent | Yes | Yes | Yes |
-| User-added connections | Per chat | Per conversation or project | No, no user present |
-| Shared account | Yes | Yes | Yes |
-| Each user signs in | Yes, inline "Connect" in chat | Yes, inline "Connect" in chat | No |
-| Source labels on results | Yes, gone when the sidebar closes | Yes, saved with the conversation | In the run log |
-| MCP read tools | Yes | Yes | Yes |
-| MCP write tools (phase 2) | **No, always blocked** | Yes, with approval | Per the action's tool permissions |
-
-### MCP writes are blocked in contextual Copilot (decided 11-11-2026)
-
-Contextual Copilot (the sidebar, `CopilotAgentSurface`) declares
-`RestrictsDestructiveBackendTools`. It can still edit the item on screen through its
-context-bound frontend tools, but every destructive *backend* tool is dropped, because a backend
-tool can change any item by id and so reach outside what the user has open
-(`AIAgentFactory.cs:171-205`). MCP tools always run on the backend and always act outside the
-page, so the same rule applies to them.
-
-- **Rule.** Every MCP tool the admin has flagged as a write is dropped in contextual Copilot,
-  whatever the agent or the user allows. MCP read tools are unaffected.
-- **Why not "writes related to this page".** We cannot check that an external record belongs to the
-  open page; only the model claims it does, and fetched text (e.g. a CRM note) can steer that
-  claim. The sidebar is also where outside text sits closest to the open item.
-- **What the user sees.** Asking to change an external system from the sidebar gets a clear
-  answer that it can't do that from here, with a pointer to Copilot Workspace, where writes are
-  allowed with approval. `ContextualEditingGuidanceContributor` already explains the Umbraco
-  limit; it needs a line covering external systems.
-- **Build note: the existing lock does not cover MCP tools.** It filters only tools registered in
-  `AIToolCollection`. MCP tools arrive through `additionalTools`, so the MCP tool source must apply
-  the surface's lock itself. Which MCP tools count as writes comes from the admin's flags in the
-  registry, never from the server's own `readOnlyHint`.
-- **Rejected for now: a per-server opt-in** ("Allow write tools in contextual Copilot", always with
-  approval). Revisit only if users ask to edit external records from the page.
+MAF adds nothing MCP-specific on .NET. Its docs say to review and log all data shared with
+third-party MCP servers, which matches the audit plan.
 
 ## Collaboration and share-conversations
 
-Share-conversations (`v18/feature/share-conversations`, SC-01 to SC-16 built, SC-17 to SC-19 open,
-not merged) gives a read-only view to named recipients, Snapshot or Live. Mapped against the idea:
+Share-conversations (`v18/feature/share-conversations`, not merged) gives named people a
+read-only view. Build MCP phases 1 and 2 without waiting for it.
 
-| Idea behaviour | Fits share-conversations v1? |
-|---|---|
-| History shared in full | Yes. Same "show as-is, warn at share time" decision as attachments |
-| Warning at share time listing systems + who fetched | Partly. Today the banner is a boolean (`hasAttachments`) with fixed copy. Needs a provenance field derived from message `AdditionalProperties` and new copy |
-| Per-server policy, "not shareable" blocks sharing | New. A server-side check in the share create endpoint, plus a disabled state in the picker |
-| Source labels | Independent of sharing; useful for the owner too |
-| Colleague continues the conversation, fetching as themselves | **No.** Recipients cannot send. Needs multi-writer or fork first |
-| "No borrowed access" | Trivially true in v1, because nobody but the owner can trigger a fetch |
-
-So: build MCP phases 1–2 without waiting. **Update 21-10-2026:** the plan is to extend
-share-conversations to collaborative (multi-writer) conversations; how is out of scope here. For
-MCP that means access is per message: calls run as the sender, never through another
-participant's token, and the run needs an acting user per message (today only the conversation's
-`UserKey`). Detail lives in the design doc "Copilot MCP client in Umbraco.AI".
+- **History shared in full:** fits. Same "show as-is, warn when sharing" rule as attachments.
+- **Share warning listing outside systems and who fetched:** partly. Today's banner is a yes/no
+  flag (`hasAttachments`). Needs a field built from source labels, and new wording.
+- **Per-server "not shareable" policy:** new. A check in the share endpoint plus a disabled state
+  in the picker.
+- **A colleague continues the chat, fetching as themselves:** doesn't fit. Recipients can't send
+  (question 6).
+- **Whose access is used:** with a shared account, everyone who chats fetches through the admin's
+  account; that is the point of shared mode. With personal sign-in, calls must run as the sender,
+  never through another participant's token, so a multi-writer conversation needs an acting user
+  per message. Detail lives in the design doc "Copilot MCP client in Umbraco.AI".
 
 ## Risks
 
-- **Prompt injection through fetched data.** External text lands in the model context next to
-  Umbraco write tools (create/update content). A CRM note can tell the model to publish or delete.
-  Existing HITL on destructive Umbraco tools is the main guard; the Workspace surface does not set
-  `RestrictsDestructiveBackendTools` today. Needs a deliberate decision. (Contextual Copilot does
-  set it, and MCP writes are blocked there; see above.)
-- **Tool poisoning.** Tool names and descriptions come from the server and go straight to the
-  model. The registry should pin an allowlist by tool name and show the description the admin
-  approved, and flag when the server's list changes.
-- **Personal data to the AI provider.** "Aggregates over individuals" is only as strong as the
-  external server's tools. We can restrict *which* tools, not *what* they return. Redaction
-  patterns in audit logs do not stop data reaching the provider. Needs a legal/DPA review before
-  any wording promises this.
-- **Hosting.** Remote HTTP (Streamable HTTP) only. Stdio servers mean launching processes (often
-  Node) on the web server, which will not work on Umbraco Cloud. Recommend HTTP-only for v1.
-- **Load balancing.** Per-user tokens and MCP sessions must be shared across servers (database,
-  not memory). OAuth callback must work behind the Cloud front door.
-- **Tool overload.** One CRM server can expose 50+ tools. The per-server allowlist matters more
-  than which chats turn a server on.
-- **Sidebar Copilot.** The idea is framed around Workspace (persisted conversations). Resolved by
-  making the agent the main gate: fixed servers work in the sidebar unchanged; user-added
-  connections there last only for that chat.
-- **Both lines.** Ships on v17 and v18. The SDK targets net10, so no blocker, but it doubles the
-  migration and backport work.
-
-## Not yet considered (added 11-11-2026)
-
-Gaps found after the first pass. **Must-fix for phase 1** items are marked; the rest need a
-decision before or during design.
-
 ### Security
 
-- **Requests to internal addresses (SSRF). Must-fix for phase 1.** The admin enters a URL and our
-  server calls it, and OAuth discovery follows URLs the server publishes. Block private, loopback
-  and link-local addresses (including cloud metadata endpoints), re-checked after DNS resolution
-  and on redirects. Matters most on Umbraco Cloud.
-- **Sampling (server asks our model to generate). Must-fix for phase 1.** MCP lets a server request
-  completions from the client's model. That spends our tokens and is another injection path. Do
-  not advertise the capability.
-- **Elicitation (server asks the user a question mid-chat).** Either render it safely as a chat
-  card or do not advertise it in v1. Proposed: off in v1.
-- **Emergency off switch.** A per-server "disable now" that applies immediately, including to
-  conversations already in progress.
-- **Guardrails on tool results.** Decide whether existing guardrails also check text returned by
-  external servers, not just user input and model output.
+- **Outside text steering the model (prompt injection).** A CRM note can tell the model to
+  publish or delete Umbraco content. The sidebar lock and approval prompts are the guards
+  (question 5 covers Workspace).
+- **Data leaking out through read tools.** Read tools that take free text or a URL (search,
+  lookup, fetch) can carry data out. Injected text can make the model put unpublished content, or
+  another server's results, into a query sent to a server, and no approval fires. With several
+  servers in one run, data can flow between them. Admins see a warning on read tools that take
+  free text or URLs; design decides whether to warn when servers are combined.
+- **Requests to internal addresses. Must-fix for phase 1.** The admin enters a URL and our server
+  calls it, and discovery follows addresses the server publishes. Block private, loopback and
+  link-local addresses (including cloud metadata), checked again after DNS lookup and on
+  redirects.
+- **Servers asking our model to write text ("sampling"). Must-fix for phase 1.** Spends our tokens
+  and is another injection path. Don't offer it.
+- **Servers asking the user questions mid-chat ("elicitation").** Proposed: off in v1.
+- **Fake or changed tool descriptions.** Names and descriptions go straight to the model. Pin the
+  allowlist by tool name, show the description the admin approved, and flag when the server's
+  list changes.
+- **Emergency off switch.** A per-server "disable now" that applies at once, including to chats in
+  progress.
+- **Guardrails on tool results.** Decide whether existing guardrails also check text that comes
+  back from servers.
+- **Personal data to the AI provider.** We can limit which tools run, not what they return. Needs
+  the legal review in question 4.
 
 ### Things that will break with real servers
 
-- **Tool schemas providers reject. Must-fix for phase 1.** MCP tool input schemas are free-form
-  JSON Schema. OpenAI strict mode already rejected schemas like these (#249), and the Anthropic
-  adapter drops `AdditionalProperties`. Normalise or simplify schemas before they reach the
-  provider, and test against each provider we support.
-- **Tool name clashes.** Two servers can both expose `search`. Prefix tool names with the server
-  alias, and stay within provider name limits (OpenAI: 64 characters, restricted characters).
-- **Huge results.** One CRM call can return thousands of rows. Cap result size before it reaches
-  the model (separate from the audit log limits), and tell the model when a result was cut.
-- **Slow or unavailable servers.** Timeouts, limited retries, and a clear "source unavailable"
-  result instead of failing the whole turn.
-- **Non-text results.** Tools can return images, audio and resource links, not just text. Decide
-  what the chat shows and what is passed to the model.
+- **Tool formats providers reject. Must-fix for phase 1.** MCP tool input schemas are free-form.
+  OpenAI's strict mode already rejected schemas like these (#249), and the Anthropic adapter
+  drops `AdditionalProperties`. Simplify schemas before they reach the provider, and test each
+  provider.
+- **Name clashes.** Two servers can both have `search`. Prefix names with the server alias, within
+  provider limits (OpenAI: 64 characters).
+- **Huge results.** Cap result size before it reaches the model, and tell the model when a result
+  was cut.
+- **Slow or down servers.** Timeouts, retries for read tools only, and a clear "source
+  unavailable" instead of failing the whole turn.
+- **Non-text results.** Tools can return images, audio and links. Decide what the chat shows and
+  what goes to the model.
 
 ### Cost and speed
 
-- **Tool lists cost tokens.** Every allowed tool's name, description and schema is sent with every
-  request. 50 tools can add thousands of input tokens per message. Another reason the allowlist
-  matters.
-- **Prompt caching.** User-toggled connections change the tool list between chats, which breaks
-  provider prompt caching. Keep the tool order stable and fixed servers first, so at least the
-  agent's own part stays cacheable.
-- **Rate limits.** External APIs limit calls per account. With a shared account, all editors
-  together can hit that limit. Surface rate-limit errors clearly; consider per-server throttling.
+- **Tool lists cost tokens.** Every allowed tool's description goes with every message. 50 tools
+  can add thousands of tokens.
+- **Prompt caching.** User-added servers change the tool list between chats, which stops the
+  provider reusing cached input. Keep tool order stable, fixed servers first.
+- **Rate limits.** With a shared account, all editors together share the outside system's limit.
+  Show rate-limit errors clearly; consider throttling per server.
 
-### Environments and Cloud
+### Running it
 
-- **Each environment signs in separately.** Dev, staging and live have different hostnames, so
-  each needs its own OAuth sign-in and its own redirect URI registered with the service. Tokens
-  never move between environments (also covered by the Deploy rule).
-- **Client registration per environment.** Where a service needs a pasted client ID and secret,
-  the admin may need one per environment. The Deploy connector must not carry them.
+- **Each environment signs in separately.** Dev, staging and live have different addresses, so
+  each needs its own sign-in and its own return address registered with the service. Where a
+  service needs a pasted client ID and secret, that may be one per environment too.
+- **Both lines.** Ships on v17 and v18: double the migrations (with matching IDs) and backports.
+- **Agent tests.** Tests calling live servers give different results each run. Decide whether to
+  mock, skip, or run live with a warning.
+- **Old conversations.** Reopening a Workspace chat after a server was removed or renamed must
+  still show its past results and labels.
+- **Approval cards.** Must show any tool's arguments readably, since every MCP tool differs.
+- **Usage dashboard.** Decide whether MCP calls appear there, not only in the audit.
 
-### Product gaps
+## Phasing
 
-- **Agent tests.** Tests that call live external servers give different results each run. Decide
-  whether tests mock MCP tools, skip them, or run them live with a warning.
-- **Old conversations.** Reopening a Workspace conversation after a server was removed or renamed
-  must still show its past tool results and source labels.
-- **Approval cards.** Write approvals must show any tool's arguments readably, since every MCP
-  tool has a different shape.
-- **Usage tracking.** Decide whether MCP calls (count, duration, failures) appear on the AI usage
-  dashboard, not only in the per-call audit.
-
-## Recommended phasing
-
-1. **Shared-account, read-only.** Registry (HTTP servers, tool allowlist, user group access,
-   sign-in mode), shared OAuth through the MCP SDK (plus static key/token where offered), token
-   table and callback endpoint, "Always use these servers" on agents, runtime tool source, source
-   labels, per-call audit. Proves the value with one CRM and one analytics server.
-2. **Write tools + personal OAuth.** Opt-in write tools with per-action approval; "Each user signs
-   in" mode, connect flow (inline in chat, plus user profile if it works), "not connected"
-   handling, acting user per message, token cleanup on user delete. User-added connections per
-   chat/project, the "Let users add their own connections" agent switch, the picker step, and the
-   "not available to this agent" note. (User choice mostly matters once people have their own
-   accounts, so phase 1 stays agent-only.) MCP writes blocked in contextual Copilot, with the
-   hand-off message to Workspace.
-3. **Sharing integration** (after share-conversations merges). Provenance-aware share warning,
+1. **Shared account, read-only.**
+    - Server list with per-tool read/write flags (unflagged = blocked), allowed tools and user
+      groups.
+    - Our own sign-in flow, token table with a user column, refresh under a lock, tokens tied to
+      the server URL, write-only secrets. Static key/token where offered.
+    - "Always use these servers" on agents, and the tool source on every route.
+    - Source labels (live), per-call audit with call details only.
+    - Agent Deploy flags missing servers.
+    - Must-fix: block internal addresses, don't offer sampling, simplify tool schemas.
+    - Proves the value with one CRM and one analytics server.
+2. **Personal sign-in, user choice and writes.**
+    - "Each user signs in", Connect in chat (plus profile if it works), "not connected" handling,
+      acting user per message, token cleanup.
+    - User-added servers per chat or project, the "Let users add" switch (default No), candidate
+      filtering, the "not available to this agent" note.
+    - Write tools for personal sign-in only, with approval; blocked in the sidebar with a pointer to
+      Workspace.
+3. **Sharing** (after share-conversations merges). Share warning built from source labels,
    per-server sharing policy.
-4. **Deploy** for the registry, once the credential-handling fix lands. Can move earlier if
-   credentials stay out of Deploy files from day one.
-
-## Open questions for the team
-
-- [ ] Which two servers do we prove it with? Do they offer Streamable HTTP? Do they allow dynamic
-      client registration, or will the admin need to paste a client ID and secret?
-- [ ] Does the popup sign-in flow work from a user profile app, or is inline chat the only place
-      editors can connect?
-- [x] One connection type or several? One: remote MCP over HTTP (11-11-2026).
-- [x] OAuth in phase 1? Yes, shared account; per-user in phase 2 (11-11-2026).
-- [x] MCP SDK OAuth or Automate's OpenIddict? MCP SDK (11-11-2026).
-- [x] Global servers, per agent, or per project? Per agent, plus user-added connections where the
-      agent allows it (11-11-2026).
-- [x] Should "Let users add their own connections" default to No on a new agent? Yes (11-11-2026).
-- [x] MCP writes in contextual Copilot? Blocked, with a hand-off to Workspace (11-11-2026).
-- [ ] Does the registry live in `Umbraco.AI.Agent` (so Automate agents can use it too) or in
-      Copilot Workspace? With the agent as the main gate, `Umbraco.AI.Agent` is the natural home.
-- [ ] Should "continue a shared conversation" become a fork feature, a multi-writer feature, or be
-      dropped from this idea?
-- [ ] Approve adding `ModelContextProtocol` as a dependency?
-- [ ] Legal/DPA review of sending external personal data to AI providers.
+4. **Server Deploy**, once the credential-handling fix lands. Credentials stay out of Deploy files.
 
 ## Sources
 
-- [ModelContextProtocol on NuGet](https://www.nuget.org/packages/ModelContextProtocol) (version history, net10 deps)
+- [ModelContextProtocol on NuGet](https://www.nuget.org/packages/ModelContextProtocol) (versions,
+  dependency floors)
 - [MCP C# SDK transports](https://csharp.sdk.modelcontextprotocol.io/v1/concepts/transports/transports.html)
-- [ClientOAuthOptions API](https://csharp.sdk.modelcontextprotocol.io/v1/api/ModelContextProtocol.Authentication.ClientOAuthOptions.html)
+- [ClientOAuthOptions API](https://csharp.sdk.modelcontextprotocol.io/v1/api/ModelContextProtocol.Authentication.ClientOAuthOptions.html),
+  [TokenContainer API](https://csharp.sdk.modelcontextprotocol.io/v1/api/ModelContextProtocol.Authentication.TokenContainer.html);
+  SDK source `src/ModelContextProtocol.Core/Authentication/ClientOAuthProvider.cs` (v2.4.0)
+- [MCP authorization spec (2025-11-25)](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization)
 - [HostedMcpServerTool API (M.E.AI)](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.ai.hostedmcpservertool)
-- [MAF: Using MCP tools](https://learn.microsoft.com/en-us/agent-framework/agents/tools/local-mcp-tools)
-- [MAF: Hosted MCP tools](https://learn.microsoft.com/en-us/agent-framework/agents/tools/hosted-mcp-tools)
-- Earlier repo thinking: `docs/ideas/mcp-server-integration.md`, `.claude/memory/provider-hosted-tools-deferred.md`
-  (revisit trigger 2 now fires)
-- Share-conversations plan: `docs/plans/share-conversations/`
-- Automate OAuth: `Umbraco.Automate.OpenIddict` (`IOAuthCredentialsService`, `OAuthCallbackController`,
-  `OAuthCredentialsCleanupJob`) in the Umbraco.Automate repo
-- Claude connectors (owner enables, members connect):
+- [MAF: Using MCP tools](https://learn.microsoft.com/en-us/agent-framework/agents/tools/local-mcp-tools),
+  [MAF: Hosted MCP tools](https://learn.microsoft.com/en-us/agent-framework/agents/tools/hosted-mcp-tools)
+- Claude connectors:
   [Microsoft 365 connector](https://support.claude.com/en/articles/12542951-enabling-and-using-the-microsoft-365-connector),
   [Setting up integrations](https://support.claude.com/en/articles/10168395-setting-up-claude-integrations)
-- ChatGPT apps (admin enables, role-based access):
+- ChatGPT apps:
   [Admin controls for apps](https://help.openai.com/en/articles/11509118-admin-controls-security-and-compliance-in-apps-connectors-enterprise-edu-and-business),
   [Feature controls and integrations](https://academy.openai.com/public/resources/feature-controls-and-integrations-with-your-tools)
+- Automate OAuth: `Umbraco.Automate.OpenIddict` (`IOAuthCredentialsService`,
+  `OAuthCallbackController`, `OAuthCredentialsCleanupJob`) in the Umbraco.Automate repo
 - CMS user profile apps: `src/packages/user/current-user/user-profile-app.extension.ts` in
   Umbraco-CMS
+- Earlier repo thinking: `docs/ideas/mcp-server-integration.md`,
+  `.claude/memory/provider-hosted-tools-deferred.md` (revisit trigger 2 now fires)
+- Share-conversations plan: `docs/plans/share-conversations/`

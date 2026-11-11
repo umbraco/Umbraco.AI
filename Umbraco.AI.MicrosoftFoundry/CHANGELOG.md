@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.MicrosoftFoundry will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.0.6](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.MicrosoftFoundry@18.0.5...Umbraco.AI.MicrosoftFoundry@18.0.6) (2026-11-11)
+
+### fix
+
+* Stop OpenAI SDK providers retrying an out-of-credit reply 3 times ([90a48ef](https://github.com/umbraco/Umbraco.AI/commit/90a48efc890759fc78f10b0d6eb7b601fcdf2bd8)), closes [#709](https://github.com/umbraco/Umbraco.AI/issues/709)
+
 ## [18.0.5](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.MicrosoftFoundry@18.0.4...Umbraco.AI.MicrosoftFoundry@18.0.5) (2026-11-03)
 
 ### Internal

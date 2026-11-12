@@ -257,7 +257,7 @@ controller.messages$.subscribe(messages => {
 {
     "peerDependencies": {
         "@umbraco-ai/agent": "^1.0.0",
-        "@umbraco-cms/backoffice": "^19.0.0-beta1"
+        "@umbraco-cms/backoffice": "^19.0.0-rc1"
     },
     "dependencies": {
         "rxjs": "^7.8.2"

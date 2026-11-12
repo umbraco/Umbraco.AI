@@ -173,7 +173,7 @@ The `builder` runs the check on its changed files before reporting a task done.
 
 ## Target Framework & Stack
 
-- .NET 11.0 (`net11.0`), Umbraco CMS 19.x (beta), Central Package Management via `Directory.Packages.props`
+- .NET 11.0 (`net11.0`), Umbraco CMS 19.x (release candidate), Central Package Management via `Directory.Packages.props`
 - Frontend: Lit + TypeScript + Vite + @hey-api/openapi-ts
 - Frontend source: `src/*/Web.StaticAssets/Client/` -> `wwwroot/App_Plugins/`
 - Database: SQL Server & SQLite via EF Core; migration prefixes: `UmbracoAI_`, `UmbracoAIPrompt_`, `UmbracoAIAgent_`, `UmbracoAISearch_`
@@ -247,7 +247,7 @@ Check [Umbraco CMS LTS/EOL](https://umbraco.com/products/knowledge-center/long-t
 
 | CMS Version | Type | Active Support Until | AI Branches | Current Policy |
 |-------------|------|----------------------|-------------|----------------|
-| v19 | Pre-release (CMS 19 beta; type and support dates not yet published) | TBD | `v19/dev` / `v19/main` | Features + bug fixes |
+| v19 | Pre-release (CMS 19 release candidate; type and support dates not yet published) | TBD | `v19/dev` / `v19/main` | Features + bug fixes |
 | v18 | STS | Mar 2027 | `v18/dev` / `v18/main` | Features + bug fixes |
 | v17 | LTS | Nov 2027 | `v17/dev` / `v17/main` | Features + bug fixes |
 

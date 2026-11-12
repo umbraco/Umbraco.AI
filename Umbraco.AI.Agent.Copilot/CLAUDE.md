@@ -180,7 +180,7 @@ export class UaiFrontendToolRepository {
         "@umbraco-ai/core": "*",
         "@umbraco-ai/agent": "*",
         "@umbraco-ai/agent-ui": "*",
-        "@umbraco-cms/backoffice": "^19.0.0-beta1"
+        "@umbraco-cms/backoffice": "^19.0.0-rc1"
     }
 }
 ```

@@ -5,6 +5,18 @@ All notable changes to Umbraco.AI.Automate will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [19.0.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Automate@18.2.0...Umbraco.AI.Automate@19.0.0-rc.1) (2026-11-12)
+
+### ⚠ BREAKING CHANGES
+
+* Requires Umbraco CMS 19, Umbraco.Automate 19 and .NET 11.
+* **automate:** Run AI Agent's "Tool permissions" setting uses the single-choice dropdown (`Umb.PropertyEditorUi.Dropdown.Single`), since the CMS 19 dropdown is always multi-select. Values saved on 18 still load.
+
+### fix
+
+* **automate:** Stop retrying a step when the OpenAI account is out of credit ([8298449](https://github.com/umbraco/Umbraco.AI/commit/8298449f1faecf11e956093784627f52349cff49))
+* **core,automate:** Recognise OpenAI's credit_balance_exhausted reply as out of credit ([54fc0eb](https://github.com/umbraco/Umbraco.AI/commit/54fc0ebe7e7eaaa9477e525077f1c63573cb4e8e)), closes [#702](https://github.com/umbraco/Umbraco.AI/issues/702) [#709](https://github.com/umbraco/Umbraco.AI/issues/709) [#720](https://github.com/umbraco/Umbraco.AI/issues/720)
+
 ## [18.2.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Automate@18.1.0...Umbraco.AI.Automate@18.2.0) (2026-11-03)
 
 ### feat

@@ -5,6 +5,18 @@ All notable changes to Umbraco.AI.MicrosoftFoundry will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [19.0.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.MicrosoftFoundry@18.0.5...Umbraco.AI.MicrosoftFoundry@19.0.0-rc.1) (2026-11-12)
+
+### ⚠ BREAKING CHANGES
+
+* Requires Umbraco CMS 19 and .NET 11.
+
+### fix
+
+* **microsoft-foundry:** Report a length finish when a streamed Responses reply is cut off ([24f0ab1](https://github.com/umbraco/Umbraco.AI/commit/24f0ab107912aa57f705357ef1c8e3cfc5127263))
+* **microsoft-foundry:** Run Responses API statelessly when chat history is client-managed ([fa179f0](https://github.com/umbraco/Umbraco.AI/commit/fa179f0e2a3a534115adb8a534329ffb5c3c8380)), closes [#716](https://github.com/umbraco/Umbraco.AI/issues/716)
+* Stop OpenAI SDK providers retrying an out-of-credit reply 3 times ([aefca39](https://github.com/umbraco/Umbraco.AI/commit/aefca3953e5461473960b02a1a9a13c4a59fb05e)), closes [#709](https://github.com/umbraco/Umbraco.AI/issues/709)
+
 ## [18.0.5](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.MicrosoftFoundry@18.0.4...Umbraco.AI.MicrosoftFoundry@18.0.5) (2026-11-03)
 
 ### Internal

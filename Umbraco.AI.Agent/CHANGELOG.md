@@ -5,6 +5,25 @@ All notable changes to Umbraco.AI.Agent will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [19.0.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.4.2...Umbraco.AI.Agent@19.0.0-rc.1) (2026-11-12)
+
+### ⚠ BREAKING CHANGES
+
+* Requires Umbraco CMS 19 and .NET 11.
+* **agent:** `@umbraco-ai/agent` moves to `@ag-ui/client` and `@ag-ui/core` 1.x. Approval resume entries now travel in `RunAgentInput.resume`, not `forwardedProps.resume`, so a custom `AgentTransport` or a direct `UaiHttpAgent.run` call must set `input.resume`. `EventType` drops the `THINKING_*` events and gains `SUBAGENT_*`; `ToolMessage.content` and `ToolCallResultEvent.content` are `string | ContentPart[]`; `RunFinishedOutcome` gains `cancelled`; `zod` is now a declared dependency.
+
+### feat
+
+* **core,agent,prompt,copilot-workspace:** Place entity actions in CMS 19 action groups ([b15e020](https://github.com/umbraco/Umbraco.AI/commit/b15e0203b57af7fe308cfe0009f44ba2a12988eb))
+* **core,agent,prompt:** Group AI property actions under an AI action group ([03d6306](https://github.com/umbraco/Umbraco.AI/commit/03d6306230651949ae067ede736f670180a04bea))
+
+### fix
+
+* **agent,agent-ui,core:** Remove a guardrail-blocked answer and keep it out of history ([5074e51](https://github.com/umbraco/Umbraco.AI/commit/5074e512620d317bbd5f4b5115b8cf2c55a8e1c0)), closes [#712](https://github.com/umbraco/Umbraco.AI/issues/712) [#717](https://github.com/umbraco/Umbraco.AI/issues/717)
+* **agent,agent-ui:** Cancel the whole turn with an abort signal ([d0ba4ad](https://github.com/umbraco/Umbraco.AI/commit/d0ba4ad0de293b161f8d9614afcaff82b8906eb4)), closes [#692](https://github.com/umbraco/Umbraco.AI/issues/692)
+* **agent,agent-ui:** Stop the run when Cancel is pressed ([cf79ee4](https://github.com/umbraco/Umbraco.AI/commit/cf79ee4781c65c4339f5fc38d444a34bfe86ce81)), closes [#692](https://github.com/umbraco/Umbraco.AI/issues/692)
+* **core,prompt,agent,conversations,search:** Run database migrations before other packages start ([72f391b](https://github.com/umbraco/Umbraco.AI/commit/72f391ba1e3a6f133b16d673bc487661e6818275))
+
 ## [18.4.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent@18.4.1...Umbraco.AI.Agent@18.4.2) (2026-11-03)
 
 ### Internal

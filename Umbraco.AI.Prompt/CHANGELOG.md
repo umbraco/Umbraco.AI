@@ -5,6 +5,22 @@ All notable changes to Umbraco.AI.Prompt will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [19.0.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@18.4.1...Umbraco.AI.Prompt@19.0.0-rc.1) (2026-11-12)
+
+### ⚠ BREAKING CHANGES
+
+* Requires Umbraco CMS 19 and .NET 11.
+
+### feat
+
+* **core,agent,prompt,copilot-workspace:** Place entity actions in CMS 19 action groups ([b15e020](https://github.com/umbraco/Umbraco.AI/commit/b15e0203b57af7fe308cfe0009f44ba2a12988eb))
+* **core,agent,prompt:** Group AI property actions under an AI action group ([03d6306](https://github.com/umbraco/Umbraco.AI/commit/03d6306230651949ae067ede736f670180a04bea))
+
+### fix
+
+* **core,prompt,agent,conversations,search:** Run database migrations before other packages start ([72f391b](https://github.com/umbraco/Umbraco.AI/commit/72f391ba1e3a6f133b16d673bc487661e6818275))
+* **prompt:** Keep pre-19 scope rules matching migrated property editors ([6f983ee](https://github.com/umbraco/Umbraco.AI/commit/6f983ee98ed5c2e4fba97858d0d5a20ac76c9816))
+
 ## [18.4.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@18.4.0...Umbraco.AI.Prompt@18.4.1) (2026-11-03)
 
 ### Internal

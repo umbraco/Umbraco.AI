@@ -5,6 +5,43 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [19.0.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@18.7.0...Umbraco.AI@19.0.0-rc.1) (2026-11-12)
+
+### ⚠ BREAKING CHANGES
+
+* Requires Umbraco CMS 19 and .NET 11.
+* **core:** Removed the chat, embedding and speech-to-text members marked "Will be removed in v3". Use the builder overloads instead (`GetChatResponseAsync(configure, messages)`, `StreamChatResponseAsync`, `CreateChatClientAsync`, `GenerateEmbeddingAsync(configure, value)`, `GenerateEmbeddingsAsync(configure, values)`, `CreateEmbeddingGeneratorAsync`, `TranscribeAsync(configure, audioStream)`, `CreateSpeechToTextClientAsync`). `WithAlias` is required; pass `"chat"`, `"embedding"` or `"speech-to-text"` to keep the old log and audit names.
+* **core:** Removed `AISerializedProperty` (unused since 1.2.0; entity data lives in `AISerializedEntity.Data`).
+* **core:** The usage analytics GET endpoints are obsolete (removal in v20). Use `usage-overview` in place of `usage-summary` and `usage-time-series`, and `usage-breakdown` in place of the four `usage-by-*` endpoints.
+* **core:** `SearchUmbracoTool` no longer takes `IExamineManager`. Ranking and word matching now come from CMS core search, so results differ from v18.
+* **core:** Moves to ImageSharp 4. A fully opaque RGBA PNG image input is now re-encoded as JPEG before it is sent.
+
+### feat
+
+* **core,agent,prompt,copilot-workspace:** Place entity actions in CMS 19 action groups ([b15e020](https://github.com/umbraco/Umbraco.AI/commit/b15e0203b57af7fe308cfe0009f44ba2a12988eb))
+* **core,agent,prompt:** Group AI property actions under an AI action group ([03d6306](https://github.com/umbraco/Umbraco.AI/commit/03d6306230651949ae067ede736f670180a04bea))
+* **core:** Add AIClientRetryPolicy that doesn't retry an out-of-credit reply ([6ac9bba](https://github.com/umbraco/Umbraco.AI/commit/6ac9bbaa8f38a754e5bf3da12d89de26b19281de)), closes [#709](https://github.com/umbraco/Umbraco.AI/issues/709)
+* **core:** Add the usage dashboard adapter for Analytics.UI ([dc4cf8c](https://github.com/umbraco/Umbraco.AI/commit/dc4cf8cb4618a9a1de43c5a6f3cec55bec3316d3))
+* **core:** Add usage overview and breakdown endpoints for the Analytics.UI dashboard ([5925124](https://github.com/umbraco/Umbraco.AI/commit/5925124d7c68b234bdebada40f195b1a651132a5))
+* **core:** Put the usage date range in the header and make every tile a chart metric ([cf7bc85](https://github.com/umbraco/Umbraco.AI/commit/cf7bc853f88f8c73a31c590af69c183159be728b)), closes [umbraco/Umbraco.Analytics.UI#42](https://github.com/umbraco/Umbraco.Analytics.UI/issues/42)
+* **core:** Rebuild the usage dashboard on Umbraco.Analytics.UI ([6e4238b](https://github.com/umbraco/Umbraco.AI/commit/6e4238b66675bf9c349b27be7fb4feb1bd6a77ec))
+* **core:** Show cached input under the Input tokens tile and keep empty periods on the chart ([b8d1ef5](https://github.com/umbraco/Umbraco.AI/commit/b8d1ef5da62117e5d4c1488cbde7194849213621))
+
+### fix
+
+* **agent,agent-ui,core:** Remove a guardrail-blocked answer and keep it out of history ([5074e51](https://github.com/umbraco/Umbraco.AI/commit/5074e512620d317bbd5f4b5115b8cf2c55a8e1c0)), closes [#712](https://github.com/umbraco/Umbraco.AI/issues/712) [#717](https://github.com/umbraco/Umbraco.AI/issues/717)
+* **core,automate:** Recognise OpenAI's credit_balance_exhausted reply as out of credit ([54fc0eb](https://github.com/umbraco/Umbraco.AI/commit/54fc0ebe7e7eaaa9477e525077f1c63573cb4e8e)), closes [#702](https://github.com/umbraco/Umbraco.AI/issues/702) [#709](https://github.com/umbraco/Umbraco.AI/issues/709) [#720](https://github.com/umbraco/Umbraco.AI/issues/720)
+* **core,openai,anthropic:** Use single-select dropdowns for single-choice settings ([a03e1a1](https://github.com/umbraco/Umbraco.AI/commit/a03e1a131ef99735593c81c82728ed7f2f4f79c5))
+* **core,prompt,agent,conversations,search:** Run database migrations before other packages start ([72f391b](https://github.com/umbraco/Umbraco.AI/commit/72f391ba1e3a6f133b16d673bc487661e6818275))
+* **core:** Don't fail get-content on pages with member pickers ([e6ee0cf](https://github.com/umbraco/Umbraco.AI/commit/e6ee0cf1597ecdb90aed32bde7190e9be9bcabd0))
+* **core:** Fill hourly usage on the oldest day that has hourly rows ([d8c8c0a](https://github.com/umbraco/Umbraco.AI/commit/d8c8c0a951990b9bd8442b04753b4bde5955128c))
+* **core:** Handle CMS 19 reusable blocks and per-culture segments in block operations ([a7a5d42](https://github.com/umbraco/Umbraco.AI/commit/a7a5d42ca332cc1bc2cde516d68d9d303a0f7092))
+* **core:** Handle CMS 19's single media and URL pickers and new multi pickers ([25cdfcf](https://github.com/umbraco/Umbraco.AI/commit/25cdfcf9e2f2bfe9998513ae461cba32cba7101e))
+* **core:** Read Markdown editor properties as text in get_umbraco_content ([eba9fd5](https://github.com/umbraco/Umbraco.AI/commit/eba9fd54d8a77e6feb7044eed48ba1b08d428039))
+* **core:** Read rich text properties as text in get_umbraco_content ([c941b21](https://github.com/umbraco/Umbraco.AI/commit/c941b2106029259901d4da6d340db7b314f235da))
+* **core:** Refuse content writes CMS 19 would silently drop without invariant-for-variant access ([a3d1b3c](https://github.com/umbraco/Umbraco.AI/commit/a3d1b3cf3613941bc9e608aa44d29ff42f0cea2d))
+* **core:** Say the account is out of credit instead of "rate limit reached" ([32c042b](https://github.com/umbraco/Umbraco.AI/commit/32c042b76ab95f5420607976deb44b23ff6f9635)), closes [#702](https://github.com/umbraco/Umbraco.AI/issues/702)
+
 ## [18.7.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@18.6.1...Umbraco.AI@18.7.0) (2026-11-03)
 
 ### feat

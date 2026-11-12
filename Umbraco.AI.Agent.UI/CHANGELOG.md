@@ -5,6 +5,24 @@ All notable changes to Umbraco.AI.Agent.UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [19.0.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@18.3.0...Umbraco.AI.Agent.UI@19.0.0-rc.1) (2026-11-12)
+
+### ⚠ BREAKING CHANGES
+
+* Requires Umbraco CMS 19 and .NET 11.
+
+### feat
+
+* **agent-ui:** Show images in chat messages with click to load for other sites ([15d90b2](https://github.com/umbraco/Umbraco.AI/commit/15d90b2087af9315816597f56f95cd75ed8a4e0a))
+
+### fix
+
+* **agent-ui,copilot:** Refresh request context before each follow-up run ([7266705](https://github.com/umbraco/Umbraco.AI/commit/72667058ea8b15ff1e292a40a2e637d0b27ae379)), closes [#688](https://github.com/umbraco/Umbraco.AI/issues/688)
+* **agent-ui:** Sanitize rendered markdown in chat messages ([1e1ed2f](https://github.com/umbraco/Umbraco.AI/commit/1e1ed2f242e5413dc7c41e6712edd5989a721767))
+* **agent,agent-ui,core:** Remove a guardrail-blocked answer and keep it out of history ([5074e51](https://github.com/umbraco/Umbraco.AI/commit/5074e512620d317bbd5f4b5115b8cf2c55a8e1c0)), closes [#712](https://github.com/umbraco/Umbraco.AI/issues/712) [#717](https://github.com/umbraco/Umbraco.AI/issues/717)
+* **agent,agent-ui:** Cancel the whole turn with an abort signal ([d0ba4ad](https://github.com/umbraco/Umbraco.AI/commit/d0ba4ad0de293b161f8d9614afcaff82b8906eb4)), closes [#692](https://github.com/umbraco/Umbraco.AI/issues/692)
+* **agent,agent-ui:** Stop the run when Cancel is pressed ([cf79ee4](https://github.com/umbraco/Umbraco.AI/commit/cf79ee4781c65c4339f5fc38d444a34bfe86ce81)), closes [#692](https://github.com/umbraco/Umbraco.AI/issues/692)
+
 ## [18.3.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@18.2.0...Umbraco.AI.Agent.UI@18.3.0) (2026-10-19)
 
 ### feat

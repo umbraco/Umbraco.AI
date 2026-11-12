@@ -5,6 +5,19 @@ All notable changes to Umbraco.AI.Anthropic will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [19.0.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Anthropic@18.1.4...Umbraco.AI.Anthropic@19.0.0-rc.1) (2026-11-12)
+
+### ⚠ BREAKING CHANGES
+
+* Requires Umbraco CMS 19 and .NET 11.
+* **anthropic:** Moves to the Anthropic SDK 13.
+* **anthropic:** Temperature, top_p and top_k are no longer sent for any Claude model (API version 2026-10-21 removed them). Saved values are kept but ignored, and the editor hides those fields.
+
+### fix
+
+* **anthropic:** Say the account is out of credit when the balance is too low ([7fa4e81](https://github.com/umbraco/Umbraco.AI/commit/7fa4e8190ff524c0ed37a815425951d26a0dc678)), closes [#702](https://github.com/umbraco/Umbraco.AI/issues/702)
+* **core,openai,anthropic:** Use single-select dropdowns for single-choice settings ([a03e1a1](https://github.com/umbraco/Umbraco.AI/commit/a03e1a131ef99735593c81c82728ed7f2f4f79c5))
+
 ## [18.1.4](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Anthropic@18.1.3...Umbraco.AI.Anthropic@18.1.4) (2026-11-03)
 
 ### Internal

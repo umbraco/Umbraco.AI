@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Mistral will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [19.0.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Mistral@18.0.5...Umbraco.AI.Mistral@19.0.0-rc.1) (2026-11-12)
+
+### ⚠ BREAKING CHANGES
+
+* Requires Umbraco CMS 19 and .NET 11.
+
 ## [18.0.5](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Mistral@18.0.4...Umbraco.AI.Mistral@18.0.5) (2026-11-03)
 
 ### Internal

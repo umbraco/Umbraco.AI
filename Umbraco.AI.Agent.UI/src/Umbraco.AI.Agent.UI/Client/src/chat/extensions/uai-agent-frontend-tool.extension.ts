@@ -39,7 +39,8 @@ import type { UaiAgentToolApi, UaiAgentToolApprovalConfig } from "../types/tool.
  *     },
  *     api: () => import("./set-property.api.js"),
  *     // Future: conditions gate when the tool resolves
- *     // conditions: [{ alias: "Umb.Condition.Context", context: "UAI_ENTITY_CONTEXT" }]
+ *     // conditions: [{ alias: "My.Condition.EntityContext" }] (a custom condition that
+ *     // checks for UAI_ENTITY_CONTEXT; the CMS has no built-in one)
  * };
  *
  * // Tool that requires HITL approval before execution

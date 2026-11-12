@@ -1,9 +1,11 @@
+import { UMB_ENTITY_ACTION_GROUP_CREATE } from "@umbraco-cms/backoffice/entity-action";
 import { UAI_PROMPT_ENTITY_TYPE, UAI_PROMPT_ROOT_ENTITY_TYPE } from "../constants.js";
 
 export const promptEntityActionManifests: Array<UmbExtensionManifest> = [
     {
         type: "entityAction",
         kind: "default",
+        group: UMB_ENTITY_ACTION_GROUP_CREATE,
         alias: "UmbracoAIPrompt.EntityAction.Prompt.Create",
         name: "Create Prompt Entity Action",
         weight: 1200,

@@ -2,6 +2,7 @@ import type { UmbExtensionManifestKind } from "@umbraco-cms/backoffice/extension
 import { iconManifests } from "./icons/manifests.js";
 import { manifests as modalManifests } from "./modals/manifests.js";
 import { manifests as versionHistoryManifests } from "./version-history/manifests.js";
+import { manifests as propertyActionManifests } from "./property-action/manifests.js";
 import { menuItemKinds } from "./menu/manifests.js";
 import { dictateTiptapManifests } from "./tiptap/manifests.js";
 
@@ -9,6 +10,7 @@ export const manifests: Array<UmbExtensionManifest | UmbExtensionManifestKind> =
 	...iconManifests,
 	...modalManifests,
 	...versionHistoryManifests,
+	...propertyActionManifests,
 	...menuItemKinds,
 	...dictateTiptapManifests,
 ];

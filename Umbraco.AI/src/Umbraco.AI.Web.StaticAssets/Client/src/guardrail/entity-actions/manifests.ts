@@ -1,9 +1,14 @@
+import {
+    UMB_ENTITY_ACTION_GROUP_CREATE,
+    UMB_ENTITY_ACTION_GROUP_STRUCTURE,
+} from "@umbraco-cms/backoffice/entity-action";
 import { UAI_GUARDRAIL_ENTITY_TYPE, UAI_GUARDRAIL_ROOT_ENTITY_TYPE } from "../constants.js";
 
 export const guardrailEntityActionManifests: Array<UmbExtensionManifest> = [
     {
         type: "entityAction",
         kind: "default",
+        group: UMB_ENTITY_ACTION_GROUP_CREATE,
         alias: "UmbracoAI.EntityAction.Guardrail.Create",
         name: "Create Guardrail Entity Action",
         weight: 1200,
@@ -17,6 +22,7 @@ export const guardrailEntityActionManifests: Array<UmbExtensionManifest> = [
     {
         type: "entityAction",
         kind: "default",
+        group: UMB_ENTITY_ACTION_GROUP_STRUCTURE,
         alias: "UmbracoAI.EntityAction.Guardrail.Delete",
         name: "Delete Guardrail Entity Action",
         weight: 100,

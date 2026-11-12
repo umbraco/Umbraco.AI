@@ -4,6 +4,6 @@
   <Import Project="$([MSBuild]::GetPathOfFileAbove(Directory.Packages.props, $(MSBuildThisFileDirectory)..))" />
 
   <ItemGroup>
-    <PackageVersion Update="Umbraco.AI.Prompt.Startup" Version="[19.0.0-beta.1, 19.999.999)" />
+    <PackageVersion Update="Umbraco.AI.Prompt.Startup" Version="[19.0.0-rc.1, 19.999.999)" />
   </ItemGroup>
 </Project>

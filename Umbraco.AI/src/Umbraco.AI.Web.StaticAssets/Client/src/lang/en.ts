@@ -19,6 +19,10 @@ export default {
         toolCount: (count: number) => (count === 1 ? "1 tool" : `${count} tools`),
         noResults: "No results found",
     },
+    uaiActionGroups: {
+        results: "Results",
+        ai: "AI",
+    },
     uaiLabels: {
         name: "Name",
         alias: "Alias",

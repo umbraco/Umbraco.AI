@@ -14,8 +14,8 @@ import type { UaiAgentToolApi } from "../types/tool.types.js";
  * produces `UaiFrontendTool[]` for the AG-UI client, and provides API loading.
  *
  * Because the manager observes only *resolved* manifests from the extension registry,
- * any future conditions on the manifest are automatically respected. A tool with
- * conditions: [{ alias: "Umb.Condition.Context", context: "UAI_ENTITY_CONTEXT" }]
+ * any future conditions on the manifest are automatically respected. A tool with a
+ * condition that requires UAI_ENTITY_CONTEXT (a custom condition; the CMS has none built in)
  * would only appear in frontendTools$ when entity context is provided by the current
  * surface. No filtering logic needed in the manager itself.
  */

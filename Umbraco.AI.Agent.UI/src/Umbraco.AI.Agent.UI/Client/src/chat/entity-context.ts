@@ -14,9 +14,9 @@ import type { Observable } from "rxjs";
  * surface, the tool doesn't have access to entity state.
  *
  * Today this is handled by the tool simply not being registered outside copilot.
- * In the future, Umbraco's conditions framework on the manifest would gate tool
- * resolution automatically (e.g., conditions: [{ alias: "Umb.Condition.Context",
- * context: "UAI_ENTITY_CONTEXT" }]).
+ * In the future, a condition on the manifest would gate tool resolution automatically
+ * (e.g., a custom condition that is permitted only when UAI_ENTITY_CONTEXT is provided;
+ * the CMS has no built-in "context exists" condition).
  *
  * Extends UmbContextMinimal so it can be used with UmbContextToken.
  */

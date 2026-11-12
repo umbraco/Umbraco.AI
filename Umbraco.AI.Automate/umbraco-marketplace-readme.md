@@ -7,9 +7,9 @@ Umbraco.AI.Automate brings AI agent capabilities to Umbraco Automate workflows.
 
 ## Requirements
 
-- Umbraco CMS 17+
-- Umbraco.AI.Agent 1.x
-- Umbraco.Automate 0.1+
+- Umbraco CMS 19+
+- Umbraco.AI.Agent 19.x
+- Umbraco.Automate 19.0+
 
 ## Related Packages
 

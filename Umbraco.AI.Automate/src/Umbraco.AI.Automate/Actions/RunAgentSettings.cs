@@ -40,7 +40,7 @@ public sealed class RunAgentSettings
         Description = "Choose whether the agent can only look things up, or can also make changes "
             + "that don't need approval, like editing drafts. Changes that need approval, like "
             + "publishing or deleting, are always blocked.",
-        EditorUiAlias = "Umb.PropertyEditorUi.Dropdown",
+        EditorUiAlias = "Umb.PropertyEditorUi.Dropdown.Single",
         EditorConfig = """
             [{ "alias": "items", "value": [
                 { "name": "Read only", "value": "ReadOnly" },

@@ -534,8 +534,8 @@ Where this package's user docs live. `major-upgrade` reads this to find the page
 makes wrong.
 
 - Where: the `umbraco/UmbracoDocs` repo (never in this repo)
-- Versions: one copy per CMS major, at `<major>/ai-in-umbraco/` (e.g. `18/ai-in-umbraco/`,
-  `17/ai-in-umbraco/`)
+- Versions: one copy per CMS major, at `<major>/ai-in-umbraco/` (e.g. `19/ai-in-umbraco/`,
+  `18/ai-in-umbraco/`)
 - Submitting: a PR to the docs repo, separate from the code PR
 
 A local clone's path is personal, so it goes in `CLAUDE.local.md` as `Umbraco docs source: <path>`.
@@ -549,7 +549,7 @@ Pipeline: `/feature-explore` → `/feature-design` → `/feature-plan` → `/fea
 `/feature-close` once the PR is merged or the plan is dropped.
 
 **Branch/worktree per feature:** new features start from the `vN/dev` line they target
-(`v18/dev` by default). Plan files stay uncommitted until `feature-build` starts, which commits
+(`v19/dev` by default). Plan files stay uncommitted until `feature-build` starts, which commits
 them and cuts the worktree. The `WorktreeCreate` hook in `.claude/settings.json` picks the real
 branch name (`vN/topic/<name>`) and location.
 

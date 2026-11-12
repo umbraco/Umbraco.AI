@@ -1,5 +1,4 @@
 # Products parked on this version line: their folders stay, but release tooling skips them.
-# One folder name per line. Blocked until Umbraco.Automate ships v19 packages
-# (see docs/upgrades/v19.md, Blockers). Empty this list to re-add them. The solutions,
-# azure-pipelines.yml and install-demo-site.* carry matching commented-out blocks.
-Umbraco.AI.Automate
+# One folder name per line. Nothing is parked on the v19 line at the moment. To park a product,
+# add its folder name here and comment out its block in the solutions, azure-pipelines.yml
+# and install-demo-site.*.

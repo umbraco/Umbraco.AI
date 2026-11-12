@@ -28,8 +28,8 @@ public class AnthropicChatCapabilitySettings
     [AIField(
         Label = "Effort",
         Description = "How many tokens Claude spends on a response, including thinking and tool calls. Leave empty for the model default (high).",
-        EditorUiAlias = "Umb.PropertyEditorUi.Dropdown",
-        EditorConfig = "[{\"alias\":\"multiple\",\"value\":false},{\"alias\":\"items\",\"value\":[\"low\",\"medium\",\"high\"]}]",
+        EditorUiAlias = "Umb.PropertyEditorUi.Dropdown.Single",
+        EditorConfig = "[{\"alias\":\"items\",\"value\":[\"low\",\"medium\",\"high\"]}]",
         SortOrder = 1)]
     [JsonConverter(typeof(DropdownStringJsonConverter))]
     public string? Effort { get; set; }
@@ -57,8 +57,8 @@ public class AnthropicChatCapabilitySettings
     [AIField(
         Label = "Prompt caching",
         Description = "Reuse the stable start of this profile's prompt across requests, billed at a discount. Leave empty to disable. Has no effect on prompts below the model's minimum cacheable length.",
-        EditorUiAlias = "Umb.PropertyEditorUi.Dropdown",
-        EditorConfig = "[{\"alias\":\"multiple\",\"value\":false},{\"alias\":\"items\",\"value\":[\"5m\",\"1h\"]}]",
+        EditorUiAlias = "Umb.PropertyEditorUi.Dropdown.Single",
+        EditorConfig = "[{\"alias\":\"items\",\"value\":[\"5m\",\"1h\"]}]",
         SortOrder = 2)]
     [JsonConverter(typeof(DropdownStringJsonConverter))]
     public string? PromptCaching { get; set; }

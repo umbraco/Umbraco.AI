@@ -29,7 +29,7 @@ public class AllProviderControllerExperimentalTests
 
         var mapper = new UmbracoMapper(
             new MapDefinitionCollection(() => new IMapDefinition[] { new ProviderMapDefinition(experimental) }),
-            Mock.Of<Umbraco.Cms.Core.Scoping.ICoreScopeProvider>(),
+            global::Umbraco.AI.Tests.Common.TestCoreScopeProvider.Create(),
             NullLogger<UmbracoMapper>.Instance);
 
         var controller = new AllProviderController(new AIProviderCollection(() => providers), mapper, experimental);

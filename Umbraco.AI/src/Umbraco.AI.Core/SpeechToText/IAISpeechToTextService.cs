@@ -12,47 +12,6 @@ namespace Umbraco.AI.Core.SpeechToText;
 public interface IAISpeechToTextService
 {
     /// <summary>
-    /// Transcribes audio from a stream using the default speech-to-text profile.
-    /// </summary>
-    /// <param name="audioStream">The audio stream to transcribe.</param>
-    /// <param name="options">Optional speech-to-text options.</param>
-    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
-    /// <returns>The transcription response.</returns>
-    [Obsolete("Use TranscribeAsync with builder overload for full observability (notifications, telemetry, duration tracking). Will be removed in v3. This method delegates to the builder API with alias 'speech-to-text'.")]
-    Task<SpeechToTextResponse> TranscribeAsync(
-        Stream audioStream,
-        SpeechToTextOptions? options = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Transcribes audio from a stream using a specific profile.
-    /// </summary>
-    /// <param name="profileId">The ID of the profile to use.</param>
-    /// <param name="audioStream">The audio stream to transcribe.</param>
-    /// <param name="options">Optional speech-to-text options.</param>
-    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
-    /// <returns>The transcription response.</returns>
-    [Obsolete("Use TranscribeAsync with .WithProfile(profileId) for full observability (notifications, telemetry, duration tracking). Will be removed in v3. This method delegates to the builder API with alias 'speech-to-text'.")]
-    Task<SpeechToTextResponse> TranscribeAsync(
-        Guid profileId,
-        Stream audioStream,
-        SpeechToTextOptions? options = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets a configured speech-to-text client for advanced scenarios.
-    /// The returned client has all registered middleware applied and is configured
-    /// according to the specified profile.
-    /// </summary>
-    /// <param name="profileId">Optional profile id. If not specified, uses the default speech-to-text profile.</param>
-    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
-    /// <returns>A configured ISpeechToTextClient instance with middleware applied.</returns>
-    [Obsolete("Use CreateSpeechToTextClientAsync with builder overload for per-call scope management and feature metadata. Will be removed in v3. This method delegates to the builder API with alias 'speech-to-text'.")]
-    Task<ISpeechToTextClient> GetSpeechToTextClientAsync(
-        Guid? profileId = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
     /// Transcribes audio using an inline speech-to-text builder with full observability
     /// (notifications, telemetry, duration tracking).
     /// </summary>

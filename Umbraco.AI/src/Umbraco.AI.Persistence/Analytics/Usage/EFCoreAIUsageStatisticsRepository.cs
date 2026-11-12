@@ -33,6 +33,7 @@ internal sealed class EFCoreAIUsageStatisticsRepository : IAIUsageStatisticsRepo
         var entities = await scope.ExecuteWithContextAsync(async db =>
         {
             var query = db.UsageStatisticsHourly
+                .AsNoTracking()
                 .Where(s => s.Period >= from && s.Period < to);
 
             query = ApplyFilter(query, filter);
@@ -64,6 +65,7 @@ internal sealed class EFCoreAIUsageStatisticsRepository : IAIUsageStatisticsRepo
         var entities = await scope.ExecuteWithContextAsync(async db =>
         {
             var query = db.UsageStatisticsDaily
+                .AsNoTracking()
                 .Where(s => s.Period >= from && s.Period < to);
 
             query = ApplyFilter(query, filter);
@@ -81,6 +83,44 @@ internal sealed class EFCoreAIUsageStatisticsRepository : IAIUsageStatisticsRepo
 
         scope.Complete();
         return entities.Select(AIUsageRecordFactory.BuildStatisticsDomain);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<AIUsageStatisticsTotal>> GetHourlyTotalsAsync(
+        DateTime from,
+        DateTime to,
+        AIUsageBreakdownDimension? dimension,
+        CancellationToken ct = default)
+    {
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+
+        var totals = await scope.ExecuteWithContextAsync(async db =>
+            await AIUsageStatisticsSummer.SumAsync(
+                db.UsageStatisticsHourly.Where(s => s.Period >= from && s.Period < to),
+                dimension,
+                ct));
+
+        scope.Complete();
+        return totals;
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<AIUsageStatisticsTotal>> GetDailyTotalsAsync(
+        DateTime from,
+        DateTime to,
+        AIUsageBreakdownDimension? dimension,
+        CancellationToken ct = default)
+    {
+        using IEFCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+
+        var totals = await scope.ExecuteWithContextAsync(async db =>
+            await AIUsageStatisticsSummer.SumAsync(
+                db.UsageStatisticsDaily.Where(s => s.Period >= from && s.Period < to),
+                dimension,
+                ct));
+
+        scope.Complete();
+        return totals;
     }
 
     /// <inheritdoc />

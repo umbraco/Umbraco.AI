@@ -9,8 +9,8 @@ using Umbraco.AI.Search.Core.Chunking;
 using Umbraco.AI.Search.Core.Configuration;
 using Umbraco.AI.Search.Core.VectorStore;
 using Umbraco.Cms.Core.Models;
-using Umbraco.Cms.Search.Core.Models.Indexing;
-using Umbraco.Cms.Search.Core.Services;
+using Umbraco.Cms.Core.Search.Indexing;
+using Umbraco.Cms.Core.Search;
 
 namespace Umbraco.AI.Search.Core.Search;
 

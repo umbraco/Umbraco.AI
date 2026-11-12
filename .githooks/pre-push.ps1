@@ -42,8 +42,8 @@ if (-not $validBranch) {
     Write-Host "  claude/<anything>"
     Write-Host ""
     Write-Host "Examples:"
-    Write-Host "  v18/dev"
-    Write-Host "  v18/topic/add-caching"
+    Write-Host "  v19/dev"
+    Write-Host "  v19/topic/add-caching"
     Write-Host "  v17/release/2026.01"
     Write-Host "  v17/hotfix/2026.01.1"
     Write-Host "========================================" -ForegroundColor Red

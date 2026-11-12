@@ -257,7 +257,7 @@ controller.messages$.subscribe(messages => {
 {
     "peerDependencies": {
         "@umbraco-ai/agent": "^1.0.0",
-        "@umbraco-cms/backoffice": "^17.3.0"
+        "@umbraco-cms/backoffice": "^19.0.0-beta1"
     },
     "dependencies": {
         "rxjs": "^7.8.2"
@@ -410,7 +410,7 @@ To create a new package that uses Agent.UI:
 
 ## Target Framework
 
-- .NET 10.0 (`net10.0`)
+- .NET 11.0 (`net11.0`)
 - Uses Central Package Management (`Directory.Packages.props`)
 - TypeScript 5.x
 - Vite 7.x for bundling

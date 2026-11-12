@@ -10,7 +10,7 @@ namespace Umbraco.AI.Core.PropertyValueOperations.Handlers;
 /// Operates on the canonical block list envelope:
 /// <code>
 /// {
-///   "layout": { "Umbraco.BlockList": [ { "contentKey": "...", "settingsKey": "..." }, ... ] },
+///   "layout": { "Umbraco.BlockList": [ { "key": "...", "contentKey": "...", "settingsKey": "..." }, ... ] },
 ///   "contentData": [ ... ],
 ///   "settingsData": [ ... ],
 ///   "expose": [ ... ]
@@ -34,7 +34,8 @@ public sealed class BlockListPropertyValueHandler : BlockEditorHandlerBase
     /// <inheritdoc />
     protected override JsonObject BuildLayoutEntry(Guid contentKey, Guid? settingsKey, AIAddItemArgs args)
     {
-        var entry = new JsonObject { ["contentKey"] = contentKey };
+        // CMS 19 layout items carry their own key; the CMS backfills key = contentKey for legacy items.
+        var entry = new JsonObject { ["key"] = contentKey, ["contentKey"] = contentKey };
         if (settingsKey is not null)
         {
             entry["settingsKey"] = settingsKey;

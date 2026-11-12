@@ -57,7 +57,7 @@ public class TestGraderControllersTests
     private static IUmbracoMapper Mapper()
         => new UmbracoMapper(
             new MapDefinitionCollection(() => [new TestMapDefinition()]),
-            Mock.Of<Umbraco.Cms.Core.Scoping.ICoreScopeProvider>(),
+            global::Umbraco.AI.Tests.Common.TestCoreScopeProvider.Create(),
             NullLogger<UmbracoMapper>.Instance);
 
     private static Mock<IAIExperimentalFeatures> FlagMock(Func<bool> decisionOn)

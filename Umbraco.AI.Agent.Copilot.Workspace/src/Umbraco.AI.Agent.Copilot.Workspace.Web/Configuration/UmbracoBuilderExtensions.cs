@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using OpenIddict.Validation.AspNetCore;
 using Umbraco.AI.Agent.Conversations.Core.Conversations;
 using Umbraco.AI.Agent.Copilot.Workspace.Core;
 using Umbraco.AI.Agent.Copilot.Workspace.Core.Authorization;
@@ -27,11 +28,7 @@ public static class UmbracoBuilderExtensions
     public static IUmbracoBuilder AddUmbracoAICopilotWorkspaceWeb(this IUmbracoBuilder builder)
     {
         builder.Services.AddSingleton<IAuthorizationHandler, CopilotWorkspaceSectionAuthorizationHandler>();
-        builder.Services.AddAuthorizationBuilder()
-            .AddPolicy(CopilotWorkspaceAuthorizationPolicies.SectionAccessCopilotWorkspace, policy =>
-            {
-                policy.Requirements.Add(new CopilotWorkspaceSectionRequirement());
-            });
+        builder.Services.AddAuthorization(ConfigureAuthorization);
 
         // Register the single product OpenAPI document. The Workspace stream/file controllers bind to it
         // via a compile-time [MapToApi]; the host-agnostic Conversations CRUD controllers are bound to it
@@ -56,4 +53,17 @@ public static class UmbracoBuilderExtensions
         // Conversations core and Agent layers).
         return builder;
     }
+
+    /// <summary>
+    /// Registers the Copilot Workspace section policy. Mirrors how the CMS builds its own backoffice
+    /// policies: both the OpenIddict validation scheme (bearer tokens) and the backoffice cookie scheme.
+    /// </summary>
+    internal static void ConfigureAuthorization(AuthorizationOptions options)
+        => options.AddPolicy(CopilotWorkspaceAuthorizationPolicies.SectionAccessCopilotWorkspace, policy =>
+        {
+            policy.AddAuthenticationSchemes(
+                OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme,
+                Umbraco.Cms.Core.Constants.Security.BackOfficeAuthenticationType);
+            policy.Requirements.Add(new CopilotWorkspaceSectionRequirement());
+        });
 }

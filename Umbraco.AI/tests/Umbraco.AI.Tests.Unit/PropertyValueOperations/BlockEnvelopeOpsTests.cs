@@ -210,4 +210,142 @@ public class BlockEnvelopeOpsTests
         values[1]!["value"]!.GetValue<string>().ShouldBe("Danish");
         values[1]!["editorAlias"]!.GetValue<string>().ShouldBe("Umbraco.TextBox");
     }
+
+    private static JsonObject ReusableEnvelope(Guid libraryKey, Guid layoutKeyA, Guid layoutKeyB, Guid localKey)
+    {
+        var envelope = BlockEnvelopeOps.Empty(LayoutKey);
+        BlockEnvelopeOps.AddLayoutEntry(envelope, LayoutKey, new JsonObject
+        {
+            ["key"] = layoutKeyA, ["contentKey"] = libraryKey, ["isExternalContent"] = true,
+        });
+        BlockEnvelopeOps.AddLayoutEntry(envelope, LayoutKey, new JsonObject
+        {
+            ["key"] = layoutKeyB, ["contentKey"] = libraryKey, ["isExternalContent"] = true,
+        });
+        BlockEnvelopeOps.AddLayoutEntry(envelope, LayoutKey, new JsonObject { ["contentKey"] = localKey });
+        BlockEnvelopeOps.AddContentDataEntry(envelope, Guid.NewGuid(), null, localKey);
+        return envelope;
+    }
+
+    [Fact]
+    public void AddLayoutEntry_WithKey_KeepsIt()
+    {
+        var envelope = BlockEnvelopeOps.Empty(LayoutKey);
+        var key = Guid.NewGuid();
+
+        BlockEnvelopeOps.AddLayoutEntry(envelope, LayoutKey, new JsonObject { ["key"] = key, ["contentKey"] = Guid.NewGuid() });
+
+        ((JsonArray)envelope["layout"]![LayoutKey]!)[0]!["key"]!.GetValue<Guid>().ShouldBe(key);
+    }
+
+    [Fact]
+    public void RemoveByContentKey_ByLayoutKey_RemovesOnlyThatReferenceOfRepeatedContentKey()
+    {
+        var library = Guid.NewGuid();
+        var keyA = Guid.NewGuid();
+        var keyB = Guid.NewGuid();
+        var envelope = ReusableEnvelope(library, keyA, keyB, Guid.NewGuid());
+
+        BlockEnvelopeOps.RemoveByContentKey(envelope, LayoutKey, keyA);
+
+        var layout = (JsonArray)envelope["layout"]![LayoutKey]!;
+        layout.Count.ShouldBe(2);
+        layout[0]!["key"]!.GetValue<Guid>().ShouldBe(keyB);
+        layout[0]!["isExternalContent"]!.GetValue<bool>().ShouldBeTrue();
+    }
+
+    [Fact]
+    public void RemoveByContentKey_KeepsContentData_WhileAnotherLayoutItemReferencesIt()
+    {
+        var shared = Guid.NewGuid();
+        var envelope = BlockEnvelopeOps.Empty(LayoutKey);
+        var keyA = Guid.NewGuid();
+        var keyB = Guid.NewGuid();
+        BlockEnvelopeOps.AddLayoutEntry(envelope, LayoutKey, new JsonObject { ["key"] = keyA, ["contentKey"] = shared });
+        BlockEnvelopeOps.AddLayoutEntry(envelope, LayoutKey, new JsonObject { ["key"] = keyB, ["contentKey"] = shared });
+        BlockEnvelopeOps.AddContentDataEntry(envelope, Guid.NewGuid(), null, shared);
+
+        BlockEnvelopeOps.RemoveByContentKey(envelope, LayoutKey, keyA);
+        ((JsonArray)envelope["contentData"]!).Count.ShouldBe(1);
+
+        BlockEnvelopeOps.RemoveByContentKey(envelope, LayoutKey, keyB);
+        ((JsonArray)envelope["contentData"]!).Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void IsAmbiguousBlockKey_RepeatedContentKeyWithoutMatchingLayoutKey_IsTrue()
+    {
+        var library = Guid.NewGuid();
+        var envelope = ReusableEnvelope(library, Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+
+        BlockEnvelopeOps.IsAmbiguousBlockKey(envelope, LayoutKey, library).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void FindContentDataEntry_ExternalBlock_ReturnsNull()
+    {
+        var library = Guid.NewGuid();
+        var keyA = Guid.NewGuid();
+        var envelope = ReusableEnvelope(library, keyA, Guid.NewGuid(), Guid.NewGuid());
+
+        BlockEnvelopeOps.FindContentDataEntry(envelope, keyA).ShouldBeNull();
+        BlockEnvelopeOps.FindContentTypeKey(envelope, library).ShouldBeNull();
+    }
+
+    [Fact]
+    public void FindContentDataEntry_LayoutKeyDifferentFromContentKey_ResolvesLocalBlock()
+    {
+        var contentKey = Guid.NewGuid();
+        var layoutKey = Guid.NewGuid();
+        var envelope = BlockEnvelopeOps.Empty(LayoutKey);
+        BlockEnvelopeOps.AddLayoutEntry(envelope, LayoutKey, new JsonObject { ["key"] = layoutKey, ["contentKey"] = contentKey });
+        BlockEnvelopeOps.AddContentDataEntry(envelope, Guid.NewGuid(), null, contentKey);
+
+        BlockEnvelopeOps.FindContentDataEntry(envelope, layoutKey).ShouldNotBeNull();
+        BlockEnvelopeOps.FindContentDataEntry(envelope, contentKey).ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void MoveInLayout_ByLayoutKey_MovesThatReference()
+    {
+        var library = Guid.NewGuid();
+        var keyA = Guid.NewGuid();
+        var keyB = Guid.NewGuid();
+        var envelope = ReusableEnvelope(library, keyA, keyB, Guid.NewGuid());
+
+        BlockEnvelopeOps.MoveInLayout(envelope, LayoutKey, keyB, 0);
+
+        var layout = (JsonArray)envelope["layout"]![LayoutKey]!;
+        layout[0]!["key"]!.GetValue<Guid>().ShouldBe(keyB);
+        layout[1]!["key"]!.GetValue<Guid>().ShouldBe(keyA);
+    }
+
+    [Fact]
+    public void GetPropertyValue_SegmentWithoutOwnValue_FallsBackToSameCultureDefaultSegment()
+    {
+        var entry = new JsonObject
+        {
+            ["values"] = new JsonArray
+            {
+                new JsonObject { ["alias"] = "title", ["culture"] = null, ["segment"] = null, ["value"] = "Invariant" },
+                new JsonObject { ["alias"] = "title", ["culture"] = "da-DK", ["segment"] = null, ["value"] = "Dansk" },
+            },
+        };
+
+        var value = BlockEnvelopeOps.GetPropertyValue(entry, "title", new AIVariantId("da-DK", "vip"));
+
+        value!.GetValue<string>().ShouldBe("Dansk");
+    }
+
+    [Fact]
+    public void SetPropertyValue_CultureAndSegment_WritesBothOnNewEntry()
+    {
+        var entry = new JsonObject { ["values"] = new JsonArray() };
+
+        BlockEnvelopeOps.SetPropertyValue(entry, "title", JsonValue.Create("Vip"), new AIVariantId("da-DK", "vip"));
+
+        var written = (JsonObject)((JsonArray)entry["values"]!)[0]!;
+        written["culture"]!.GetValue<string>().ShouldBe("da-DK");
+        written["segment"]!.GetValue<string>().ShouldBe("vip");
+    }
 }

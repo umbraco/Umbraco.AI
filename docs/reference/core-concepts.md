@@ -155,9 +155,9 @@ public class MyContentService
 
     public async Task<string> GenerateSummaryAsync(string content)
     {
-        var response = await _chatService.GetResponseAsync(
-            profileAlias: "content-assistant",
-            prompt: $"Summarize the following content:\n\n{content}");
+        var response = await _chatService.GetChatResponseAsync(
+            b => b.WithAlias("summarize-content").WithProfile("content-assistant"),
+            [new ChatMessage(ChatRole.User, $"Summarize the following content:\n\n{content}")]);
 
         return response.Text;
     }

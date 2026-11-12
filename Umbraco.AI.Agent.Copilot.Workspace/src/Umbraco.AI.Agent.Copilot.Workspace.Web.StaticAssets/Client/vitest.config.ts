@@ -25,6 +25,10 @@ export default defineConfig({
                 __dirname,
                 "../../../../Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client/src/index.ts",
             ),
+            // Core's barrel reaches the usage dashboard, which imports `@umbraco/analytics-ui`. That
+            // npm package ships types only (the backoffice loads its code via the import map), so
+            // point it at a stand-in that just provides the names. See test/analytics-ui.stub.ts.
+            "@umbraco/analytics-ui": resolve(__dirname, "test/analytics-ui.stub.ts"),
         },
     },
 });

@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using CmsConstants = Umbraco.Cms.Core.Constants;
 
 namespace Umbraco.AI.Core.PropertyValueOperations.Handlers;
 
@@ -12,26 +13,41 @@ namespace Umbraco.AI.Core.PropertyValueOperations.Handlers;
 /// is supported for the editable scalar fields (<c>name</c>, <c>target</c>, <c>queryString</c>,
 /// <c>url</c>) so the dispatcher can target nested edits via path.
 /// </remarks>
-public sealed class MultiUrlPickerPropertyValueHandler : IAIPropertyValueHandler
+public class MultiUrlPickerPropertyValueHandler : IAIPropertyValueHandler
 {
-    private const string EditorSchemaAlias = "Umbraco.MultiUrlPicker";
-
     private static readonly HashSet<string> EditableProperties = new(StringComparer.OrdinalIgnoreCase)
     {
         "name", "target", "queryString", "url",
     };
 
     /// <inheritdoc />
-    public string ForPropertyEditorSchemaAlias => EditorSchemaAlias;
+    public string ForPropertyEditorSchemaAlias => EditorAlias;
+
+    /// <summary>
+    /// The editor alias this handler serves; also names the editor in error messages.
+    /// </summary>
+    private protected virtual string EditorAlias => CmsConstants.PropertyEditors.Aliases.MultiUrlPicker;
+
+    /// <summary>
+    /// The most links the editor can hold, or <c>null</c> when it has no fixed limit.
+    /// </summary>
+    private protected virtual int? MaxItems => null;
 
     /// <inheritdoc />
     public AIValidationResult ValidateAddItem(JsonNode? value, AIAddItemArgs args, AIPropertyValueOperationContext context)
     {
+        if (MaxItems is int maxItems && AsArray(value).Count >= maxItems)
+        {
+            return AIValidationResult.Invalid(new AIPropertyValueOperationError(
+                AIPropertyValueOperationError.Codes.SchemaMismatch,
+                $"{EditorAlias} holds at most {maxItems} link. Remove the existing one or use set_value to replace it."));
+        }
+
         if (args.Values is null)
         {
             return AIValidationResult.Invalid(new AIPropertyValueOperationError(
                 AIPropertyValueOperationError.Codes.SchemaMismatch,
-                "MultiUrlPicker AddItem requires 'values' with at least 'type' and 'url' (or 'documentKey'/'mediaKey' for content links)."));
+                $"{EditorAlias} AddItem requires 'values' with at least 'type' and 'url' (or 'documentKey'/'mediaKey' for content links)."));
         }
 
         var type = args.Values["type"]?.GetValue<string?>();
@@ -39,7 +55,7 @@ public sealed class MultiUrlPickerPropertyValueHandler : IAIPropertyValueHandler
         {
             return AIValidationResult.Invalid(new AIPropertyValueOperationError(
                 AIPropertyValueOperationError.Codes.SchemaMismatch,
-                "MultiUrlPicker AddItem requires 'values.type' (e.g. 'external', 'document', 'media')."));
+                $"{EditorAlias} AddItem requires 'values.type' (e.g. 'external', 'document', 'media')."));
         }
 
         return AIValidationResult.Valid;
@@ -199,7 +215,7 @@ public sealed class MultiUrlPickerPropertyValueHandler : IAIPropertyValueHandler
         if (!EditableProperties.Contains(propertyAlias))
         {
             throw new InvalidOperationException(
-                $"MultiUrlPicker does not allow setting '{propertyAlias}'. Editable fields: {string.Join(", ", EditableProperties)}.");
+                $"{EditorAlias} does not allow setting '{propertyAlias}'. Editable fields: {string.Join(", ", EditableProperties)}.");
         }
 
         var array = AsArray(value);

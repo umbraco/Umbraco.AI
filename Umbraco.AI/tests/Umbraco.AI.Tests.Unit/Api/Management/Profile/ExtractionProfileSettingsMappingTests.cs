@@ -26,7 +26,7 @@ public class ExtractionProfileSettingsMappingTests
 
     private static UmbracoMapper CreateMapper() => new(
         new MapDefinitionCollection(() => new IMapDefinition[] { new ProfileMapDefinition(), new CommonMapDefinition() }),
-        Mock.Of<ICoreScopeProvider>(),
+        global::Umbraco.AI.Tests.Common.TestCoreScopeProvider.Create(),
         NullLogger<UmbracoMapper>.Instance);
 
     #region Happy path

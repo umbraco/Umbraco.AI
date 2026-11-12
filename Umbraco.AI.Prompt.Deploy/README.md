@@ -27,12 +27,12 @@ dotnet add package Umbraco.AI.Prompt.Deploy
 
 ## Requirements
 
-- Umbraco CMS 17.0.0+
+- Umbraco CMS 19.0.0+
 - Umbraco.AI 1.0.0+
 - Umbraco.AI.Prompt 1.0.0+
 - Umbraco.AI.Deploy 1.0.0+
-- Umbraco Deploy 17.0.0+
-- .NET 10.0
+- Umbraco Deploy 19.0.0+
+- .NET 11.0
 
 ## Supported Entities
 

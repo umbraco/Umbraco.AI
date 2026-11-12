@@ -35,6 +35,34 @@ internal interface IAIUsageStatisticsRepository
         CancellationToken ct = default);
 
     /// <summary>
+    /// Gets hourly statistics within a time period summed in the database: one row per hour, or one row per
+    /// key (and name) of a dimension.
+    /// </summary>
+    /// <param name="from">Start time (inclusive).</param>
+    /// <param name="to">End time (exclusive).</param>
+    /// <param name="dimension">The dimension to group by, or null to group by hour.</param>
+    /// <param name="ct">Cancellation token.</param>
+    Task<IReadOnlyList<AIUsageStatisticsTotal>> GetHourlyTotalsAsync(
+        DateTime from,
+        DateTime to,
+        AIUsageBreakdownDimension? dimension,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Gets daily statistics within a time period summed in the database: one row per day, or one row per
+    /// key (and name) of a dimension.
+    /// </summary>
+    /// <param name="from">Start time (inclusive).</param>
+    /// <param name="to">End time (exclusive).</param>
+    /// <param name="dimension">The dimension to group by, or null to group by day.</param>
+    /// <param name="ct">Cancellation token.</param>
+    Task<IReadOnlyList<AIUsageStatisticsTotal>> GetDailyTotalsAsync(
+        DateTime from,
+        DateTime to,
+        AIUsageBreakdownDimension? dimension,
+        CancellationToken ct = default);
+
+    /// <summary>
     /// Saves a batch of hourly statistics.
     /// </summary>
     /// <param name="statistics">The statistics to save.</param>

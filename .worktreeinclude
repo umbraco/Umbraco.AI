@@ -12,7 +12,7 @@ appsettings.Local.json
 !.env.template
 
 # Demo sites
-demos/v18/
+demos/v19/
 *.local.slnx
 
 # Local Claude/agent config (workflow rules + local settings)

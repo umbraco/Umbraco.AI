@@ -39,6 +39,7 @@ public class UsageTimeSeriesController : AnalyticsControllerBase
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Time series data points.</returns>
     [HttpGet("usage-time-series")]
+    [Obsolete("Use the usage-overview endpoint instead. Will be removed in v20.")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(IEnumerable<UsageTimeSeriesPointModel>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

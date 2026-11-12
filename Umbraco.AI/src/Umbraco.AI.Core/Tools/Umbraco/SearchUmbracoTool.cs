@@ -1,12 +1,13 @@
 using System.ComponentModel;
-using Examine;
-using Examine.Search;
-
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Models.PublishedContent;
+using Umbraco.Cms.Core.Search;
+using Umbraco.Cms.Core.Search.Querying;
+using Umbraco.Cms.Core.Search.Querying.Filtering;
 using Umbraco.Cms.Core.Security;
+using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Web;
 using Umbraco.Extensions;
 
@@ -33,18 +34,21 @@ public record SearchUmbracoArgs(
     int? MaxResults = 10);
 
 /// <summary>
-/// Tool that searches Umbraco content and media using Examine.
+/// Tool that searches Umbraco content and media using the CMS search indexes.
 /// </summary>
 [AITool("search_umbraco", "Search Umbraco", ScopeId = SearchScope.ScopeId)]
 public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
 {
-    private const string ExternalIndexName = "ExternalIndex";
-
     // How many index matches to fetch per result asked for, and the most to fetch, before access filtering.
     private const int CandidateMultiplier = 5;
     private const int MaxCandidates = 250;
 
-    private readonly IExamineManager _examineManager;
+    // The CMS searcher requires every word of a query to match. When that finds too little, each word is
+    // searched on its own; this caps how many words are tried so the number of searcher calls stays bounded.
+    private const int MaxFallbackWords = 5;
+
+    private readonly ISearcherResolver _searcherResolver;
+    private readonly ILanguageService _languageService;
     private readonly IUmbracoContextFactory _umbracoContextFactory;
     private readonly IBackOfficeSecurityAccessor _backOfficeSecurityAccessor;
     private readonly IUmbracoReadAuthorizer _readAuthorizer;
@@ -52,36 +56,20 @@ public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
     /// <summary>
     /// Initializes a new instance of <see cref="SearchUmbracoTool"/>.
     /// </summary>
-    /// <param name="examineManager">The Examine manager.</param>
-    /// <param name="umbracoContextFactory">The Umbraco context factory.</param>
-    /// <param name="backOfficeSecurityAccessor">The backoffice security accessor for user context.</param>
-    [Obsolete("Use the constructor that accepts an IUmbracoReadAuthorizer. Will be removed in v20.")]
-    public SearchUmbracoTool(
-        IExamineManager examineManager,
-        IUmbracoContextFactory umbracoContextFactory,
-        IBackOfficeSecurityAccessor backOfficeSecurityAccessor)
-        : this(
-            examineManager,
-            umbracoContextFactory,
-            backOfficeSecurityAccessor,
-            StaticServiceProvider.Instance.GetRequiredService<IUmbracoReadAuthorizer>())
-    {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="SearchUmbracoTool"/>.
-    /// </summary>
-    /// <param name="examineManager">The Examine manager.</param>
+    /// <param name="searcherResolver">Resolves the searcher for a search index.</param>
+    /// <param name="languageService">The language service, used to search every culture.</param>
     /// <param name="umbracoContextFactory">The Umbraco context factory.</param>
     /// <param name="backOfficeSecurityAccessor">The backoffice security accessor for user context.</param>
     /// <param name="readAuthorizer">Limits results to what the acting user can access.</param>
     public SearchUmbracoTool(
-        IExamineManager examineManager,
+        ISearcherResolver searcherResolver,
+        ILanguageService languageService,
         IUmbracoContextFactory umbracoContextFactory,
         IBackOfficeSecurityAccessor backOfficeSecurityAccessor,
         IUmbracoReadAuthorizer readAuthorizer)
     {
-        _examineManager = examineManager;
+        _searcherResolver = searcherResolver;
+        _languageService = languageService;
         _umbracoContextFactory = umbracoContextFactory;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
         _readAuthorizer = readAuthorizer;
@@ -91,6 +79,8 @@ public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
     public override string Description =>
         "Searches Umbraco content and media by text query. " +
         "Searches across content fields and tags. " +
+        "Short keyword queries work best: every word of the query must match, and if that finds too little, " +
+        "the words are searched individually. Avoid long sentences. " +
         "Returns matching items with metadata including name, type, URL, and thumbnail for media. " +
         "Use type parameter to filter results: 'content' for content only, 'media' for media only, or 'all' for both. " +
         "Use tags parameter to filter by exact tag values (results must have at least one matching tag). " +
@@ -121,15 +111,6 @@ public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
         // Enforce max results limit
         var maxResults = Math.Min(args.MaxResults ?? 10, 50);
 
-        // Get Examine index
-        if (!_examineManager.TryGetIndex(ExternalIndexName, out var index))
-        {
-            return new SearchUmbracoResult(
-                false,
-                Array.Empty<UmbracoSearchResultItem>(),
-                "Search index is not available.");
-        }
-
         try
         {
             // Search results show names, keys and places in the tree, so they need an acting user who can
@@ -146,10 +127,17 @@ public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
             // Access is decided per result by the read authorizer (start nodes, sections, permissions, as
             // the CMS tree does). Fetch extra matches so a user restricted to part of the tree still gets
             // up to maxResults of what they can see.
-            var searchResults = PerformSearch(index, args.Query, typeFilter, args.Tags, Math.Min(maxResults * CandidateMultiplier, MaxCandidates));
+            var plan = await CreateSearchPlanAsync(typeFilter, args.Tags);
+            if (plan is null)
+            {
+                return new SearchUmbracoResult(
+                    false,
+                    Array.Empty<UmbracoSearchResultItem>(),
+                    "Search index is not available.");
+            }
 
-            // Enrich results with published content data, keeping only what the user may see
-            var enrichedResults = (await EnrichResultsAsync(searchResults)).Take(maxResults).ToList();
+            var take = Math.Min(maxResults * CandidateMultiplier, MaxCandidates);
+            var enrichedResults = await SearchAndEnrichAsync(plan, args.Query, take, maxResults);
 
             return new SearchUmbracoResult(
                 true,
@@ -165,108 +153,62 @@ public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
         }
     }
 
-    private ISearchResults PerformSearch(IIndex index, string query, string typeFilter, string[]? tags, int maxResults)
+    /// <summary>
+    /// Works out which indexes, searchers, cultures and filters a search covers. Returns null when a searched
+    /// index has no searcher.
+    /// </summary>
+    private async Task<SearchPlan?> CreateSearchPlanAsync(string typeFilter, string[]? tags)
     {
-        var searcher = index.Searcher;
-        var queryExecutor = searcher.CreateQuery();
-
-        IBooleanOperation? booleanQuery = null;
-
-        // Type filter
-        if (typeFilter == "content")
+        var aliases = new List<(string Alias, bool IsMedia)>();
+        if (typeFilter != "media")
         {
-            booleanQuery = queryExecutor.Field("__IndexType", "content");
-        }
-        else if (typeFilter == "media")
-        {
-            booleanQuery = queryExecutor.Field("__IndexType", "media");
+            aliases.Add((global::Umbraco.Cms.Core.Constants.Search.IndexAliases.PublishedContent, false));
         }
 
-        // Build boosted text query using native Lucene syntax
-        var luceneQuery = BuildTextQuery(query);
-
-        if (booleanQuery != null)
+        if (typeFilter != "content")
         {
-            booleanQuery = booleanQuery.And().NativeQuery(luceneQuery);
-        }
-        else
-        {
-            booleanQuery = queryExecutor.NativeQuery(luceneQuery);
+            aliases.Add((global::Umbraco.Cms.Core.Constants.Search.IndexAliases.DraftMedia, true));
         }
 
-        // Tag filter - only when explicit Tags parameter provided (pure filter, not mixed with text search)
-        if (tags is { Length: > 0 })
+        var indexes = new List<SearchIndex>();
+        foreach (var (alias, isMedia) in aliases)
         {
-            booleanQuery = booleanQuery.And().GroupedOr(["tags"], tags);
-        }
-
-        return booleanQuery.Execute(new QueryOptions(0, maxResults));
-    }
-
-    internal static string BuildTextQuery(string query)
-    {
-        var terms = query.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-        // Cap at 10 terms to prevent excessively complex queries
-        if (terms.Length > 10)
-        {
-            terms = terms[..10];
-        }
-
-        var escapedTerms = terms.Select(EscapeLuceneTerm).ToArray();
-        var isMultiWord = escapedTerms.Length > 1;
-
-        var parts = new List<string>();
-
-        // Boosted name field matches (individual terms)
-        foreach (var term in escapedTerms)
-        {
-            parts.Add($"nodeName:{term}^10");
-        }
-
-        // Exact phrase match on name (multi-word only)
-        if (isMultiWord)
-        {
-            var phrase = string.Join(" ", escapedTerms);
-            parts.Add($"nodeName:\"{phrase}\"^15");
-        }
-
-        // Broad field search (individual terms, baseline boost)
-        foreach (var term in escapedTerms)
-        {
-            parts.Add($"{term}^1");
-        }
-
-        // Phrase match across default fields (multi-word only)
-        if (isMultiWord)
-        {
-            var phrase = string.Join(" ", escapedTerms);
-            parts.Add($"\"{phrase}\"^3");
-        }
-
-        return string.Join(" ", parts);
-    }
-
-    internal static string EscapeLuceneTerm(string term)
-    {
-        var sb = new System.Text.StringBuilder(term.Length);
-        foreach (var c in term)
-        {
-            if (c is '+' or '-' or '!' or '(' or ')' or '{' or '}' or '[' or ']' or '^' or '"' or '~' or '*' or '?' or ':' or '\\' or '/')
+            var searcher = _searcherResolver.GetSearcher(alias);
+            if (searcher is null)
             {
-                sb.Append('\\');
+                return null;
             }
 
-            sb.Append(c);
+            indexes.Add(new SearchIndex(alias, isMedia, searcher));
         }
 
-        return sb.ToString();
+        // Tag filter - only when explicit Tags parameter provided. Values within a filter are ORed.
+        Filter[]? filters = tags is { Length: > 0 }
+            ? [new KeywordFilter(global::Umbraco.Cms.Core.Constants.Search.FieldNames.Tags, tags, false)]
+            : null;
+
+        var cultures = (await _languageService.GetAllAsync()).Select(x => x.IsoCode).ToArray();
+        if (cultures.Length == 0)
+        {
+            cultures = [string.Empty];
+        }
+
+        return new SearchPlan(indexes, cultures, filters);
     }
 
-    private async Task<IReadOnlyList<UmbracoSearchResultItem>> EnrichResultsAsync(ISearchResults searchResults)
+    /// <summary>
+    /// Runs the search in up to two passes and returns the items the user may see, best match first. The first
+    /// pass sends the query as typed (the CMS searcher requires every word to match). If that fills fewer than
+    /// <paramref name="maxResults"/>, and the query has several words, a second pass searches each word on its
+    /// own and appends what is new. The searcher is called at most indexes x cultures x (1 + MaxFallbackWords)
+    /// times; the published cache and the authorizer are consulted for at most MaxCandidates distinct items.
+    /// </summary>
+    private async Task<IReadOnlyList<UmbracoSearchResultItem>> SearchAndEnrichAsync(
+        SearchPlan plan,
+        string query,
+        int take,
+        int maxResults)
     {
-        var enrichedResults = new List<UmbracoSearchResultItem>();
-
         // Ensure UmbracoContext exists — not automatically created for backoffice API requests, and
         // never created at all when this tool is invoked from Umbraco.Automate's background dispatcher.
         // A no-op if a context is already ambient. Every result is checked against the published item,
@@ -274,21 +216,119 @@ public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
         using var contextReference = _umbracoContextFactory.EnsureUmbracoContext();
         var umbracoContext = contextReference.UmbracoContext;
 
-        foreach (var searchResult in searchResults)
+        var results = new List<UmbracoSearchResultItem>();
+        var examined = new HashSet<Guid>();
+
+        var candidates = MergeByRank(await SearchAsync(plan, [query], take), examined, MaxCandidates);
+        await EnrichResultsAsync(umbracoContext, candidates, examined, results, maxResults);
+
+        var words = query
+            .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        var candidateBudget = MaxCandidates - examined.Count;
+        if (results.Count < maxResults && words.Length > 1 && candidateBudget > 0)
         {
-            // Try to parse the ID
-            if (!int.TryParse(searchResult.Id, out var nodeId))
+            var fallback = MergeByRank(await SearchAsync(plan, words.Take(MaxFallbackWords), take), examined, candidateBudget);
+            await EnrichResultsAsync(umbracoContext, fallback, examined, results, maxResults);
+        }
+
+        // The search abstractions return documents in rank order without a score, so the score is
+        // synthesized from the final order (highest first).
+        return results.Select((item, index) => item with { Score = results.Count - index }).ToList();
+    }
+
+    /// <summary>
+    /// Searches every index and culture for each query (invariant content is part of every culture's results).
+    /// Each returned list is one search's hits in rank order.
+    /// </summary>
+    private static async Task<IReadOnlyList<IReadOnlyList<SearchHit>>> SearchAsync(
+        SearchPlan plan,
+        IEnumerable<string> queries,
+        int take)
+    {
+        var rankedLists = new List<IReadOnlyList<SearchHit>>();
+        foreach (var query in queries)
+        {
+            foreach (var index in plan.Indexes)
             {
-                continue;
+                foreach (var culture in plan.Cultures)
+                {
+                    // A null access context only matches unprotected content, the same as the CMS's public
+                    // search; member-protected pages must not be offered to the model.
+                    var result = await index.Searcher.SearchAsync(
+                        index.Alias,
+                        query: query,
+                        filters: plan.Filters,
+                        culture: culture.Length == 0 ? null : culture,
+                        accessContext: null,
+                        skip: 0,
+                        take: take);
+
+                    rankedLists.Add(result.Documents.Select(d => new SearchHit(d.Id, index.IsMedia)).ToList());
+                }
+            }
+        }
+
+        return rankedLists;
+    }
+
+    /// <summary>
+    /// Interleaves ranked lists by rank, dropping repeats (the same item can match in several cultures,
+    /// indexes or words) and anything already examined, and stops at <paramref name="limit"/> hits. Lists
+    /// are given in priority order, so on a tie the earlier list wins.
+    /// </summary>
+    private static IReadOnlyList<SearchHit> MergeByRank(
+        IReadOnlyList<IReadOnlyList<SearchHit>> rankedLists,
+        HashSet<Guid> examined,
+        int limit)
+    {
+        var merged = new List<SearchHit>();
+        var seen = new HashSet<Guid>();
+        var longest = rankedLists.Count == 0 ? 0 : rankedLists.Max(x => x.Count);
+        for (var rank = 0; rank < longest && merged.Count < limit; rank++)
+        {
+            foreach (var list in rankedLists)
+            {
+                if (merged.Count >= limit)
+                {
+                    break;
+                }
+
+                if (rank < list.Count && !examined.Contains(list[rank].Key) && seen.Add(list[rank].Key))
+                {
+                    merged.Add(list[rank]);
+                }
+            }
+        }
+
+        return merged;
+    }
+
+    /// <summary>
+    /// Adds the candidates the user may see to <paramref name="results"/>, in order, stopping once
+    /// <paramref name="maxResults"/> are held so later candidates cost no lookups.
+    /// </summary>
+    private async Task EnrichResultsAsync(
+        IUmbracoContext umbracoContext,
+        IReadOnlyList<SearchHit> candidates,
+        HashSet<Guid> examined,
+        List<UmbracoSearchResultItem> results,
+        int maxResults)
+    {
+        foreach (var (key, isMedia) in candidates)
+        {
+            if (results.Count >= maxResults)
+            {
+                return;
             }
 
-            // Determine type from index
-            var isMedia = searchResult.Values.ContainsKey("__IndexType") &&
-                         searchResult.Values["__IndexType"] == "media";
+            examined.Add(key);
 
             IPublishedContent? publishedItem = isMedia
-                ? umbracoContext.Media?.GetById(nodeId)
-                : umbracoContext.Content?.GetById(nodeId);
+                ? umbracoContext.Media?.GetById(key)
+                : umbracoContext.Content?.GetById(key);
 
             if (publishedItem is null)
             {
@@ -301,11 +341,9 @@ public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
 
             if (canSee)
             {
-                enrichedResults.Add(CreateEnrichedResultItem(publishedItem, searchResult.Score, isMedia));
+                results.Add(CreateEnrichedResultItem(publishedItem, 0, isMedia));
             }
         }
-
-        return enrichedResults;
     }
 
     private UmbracoSearchResultItem CreateEnrichedResultItem(IPublishedContent content, float score, bool isMedia)
@@ -345,4 +383,9 @@ public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
         return media.Url();
     }
 
+    private readonly record struct SearchHit(Guid Key, bool IsMedia);
+
+    private sealed record SearchIndex(string Alias, bool IsMedia, ISearcher Searcher);
+
+    private sealed record SearchPlan(IReadOnlyList<SearchIndex> Indexes, string[] Cultures, Filter[]? Filters);
 }

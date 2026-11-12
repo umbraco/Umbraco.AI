@@ -40,47 +40,6 @@ internal sealed class AISpeechToTextService : IAISpeechToTextService
         _contributors = contributors;
     }
 
-    #pragma warning disable CS0618 // Obsolete members - implementing the deprecated interface methods
-
-    public Task<SpeechToTextResponse> TranscribeAsync(
-        Stream audioStream,
-        SpeechToTextOptions? options = null,
-        CancellationToken cancellationToken = default)
-        => TranscribeAsync(
-            b => ConfigureLegacy(b, profileId: null, options),
-            audioStream, cancellationToken);
-
-    public Task<SpeechToTextResponse> TranscribeAsync(
-        Guid profileId,
-        Stream audioStream,
-        SpeechToTextOptions? options = null,
-        CancellationToken cancellationToken = default)
-        => TranscribeAsync(
-            b => ConfigureLegacy(b, profileId, options),
-            audioStream, cancellationToken);
-
-    public Task<ISpeechToTextClient> GetSpeechToTextClientAsync(
-        Guid? profileId = null,
-        CancellationToken cancellationToken = default)
-        => CreateSpeechToTextClientAsync(
-            b => ConfigureLegacy(b, profileId, options: null),
-            cancellationToken);
-
-    #pragma warning restore CS0618
-
-    private static void ConfigureLegacy(AISpeechToTextBuilder builder, Guid? profileId, SpeechToTextOptions? options)
-    {
-        builder.WithAlias("speech-to-text");
-        if (profileId.HasValue)
-        {
-            builder.WithProfile(profileId.Value);
-        }
-        if (options is not null)
-        {
-            builder.WithSpeechToTextOptions(options);
-        }
-    }
-
     public async Task<SpeechToTextResponse> TranscribeAsync(
         Action<AISpeechToTextBuilder> configure,
         Stream audioStream,

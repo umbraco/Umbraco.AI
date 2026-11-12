@@ -150,7 +150,7 @@ public class ConversationSaveCancelledApiTests
                     new ConversationMapDefinition(),
                     new ProjectMapDefinition(),
                 }),
-                Mock.Of<ICoreScopeProvider>(),
+                TestCoreScopeProvider.Create(),
                 NullLogger<UmbracoMapper>.Instance);
         }
 

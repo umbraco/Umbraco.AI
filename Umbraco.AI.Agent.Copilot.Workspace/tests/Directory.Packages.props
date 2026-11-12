@@ -9,15 +9,15 @@
     is NUnit-only. See that project's test file for the full explanation (issue #375).
   -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.Cms.Tests.Integration" Version="[18.0.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.Cms.Tests.Integration" Version="[19.0.0-beta1, 19.999.999)" />
     <PackageVersion Include="NUnit" Version="3.14.0" />
     <PackageVersion Include="NUnit3TestAdapter" Version="4.6.0" />
 
     <!--
-      Umbraco.Cms.Tests.Integration 18.0.0 transitively requires Microsoft.NET.Test.Sdk >= 18.5.1,
+      Umbraco.Cms.Tests.Integration 19.0.0-beta1 transitively requires Microsoft.NET.Test.Sdk >= 18.11.0,
       higher than the repo-wide floor pinned in the root Directory.Packages.props. Override it here
       (scoped to this tests/ subtree only) so restore doesn't report a package downgrade.
     -->
-    <PackageVersion Update="Microsoft.NET.Test.Sdk" Version="18.5.1" />
+    <PackageVersion Update="Microsoft.NET.Test.Sdk" Version="18.11.0" />
   </ItemGroup>
 </Project>

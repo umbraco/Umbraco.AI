@@ -58,7 +58,7 @@ public class AllGuardrailEvaluatorsControllerTests
     private static IUmbracoMapper Mapper()
         => new UmbracoMapper(
             new MapDefinitionCollection(() => [new GuardrailMapDefinition()]),
-            Mock.Of<Umbraco.Cms.Core.Scoping.ICoreScopeProvider>(),
+            global::Umbraco.AI.Tests.Common.TestCoreScopeProvider.Create(),
             NullLogger<UmbracoMapper>.Instance);
 
     private static IAIExperimentalFeatures Flag(bool decisionOn)

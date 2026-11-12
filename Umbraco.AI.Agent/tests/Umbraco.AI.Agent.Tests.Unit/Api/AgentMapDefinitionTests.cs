@@ -27,7 +27,7 @@ public class AgentMapDefinitionTests
             {
                 new AgentMapDefinition(Mock.Of<IShortStringHelper>())
             }),
-            Mock.Of<ICoreScopeProvider>(),
+            TestCoreScopeProvider.Create(),
             NullLogger<UmbracoMapper>.Instance);
     }
 

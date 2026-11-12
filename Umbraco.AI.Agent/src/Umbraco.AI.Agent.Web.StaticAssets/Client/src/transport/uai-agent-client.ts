@@ -1,4 +1,5 @@
 import { type Message, EventType as AGUIEventType, transformChunks, type Tool } from "@ag-ui/client";
+import { contentToText } from "@ag-ui/core";
 import { UaiHttpAgent } from "./uai-http-agent.js";
 import {
     UaiChatMessage,
@@ -80,9 +81,10 @@ export class UaiAgentClient {
     static #toAGUIMessage(m: UaiChatMessage): Message {
         if (m.role === "user") {
             // When contentParts are present, send as content array (AG-UI multimodal draft)
-            const content = m.contentParts && m.contentParts.length > 0
-                ? m.contentParts as unknown as string  // AG-UI client types content as string, but protocol accepts array
-                : m.content;
+            const content =
+                m.contentParts && m.contentParts.length > 0
+                    ? (m.contentParts as unknown as string) // Our part shape isn't AG-UI's ContentPart, but the server reads it
+                    : m.content;
             return {
                 id: m.id,
                 role: "user" as const,
@@ -124,6 +126,8 @@ export class UaiAgentClient {
      * @param resume Optional resume entries for human_approval or tool_call interrupts
      * @param previousAgentId Optional ID of the agent resolved on the previous turn, sent for
      * `auto` agents so the server-side selection chain (e.g. a sticky selector) can see it.
+     * @param signal Optional signal that cancels the run: its request is aborted and no more
+     * events reach the callbacks.
      */
     sendMessage(
         messages: UaiChatMessage[],
@@ -131,7 +135,10 @@ export class UaiAgentClient {
         context?: Array<{ description: string; value: string }>,
         resume?: Array<{ interruptId: string; status: "resolved" | "cancelled"; payload?: unknown }>,
         previousAgentId?: string,
+        signal?: AbortSignal,
     ): void {
+        if (signal?.aborted) return;
+
         const runId = crypto.randomUUID();
 
         // Clear any pending tool args from previous run
@@ -146,22 +153,21 @@ export class UaiAgentClient {
         // side-channel where metadata was sent in a parallel array and rejoined by name.
         const aguiTools = (tools ?? []).map((tool) => UaiAgentClient.#toAGUITool(tool));
 
-        // Thread resume entries and the previous auto-selection pick through forwardedProps.
-        // UaiHttpAgent lifts `resume` into the typed body.resume field on the server request;
-        // `previousAgentId` passes through unchanged for the server's agent-selection chain.
+        // `resume` is a first-class RunAgentInput field; `previousAgentId` has no typed slot, so it
+        // travels in forwardedProps for the server's agent-selection chain.
         const forwardedProps: Record<string, unknown> = {};
-        if (resume?.length) forwardedProps.resume = resume;
         if (previousAgentId) forwardedProps.previousAgentId = previousAgentId;
 
         // Subscribe to the transport's event stream
         // Apply transformChunks to convert CHUNK events → START/CONTENT/END events
-        this.#transport
+        const subscription = this.#transport
             .run({
                 threadId: this.#threadId,
                 runId,
                 messages: convertedMessages,
                 tools: aguiTools,
                 context: context ?? [],
+                resume: resume?.length ? resume : undefined,
                 forwardedProps: Object.keys(forwardedProps).length > 0 ? forwardedProps : undefined,
             })
             .pipe(transformChunks(false))
@@ -172,6 +178,9 @@ export class UaiAgentClient {
                     this.#callbacks.onError?.(err);
                 },
             });
+
+        // Unsubscribing tears down the transport's stream, which aborts the request (see UaiHttpAgent).
+        signal?.addEventListener("abort", () => subscription.unsubscribe(), { once: true });
     }
 
     /**
@@ -234,7 +243,7 @@ export class UaiAgentClient {
                 break;
 
             case AGUIEventType.TOOL_CALL_RESULT:
-                this.#callbacks.onToolCallResult?.(event.toolCallId, event.content);
+                this.#callbacks.onToolCallResult?.(event.toolCallId, contentToText(event.content));
                 break;
 
             case AGUIEventType.RUN_FINISHED:
@@ -328,9 +337,9 @@ export class UaiAgentClient {
             const contentParts = isMultimodal ? (m.content as UaiInputContent[]) : undefined;
             const textContent = isMultimodal
                 ? (m.content as UaiInputContent[])
-                    .filter((p): p is { type: "text"; text: string } => p.type === "text")
-                    .map((p) => p.text)
-                    .join("")
+                      .filter((p): p is { type: "text"; text: string } => p.type === "text")
+                      .map((p) => p.text)
+                      .join("")
                 : (m.content as string);
 
             return {

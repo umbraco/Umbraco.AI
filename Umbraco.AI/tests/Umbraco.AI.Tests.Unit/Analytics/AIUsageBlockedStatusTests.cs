@@ -101,8 +101,8 @@ public class AIUsageBlockedStatusTests
         records
             .Setup(x => x.GetRecordsByPeriodAsync(It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([Record(now.AddMinutes(-2), AIUsageRecordStatus.Succeeded), Record(now.AddMinutes(-1), AIUsageRecordStatus.Blocked)]);
-        var service = new AIUsageAnalyticsService(
-            records.Object, Mock.Of<IAIUsageStatisticsRepository>(), NullLogger<AIUsageAnalyticsService>.Instance);
+        var service = new AIUsageAnalyticsService(new AIUsageStatisticsReader(
+            records.Object, Mock.Of<IAIUsageStatisticsRepository>(), NullLogger<AIUsageStatisticsReader>.Instance));
 
         // Act
         var summary = await service.GetSummaryAsync(now.AddHours(-1), now.AddMinutes(1), AIUsagePeriod.Hourly);

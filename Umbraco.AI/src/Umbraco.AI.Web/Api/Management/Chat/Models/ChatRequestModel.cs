@@ -31,7 +31,7 @@ public class ChatMessageModel
     /// <summary>
     /// The plain-text content of the message. Use <see cref="ContentParts"/> for multimodal content.
     /// </summary>
-    [Obsolete("Use ContentParts instead. This property will be removed in a future version.")]
+    [Obsolete("Use ContentParts instead. Will be removed in v20.")]
     public string? Content { get; set; }
 
     /// <summary>

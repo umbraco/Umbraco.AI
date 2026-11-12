@@ -8,9 +8,11 @@ export const manifests: Array<UmbExtensionManifest> = [
         kind: "default",
         alias: UAI_ANALYTICS_ROOT_WORKSPACE_ALIAS,
         name: "Analytics Root Workspace",
+        element: () => import("./analytics-workspace.element.js"),
+        api: () => import("./analytics-workspace.context.js"),
         meta: {
             entityType: UAI_ANALYTICS_ROOT_ENTITY_TYPE,
-            headline: "Analytics",
+            headline: "#uaiAnalytics_title",
         },
     },
     {

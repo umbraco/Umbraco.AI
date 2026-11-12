@@ -82,6 +82,23 @@ public class BlockGridPropertyValueHandlerTests
     }
 
     [Fact]
+    public void ValidateRemoveItem_RejectsAreaItemAddressedByLayoutKey()
+    {
+        var handler = new BlockGridPropertyValueHandler(new Mock<IContentTypeService>().Object);
+        var envelope = BuildEnvelopeWithNestedBlock(Guid.NewGuid(), out var nestedContentKey);
+        var nestedLayoutKey = Guid.NewGuid();
+        var root = envelope[BlockEnvelopeOps.LayoutPropertyName]![LayoutKey]![0]!;
+        var nested = root["areas"]![0]!["items"]![0]!;
+        nested["key"] = nestedLayoutKey;
+
+        var result = handler.ValidateRemoveItem(envelope, nestedLayoutKey, BuildContext());
+
+        result.IsValid.ShouldBeFalse();
+        result.Error!.Code.ShouldBe(AIPropertyValueOperationError.Codes.OperationNotSupported);
+        nestedContentKey.ShouldNotBe(nestedLayoutKey);
+    }
+
+    [Fact]
     public void ValidateRemoveItem_RejectsBlockNestedInArea()
     {
         // Arrange

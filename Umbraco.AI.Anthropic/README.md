@@ -9,7 +9,7 @@ Anthropic provider plugin for Umbraco.AI, enabling integration with Anthropic's 
 - **Anthropic API Support** - Connect to Anthropic's API (Claude 3.5 Sonnet, Claude 3 Opus, etc.)
 - **Chat Capabilities** - Full support for chat completions with streaming
 - **Advanced Features** - Support for Claude's unique capabilities like extended context windows
-- **Model Configuration** - Configure temperature, max tokens, and other model parameters
+- **Model Configuration** - Configure max tokens, effort and prompt caching. Temperature, top_p and top_k are not supported by Anthropic's current API.
 - **Middleware Support** - Compatible with Umbraco.AI's middleware pipeline
 
 ## Monorepo Context
@@ -24,9 +24,9 @@ dotnet add package Umbraco.AI.Anthropic
 
 ## Requirements
 
-- Umbraco CMS 17.0.0+
+- Umbraco CMS 19.0.0+
 - Umbraco.AI 1.0.0+
-- .NET 10.0
+- .NET 11.0
 
 ## Configuration
 

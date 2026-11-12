@@ -89,9 +89,11 @@ parameters:
                 - name: Umbraco.AI.Agent.Deploy
                   change_var: AgentDeployChanged
                   has_npm: false
-                - name: Umbraco.AI.Automate
-                  change_var: AutomateChanged
-                  has_npm: false
+                # Parked on the v19 line until Umbraco.Automate ships v19
+                # (docs/upgrades/v19.md, Blockers). Uncomment to re-add.
+                # - name: Umbraco.AI.Automate
+                #   change_var: AutomateChanged
+                #   has_npm: false
           - level: 3
             products:
                 - name: Umbraco.AI.Agent.Copilot

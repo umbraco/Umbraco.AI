@@ -29,9 +29,9 @@ dotnet add package Umbraco.AI.HuggingFace
 
 ## Requirements
 
-- Umbraco CMS 17.0.0+
+- Umbraco CMS 19.0.0+
 - Umbraco.AI 1.0.0+
-- .NET 10.0
+- .NET 11.0
 - A [Hugging Face access token](https://huggingface.co/settings/tokens) with the
   *Make calls to Inference Providers* permission
 

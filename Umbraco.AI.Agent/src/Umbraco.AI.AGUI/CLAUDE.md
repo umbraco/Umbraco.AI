@@ -337,11 +337,11 @@ public async IAsyncEnumerable<IAGUIEvent> StreamMessages()
 ## Dependencies
 
 - **Microsoft.AspNetCore.App** - ASP.NET Core framework for SSE streaming
-- **.NET 10.0** (`net10.0`) - Target framework
+- **.NET 11.0** (`net11.0`) - Target framework
 
 ## Target Framework
 
-- .NET 10.0 (`net10.0`)
+- .NET 11.0 (`net11.0`)
 - Nullable reference types enabled
 - Uses Central Package Management (`Directory.Packages.props`)
 

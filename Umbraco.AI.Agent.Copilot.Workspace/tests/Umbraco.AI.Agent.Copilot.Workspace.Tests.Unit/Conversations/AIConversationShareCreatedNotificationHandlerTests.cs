@@ -5,7 +5,6 @@ using Umbraco.AI.Agent.Conversations.Core.Conversations;
 using Umbraco.AI.Agent.Copilot.Workspace.Core.Conversations;
 using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Hosting;
-using Umbraco.Cms.Core.IO;
 using Umbraco.Cms.Core.Mail;
 using Umbraco.Cms.Core.Models.Email;
 using Umbraco.Cms.Core.Models.Membership;
@@ -231,15 +230,13 @@ public class AIConversationShareCreatedNotificationHandlerTests
         var emailSender = new Mock<IEmailSender>();
         var hostingEnvironment = new Mock<IHostingEnvironment>();
         hostingEnvironment.Setup(x => x.ApplicationMainUrl).Returns(new Uri("https://my-site.example"));
-        var ioHelper = new Mock<IIOHelper>();
-        ioHelper.Setup(x => x.ResolveUrl(It.IsAny<string>())).Returns("/umbraco");
+        hostingEnvironment.Setup(x => x.ToAbsolute(It.IsAny<string>())).Returns("/umbraco");
         var logger = new Mock<ILogger<AIConversationShareCreatedNotificationHandler>>();
 
         var handler = new AIConversationShareCreatedNotificationHandler(
             userService.Object,
             emailSender.Object,
             hostingEnvironment.Object,
-            ioHelper.Object,
             logger.Object);
 
         return (handler, userService, emailSender, logger);

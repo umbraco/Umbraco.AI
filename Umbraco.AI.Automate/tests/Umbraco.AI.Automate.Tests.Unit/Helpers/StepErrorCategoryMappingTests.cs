@@ -35,6 +35,21 @@ public class StepErrorCategoryMappingTests
         StepErrorCategoryMapping.FromException(wrapped).ShouldBe(StepRunErrorCategory.RateLimiting);
     }
 
+    [Theory]
+    [InlineData("insufficient_quota", StepRunErrorCategory.ConfigurationError)]
+    [InlineData("credit_balance_exhausted", StepRunErrorCategory.ConfigurationError)]
+    [InlineData("rate_limit_exceeded", StepRunErrorCategory.RateLimiting)]
+    [InlineData(null, StepRunErrorCategory.RateLimiting)]
+    public void FromException_RateLimited_IsTerminalOnlyWhenTheAccountIsOutOfCredit(
+        string? providerCode,
+        StepRunErrorCategory expected)
+    {
+        var error = new AIProviderException(
+            new AIProviderErrorInfo(AIProviderErrorCategory.RateLimited, "user-safe message", providerCode, "raw message"));
+
+        StepErrorCategoryMapping.FromException(error).ShouldBe(expected);
+    }
+
     [Fact]
     public void FromException_NotAProviderFailure_IsUnknown()
     {
@@ -42,7 +57,7 @@ public class StepErrorCategoryMappingTests
     }
 
     // Automate retries every category except these (see DefaultStepErrorClassifier), so the mapping decides
-    // whether a rejected key or an unknown model burns the retry budget, and a quota error still gets one.
+    // whether a rejected key or an unknown model burns the retry budget, and a real rate limit still gets one.
     [Theory]
     [InlineData(AIProviderErrorCategory.Authentication, true)]
     [InlineData(AIProviderErrorCategory.NotFound, true)]

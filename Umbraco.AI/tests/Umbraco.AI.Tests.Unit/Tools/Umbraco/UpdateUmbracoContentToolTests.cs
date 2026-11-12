@@ -130,6 +130,40 @@ public class UpdateUmbracoContentToolTests
             Times.Never);
     }
 
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, true)]
+    public async Task ExecuteAsync_SharedPropertyOnVariantContent_RequiresInvariantForVariantAccess(bool hasAccess, bool reachesUpdate)
+    {
+        var userKey = Guid.NewGuid();
+        var key = Guid.NewGuid();
+        _authorizerMock
+            .Setup(x => x.AuthorizeContentAsync(ActionUpdate.ActionLetter, key, null))
+            .ReturnsAsync(UmbracoWriteAuthorizationResult.Allowed(userKey, hasAccess));
+        var contentMock = CreateContentMock(key, "Home", "homePage", [CreatePropertyMock("shared", "old").Object]);
+        Mock.Get(contentMock.Object.ContentType).Setup(x => x.Variations).Returns(ContentVariation.Culture);
+        contentMock.Setup(x => x.AvailableCultures).Returns(["en-US"]);
+        _contentEditingServiceMock.Setup(x => x.GetAsync(key)).ReturnsAsync(contentMock.Object);
+        _contentEditingServiceMock
+            .Setup(x => x.UpdateAsync(key, It.IsAny<ContentUpdateModel>(), userKey))
+            .ReturnsAsync(Attempt<ContentUpdateResult, ContentEditingOperationStatus>.Fail(
+                ContentEditingOperationStatus.NotFound, new ContentUpdateResult()));
+        var values = new Dictionary<string, JsonElement> { ["shared"] = JsonSerializer.SerializeToElement("x") };
+
+        var result = await _tool.ExecuteAsync(new UpdateUmbracoContentArgs(key, null, values), CancellationToken.None);
+
+        var typed = result.ShouldBeOfType<UpdateUmbracoContentResult>();
+        typed.Success.ShouldBeFalse();
+        if (!reachesUpdate)
+        {
+            typed.Message.ShouldContain("invariant-for-variant permission");
+        }
+
+        _contentEditingServiceMock.Verify(
+            x => x.UpdateAsync(It.IsAny<Guid>(), It.IsAny<ContentUpdateModel>(), It.IsAny<Guid>()),
+            reachesUpdate ? Times.Once : Times.Never);
+    }
+
     [Fact]
     public async Task ExecuteAsync_UpdateFails_ReturnsMappedMessage()
     {

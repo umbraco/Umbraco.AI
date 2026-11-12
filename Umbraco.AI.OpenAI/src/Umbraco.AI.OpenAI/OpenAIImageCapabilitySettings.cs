@@ -27,8 +27,8 @@ public class OpenAIImageCapabilitySettings
     [AIField(
         Label = "Quality",
         Description = "Rendering quality. DALL·E 3 accepts standard and hd; gpt-image accepts low, medium, high and auto. Leave empty for the model default.",
-        EditorUiAlias = "Umb.PropertyEditorUi.Dropdown",
-        EditorConfig = "[{\"alias\":\"multiple\",\"value\":false},{\"alias\":\"items\",\"value\":[\"auto\",\"low\",\"medium\",\"high\",\"standard\",\"hd\"]}]",
+        EditorUiAlias = "Umb.PropertyEditorUi.Dropdown.Single",
+        EditorConfig = "[{\"alias\":\"items\",\"value\":[\"auto\",\"low\",\"medium\",\"high\",\"standard\",\"hd\"]}]",
         SortOrder = 1)]
     [JsonConverter(typeof(DropdownStringJsonConverter))]
     public string? Quality { get; set; }
@@ -40,8 +40,8 @@ public class OpenAIImageCapabilitySettings
     [AIField(
         Label = "Style",
         Description = "Rendering style, supported by DALL·E 3 only. Leave empty for the model default.",
-        EditorUiAlias = "Umb.PropertyEditorUi.Dropdown",
-        EditorConfig = "[{\"alias\":\"multiple\",\"value\":false},{\"alias\":\"items\",\"value\":[\"vivid\",\"natural\"]}]",
+        EditorUiAlias = "Umb.PropertyEditorUi.Dropdown.Single",
+        EditorConfig = "[{\"alias\":\"items\",\"value\":[\"vivid\",\"natural\"]}]",
         SortOrder = 2)]
     [JsonConverter(typeof(DropdownStringJsonConverter))]
     public string? Style { get; set; }

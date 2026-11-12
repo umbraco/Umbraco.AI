@@ -10,52 +10,6 @@ namespace Umbraco.AI.Core.Embeddings;
 public interface IAIEmbeddingService
 {
     /// <summary>
-    /// Generates an embedding for a single text value using the default embedding profile.
-    /// </summary>
-    [Obsolete("Use GenerateEmbeddingAsync with builder overload for full observability. Will be removed in v3.")]
-    Task<Embedding<float>> GenerateEmbeddingAsync(
-        string value,
-        EmbeddingGenerationOptions? options = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Generates an embedding for a single text value using a specific profile.
-    /// </summary>
-    [Obsolete("Use GenerateEmbeddingAsync with .WithProfile(profileId) for full observability. Will be removed in v3.")]
-    Task<Embedding<float>> GenerateEmbeddingAsync(
-        Guid profileId,
-        string value,
-        EmbeddingGenerationOptions? options = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Generates embeddings for multiple text values using the default embedding profile.
-    /// </summary>
-    [Obsolete("Use GenerateEmbeddingsAsync with builder overload for full observability. Will be removed in v3.")]
-    Task<GeneratedEmbeddings<Embedding<float>>> GenerateEmbeddingsAsync(
-        IEnumerable<string> values,
-        EmbeddingGenerationOptions? options = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Generates embeddings for multiple text values using a specific profile.
-    /// </summary>
-    [Obsolete("Use GenerateEmbeddingsAsync with .WithProfile(profileId) for full observability. Will be removed in v3.")]
-    Task<GeneratedEmbeddings<Embedding<float>>> GenerateEmbeddingsAsync(
-        Guid profileId,
-        IEnumerable<string> values,
-        EmbeddingGenerationOptions? options = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets a configured embedding generator for advanced scenarios.
-    /// </summary>
-    [Obsolete("Use CreateEmbeddingGeneratorAsync with builder overload for per-call scope management. Will be removed in v3.")]
-    Task<IEmbeddingGenerator<string, Embedding<float>>> GetEmbeddingGeneratorAsync(
-        Guid? profileId = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
     /// Generates an embedding for a single text value using a builder with full observability
     /// (notifications, telemetry, duration tracking).
     /// </summary>

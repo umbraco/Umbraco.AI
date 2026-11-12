@@ -44,7 +44,13 @@ public abstract class BlockEditorHandlerBase : IAIPropertyValueHandler
 
     /// <inheritdoc />
     public virtual AIValidationResult ValidateRemoveItem(JsonNode? value, Guid blockKey, AIPropertyValueOperationContext context)
-        => AIValidationResult.Valid;
+    {
+        // A reusable element can be referenced several times with the same contentKey; only the
+        // layout key tells those references apart.
+        return value is JsonObject envelope
+            ? BlockEnvelopeOps.ValidateRemovable(envelope, LayoutKey, blockKey)
+            : AIValidationResult.Valid;
+    }
 
     /// <inheritdoc />
     public Task<AIAddItemHandlerResult> AddItemAsync(
@@ -78,6 +84,7 @@ public abstract class BlockEditorHandlerBase : IAIPropertyValueHandler
 
         // Expose entries follow the element type's variance: an invariant element type is exposed
         // once with a null culture/segment, whatever the document's variants are.
+        // Expose entries are per culture only (CMS 19 dropped segments from them).
         var exposeVariants = elementType is null
             ? context.DocumentMetadata.Variants
             : context.DocumentMetadata.Variants

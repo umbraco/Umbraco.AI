@@ -9,6 +9,7 @@ using Umbraco.AI.Deploy.NotificationHandlers;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.DependencyInjection;
+using Umbraco.Deploy.Infrastructure;
 
 namespace Umbraco.AI.Deploy.Composing;
 
@@ -26,9 +27,17 @@ public class UmbracoAIDeployComposer : IComposer
 
         builder.Services.AddSingleton<UmbracoAIDeploySettingsAccessor>();
 
-        // Register component for UDI and disk entity type registration
+        // Register component for UDI type registration
         builder.Components()
             .Append<UmbracoAIDeployComponent>();
+
+        // Disk entity types are serialized to UDA files
+        builder.Services.Configure<DeployEntityTypesOptions>(options => options
+            .AddDiskEntityType(UmbracoAIConstants.UdiEntityType.Context)
+            .AddDiskEntityType(UmbracoAIConstants.UdiEntityType.Connection)
+            .AddDiskEntityType(UmbracoAIConstants.UdiEntityType.Guardrail)
+            .AddDiskEntityType(UmbracoAIConstants.UdiEntityType.Profile)
+            .AddDiskEntityType(UmbracoAIConstants.UdiEntityType.Settings));
 
         // Register notification handlers for automatic artifact management
         builder.AddNotificationAsyncHandler<AIContextSavedNotification, AIContextSavedDeployRefresherNotificationAsyncHandler>();

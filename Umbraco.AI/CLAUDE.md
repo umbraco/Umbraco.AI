@@ -449,7 +449,7 @@ public class MyProvider : AIProviderBase<MyProviderSettings>
 
 ## Target Framework
 
-- .NET 10.0 (`net10.0`)
+- .NET 11.0 (`net11.0`)
 - Uses Central Package Management (`Directory.Packages.props`)
 - Nullable reference types enabled
 

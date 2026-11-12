@@ -76,7 +76,7 @@ The fastest way to get started is using the install-demo script, which creates a
 This creates:
 
 - `Umbraco.AI.local.slnx` - Unified solution with all products
-- `demos/v18/Umbraco.AI.DemoSite/` - Umbraco instance with all packages referenced
+- `demos/v19/Umbraco.AI.DemoSite/` - Umbraco instance with all packages referenced
 
 After running the script, build the frontend and backend:
 
@@ -90,8 +90,8 @@ npm run build
 # Build the unified solution
 dotnet build Umbraco.AI.local.slnx
 
-# Run the demo site (from demos/v18/Umbraco.AI.DemoSite/)
-cd demos/v18/Umbraco.AI.DemoSite
+# Run the demo site (from demos/v19/Umbraco.AI.DemoSite/)
+cd demos/v19/Umbraco.AI.DemoSite
 dotnet run
 ```
 
@@ -200,8 +200,8 @@ Umbraco.AI (Core)
 
 ## Target Framework
 
-- .NET 10.0 (`net10.0`)
-- Umbraco CMS 18.x
+- .NET 11.0 (`net11.0`)
+- Umbraco CMS 19.x
 - Central Package Management via `Directory.Packages.props`
 
 ## Contributing

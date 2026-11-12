@@ -75,13 +75,13 @@ public class MistralProviderSettings
 
 ## Dependencies
 
-- Umbraco CMS 18.x
-- Umbraco.AI 18.x
+- Umbraco CMS 19.x
+- Umbraco.AI 19.x
 - Mistral.SDK (unofficial, MIT-licensed — <https://github.com/tghamm/Mistral.SDK>)
 
 ## Target Framework
 
-- .NET 10.0 (`net10.0`)
+- .NET 11.0 (`net11.0`)
 - Central Package Management via root `Directory.Packages.props`
 - Nullable reference types enabled
 

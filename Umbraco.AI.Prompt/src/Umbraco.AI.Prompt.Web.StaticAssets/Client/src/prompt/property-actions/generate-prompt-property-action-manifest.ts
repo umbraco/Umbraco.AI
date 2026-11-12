@@ -4,6 +4,7 @@ import type { ManifestPropertyEditorUi } from "@umbraco-cms/backoffice/property-
 import { UAI_PROMPT_PROPERTY_ACTION_PREFIX, UAI_PROMPT_SCOPE_CONDITION_ALIAS } from "./constants.js";
 import type { UaiPromptRegistrationModel, UaiPromptPropertyActionMeta } from "./types.js";
 import type { UaiPromptScopeConditionConfig } from "./prompt-scope.condition.js";
+import { expandEditorUiAliases } from "./prompt-scope-matcher.js";
 
 /**
  * Gets the property editor UIs that a prompt should appear on based on its scope.
@@ -39,7 +40,8 @@ function getPropertyEditorUisForScope(prompt: UaiPromptRegistrationModel): strin
             .map((manifest) => manifest.alias);
     }
 
-    return Array.from(editorAliases);
+    // Old aliases also register on their CMS 19 split aliases (the backoffice filters on this list first)
+    return expandEditorUiAliases(editorAliases);
 }
 
 /**

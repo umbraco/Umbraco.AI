@@ -5,6 +5,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using OpenAI;
 using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.Providers.Errors;
 
 namespace Umbraco.AI.FireworksAI;
 
@@ -83,7 +84,7 @@ public class FireworksAIProvider : AIProviderBase<FireworksAIProviderSettings>
                 ? "https://api.fireworks.ai/inference/v1"
                 : settings.Endpoint);
 
-        return new OpenAIClient(credential, new OpenAIClientOptions { Endpoint = endpoint });
+        return new OpenAIClient(credential, new OpenAIClientOptions { Endpoint = endpoint, RetryPolicy = AIClientRetryPolicy.Default });
     }
 
     private async Task<IReadOnlyList<FireworksAIModelInfo>> FetchModelsFromApiAsync(

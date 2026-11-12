@@ -15,6 +15,6 @@ AI prompt template management for Umbraco.AI - create, organize, and execute reu
 
 ### Requirements
 
-- Umbraco CMS 17.0.0+
+- Umbraco CMS 19.0.0+
 - Umbraco.AI 1.0.0+
-- .NET 10.0
+- .NET 11.0

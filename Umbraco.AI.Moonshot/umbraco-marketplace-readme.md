@@ -11,7 +11,7 @@ Moonshot AI provider for Umbraco.AI - integrate Moonshot's Kimi chat models via 
 
 ### Requirements
 
-- Umbraco CMS 18.0.0+
-- Umbraco.AI 18.0.0+
-- .NET 10.0
+- Umbraco CMS 19.0.0+
+- Umbraco.AI 19.0.0+
+- .NET 11.0
 - Moonshot API key

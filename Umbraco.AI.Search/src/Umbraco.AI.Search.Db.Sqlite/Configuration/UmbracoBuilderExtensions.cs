@@ -31,7 +31,7 @@ public static partial class UmbracoBuilderExtensions
             shareUmbracoConnection: aiConnectionString is null);
 
         builder.Services.AddSingleton<IAIVectorStore, EFCoreAIVectorStore>();
-        builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunAISearchMigrationNotificationHandler>();
+        builder.AddNotificationAsyncHandler<PostRuntimePremigrationsUpgradeNotification, RunAISearchMigrationNotificationHandler>();
 
         return builder;
     }

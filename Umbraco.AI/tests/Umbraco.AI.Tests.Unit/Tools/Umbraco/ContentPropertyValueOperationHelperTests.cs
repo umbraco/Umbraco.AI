@@ -417,12 +417,11 @@ public class ContentPropertyValueOperationHelperTests
         property.Value.ShouldBe("new value");
 
         // ContentEditingServiceBase.TryGetAndValidateContentType requires an invariant Variants entry
-        // (Culture and Segment both null) for an invariant content type, or the whole update fails with
+        // (Culture null) for an invariant content type, or the whole update fails with
         // ContentTypeCultureVarianceMismatch even though nothing here changes the name.
         var variant = capturedModel.Variants.Single();
         variant.Name.ShouldBe("Home");
         variant.Culture.ShouldBeNull();
-        variant.Segment.ShouldBeNull();
     }
 
     [Fact]
@@ -819,6 +818,179 @@ public class ContentPropertyValueOperationHelperTests
         var normalized = ContentPropertyValueOperationHelper.NormalizeIncomingValue(value);
 
         normalized.ShouldBe(expected);
+    }
+
+    #endregion
+
+    #region Invariant-for-variant permission
+
+    private const string MergeEditorAlias = "Test.MergeEditor";
+
+    private bool _leafVaries;
+
+    private static readonly UmbracoPropertyPathSegmentArg[] LeafPath =
+        [RootSegment, new(null, Guid.NewGuid()), new("title", null)];
+
+    private Guid SetUpSharedRootOnVariantContent(bool hasAccess, bool rootCanMerge)
+    {
+        var key = Guid.NewGuid();
+        var userKey = Guid.NewGuid();
+        _authorizerMock
+            .Setup(x => x.AuthorizeContentAsync(ActionUpdate.ActionLetter, key, null))
+            .ReturnsAsync(UmbracoWriteAuthorizationResult.Allowed(userKey, hasAccess));
+
+        // The root property is shared (invariant) on culture-variant content.
+        var root = CreatePropertyMock(RootSegment.Alias!, null, editorAlias: MergeEditorAlias);
+        _contentEditingServiceMock
+            .Setup(x => x.GetAsync(key))
+            .ReturnsAsync(CreateContentMock(Guid.NewGuid(), null, ContentVariation.Culture, [root.Object]).Object);
+
+        var mergeEditor = new Mock<IDataEditor>();
+        mergeEditor.Setup(x => x.Alias).Returns(MergeEditorAlias);
+        mergeEditor.Setup(x => x.GetValueEditor()).Returns(_valueEditorMock.Object);
+        mergeEditor.Setup(x => x.CanMergePartialPropertyValues(It.IsAny<IPropertyType>())).Returns(rootCanMerge);
+        _editors.Add(mergeEditor.Object);
+
+        _dispatcherMock
+            .Setup(x => x.DispatchAsync(It.IsAny<AIPropertyValueDispatchRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AIPropertyValueDispatchRequest r, CancellationToken _) =>
+                AIPropertyValueDispatchResult.Ok(JsonValue.Create("new")) with { NestedVariesByCulture = r.Path.Count > 1 ? _leafVaries : null });
+        _contentEditingServiceMock
+            .Setup(x => x.UpdateAsync(key, It.IsAny<ContentUpdateModel>(), userKey))
+            .ReturnsAsync(Attempt<ContentUpdateResult, ContentEditingOperationStatus>.Succeed(
+                ContentEditingOperationStatus.Success, new ContentUpdateResult()));
+        return key;
+    }
+
+    private void VerifyUpdate(Times times) => _contentEditingServiceMock.Verify(
+        x => x.UpdateAsync(It.IsAny<Guid>(), It.IsAny<ContentUpdateModel>(), It.IsAny<Guid>()), times);
+
+    [Fact]
+    public async Task ExecuteAsync_SharedPropertyOnVariantContent_WithoutPermission_IsRefusedWithoutPersisting()
+    {
+        var key = SetUpSharedRootOnVariantContent(hasAccess: false, rootCanMerge: false);
+
+        var result = await ExecuteAsync(key, [RootSegment], culture: "en-US");
+
+        result.Success.ShouldBeFalse();
+        result.Message.ShouldContain("invariant-for-variant permission");
+        VerifyUpdate(Times.Never());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_SharedPropertyOnVariantContent_WithPermission_Persists()
+    {
+        var key = SetUpSharedRootOnVariantContent(hasAccess: true, rootCanMerge: false);
+
+        var result = await ExecuteAsync(key, [RootSegment], culture: "en-US");
+
+        result.Success.ShouldBeTrue();
+        VerifyUpdate(Times.Once());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_BlockEditor_VariantLeafInsideBlock_WithoutPermission_Persists()
+    {
+        _leafVaries = true;
+        var key = SetUpSharedRootOnVariantContent(hasAccess: false, rootCanMerge: true);
+
+        var result = await ExecuteAsync(key, LeafPath, culture: "en-US");
+
+        result.Success.ShouldBeTrue();
+        VerifyUpdate(Times.Once());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_BlockEditor_InvariantPropertyInsideBlock_EvenWithVariantLeaf_IsRefused()
+    {
+        // The first nested property is invariant, so the CMS reverts it whole, whatever varies beneath it.
+        _leafVaries = false;
+        var key = SetUpSharedRootOnVariantContent(hasAccess: false, rootCanMerge: true);
+        UmbracoPropertyPathSegmentArg[] path =
+            [RootSegment, new(null, Guid.NewGuid()), new("shared", null), new(null, Guid.NewGuid()), new("title", null)];
+
+        var result = await ExecuteAsync(key, path, culture: "en-US");
+
+        result.Success.ShouldBeFalse();
+        result.Message.ShouldContain("culture-variant properties of its blocks");
+        VerifyUpdate(Times.Never());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_BlockEditor_VariantPropertyInsideBlock_AllowsAddingNestedBlock()
+    {
+        _leafVaries = true;
+        var key = SetUpSharedRootOnVariantContent(hasAccess: false, rootCanMerge: true);
+        UmbracoPropertyPathSegmentArg[] path = [RootSegment, new(null, Guid.NewGuid()), new("variantBlocks", null)];
+
+        var result = await ExecuteAsync(key, path, AIPropertyOperation.AddItem, culture: "en-US");
+
+        result.Success.ShouldBeTrue();
+        VerifyUpdate(Times.Once());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_BlockEditor_VariantPropertyInsideBlock_AllowsSettingInvariantLeafBeneathIt()
+    {
+        _leafVaries = true;
+        var key = SetUpSharedRootOnVariantContent(hasAccess: false, rootCanMerge: true);
+        UmbracoPropertyPathSegmentArg[] path =
+            [RootSegment, new(null, Guid.NewGuid()), new("variantBlocks", null), new(null, Guid.NewGuid()), new("sharedLeaf", null)];
+
+        var result = await ExecuteAsync(key, path, culture: "en-US");
+
+        result.Success.ShouldBeTrue();
+        VerifyUpdate(Times.Once());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_BlockEditor_SharedLeafInsideBlock_WithoutPermission_IsRefused()
+    {
+        _leafVaries = false;
+        var key = SetUpSharedRootOnVariantContent(hasAccess: false, rootCanMerge: true);
+
+        var result = await ExecuteAsync(key, LeafPath, culture: "en-US");
+
+        result.Success.ShouldBeFalse();
+        VerifyUpdate(Times.Never());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_BlockEditor_WholeRootValue_WithoutPermission_IsRefused()
+    {
+        var key = SetUpSharedRootOnVariantContent(hasAccess: false, rootCanMerge: true);
+
+        var result = await ExecuteAsync(key, [RootSegment], culture: "en-US");
+
+        result.Success.ShouldBeFalse();
+        VerifyUpdate(Times.Never());
+    }
+
+    [Theory]
+    [InlineData(AIPropertyOperation.AddItem)]
+    [InlineData(AIPropertyOperation.RemoveItem)]
+    [InlineData(AIPropertyOperation.MoveItem)]
+    public async Task ExecuteAsync_BlockEditor_LayoutChange_WithoutPermission_IsRefused(AIPropertyOperation operation)
+    {
+        _leafVaries = false;
+        var key = SetUpSharedRootOnVariantContent(hasAccess: false, rootCanMerge: true);
+
+        var result = await ExecuteAsync(key, [RootSegment], operation, culture: "en-US");
+
+        result.Success.ShouldBeFalse();
+        result.Message.ShouldContain("adding, removing or moving its blocks");
+        VerifyUpdate(Times.Never());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_BlockEditor_LayoutChange_WithPermission_Persists()
+    {
+        var key = SetUpSharedRootOnVariantContent(hasAccess: true, rootCanMerge: true);
+
+        var result = await ExecuteAsync(key, [RootSegment], AIPropertyOperation.AddItem, culture: "en-US");
+
+        result.Success.ShouldBeTrue();
+        VerifyUpdate(Times.Once());
     }
 
     #endregion

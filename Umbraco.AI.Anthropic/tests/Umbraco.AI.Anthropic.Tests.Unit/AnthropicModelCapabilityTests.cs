@@ -109,7 +109,7 @@ public class AnthropicModelCapabilityTests
     }
 
     [Fact]
-    public async Task GetModelsAsync_DeclaresTemperatureUnsupportedWhereTheModelRejectsIt()
+    public async Task GetModelsAsync_DeclaresSamplingUnsupportedForEveryModel()
     {
         // Arrange
         var (provider, settings, _) = CreateProvider(TwoModelsPage);
@@ -118,17 +118,18 @@ public class AnthropicModelCapabilityTests
         // Act
         var descriptors = await ((Core.Providers.IAICapability)capability).GetModelsAsync(settings);
 
-        // Assert — Opus 5 rejects the sampling parameters but reports effort support, and Haiku 4.5 is the
-        // exact inverse, so the two declarations cannot be reading each other's source
+        // Assert — API version 2026-10-21 removed the sampling parameters for every model, while effort
+        // support still varies per model (Opus 5 reports it, Haiku 4.5 is the inverse)
         var opus = descriptors.Single(d => d.Model.ModelId == "claude-opus-5");
         // The whole sampling group is declared, not just the field the editor happens to render: core
-        // strips exactly what is declared, and these models reject top_p and top_k as well.
+        // strips exactly what is declared, and top_p and top_k are gone too.
         opus.Metadata[AIModelMetadataKeys.ProfileSettingsUnsupported]
             .ShouldBe("temperature,topP,topK,frequencyPenalty,presencePenalty");
         opus.Metadata.ContainsKey(AIModelMetadataKeys.CapabilitySettingsUnsupported).ShouldBeFalse();
 
         var haiku = descriptors.Single(d => d.Model.ModelId == "claude-haiku-4-5-20251001");
-        haiku.Metadata.ContainsKey(AIModelMetadataKeys.ProfileSettingsUnsupported).ShouldBeFalse();
+        haiku.Metadata[AIModelMetadataKeys.ProfileSettingsUnsupported]
+            .ShouldBe("temperature,topP,topK,frequencyPenalty,presencePenalty");
         haiku.Metadata[AIModelMetadataKeys.CapabilitySettingsUnsupported].ShouldBe("effort");
     }
 

@@ -11,7 +11,7 @@ namespace Umbraco.AI.Agent.Persistence.Notifications;
 /// <summary>
 /// Notification handler that runs database migrations on application startup.
 /// </summary>
-internal sealed class RunAgentMigrationNotificationHandler : INotificationAsyncHandler<UmbracoApplicationStartedNotification>
+internal sealed class RunAgentMigrationNotificationHandler : INotificationAsyncHandler<PostRuntimePremigrationsUpgradeNotification>
 {
     private readonly IConfiguration _configuration;
     private readonly ILogger<RunAgentMigrationNotificationHandler> _logger;
@@ -25,7 +25,7 @@ internal sealed class RunAgentMigrationNotificationHandler : INotificationAsyncH
     }
 
     /// <inheritdoc />
-    public async Task HandleAsync(UmbracoApplicationStartedNotification notification, CancellationToken cancellationToken)
+    public async Task HandleAsync(PostRuntimePremigrationsUpgradeNotification notification, CancellationToken cancellationToken)
     {
         try
         {
@@ -73,8 +73,9 @@ internal sealed class RunAgentMigrationNotificationHandler : INotificationAsyncH
         }
         catch (Exception ex)
         {
+            // Log and keep serving: this runs during CMS boot, so rethrowing would stop the whole
+            // site from starting when only Umbraco.AI.Agent is affected.
             _logger.LogError(ex, "Failed to run Umbraco.AI.Agent database migrations.");
-            throw;
         }
     }
 }

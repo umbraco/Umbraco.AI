@@ -30,14 +30,17 @@ Check the initial prompt/task for a `--products` parameter:
 - If `--products="Product1,Product2,..."` is present → Use **Automated Mode**
 - If no products specified → Use **Interactive Mode**
 
+Parked products (listed in `scripts/parked-products.txt`) are skipped: they are not offered, and are rejected if passed in `--products`.
+
 ### Automated Mode (products provided)
 
 1. **Parse product list** from parameter (comma-separated)
 2. **Discover available products** to validate:
     ```bash
-    find . -maxdepth 1 -type d -name "Umbraco.AI*" | sed 's|^\./||' | sort
+    find . -maxdepth 1 -type d -name "Umbraco.AI*" | sed 's|^\./||' | sort \
+      | grep -v -x -F -f <(grep -v -E '^\s*(#|$)' scripts/parked-products.txt | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//') || true
     ```
-3. **Validate** each product exists in the repository
+3. **Validate** each product exists in the repository and is not parked
 4. **Skip to Generate Manifest** (step 5 below)
 
 ### Interactive Mode (no products provided)
@@ -45,7 +48,8 @@ Check the initial prompt/task for a `--products` parameter:
 1. **Discover products** - Find all `Umbraco.AI*` directories at repository root:
 
     ```bash
-    find . -maxdepth 1 -type d -name "Umbraco.AI*" | sed 's|^\./||' | sort
+    find . -maxdepth 1 -type d -name "Umbraco.AI*" | sed 's|^\./||' | sort \
+      | grep -v -x -F -f <(grep -v -E '^\s*(#|$)' scripts/parked-products.txt | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//') || true
     ```
 
 2. **Display numbered menu** - Show all products with numbers:

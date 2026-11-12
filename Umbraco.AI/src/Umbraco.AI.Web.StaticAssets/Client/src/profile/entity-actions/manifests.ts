@@ -1,9 +1,14 @@
+import {
+    UMB_ENTITY_ACTION_GROUP_CREATE,
+    UMB_ENTITY_ACTION_GROUP_STRUCTURE,
+} from "@umbraco-cms/backoffice/entity-action";
 import { UAI_PROFILE_ENTITY_TYPE, UAI_PROFILE_ROOT_ENTITY_TYPE } from "../constants.js";
 
 export const profileEntityActionManifests: Array<UmbExtensionManifest> = [
     {
         type: "entityAction",
         kind: "default",
+        group: UMB_ENTITY_ACTION_GROUP_CREATE,
         alias: "UmbracoAI.EntityAction.Profile.Create",
         name: "Create Profile Entity Action",
         weight: 1200,
@@ -18,6 +23,7 @@ export const profileEntityActionManifests: Array<UmbExtensionManifest> = [
     {
         type: "entityAction",
         kind: "default",
+        group: UMB_ENTITY_ACTION_GROUP_STRUCTURE,
         alias: "UmbracoAI.EntityAction.Profile.Delete",
         name: "Delete Profile Entity Action",
         weight: 100,

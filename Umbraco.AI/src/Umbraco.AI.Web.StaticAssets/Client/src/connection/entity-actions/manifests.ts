@@ -1,9 +1,14 @@
+import {
+    UMB_ENTITY_ACTION_GROUP_CREATE,
+    UMB_ENTITY_ACTION_GROUP_STRUCTURE,
+} from "@umbraco-cms/backoffice/entity-action";
 import { UAI_CONNECTION_ENTITY_TYPE, UAI_CONNECTION_ROOT_ENTITY_TYPE } from "../constants.js";
 
 export const connectionEntityActionManifests: Array<UmbExtensionManifest> = [
     {
         type: "entityAction",
         kind: "default",
+        group: UMB_ENTITY_ACTION_GROUP_CREATE,
         alias: "UmbracoAI.EntityAction.Connection.Create",
         name: "Create Connection Entity Action",
         weight: 1200,
@@ -18,6 +23,7 @@ export const connectionEntityActionManifests: Array<UmbExtensionManifest> = [
     {
         type: "entityAction",
         kind: "default",
+        group: UMB_ENTITY_ACTION_GROUP_STRUCTURE,
         alias: "UmbracoAI.EntityAction.Connection.Delete",
         name: "Delete Connection Entity Action",
         weight: 100,

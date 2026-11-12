@@ -34,6 +34,9 @@ export const UAI_TEST_EXECUTION_REPOSITORY_ALIAS = "UmbracoAI.Repository.Test.Ex
 export const UAI_TEST_RUN_DETAIL_REPOSITORY_ALIAS = "UmbracoAI.Repository.TestRun.Detail";
 export const UAI_TEST_GRADER_ITEM_REPOSITORY_ALIAS = "UmbracoAI.Repository.Test.GraderItem";
 
+// Entity action group aliases
+export const UAI_ENTITY_ACTION_GROUP_RESULTS = "UmbracoAI.EntityActionGroup.Results";
+
 // Icons
 export const UAI_TEST_ICON = "icon-lab";
 export const UAI_TEST_RUN_ICON = "icon-timer";

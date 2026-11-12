@@ -1,9 +1,11 @@
+import { UMB_ENTITY_ACTION_GROUP_CREATE } from "@umbraco-cms/backoffice/entity-action";
 import { UAI_AGENT_ENTITY_TYPE, UAI_AGENT_ROOT_ENTITY_TYPE } from "../constants.js";
 
 export const agentEntityActionManifests: Array<UmbExtensionManifest> = [
     {
         type: "entityAction",
         kind: "default",
+        group: UMB_ENTITY_ACTION_GROUP_CREATE,
         alias: "UmbracoAIAgent.EntityAction.Agent.Create",
         name: "Create Agent Entity Action",
         weight: 1200,

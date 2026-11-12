@@ -1,3 +1,7 @@
+import {
+    UMB_ENTITY_ACTION_GROUP_CREATE,
+    UMB_ENTITY_ACTION_GROUP_STRUCTURE,
+} from "@umbraco-cms/backoffice/entity-action";
 import { UAI_PROJECT_ENTITY_TYPE } from "../../constants.js";
 
 /**
@@ -9,6 +13,7 @@ export const projectEntityActionManifests: UmbExtensionManifest[] = [
     {
         type: "entityAction",
         kind: "default",
+        group: UMB_ENTITY_ACTION_GROUP_CREATE,
         alias: "Uai.CopilotWorkspace.EntityAction.Project.NewChat",
         name: "New Chat In Project Entity Action",
         weight: 200,
@@ -19,6 +24,7 @@ export const projectEntityActionManifests: UmbExtensionManifest[] = [
     {
         type: "entityAction",
         kind: "default",
+        group: UMB_ENTITY_ACTION_GROUP_STRUCTURE,
         alias: "Uai.CopilotWorkspace.EntityAction.Project.Delete",
         name: "Delete Project Entity Action",
         weight: 100,

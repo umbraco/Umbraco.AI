@@ -1,9 +1,27 @@
-import { UAI_TEST_ENTITY_TYPE, UAI_TEST_ROOT_ENTITY_TYPE, UAI_TEST_RUN_ENTITY_TYPE } from "../constants.js";
+import {
+	UMB_ENTITY_ACTION_GROUP_CREATE,
+	UMB_ENTITY_ACTION_GROUP_STRUCTURE,
+} from "@umbraco-cms/backoffice/entity-action";
+import {
+	UAI_ENTITY_ACTION_GROUP_RESULTS,
+	UAI_TEST_ENTITY_TYPE,
+	UAI_TEST_ROOT_ENTITY_TYPE,
+	UAI_TEST_RUN_ENTITY_TYPE,
+} from "../constants.js";
 
 export const testEntityActionManifests: Array<UmbExtensionManifest> = [
 	{
+		type: "entityActionGroup",
+		alias: UAI_ENTITY_ACTION_GROUP_RESULTS,
+		name: "Results Entity Action Group",
+		// Between the CMS Create (1200) and Structure (800) groups
+		weight: 1000,
+		meta: { label: "#uaiActionGroups_results" },
+	},
+	{
 		type: "entityAction",
 		kind: "default",
+		group: UMB_ENTITY_ACTION_GROUP_CREATE,
 		alias: "UmbracoAI.EntityAction.Test.Create",
 		name: "Create Test Entity Action",
 		weight: 1200,
@@ -18,6 +36,7 @@ export const testEntityActionManifests: Array<UmbExtensionManifest> = [
 	{
 		type: "entityAction",
 		kind: "default",
+		group: UMB_ENTITY_ACTION_GROUP_STRUCTURE,
 		alias: "UmbracoAI.EntityAction.Test.Delete",
 		name: "Delete Test Entity Action",
 		weight: 100,
@@ -31,6 +50,7 @@ export const testEntityActionManifests: Array<UmbExtensionManifest> = [
 	{
 		type: "entityAction",
 		kind: "default",
+		group: UAI_ENTITY_ACTION_GROUP_RESULTS,
 		alias: "UmbracoAI.EntityAction.TestRun.ViewDetail",
 		name: "View Detail Test Run Entity Action",
 		weight: 1000,
@@ -44,6 +64,7 @@ export const testEntityActionManifests: Array<UmbExtensionManifest> = [
 	{
 		type: "entityAction",
 		kind: "default",
+		group: UAI_ENTITY_ACTION_GROUP_RESULTS,
 		alias: "UmbracoAI.EntityAction.TestRun.SetBaseline",
 		name: "Set Baseline Test Run Entity Action",
 		weight: 900,
@@ -57,6 +78,7 @@ export const testEntityActionManifests: Array<UmbExtensionManifest> = [
 	{
 		type: "entityAction",
 		kind: "default",
+		group: UMB_ENTITY_ACTION_GROUP_STRUCTURE,
 		alias: "UmbracoAI.EntityAction.TestRun.Delete",
 		name: "Delete Test Run Entity Action",
 		weight: 100,

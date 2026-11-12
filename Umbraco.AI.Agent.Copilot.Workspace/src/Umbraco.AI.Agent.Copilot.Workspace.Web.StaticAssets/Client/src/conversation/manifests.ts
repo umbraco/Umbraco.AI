@@ -1,3 +1,4 @@
+import { UMB_ENTITY_ACTION_GROUP_STRUCTURE } from "@umbraco-cms/backoffice/entity-action";
 import {
     UAI_CONVERSATION_ENTITY_TYPE,
     UAI_CONVERSATION_SHARED_FLAG,
@@ -95,6 +96,7 @@ export const conversationManifests: UmbExtensionManifest[] = [
     {
         type: "entityAction",
         kind: "default",
+        group: UMB_ENTITY_ACTION_GROUP_STRUCTURE,
         alias: "Uai.CopilotWorkspace.EntityAction.Conversation.Pin",
         name: "Pin Conversation Entity Action",
         weight: 600,
@@ -106,6 +108,7 @@ export const conversationManifests: UmbExtensionManifest[] = [
     {
         type: "entityAction",
         kind: "default",
+        group: UMB_ENTITY_ACTION_GROUP_STRUCTURE,
         alias: "Uai.CopilotWorkspace.EntityAction.Conversation.Unpin",
         name: "Unpin Conversation Entity Action",
         weight: 600,
@@ -117,6 +120,7 @@ export const conversationManifests: UmbExtensionManifest[] = [
     {
         type: "entityAction",
         kind: "default",
+        group: UMB_ENTITY_ACTION_GROUP_STRUCTURE,
         alias: "Uai.CopilotWorkspace.EntityAction.Conversation.Rename",
         name: "Rename Conversation Entity Action",
         weight: 500,
@@ -128,6 +132,7 @@ export const conversationManifests: UmbExtensionManifest[] = [
     {
         type: "entityAction",
         kind: "default",
+        group: UMB_ENTITY_ACTION_GROUP_STRUCTURE,
         alias: "Uai.CopilotWorkspace.EntityAction.Conversation.Move",
         name: "Move Conversation Entity Action",
         weight: 400,
@@ -139,6 +144,7 @@ export const conversationManifests: UmbExtensionManifest[] = [
     {
         type: "entityAction",
         kind: "default",
+        group: UMB_ENTITY_ACTION_GROUP_STRUCTURE,
         alias: "Uai.CopilotWorkspace.EntityAction.Conversation.Archive",
         name: "Archive Conversation Entity Action",
         weight: 300,
@@ -150,6 +156,7 @@ export const conversationManifests: UmbExtensionManifest[] = [
     {
         type: "entityAction",
         kind: "default",
+        group: UMB_ENTITY_ACTION_GROUP_STRUCTURE,
         alias: "Uai.CopilotWorkspace.EntityAction.Conversation.Unarchive",
         name: "Restore Conversation Entity Action",
         weight: 300,
@@ -161,6 +168,7 @@ export const conversationManifests: UmbExtensionManifest[] = [
     {
         type: "entityAction",
         kind: "default",
+        group: UMB_ENTITY_ACTION_GROUP_STRUCTURE,
         alias: "Uai.CopilotWorkspace.EntityAction.Conversation.Delete",
         name: "Delete Conversation Entity Action",
         weight: 100,

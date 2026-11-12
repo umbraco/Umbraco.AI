@@ -1,9 +1,14 @@
+import {
+    UMB_ENTITY_ACTION_GROUP_CREATE,
+    UMB_ENTITY_ACTION_GROUP_STRUCTURE,
+} from "@umbraco-cms/backoffice/entity-action";
 import { UAI_CONTEXT_ENTITY_TYPE, UAI_CONTEXT_ROOT_ENTITY_TYPE } from "../constants.js";
 
 export const contextEntityActionManifests: Array<UmbExtensionManifest> = [
     {
         type: "entityAction",
         kind: "default",
+        group: UMB_ENTITY_ACTION_GROUP_CREATE,
         alias: "UmbracoAI.EntityAction.Context.Create",
         name: "Create Context Entity Action",
         weight: 1200,
@@ -17,6 +22,7 @@ export const contextEntityActionManifests: Array<UmbExtensionManifest> = [
     {
         type: "entityAction",
         kind: "default",
+        group: UMB_ENTITY_ACTION_GROUP_STRUCTURE,
         alias: "UmbracoAI.EntityAction.Context.Delete",
         name: "Delete Context Entity Action",
         weight: 100,

@@ -91,6 +91,7 @@ public class SearchUmbracoTool : AIToolBase<SearchUmbracoArgs>
     public override string Description =>
         "Searches Umbraco content and media by text query. " +
         "Searches across content fields and tags. " +
+        "Only published content is searched: unpublished pages and unpublished changes are not found. " +
         "Returns matching items with metadata including name, type, URL, and thumbnail for media. " +
         "Use type parameter to filter results: 'content' for content only, 'media' for media only, or 'all' for both. " +
         "Use tags parameter to filter by exact tag values (results must have at least one matching tag). " +

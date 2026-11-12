@@ -5,6 +5,17 @@ All notable changes to Umbraco.AI.Deploy will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [19.0.0-rc.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Deploy@18.4.0...Umbraco.AI.Deploy@19.0.0-rc.1) (2026-11-12)
+
+### ⚠ BREAKING CHANGES
+
+* Requires Umbraco CMS 19, Umbraco Deploy 19 and .NET 11.
+* **deploy:** `UmbracoAIDeployComponent` no longer takes an `IDiskEntityService` constructor parameter. Deploy 19 removed the method it was used for; disk entity types are now registered by the composer through `DeployEntityTypesOptions`.
+
+### Notes
+
+* On SQLite, give Umbraco.AI its own database (the `umbracoAIDbDSN` connection string) when using Deploy. With one shared SQLite file, a Deploy import can fail with "database is locked".
+
 ## [18.4.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Deploy@18.3.1...Umbraco.AI.Deploy@18.4.0) (2026-11-03)
 
 ### feat

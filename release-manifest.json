@@ -1,5 +1,10 @@
 {
   "include": [
+    "Umbraco.AI.Agent.Deploy",
+    "Umbraco.AI.Deploy",
+    "Umbraco.AI.Prompt.Deploy"
+  ],
+  "exclude": [
     "Umbraco.AI",
     "Umbraco.AI.Agent",
     "Umbraco.AI.Agent.Copilot",
@@ -8,6 +13,7 @@
     "Umbraco.AI.Alibaba",
     "Umbraco.AI.Amazon",
     "Umbraco.AI.Anthropic",
+    "Umbraco.AI.Automate",
     "Umbraco.AI.Cloudflare",
     "Umbraco.AI.DeepSeek",
     "Umbraco.AI.FireworksAI",
@@ -23,11 +29,5 @@
     "Umbraco.AI.TogetherAI",
     "Umbraco.AI.TypeSafe",
     "Umbraco.AI.ZAI"
-  ],
-  "exclude": [
-    "Umbraco.AI.Agent.Deploy",
-    "Umbraco.AI.Automate",
-    "Umbraco.AI.Deploy",
-    "Umbraco.AI.Prompt.Deploy"
   ]
 }

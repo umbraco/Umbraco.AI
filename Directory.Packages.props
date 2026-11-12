@@ -18,7 +18,6 @@
     <PackageVersion Include="Umbraco.Cms.Infrastructure" Version="[19.0.0-rc1, 19.999.999)" />
     <PackageVersion Include="Umbraco.Cms.Web.Common" Version="[19.0.0-rc1, 19.999.999)" />
     <PackageVersion Include="Umbraco.Cms.Api.Management" Version="[19.0.0-rc1, 19.999.999)" />
-    <PackageVersion Include="Umbraco.Cms.Api.Common" Version="[19.0.0-rc1, 19.999.999)" />
     <PackageVersion Include="Umbraco.Cms.Persistence.EFCore" Version="[19.0.0-rc1, 19.999.999)" />
     <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.SqlServer" Version="[19.0.0-rc1, 19.999.999)" />
     <PackageVersion Include="Umbraco.Cms.Persistence.EFCore.Sqlite" Version="[19.0.0-rc1, 19.999.999)" />
@@ -31,7 +30,7 @@
 
   <!-- Umbraco Deploy. -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.Deploy.Infrastructure" Version="[19.0.0-beta1, 19.999.999)" />
+    <PackageVersion Include="Umbraco.Deploy.Infrastructure" Version="[19.0.0-rc1, 19.999.999)" />
   </ItemGroup>
 
   <!-- Umbraco Automate -->

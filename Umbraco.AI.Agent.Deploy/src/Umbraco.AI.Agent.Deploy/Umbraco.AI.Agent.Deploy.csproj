@@ -24,8 +24,5 @@
 
   <ItemGroup>
     <PackageReference Include="Umbraco.Deploy.Infrastructure" />
-    <!-- Temporary: Deploy 19.0.0-beta1 floors Umbraco.Cms.Api.Common at beta1, which restore
-         picks over the rc1 the CMS needs (NU1605). Remove once Deploy ships a 19 rc. -->
-    <PackageReference Include="Umbraco.Cms.Api.Common" />
   </ItemGroup>
 </Project>

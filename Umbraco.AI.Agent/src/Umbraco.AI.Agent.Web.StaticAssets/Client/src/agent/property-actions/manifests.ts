@@ -1,3 +1,4 @@
+import { UAI_PROPERTY_ACTION_GROUP_AI } from "@umbraco-ai/core";
 import {
     UAI_AGENT_STARTER_PROMPTS_PROPERTY_EDITOR_UI_ALIAS,
     UAI_SUGGEST_STARTER_PROMPTS_PROPERTY_ACTION_ALIAS,
@@ -7,6 +8,7 @@ export const agentPropertyActionManifests: Array<UmbExtensionManifest> = [
     {
         type: "propertyAction",
         kind: "default",
+        group: UAI_PROPERTY_ACTION_GROUP_AI,
         alias: UAI_SUGGEST_STARTER_PROMPTS_PROPERTY_ACTION_ALIAS,
         name: "Suggest Starter Prompts Property Action",
         forPropertyEditorUis: [UAI_AGENT_STARTER_PROMPTS_PROPERTY_EDITOR_UI_ALIAS],

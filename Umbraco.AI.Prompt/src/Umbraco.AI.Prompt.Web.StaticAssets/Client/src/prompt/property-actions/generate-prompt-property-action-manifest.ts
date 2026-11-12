@@ -1,6 +1,7 @@
 import type { ManifestPropertyAction } from "@umbraco-cms/backoffice/property-action";
 import { umbExtensionsRegistry } from "@umbraco-cms/backoffice/extension-registry";
 import type { ManifestPropertyEditorUi } from "@umbraco-cms/backoffice/property-editor";
+import { UAI_PROPERTY_ACTION_GROUP_AI } from "@umbraco-ai/core";
 import { UAI_PROMPT_PROPERTY_ACTION_PREFIX, UAI_PROMPT_SCOPE_CONDITION_ALIAS } from "./constants.js";
 import type { UaiPromptRegistrationModel, UaiPromptPropertyActionMeta } from "./types.js";
 import type { UaiPromptScopeConditionConfig } from "./prompt-scope.condition.js";
@@ -71,6 +72,7 @@ export function generatePromptPropertyActionManifest(
     return {
         type: "propertyAction",
         kind: "default",
+        group: UAI_PROPERTY_ACTION_GROUP_AI,
         alias: `${UAI_PROMPT_PROPERTY_ACTION_PREFIX}.${prompt.alias}`,
         name: `Insert Prompt: ${prompt.name}`,
         forPropertyEditorUis: propertyEditorUis,

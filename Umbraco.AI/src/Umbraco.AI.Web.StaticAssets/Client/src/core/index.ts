@@ -5,6 +5,7 @@ export * from "./entity-action/delete/index.js";
 export * from "./entity-bulk-action/delete/index.js";
 export * from "./events/index.js";
 export * from "./modals/index.js";
+export * from "./property-action/index.js";
 export * from "./types.js";
 export * from "./utils/index.js";
 export * from "./version-history/index.js";

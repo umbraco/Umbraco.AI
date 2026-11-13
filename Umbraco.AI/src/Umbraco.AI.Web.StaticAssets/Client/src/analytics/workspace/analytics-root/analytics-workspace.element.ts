@@ -5,7 +5,7 @@ import { USAGE_DATE_PRESETS, defaultUsageDateRange } from "../../usage/usage-dat
 import { UAI_ANALYTICS_WORKSPACE_CONTEXT } from "./analytics-workspace.context-token.js";
 
 /**
- * The analytics root workspace: the standard workspace editor, with the date range picker in its header.
+ * The analytics root workspace: the standard workspace editor, with the date range picker at the right of its header.
  * The workspace views (Usage) are routed by the editor as for any workspace.
  */
 @customElement("uai-analytics-workspace")
@@ -37,7 +37,7 @@ export class UaiAnalyticsWorkspaceElement extends UmbLitElement {
     override render() {
         const headline = this.manifest?.meta.headline;
         return html`<umb-workspace-editor headline=${ifDefined(headline ? this.localize.string(headline) : undefined)}>
-            <div slot="action-menu" class="actions">
+            <div slot="header" class="actions">
                 <uaui-date-range
                     .presets=${USAGE_DATE_PRESETS}
                     .value=${this._range}
@@ -50,10 +50,14 @@ export class UaiAnalyticsWorkspaceElement extends UmbLitElement {
 
     static override styles = [
         css`
+            /* In the header slot and growing (as the other workspace editors' headers do), the picker
+               fills the space between the headline and the view tabs and ends at the right. In the
+               action-menu slot it sat just after the headline once a second view added tabs. */
             .actions {
                 display: flex;
+                flex: 1 1 auto;
                 align-items: center;
-                padding-inline-end: var(--uui-size-layout-1);
+                justify-content: flex-end;
             }
         `,
     ];

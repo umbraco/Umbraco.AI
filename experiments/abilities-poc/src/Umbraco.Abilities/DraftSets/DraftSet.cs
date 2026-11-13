@@ -27,6 +27,9 @@ public sealed class DraftSet
     public required string Name { get; set; }
 
     public List<RecordedCall> Calls { get; } = [];
+
+    /// <summary>The apply steps already done, so a failed apply resumes where it stopped and nothing applies twice.</summary>
+    public HashSet<string> AppliedSteps { get; } = [];
 }
 
 public interface IDraftSetStore
@@ -50,11 +53,15 @@ public sealed class InMemoryDraftSetStore : IDraftSetStore
 }
 
 /// <summary>
-/// The transaction applies run in. Products whose writes share it get all-or-nothing apply across
-/// entity types; in Umbraco this would be an <c>ICoreScope</c>.
+/// A product's own transaction, such as an Umbraco scope for content or Commerce's unit of work. Products can use
+/// their own connection strings, so a draft set never assumes one transaction across products: each product's
+/// changes apply all or nothing in its own unit of work, one product after another.
 /// </summary>
 public interface IUnitOfWorkProvider
 {
+    /// <summary>Names the product's step when a set is applied, e.g. "Content" or "Commerce".</summary>
+    string Name { get; }
+
     IUnitOfWork Begin();
 }
 
@@ -89,4 +96,12 @@ public sealed record EntityProblems(EntityRef Entity, IReadOnlyList<Problem> Pro
 
 public sealed record DraftSetChange(EntityRef Entity, string Change, int Edits);
 
-public sealed record DraftSetSummary(Guid Id, string Name, IReadOnlyList<DraftSetChange> Entities, IReadOnlyList<string> OperationsOnApply);
+/// <summary>One step of applying a set: a product's changes in its own transaction, or one recorded operation.</summary>
+public sealed record ApplyStep(string Name, string Description, bool Applied);
+
+public sealed record DraftSetSummary(
+    Guid Id,
+    string Name,
+    IReadOnlyList<DraftSetChange> Entities,
+    IReadOnlyList<string> OperationsOnApply,
+    IReadOnlyList<ApplyStep> ApplyPlan);

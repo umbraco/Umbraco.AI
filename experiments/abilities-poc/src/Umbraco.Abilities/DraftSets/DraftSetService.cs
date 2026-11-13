@@ -7,15 +7,20 @@ namespace Umbraco.Abilities.DraftSets;
 
 /// <summary>
 /// Records Write ability calls instead of running them, works out an entity's state inside a set, and applies
-/// a set as one unit. Unlike the CMS Draft Sets PoC, the working state is computed in memory from
+/// the set. Unlike the CMS Draft Sets PoC, the working state is computed in memory from
 /// <see cref="IEntityDefinition.LoadAsync"/> plus the recorded edits, so it works for any entity type.
+/// <para>
+/// Applying is atomic per product, not across products: each product's changes save in that product's own
+/// transaction, one product after another, and recorded operations (such as switching a discount on) run last.
+/// If a step fails, the steps before it stay applied, the set is kept, and applying again resumes from the
+/// failed step.
+/// </para>
 /// </summary>
 public sealed class DraftSetService(
     IDraftSetStore store,
     AbilityRegistry abilities,
     EntityDefinitionRegistry definitions,
-    ItemTypeRegistry itemTypes,
-    IUnitOfWorkProvider unitOfWork)
+    ItemTypeRegistry itemTypes)
 {
     public DraftSet Create(string name)
     {
@@ -46,6 +51,13 @@ public sealed class DraftSetService(
 
             var target = edit.Prepare(recorded);
             var definition = definitions.Get(target.EntityType);
+            if (set.AppliedSteps.Contains(definition.UnitOfWork.Name))
+            {
+                throw new AbilityInputException(
+                    $"{definition.UnitOfWork.Name} changes in this set are already applied. Start a new draft set to change them again.",
+                    [new Problem("entityType", "Already applied.")]);
+            }
+
             var working = await GetWorkingStateAsync(set, target.EntityType, target.EntityKey, cancellationToken);
 
             if (target.Creates)
@@ -121,7 +133,7 @@ public sealed class DraftSetService(
         var set = Get(setId);
         var result = new List<EntityProblems>();
 
-        foreach (var (entityType, key) in TouchedEntities(set))
+        foreach (var (entityType, key) in PendingEntities(set))
         {
             var definition = definitions.Get(entityType);
             var document = (await GetWorkingStateAsync(set, entityType, key, cancellationToken))!;
@@ -154,12 +166,14 @@ public sealed class DraftSetService(
         }
 
         var operations = set.Calls.Where(c => c.EntityType is null).Select(c => c.AbilityId).ToList();
-        return new DraftSetSummary(set.Id, set.Name, changes, operations);
+        var plan = Plan(set).Select(s => new ApplyStep(s.Name, s.Description, set.AppliedSteps.Contains(s.Key))).ToList();
+        return new DraftSetSummary(set.Id, set.Name, changes, operations, plan);
     }
 
     /// <summary>
-    /// Validates the set, checks nothing changed underneath it, then saves every entity and runs every recorded
-    /// operation in one unit of work. Anything failing rolls the whole set back.
+    /// Validates the set and checks nothing changed underneath it, then applies it one step at a time: each
+    /// product's entities in that product's own transaction, then each recorded operation. A failed step rolls back
+    /// only itself; earlier steps stay applied and are skipped when the set is applied again.
     /// </summary>
     public async Task<AbilityResult> ApplyAsync(Guid setId, AbilityContext context, CancellationToken cancellationToken = default)
     {
@@ -181,7 +195,7 @@ public sealed class DraftSetService(
         }
 
         var conflicts = new List<Problem>();
-        foreach (var (entityType, key) in TouchedEntities(set))
+        foreach (var (entityType, key) in PendingEntities(set))
         {
             var first = set.Calls.First(c => c.EntityType == entityType && c.EntityKey == key);
             if (first.Creates)
@@ -202,36 +216,106 @@ public sealed class DraftSetService(
         }
 
         var saved = new List<EntityRef>();
-        try
-        {
-            using var transaction = unitOfWork.Begin();
+        var steps = new List<Problem>();
+        string? failure = null;
+        var runContext = context with { DraftSetId = null };
 
-            foreach (var (entityType, key) in TouchedEntities(set))
+        foreach (var step in Plan(set))
+        {
+            if (set.AppliedSteps.Contains(step.Key))
             {
-                var document = (await GetWorkingStateAsync(set, entityType, key, cancellationToken))!;
-                saved.Add(await definitions.Get(entityType).SaveAsync(document, cancellationToken));
+                steps.Add(new Problem(step.Name, "Already applied."));
+                continue;
             }
 
-            var runContext = context with { DraftSetId = null };
-            foreach (var call in set.Calls.Where(c => c.EntityType is null))
+            if (failure is not null)
             {
-                var result = await abilities.Find(call.AbilityId)!.InvokeAsync(call.Input, runContext, cancellationToken);
-                if (!result.Success)
+                steps.Add(new Problem(step.Name, "Not applied yet."));
+                continue;
+            }
+
+            try
+            {
+                if (step.UnitOfWork is { } unitOfWork)
                 {
-                    throw new DraftSetApplyException($"{call.AbilityId} failed: {result.Failure!.Message}");
-                }
-            }
+                    using var transaction = unitOfWork.Begin();
+                    foreach (var (entityType, key) in step.Entities)
+                    {
+                        var document = (await GetWorkingStateAsync(set, entityType, key, cancellationToken))!;
+                        saved.Add(await definitions.Get(entityType).SaveAsync(document, cancellationToken));
+                    }
 
-            transaction.Complete();
+                    transaction.Complete();
+                }
+                else
+                {
+                    var result = await abilities.Find(step.Call!.AbilityId)!.InvokeAsync(step.Call.Input, runContext, cancellationToken);
+                    if (!result.Success)
+                    {
+                        throw new DraftSetApplyException(result.Failure!.Message);
+                    }
+                }
+
+                set.AppliedSteps.Add(step.Key);
+                store.Save(set);
+                steps.Add(new Problem(step.Name, "Applied."));
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                failure = $"{step.Name} failed and was rolled back: {ex.Message}";
+                steps.Add(new Problem(step.Name, $"Failed and rolled back: {ex.Message}"));
+            }
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+
+        if (failure is not null)
         {
-            return AbilityResult.Fail(FailureCategory.Runtime, $"Nothing was applied. {ex.Message}");
+            var appliedSome = set.AppliedSteps.Count > 0;
+            return AbilityResult.Fail(
+                FailureCategory.Runtime,
+                appliedSome
+                    ? $"Partly applied. {failure} Earlier steps stay applied. Fix the cause and apply again to apply the rest; nothing is applied twice."
+                    : $"Nothing was applied. {failure}",
+                steps);
         }
 
         store.Remove(set.Id);
         return AbilityResult.Ok(saved);
     }
+
+    /// <summary>
+    /// The steps of applying a set: one per product transaction, in the order the set first touched them, then each
+    /// recorded operation in the order it was recorded, so that switching things on comes after saving them.
+    /// </summary>
+    private IReadOnlyList<PlannedStep> Plan(DraftSet set)
+    {
+        var steps = TouchedEntities(set)
+            .GroupBy(e => definitions.Get(e.EntityType).UnitOfWork.Name)
+            .Select(g => new PlannedStep(
+                g.Key,
+                g.Key,
+                $"{g.Count()} {(g.Count() == 1 ? "entity" : "entities")}, saved together: all or nothing.",
+                definitions.Get(g.First().EntityType).UnitOfWork,
+                g.ToList(),
+                null))
+            .ToList();
+
+        var operations = set.Calls.Select((call, index) => (call, index)).Where(c => c.call.EntityType is null);
+        steps.AddRange(operations.Select(o => new PlannedStep(
+            $"operation:{o.index}", o.call.AbilityId, "Runs after the changes are saved.", null, [], o.call)));
+        return steps;
+    }
+
+    private sealed record PlannedStep(
+        string Key,
+        string Name,
+        string Description,
+        IUnitOfWorkProvider? UnitOfWork,
+        IReadOnlyList<(string EntityType, Guid Key)> Entities,
+        RecordedCall? Call);
+
+    /// <summary>Entities whose product's changes are not applied yet.</summary>
+    private IEnumerable<(string EntityType, Guid Key)> PendingEntities(DraftSet set)
+        => TouchedEntities(set).Where(e => !set.AppliedSteps.Contains(definitions.Get(e.EntityType).UnitOfWork.Name));
 
     private async Task<bool> ExistsAsync(DraftSet set, string entityType, Guid key, CancellationToken cancellationToken)
         => definitions.Find(entityType) is not null && await GetWorkingStateAsync(set, entityType, key, cancellationToken) is not null;

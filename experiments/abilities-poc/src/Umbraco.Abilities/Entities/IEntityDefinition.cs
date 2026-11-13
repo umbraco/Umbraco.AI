@@ -11,6 +11,9 @@ public interface IEntityDefinition
     /// <summary>False for entities that can be found and referenced but not created here.</summary>
     bool CanCreate { get; }
 
+    /// <summary>The product transaction this entity type saves in. Entity types sharing one apply together.</summary>
+    DraftSets.IUnitOfWorkProvider UnitOfWork { get; }
+
     /// <summary>
     /// The subtypes an entity of this type can be created as, each with its own structure, such as the document
     /// types of CMS content. Empty when the entity type has a single structure.

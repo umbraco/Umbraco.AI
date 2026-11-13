@@ -6,11 +6,13 @@ using Umbraco.Abilities.Entities;
 namespace Umbraco.Abilities.Samples;
 
 /// <summary>
-/// Stands in for the Umbraco database that CMS content, Commerce and Automate share. Its transaction
-/// plays the part of an Umbraco scope: a set applied across products is saved or rolled back as one.
+/// Stands in for one product's database and transaction. Each sample product has its own, as Commerce, Automate
+/// and Umbraco.AI can each use their own connection string.
 /// </summary>
-public sealed class InMemoryDatabase : IUnitOfWorkProvider
+public sealed class InMemoryDatabase(string name) : IUnitOfWorkProvider
 {
+    public string Name { get; } = name;
+
     private Dictionary<string, Dictionary<Guid, Row>> _tables = [];
 
     public sealed record Row(JsonObject Root, long Version);
@@ -66,6 +68,8 @@ public abstract class InMemoryEntityDefinition(InMemoryDatabase database, string
     public string EntityType { get; } = entityType;
 
     public virtual bool CanCreate => true;
+
+    public IUnitOfWorkProvider UnitOfWork => Database;
 
     public abstract Task<EntityStructure> DescribeAsync(string? subtype, CancellationToken cancellationToken = default);
 

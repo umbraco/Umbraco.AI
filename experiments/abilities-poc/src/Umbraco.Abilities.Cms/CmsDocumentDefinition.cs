@@ -57,8 +57,10 @@ public sealed class CmsDocumentDefinition : IEntityDefinition
         PropertyEditorCollection editors,
         IJsonSerializer json,
         ItemTypeRegistry itemTypes,
+        IUnitOfWorkProvider unitOfWork,
         Func<Guid> actingUser)
     {
+        UnitOfWork = unitOfWork;
         _contentTypes = contentTypes;
         _languages = languages;
         _editing = editing;
@@ -72,6 +74,8 @@ public sealed class CmsDocumentDefinition : IEntityDefinition
     public string EntityType => Type;
 
     public bool CanCreate => true;
+
+    public IUnitOfWorkProvider UnitOfWork { get; }
 
     public Task<IReadOnlyList<EntitySubtype>> GetSubtypesAsync(CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<EntitySubtype>>(_contentTypes.GetAll()
@@ -601,9 +605,11 @@ public sealed class CmsDocumentDefinition : IEntityDefinition
     }
 }
 
-/// <summary>Applies a draft set inside one Umbraco scope, so every document saves or none does.</summary>
+/// <summary>Content's step of applying a draft set runs in one Umbraco scope, so every document saves or none does.</summary>
 public sealed class CmsScopeUnitOfWorkProvider(ICoreScopeProvider scopes) : IUnitOfWorkProvider
 {
+    public string Name => "Content";
+
     public IUnitOfWork Begin() => new Scope(scopes.CreateCoreScope());
 
     private sealed class Scope(ICoreScope scope) : IUnitOfWork

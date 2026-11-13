@@ -47,7 +47,8 @@ Each design layer and where it lives:
 | A third party's item type is creatable with no change to Commerce or the AI adapter | `A_third_party_rule_type_is_creatable_with_no_change_to_commerce` |
 | Every ability becomes an AI tool; only irreversible Writes are wrapped for approval | `Every_ability_is_an_AI_tool_and_only_irreversible_writes_need_approval` |
 | One set holds a page with nested blocks, a discount referring to that new page, and a recorded operation, all applied together | `DraftSetTests.A_campaign_spanning_content_commerce_and_operations_is_applied_together` |
-| A failure during apply leaves nothing applied | `If_anything_fails_while_applying_nothing_is_applied` |
+| A failed step leaves earlier products' changes applied; applying again resumes at the failed step and applies nothing twice | `A_failed_step_leaves_earlier_steps_applied_and_applying_again_resumes` |
+| A product whose save fails rolls back all of its changes in the set, which can then be fixed and resumed | `A_product_whose_save_fails_rolls_back_all_of_its_changes_and_can_be_fixed_and_resumed` |
 | Apply is refused if live data changed under the set | `Applying_is_refused_when_live_data_changed_underneath_the_set` |
 | Reads inside a set show its edits; reads outside show live data | `Reads_inside_a_set_show_its_edits_and_reads_outside_show_live_data` |
 | Replay is deterministic, and keys handed to the model are the stored keys | `Replaying_a_set_gives_the_same_entity_every_time` |
@@ -85,6 +86,22 @@ These feed back into the design doc.
 6. **Abilities as item types works.** Reflecting an ability's input type into fields made Automate's step
    types come for free, including an entity reference from `[EntityKey]`.
 
+## Applying a set
+
+Products can each use their own connection string (Commerce, Automate and Umbraco.AI all can), so a draft
+set never assumes one transaction across products. Each entity definition names its product's unit of
+work, and applying a set runs in steps:
+
+1. **One step per product**, in the order the set first touched them: all of that product's changes save
+   in its own transaction, so they apply all or nothing.
+2. **Recorded operations last**, one step each, so switching something on (`commerce.activateDiscount`)
+   happens after it is saved.
+
+Progress is kept on the set after each step. If a step fails, it rolls back, earlier steps stay applied, and
+the set is kept. Its applied products can't be edited in it any more, the rest can be fixed, and applying
+again resumes at the failed step without applying anything twice. `draftSet.summarize` lists the plan (each
+product, then each operation) so a person sees before approving which parts are all or nothing.
+
 ## Against a real Umbraco
 
 `CmsDocumentDefinition` is a real definition for documents. One entity type, `cms.document`, has a subtype per
@@ -100,7 +117,8 @@ inside one Umbraco scope.
 | A culture-variant page with a Block List (per-culture block values and a settings element) and a Block Grid (column span, areas) built through the AI tools is stored by Umbraco as expected, and loads back to the same shape | `A_page_built_from_text_is_saved_by_Umbraco_with_its_blocks_settings_grid_and_cultures` |
 | Umbraco's validation errors come back on the entity paths and cultures, and the generic check agrees with Umbraco | `Umbraco_validation_problems_come_back_on_the_entity_paths_and_cultures` |
 | Editing an existing page keeps what the edit didn't touch (other cultures, settings, the grid) | `Editing_an_existing_page_keeps_everything_the_edit_did_not_touch` |
-| A failure while applying rolls back a page already saved in the same Umbraco scope | `A_failure_while_applying_rolls_back_every_document_in_the_scope` |
+| A page refused on save (by a notification handler) rolls back the page saved before it in the same Umbraco scope | `A_failed_save_rolls_back_every_document_in_the_Umbraco_scope` |
+| A recorded operation failing after Content's step leaves the content applied, and resuming doesn't save it again | `A_failed_operation_after_the_content_leaves_the_content_applied_and_the_set_resumable` |
 | Apply is refused when the page was saved in Umbraco after being edited in the set | `Applying_is_refused_when_the_page_changed_in_Umbraco_after_it_was_edited_in_the_set` |
 
 What running against Umbraco taught us:
@@ -152,7 +170,7 @@ What still does not fit, and needs a decision rather than more code:
 | CMS | No concurrency token on update | Change detection has to compare `UpdateDate` or `VersionId` inside the apply scope |
 | Commerce | A discount's rules are one recursive tree under a group rule (AND/OR is a setting); rule and reward nodes have no ids | Fits as a single-item slot with nested slots, but the definition must assign item keys on load and drop them on save |
 | Commerce | Validation is message-only and stops at the first error; rule and reward settings are not validated on write | Problems by path have to come from the definition, not from Commerce |
-| Commerce | Saves use Commerce's own unit of work and connection, and can't join an Umbraco scope | **A page and a discount can't be applied all or nothing today.** Needs a Commerce change, or best effort with compensation |
+| Commerce | Saves use Commerce's own unit of work and connection, and can't join an Umbraco scope | No longer a gap: draft sets don't assume a transaction across products (see "Applying a set") |
 | Commerce | `Version` exists but isn't exposed, and conflicts are retried (last writer wins) | No change detection for discounts without a Commerce change |
 | Automate | Steps are a flat list and edges are their own list carrying data (outcome, handle, filter); loops and parallel paths come from edges, not nesting | Item references on fields are not enough: the contract needs **edges as a first-class part of an entity** |
 | Automate | Validation errors are strings with no path; unknown step types aren't caught at publish | Problems by path have to come from the definition |
@@ -171,5 +189,6 @@ and [#747](https://github.com/umbraco/Umbraco.AI/issues/747) (block settings use
   on each read.
 - **Access checks.** The `Access` failure category exists but nothing enforces permissions.
 - **Opening a set in an editor.** Nothing loads a set's working state into a backoffice workspace.
-- **Transactions across separate databases.** All samples share one in-memory database, standing in for
-  Umbraco's shared scope.
+- **Undo.** A failed apply is resumed, not undone. Nothing reverses a product's step that already applied.
+- **Products sharing a database.** Products that do share a connection could apply in one transaction; the
+  PoC always applies them one after another.

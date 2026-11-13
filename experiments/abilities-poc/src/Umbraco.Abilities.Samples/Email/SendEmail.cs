@@ -9,10 +9,12 @@ public sealed record SendEmailInput(
 
 public sealed record SentEmail(string To, string Subject);
 
-/// <summary>Records sent emails. A recipient at bounce.test fails, to show a failed operation rolling a set back.</summary>
+/// <summary>Records sent emails. While the server is down, sending fails, to show a failed step and a resumed apply.</summary>
 public sealed class Outbox
 {
     public List<SentEmail> Sent { get; } = [];
+
+    public bool ServerDown { get; set; }
 }
 
 [Ability("email.send", "Send email", Kind = AbilityKind.Write,
@@ -26,9 +28,9 @@ public sealed class SendEmailAbility(Outbox outbox) : AbilityBase<SendEmailInput
             throw new AbilityInputException("A valid recipient is required.", [new Problem("to", "Not an email address.")]);
         }
 
-        if (input.To.EndsWith("@bounce.test", StringComparison.OrdinalIgnoreCase))
+        if (outbox.ServerDown)
         {
-            throw new InvalidOperationException($"The mail server rejected {input.To}.");
+            throw new InvalidOperationException("The mail server is not responding.");
         }
 
         var sent = new SentEmail(input.To, input.Subject);

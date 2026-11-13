@@ -57,7 +57,7 @@ public class CreationPromptTests
         // 4. Check, review, apply.
         var validation = await _agent.OkAsync("draftSet_validate", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
         Assert.True(validation.GetProperty("valid").GetBoolean(), validation.ToString());
-        Assert.Empty(_site.Database.All("commerce.discount"));
+        Assert.Empty(_site.CommerceDatabase.All("commerce.discount"));
 
         var summary = await _agent.OkAsync("draftSet_summarize", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
         var change = summary.GetProperty("entities")[0];

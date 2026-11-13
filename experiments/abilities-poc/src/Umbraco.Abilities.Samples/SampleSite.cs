@@ -16,7 +16,7 @@ public sealed class SampleSite
 {
     private SampleSite()
     {
-        DraftSets = new DraftSetService(new InMemoryDraftSetStore(), Abilities, Definitions, ItemTypes, Database);
+        DraftSets = new DraftSetService(new InMemoryDraftSetStore(), Abilities, Definitions, ItemTypes);
         Invoker = new AbilityInvoker(Abilities, DraftSets);
 
         // Framework: the generic entity and draft set abilities.
@@ -36,14 +36,14 @@ public sealed class SampleSite
             .Add(new DiscardDraftSetAbility(DraftSets));
 
         // CMS content.
-        Pages = new CmsPageDefinition(Database);
-        Media = new CmsMediaDefinition(Database);
+        Pages = new CmsPageDefinition(ContentDatabase);
+        Media = new CmsMediaDefinition(ContentDatabase);
         Definitions.Add(Pages).Add(Media);
         CmsPageDefinition.RegisterItemTypes(ItemTypes);
 
         // Commerce.
-        Collections = new CollectionDefinition(Database);
-        Discounts = new DiscountDefinition(Database);
+        Collections = new CollectionDefinition(CommerceDatabase);
+        Discounts = new DiscountDefinition(CommerceDatabase);
         Definitions.Add(Collections).Add(Discounts);
         DiscountDefinition.RegisterItemTypes(ItemTypes);
         var activateDiscount = new ActivateDiscountAbility(Discounts);
@@ -59,12 +59,17 @@ public sealed class SampleSite
         Abilities.Add(sendEmail);
 
         // Automate: its step types are other packages' abilities.
-        Workflows = new WorkflowDefinition(Database);
+        Workflows = new WorkflowDefinition(AutomateDatabase);
         Definitions.Add(Workflows);
         WorkflowDefinition.RegisterItemTypes(ItemTypes, [sendEmail, activateDiscount]);
     }
 
-    public InMemoryDatabase Database { get; } = new();
+    // Separate databases, as the products can each have their own connection string.
+    public InMemoryDatabase ContentDatabase { get; } = new("Content");
+
+    public InMemoryDatabase CommerceDatabase { get; } = new("Commerce");
+
+    public InMemoryDatabase AutomateDatabase { get; } = new("Automate");
 
     public AbilityRegistry Abilities { get; } = new();
 

@@ -53,7 +53,10 @@ public class DraftSetTests
         var summary = await _agent.OkAsync("draftSet_summarize", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
         Assert.Equal(2, summary.GetProperty("entities").GetArrayLength());
         Assert.Equal("commerce.activateDiscount", summary.GetProperty("operationsOnApply")[0].GetString());
-        Assert.Empty(_site.Database.All("cms.page"));
+        Assert.Empty(_site.ContentDatabase.All("cms.page"));
+
+        // The plan says how it will apply: each product in its own transaction, the switch-on last.
+        Assert.Equal(["Content", "Commerce", "commerce.activateDiscount"], summary.GetProperty("applyPlan").EnumerateArray().Select(s => s.GetProperty("name").GetString()));
 
         await _agent.OkAsync("draftSet_apply", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
 
@@ -67,18 +70,65 @@ public class DraftSetTests
     }
 
     [Fact]
-    public async Task If_anything_fails_while_applying_nothing_is_applied()
+    public async Task A_failed_step_leaves_earlier_steps_applied_and_applying_again_resumes()
     {
-        await _agent.StartDraftSetAsync("Will fail");
+        await _agent.StartDraftSetAsync("Launch");
         var page = (await _agent.OkAsync("entity_create", """{ "entityType": "cms.page", "culture": "en-US", "fields": { "title": "Launch" } }""")).GetProperty("key").GetGuid();
-        await _agent.OkAsync("email_send", """{ "to": "list@bounce.test", "subject": "We launched" }""");
+        await _agent.OkAsync("email_send", """{ "to": "list@example.com", "subject": "We launched" }""");
 
+        _site.Outbox.ServerDown = true;
         var failure = await _agent.FailAsync("draftSet_apply", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
         Assert.Equal("Runtime", failure.GetProperty("category").GetString());
-        Assert.Contains("Nothing was applied", failure.GetProperty("message").GetString());
+        Assert.Contains("Partly applied", failure.GetProperty("message").GetString());
+        Assert.Equal(
+            ["Content: Applied.", "email.send: Failed and rolled back: The mail server is not responding."],
+            failure.GetProperty("problems").EnumerateArray().Select(p => $"{p.GetProperty("path").GetString()}: {p.GetProperty("message").GetString()}"));
 
-        Assert.Null(await _site.Pages.LoadAsync(page));
-        Assert.Empty(_site.Outbox.Sent);
+        // The page is applied; the set is kept, and its applied part can no longer be edited in it.
+        Assert.Equal(1, (await _site.Pages.LoadAsync(page))!.LiveVersion);
+        var locked = await _agent.FailAsync("entity_setValue", $$"""
+            { "entityType": "cms.page", "key": "{{page}}", "elementPath": "", "field": "title", "value": "Changed", "culture": "en-US" }
+            """);
+        Assert.Contains("already applied", locked.GetProperty("message").GetString());
+
+        // Applying again resumes at the failed step, and does not save the page twice.
+        _site.Outbox.ServerDown = false;
+        await _agent.OkAsync("draftSet_apply", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
+        Assert.Single(_site.Outbox.Sent);
+        Assert.Equal(1, (await _site.Pages.LoadAsync(page))!.LiveVersion);
+    }
+
+    [Fact]
+    public async Task A_product_whose_save_fails_rolls_back_all_of_its_changes_and_can_be_fixed_and_resumed()
+    {
+        await _agent.StartDraftSetAsync("Two discounts");
+        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "cms.page", "culture": "en-US", "fields": { "title": "Deals" } }""")).GetProperty("key").GetGuid();
+        var first = await CreateDiscountAsync("First", "DEAL");
+        var second = await CreateDiscountAsync("Second", "DEAL"); // passes validation (only live codes are checked), fails on save
+
+        var failure = await _agent.FailAsync("draftSet_apply", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
+        Assert.Contains("Commerce failed and was rolled back", failure.GetProperty("message").GetString());
+
+        // Content applied; Commerce rolled back as a whole, including the first discount, which saved fine.
+        Assert.NotNull(await _site.Pages.LoadAsync(page));
+        Assert.Null(await _site.Discounts.LoadAsync(first));
+        Assert.Null(await _site.Discounts.LoadAsync(second));
+
+        // Commerce isn't applied, so it can still be fixed in the set; applying again finishes the job.
+        await _agent.OkAsync("entity_setValue", $$"""
+            { "entityType": "commerce.discount", "key": "{{second}}", "elementPath": "", "field": "code", "value": "DEAL2" }
+            """);
+        await _agent.OkAsync("draftSet_apply", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
+        Assert.NotNull(await _site.Discounts.LoadAsync(first));
+        Assert.NotNull(await _site.Discounts.LoadAsync(second));
+    }
+
+    private async Task<Guid> CreateDiscountAsync(string name, string code)
+    {
+        var discount = (await _agent.OkAsync("entity_create", $$"""{ "entityType": "commerce.discount", "fields": { "name": "{{name}}", "code": "{{code}}" } }""")).GetProperty("key").GetGuid();
+        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "commerce.discount", "key": "{{discount}}", "slotPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 0 } }""");
+        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "commerce.discount", "key": "{{discount}}", "slotPath": "rewards", "itemType": "freeShipping" }""");
+        return discount;
     }
 
     [Fact]

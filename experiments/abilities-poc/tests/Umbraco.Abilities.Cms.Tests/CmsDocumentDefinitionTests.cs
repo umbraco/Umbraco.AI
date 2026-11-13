@@ -10,8 +10,11 @@ using Umbraco.Abilities.AI;
 using Umbraco.Abilities.DraftSets;
 using Umbraco.Abilities.Entities;
 using Umbraco.Cms.Core;
+using Umbraco.Cms.Core.DependencyInjection;
+using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Models.ContentEditing;
+using Umbraco.Cms.Core.Notifications;
 using Umbraco.Cms.Core.PropertyEditors;
 using Umbraco.Cms.Core.Scoping;
 using Umbraco.Cms.Core.Serialization;
@@ -44,6 +47,10 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
     private IContentService ContentService => GetRequiredService<IContentService>();
 
     private IContentEditingService ContentEditingService => GetRequiredService<IContentEditingService>();
+
+    // A third-party handler that vetoes saving a page called "Refused", to make a save fail after validation.
+    protected override void CustomTestSetup(IUmbracoBuilder builder)
+        => builder.AddNotificationHandler<ContentSavingNotification, RefuseSavingHandler>();
 
     protected override void SetUpTestConfiguration(IConfigurationBuilder configBuilder)
     {
@@ -114,7 +121,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         var abilities = new AbilityRegistry();
         var definitions = new EntityDefinitionRegistry();
         var itemTypes = new ItemTypeRegistry();
-        _draftSets = new DraftSetService(new InMemoryDraftSetStore(), abilities, definitions, itemTypes, new CmsScopeUnitOfWorkProvider(GetRequiredService<ICoreScopeProvider>()));
+        _draftSets = new DraftSetService(new InMemoryDraftSetStore(), abilities, definitions, itemTypes);
         _documents = new CmsDocumentDefinition(
             ContentTypeService,
             GetRequiredService<IDataTypeService>(),
@@ -124,6 +131,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
             GetRequiredService<PropertyEditorCollection>(),
             GetRequiredService<IJsonSerializer>(),
             itemTypes,
+            new CmsScopeUnitOfWorkProvider(GetRequiredService<ICoreScopeProvider>()),
             () => Constants.Security.SuperUserKey);
         definitions.Add(_documents);
 
@@ -264,15 +272,35 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
     }
 
     [Test]
-    public async Task A_failure_while_applying_rolls_back_every_document_in_the_scope()
+    public async Task A_failed_save_rolls_back_every_document_in_the_Umbraco_scope()
     {
-        await _agent.StartDraftSetAsync("Will fail");
+        await _agent.StartDraftSetAsync("Two pages");
+        var page = await BuildSummerPageAsync();
+        var refused = (await _agent.OkAsync("entity_create", """{ "entityType": "cms.document", "subtype": "landingPage", "culture": "en-US", "fields": { "name": "Refused", "subtitle": "No" } }"""))
+            .GetProperty("key").GetGuid();
+
+        var failure = await _agent.FailAsync("draftSet_apply", SetJson());
+        Assert.That(failure.GetProperty("message").GetString(), Does.Contain("Nothing was applied").And.Contain("Content failed and was rolled back"));
+        Assert.That(ContentService.GetById(page.Key), Is.Null, "the page saved before the refused one was rolled back");
+        Assert.That(ContentService.GetById(refused), Is.Null);
+    }
+
+    [Test]
+    public async Task A_failed_operation_after_the_content_leaves_the_content_applied_and_the_set_resumable()
+    {
+        await _agent.StartDraftSetAsync("Content, then an operation");
         var page = await BuildSummerPageAsync();
         await _agent.OkAsync("test_fail", "{}");
 
+        FailingOperationAbility.Fail = true;
         var failure = await _agent.FailAsync("draftSet_apply", SetJson());
-        Assert.That(failure.GetProperty("message").GetString(), Does.Contain("Nothing was applied"));
-        Assert.That(ContentService.GetById(page.Key), Is.Null, "the page saved before the failure was rolled back");
+        Assert.That(failure.GetProperty("message").GetString(), Does.Contain("Partly applied"));
+        Assert.That(ContentService.GetById(page.Key), Is.Not.Null, "Content's step committed before the operation failed");
+        var version = ContentService.GetById(page.Key)!.VersionId;
+
+        FailingOperationAbility.Fail = false;
+        await _agent.OkAsync("draftSet_apply", SetJson());
+        Assert.That(ContentService.GetById(page.Key)!.VersionId, Is.EqualTo(version), "resuming does not save the page again");
     }
 
     [Test]
@@ -368,12 +396,25 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         return dataType;
     }
 
-    /// <summary>A recorded operation that fails when the set is applied, to test rollback.</summary>
-    [Ability("test.fail", "Fail", Kind = AbilityKind.Write, Description = "Fails when run.")]
+    /// <summary>A recorded operation that fails when the set is applied while <see cref="Fail"/> is set.</summary>
+    [Ability("test.fail", "Fail", Kind = AbilityKind.Write, Description = "Fails when run while failing is switched on.")]
     private sealed class FailingOperationAbility : AbilityBase<JsonObject, object>
     {
+        public static bool Fail { get; set; }
+
         protected override Task<AbilityResult> ExecuteAsync(JsonObject input, AbilityContext context, CancellationToken cancellationToken)
-            => throw new InvalidOperationException("The operation failed on purpose.");
+            => Fail ? throw new InvalidOperationException("The operation failed on purpose.") : Task.FromResult(Success(new { ran = true }));
+    }
+
+    private sealed class RefuseSavingHandler : INotificationHandler<ContentSavingNotification>
+    {
+        public void Handle(ContentSavingNotification notification)
+        {
+            if (notification.SavedEntities.Any(c => c.Name == "Refused" || c.GetCultureName("en-US") == "Refused"))
+            {
+                notification.CancelOperation(new EventMessage("Test", "Pages called Refused can't be saved.", EventMessageType.Error));
+            }
+        }
     }
 
     /// <summary>Calls the AI tools by name with JSON arguments, as a model would.</summary>

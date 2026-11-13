@@ -95,6 +95,18 @@ public sealed class DiscountDefinition(InMemoryDatabase database)
 
         return Task.FromResult<IReadOnlyList<Problem>>(problems);
     }
+
+    /// <summary>Codes are unique, as a database constraint would enforce on save.</summary>
+    public override Task<EntityRef> SaveAsync(EntityDocument document, CancellationToken cancellationToken = default)
+    {
+        if (Text(document.Root, "code") is { Length: > 0 } code
+            && Database.All(EntityType).Any(r => r.Key != document.Key && Element.Fields(r.Row.Root)["code"]?.GetValue<string>() == code))
+        {
+            throw new InvalidOperationException($"The discount code '{code}' is already in use.");
+        }
+
+        return base.SaveAsync(document, cancellationToken);
+    }
 }
 
 public sealed record ActivateDiscountInput(

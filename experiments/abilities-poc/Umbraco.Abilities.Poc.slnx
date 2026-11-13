@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Umbraco.Abilities/Umbraco.Abilities.csproj" />
+    <Project Path="src/Umbraco.Abilities.AI/Umbraco.Abilities.AI.csproj" />
+    <Project Path="src/Umbraco.Abilities.Samples/Umbraco.Abilities.Samples.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Umbraco.Abilities.Tests/Umbraco.Abilities.Tests.csproj" />
+  </Folder>
+</Solution>

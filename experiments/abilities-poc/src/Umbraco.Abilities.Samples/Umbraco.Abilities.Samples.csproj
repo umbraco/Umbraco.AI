@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Stand-ins for product packages. They reference only the contract, never the AI adapter. -->
+  <ItemGroup>
+    <ProjectReference Include="../Umbraco.Abilities/Umbraco.Abilities.csproj" />
+  </ItemGroup>
+</Project>

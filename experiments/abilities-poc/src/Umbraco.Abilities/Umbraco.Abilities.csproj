@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The contract and runtime. No dependencies: packages reference only this. -->
+</Project>

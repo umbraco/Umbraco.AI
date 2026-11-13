@@ -126,21 +126,41 @@ public sealed record ItemTypeDefinition(string Group, string Alias, string Name,
     public IReadOnlyList<string> AlsoIn { get; init; } = [];
 }
 
-/// <summary>Item types by group. Aliases are unique across the registry.</summary>
+/// <summary>
+/// Item types by group. An alias is unique within a group, but the same alias can appear in several groups,
+/// as one element type can be used by several block editors with different settings and areas.
+/// </summary>
 public sealed class ItemTypeRegistry
 {
-    private readonly Dictionary<string, ItemTypeDefinition> _byAlias = new(StringComparer.Ordinal);
+    private readonly Dictionary<(string Group, string Alias), ItemTypeDefinition> _types = [];
 
     public ItemTypeRegistry Add(ItemTypeDefinition itemType)
     {
-        _byAlias.Add(itemType.Alias, itemType);
+        _types.Add((itemType.Group, itemType.Alias), itemType);
         return this;
     }
 
-    public ItemTypeDefinition? Find(string alias) => _byAlias.GetValueOrDefault(alias);
+    /// <summary>Adds the type unless one is already registered for its group and alias.</summary>
+    public ItemTypeRegistry AddIfMissing(ItemTypeDefinition itemType)
+    {
+        _types.TryAdd((itemType.Group, itemType.Alias), itemType);
+        return this;
+    }
+
+    /// <summary>Finds a type by alias, or by <c>group:alias</c> when the alias is used in several groups.</summary>
+    public ItemTypeDefinition? Find(string alias)
+    {
+        var separator = alias.LastIndexOf(':');
+        return separator > 0
+            ? Find(alias[..separator], alias[(separator + 1)..])
+            : _types.Values.FirstOrDefault(t => t.Alias == alias);
+    }
+
+    public ItemTypeDefinition? Find(string group, string alias)
+        => InGroup(group).FirstOrDefault(t => t.Alias == alias);
 
     public IReadOnlyList<ItemTypeDefinition> InGroup(string group)
-        => _byAlias.Values.Where(t => t.Group == group || t.AlsoIn.Contains(group)).ToList();
+        => _types.Values.Where(t => t.Group == group || t.AlsoIn.Contains(group)).ToList();
 }
 
 /// <summary>
@@ -155,6 +175,9 @@ public sealed class EntityDocument
 
     public required Guid Key { get; init; }
 
+    /// <summary>The subtype, e.g. a document's content type alias. Null for entity types without subtypes.</summary>
+    public string? Subtype { get; init; }
+
     /// <summary>The stored version this copy was loaded from; null when the entity is new.</summary>
     public long? LiveVersion { get; init; }
 
@@ -164,6 +187,7 @@ public sealed class EntityDocument
     {
         EntityType = EntityType,
         Key = Key,
+        Subtype = Subtype,
         LiveVersion = LiveVersion,
         Root = (JsonObject)Root.DeepClone(),
     };
@@ -173,6 +197,7 @@ public sealed class EntityDocument
         var json = (JsonObject)Root.DeepClone();
         json["entityType"] = EntityType;
         json["key"] = Key.ToString();
+        json["subtype"] = Subtype;
         json["version"] = LiveVersion;
         return json;
     }

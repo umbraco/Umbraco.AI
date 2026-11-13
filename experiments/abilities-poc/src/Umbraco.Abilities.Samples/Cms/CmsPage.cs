@@ -82,7 +82,7 @@ public sealed class CmsPageDefinition(InMemoryDatabase database)
             })));
     }
 
-    public override Task<EntityStructure> DescribeAsync(CancellationToken cancellationToken = default)
+    public override Task<EntityStructure> DescribeAsync(string? subtype, CancellationToken cancellationToken = default)
         => Task.FromResult(new EntityStructure(EntityType, "Page", "A content page.", ElementShape
             .Of(
                 new FieldDefinition("title", "Page name.", FieldType.String, Required: true) { Varies = Variance.Culture },
@@ -125,7 +125,7 @@ public sealed class CmsPageDefinition(InMemoryDatabase database)
 public sealed class CmsMediaDefinition(InMemoryDatabase database)
     : InMemoryEntityDefinition(database, "cms.media", "name", "/umbraco/section/media/workspace/media/edit")
 {
-    public override Task<EntityStructure> DescribeAsync(CancellationToken cancellationToken = default)
+    public override Task<EntityStructure> DescribeAsync(string? subtype, CancellationToken cancellationToken = default)
         => Task.FromResult(new EntityStructure(EntityType, "Media", "An image or file.", ElementShape.Of(
             new FieldDefinition("name", "Media name.", FieldType.String, Required: true),
             new FieldDefinition("altText", "Alternative text.", FieldType.String))));

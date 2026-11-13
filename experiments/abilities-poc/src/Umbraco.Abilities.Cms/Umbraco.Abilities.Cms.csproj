@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- A real entity definition for CMS documents, on IContentEditingService. -->
+  <ItemGroup>
+    <ProjectReference Include="../Umbraco.Abilities/Umbraco.Abilities.csproj" />
+    <PackageReference Include="Umbraco.Cms.Core" />
+    <PackageReference Include="Umbraco.Cms.Infrastructure" />
+  </ItemGroup>
+</Project>

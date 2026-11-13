@@ -36,7 +36,7 @@ public abstract class EntityEditAbilityBase<TInput> : AbilityBase<TInput, object
         }
 
         var key = typed.Key ?? throw new AbilityInputException("key is required.", [new Problem("key", "Required.")]);
-        return new EntityEditTarget(typed.EntityType, key, Creates);
+        return new EntityEditTarget(typed.EntityType, key, Creates, (typed as CreateEntityInput)?.Subtype);
     }
 
     public object? Apply(EntityDocument document, JsonObject input, EntityEditContext context) => Apply(document, Read(input), context);
@@ -70,7 +70,8 @@ public abstract class EntityEditAbilityBase<TInput> : AbilityBase<TInput, object
 
 public sealed record GetEntitySchemaInput(
     [property: Description("Entity type, e.g. 'commerce.discount'.")] string EntityType,
-    [property: Description("Optional item type aliases (from a slot's allowedItemTypes) to get the full schema for.")] string[]? ItemTypes = null);
+    [property: Description("Optional item type aliases (from a slot's allowedItemTypes) to get the full schema for. Use group:alias when an alias appears in several groups.")] string[]? ItemTypes = null,
+    [property: Description("The subtype, for entity types that have them, e.g. a document's content type alias.")] string? Subtype = null);
 
 [Ability("entity.getSchema", "Get entity schema", Kind = AbilityKind.Read,
     Description = "Returns an entity type's fields (as JSON Schema) and slots with their allowed item types. " +
@@ -80,7 +81,19 @@ public sealed class GetEntitySchemaAbility(EntityDefinitionRegistry definitions,
 {
     protected override async Task<AbilityResult> ExecuteAsync(GetEntitySchemaInput input, AbilityContext context, CancellationToken cancellationToken)
     {
-        var structure = await definitions.Get(input.EntityType).DescribeAsync(cancellationToken);
+        var definition = definitions.Get(input.EntityType);
+        var subtypes = await definition.GetSubtypesAsync(cancellationToken);
+        if (subtypes.Count > 0 && input.Subtype is null)
+        {
+            return Success(new JsonObject
+            {
+                ["entityType"] = input.EntityType,
+                ["subtypes"] = new JsonArray(subtypes.Select(s => (JsonNode?)new JsonObject { ["alias"] = s.Alias, ["name"] = s.Name }).ToArray()),
+                ["next"] = "Call again with a subtype to get its fields and slots.",
+            });
+        }
+
+        var structure = await definition.DescribeAsync(input.Subtype, cancellationToken);
         var output = new JsonObject
         {
             ["entityType"] = structure.EntityType,
@@ -176,6 +189,7 @@ public sealed record CreateEntityInput(
     [property: Description("Entity type to create.")] string EntityType,
     [property: Description("Optional key for the new entity. Choose one when other entities in the set must refer to it.")] Guid? Key = null,
     [property: Description("Field values, keyed by field alias.")] JsonObject? Fields = null,
+    [property: Description("The subtype to create, for entity types that have them, e.g. a document's content type alias.")] string? Subtype = null,
     [property: Description("Culture to edit, e.g. 'en-US'. Needed for values that vary by culture; ignored for invariant values.")] string? Culture = null,
     [property: Description("Segment to edit. Omit for the default segment.")] string? Segment = null) : IEntityEditInput;
 

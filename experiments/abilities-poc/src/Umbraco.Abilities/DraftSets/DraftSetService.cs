@@ -60,17 +60,25 @@ public sealed class DraftSetService(
                     throw new AbilityInputException($"{target.EntityType} {target.EntityKey} already exists.", [new Problem("key", "Already exists.")]);
                 }
 
-                working = definition.New(target.EntityKey);
+                var subtypes = await definition.GetSubtypesAsync(cancellationToken);
+                if (subtypes.Count > 0 && !subtypes.Any(s => s.Alias == target.Subtype))
+                {
+                    throw new AbilityInputException(
+                        $"{target.EntityType} needs a subtype. Subtypes: {string.Join(", ", subtypes.Select(s => s.Alias))}.",
+                        [new Problem("subtype", "Required, and must be one of the listed subtypes.")]);
+                }
+
+                working = definition.New(target.EntityKey, target.Subtype);
             }
             else if (working is null)
             {
                 throw new AbilityInputException($"No {target.EntityType} with key {target.EntityKey}.", [new Problem("key", "Not found.")]);
             }
 
-            var structure = await definition.DescribeAsync(cancellationToken);
+            var structure = await definition.DescribeAsync(working.Subtype, cancellationToken);
             var output = edit.Apply(working, recorded, new EntityEditContext(definition, structure, itemTypes));
 
-            set.Calls.Add(new RecordedCall(ability.Descriptor.Id, recorded, target.EntityType, target.EntityKey, target.Creates, working.LiveVersion));
+            set.Calls.Add(new RecordedCall(ability.Descriptor.Id, recorded, target.EntityType, target.EntityKey, target.Creates, working.LiveVersion, working.Subtype));
             store.Save(set);
             return AbilityResult.Ok(output);
         }
@@ -90,8 +98,8 @@ public sealed class DraftSetService(
         var definition = definitions.Get(entityType);
         var calls = set.Calls.Where(c => c.EntityType == entityType && c.EntityKey == key).ToList();
 
-        var document = calls.FirstOrDefault()?.Creates == true
-            ? definition.New(key)
+        var document = calls.FirstOrDefault() is { Creates: true } create
+            ? definition.New(key, create.Subtype)
             : (await definition.LoadAsync(key, cancellationToken))?.Clone();
 
         if (document is null || calls.Count == 0)
@@ -99,7 +107,7 @@ public sealed class DraftSetService(
             return document;
         }
 
-        var context = new EntityEditContext(definition, await definition.DescribeAsync(cancellationToken), itemTypes);
+        var context = new EntityEditContext(definition, await definition.DescribeAsync(document.Subtype, cancellationToken), itemTypes);
         foreach (var call in calls)
         {
             ((IEntityEditAbility)abilities.Find(call.AbilityId)!).Apply(document, call.Input, context);
@@ -117,15 +125,17 @@ public sealed class DraftSetService(
         {
             var definition = definitions.Get(entityType);
             var document = (await GetWorkingStateAsync(set, entityType, key, cancellationToken))!;
-            var structure = await definition.DescribeAsync(cancellationToken);
+            var structure = await definition.DescribeAsync(document.Subtype, cancellationToken);
 
             var problems = new List<Problem>();
             problems.AddRange(await StructureValidator.ValidateAsync(document, structure, itemTypes, (type, k) => ExistsAsync(set, type, k, cancellationToken)));
             problems.AddRange(await definition.ValidateAsync(document, cancellationToken));
 
-            if (problems.Count > 0)
+            // The generic structure check and the product's own validation often find the same problem.
+            var distinct = problems.DistinctBy(p => (p.Path, p.Culture, p.Segment)).ToList();
+            if (distinct.Count > 0)
             {
-                result.Add(new EntityProblems(definition.ToRef(document), problems));
+                result.Add(new EntityProblems(definition.ToRef(document), distinct));
             }
         }
 

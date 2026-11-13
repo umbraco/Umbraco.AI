@@ -51,7 +51,7 @@ public static class EntityEditor
             var item = slot.Items.FirstOrDefault(n => Element.ItemKey(n!) == key) as JsonObject
                 ?? throw Invalid(Join(slot.Path, key.ToString()), "No item with this key in the slot.");
 
-            var itemType = target.ItemTypes.Find(Element.ItemType(item))
+            var itemType = target.ItemTypes.Find(slot.Slot.ItemTypeGroup, Element.ItemType(item))
                 ?? throw Invalid(Join(slot.Path, key.ToString()), $"Item type '{Element.ItemType(item)}' is not registered.");
 
             current = new ResolvedElement(item, itemType.Shape, Join(slot.Path, key.ToString()), itemType, slot.Slot);

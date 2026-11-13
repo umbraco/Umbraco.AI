@@ -15,7 +15,8 @@ dotnet test
 ```
 
 The folder has its own `Directory.Build.props`, `Directory.Packages.props` and `NuGet.config`, so the
-monorepo's central packages and versioning don't apply. Only nuget.org is needed.
+monorepo's central packages and versioning don't apply. Only nuget.org is needed. The CMS tests start a real
+Umbraco 18 on SQLite through `Umbraco.Cms.Tests.Integration`, and take about 15 seconds.
 
 ## What is here
 
@@ -24,7 +25,9 @@ monorepo's central packages and versioning don't apply. Only nuget.org is needed
 | `Umbraco.Abilities` | The contract and runtime: abilities, entity definitions, the path editor, draft sets, the invoker | Nothing |
 | `Umbraco.Abilities.AI` | Umbraco.AI's adapter: every ability becomes an M.E.AI `AIFunction` | Contract, `Microsoft.Extensions.AI.Abstractions` |
 | `Umbraco.Abilities.Samples` | Product packages: CMS pages with nested blocks, Commerce collections and discounts, a third-party rule type, an email package, Automate workflows | Contract only |
-| `Umbraco.Abilities.Tests` | A scripted model calling the AI tools with JSON arguments | All of the above |
+| `Umbraco.Abilities.Cms` | The real entity definition for CMS documents, on `IContentEditingService` | Contract, Umbraco 18 |
+| `Umbraco.Abilities.Tests` | A scripted model calling the AI tools with JSON arguments | Contract, AI adapter, samples |
+| `Umbraco.Abilities.Cms.Tests` | The same, against a real Umbraco on SQLite | Contract, AI adapter, CMS definition, Umbraco test host |
 
 Each design layer and where it lives:
 
@@ -82,6 +85,46 @@ These feed back into the design doc.
 6. **Abilities as item types works.** Reflecting an ability's input type into fields made Automate's step
    types come for free, including an entity reference from `[EntityKey]`.
 
+## Against a real Umbraco
+
+`CmsDocumentDefinition` is a real definition for documents. One entity type, `cms.document`, has a subtype per
+document type. It builds the structure from the document type and its data types (Block List and Block Grid
+configuration, settings element types, areas, variance), loads through `IContentEditingService` in the editor
+format, writes block envelopes with layout, settings, grid areas and expose entries, validates with Umbraco's
+own `ValidateCreateAsync` / `ValidateUpdateAsync`, and saves with `ContentCreateModel` / `ContentUpdateModel`
+inside one Umbraco scope.
+
+| Shown against Umbraco 18 (SQLite) | Test |
+| --- | --- |
+| The schema comes from the document type: cultures, varying fields, block types per slot, settings, grid areas and placement | `The_schema_comes_from_the_document_type_and_its_block_editors` |
+| A culture-variant page with a Block List (per-culture block values and a settings element) and a Block Grid (column span, areas) built through the AI tools is stored by Umbraco as expected, and loads back to the same shape | `A_page_built_from_text_is_saved_by_Umbraco_with_its_blocks_settings_grid_and_cultures` |
+| Umbraco's validation errors come back on the entity paths and cultures, and the generic check agrees with Umbraco | `Umbraco_validation_problems_come_back_on_the_entity_paths_and_cultures` |
+| Editing an existing page keeps what the edit didn't touch (other cultures, settings, the grid) | `Editing_an_existing_page_keeps_everything_the_edit_did_not_touch` |
+| A failure while applying rolls back a page already saved in the same Umbraco scope | `A_failure_while_applying_rolls_back_every_document_in_the_scope` |
+| Apply is refused when the page was saved in Umbraco after being edited in the set | `Applying_is_refused_when_the_page_changed_in_Umbraco_after_it_was_edited_in_the_set` |
+
+What running against Umbraco taught us:
+
+1. **Structure can depend on a subtype.** Documents are one entity type with a structure per document type,
+   chosen at create. The contract gained `GetSubtypesAsync`, `DescribeAsync(subtype)` and `subtype` on create
+   and schema. Media types and member types will need the same.
+2. **An item exists only in the cultures it has values for.** Umbraco exposes a block in the cultures it has
+   values in, and skips validating it elsewhere: an English-only hero is not part of the Danish page. The
+   generic validator first flagged its missing Danish heading; it now follows the same rule (or every culture
+   when an item has no values yet).
+3. **Umbraco's block error paths need translating.** Errors inside an invariant block property carry no
+   culture; it sits in a JSON path filter, `.contentData[1].values[?(@.alias == 'heading' && @.culture ==
+   'en-US' ...)].value`, and `contentData[i]` counts only the blocks exposed in that culture. The definition
+   maps these to `blocks/{key}/heading` with culture `en-US`.
+4. **Umbraco saves invalid values and reports them afterwards.** The definition treats any reported error
+   as a failed save, so the scope rolls back and nothing half-valid is applied.
+5. **`UpdateDate` works as a change check.** It is compared before saving, as Umbraco has no check of its own.
+
+Not covered yet: templates (an update would clear one), publishing, rich text with blocks, segments inside
+blocks, culture-variant block properties against real Umbraco, error paths inside blocks nested in blocks,
+a parent created in the same set, permissions (it runs as the super user), and editors other than text,
+numbers, booleans, tags, content picker and blocks (they pass through as JSON, untested).
+
 ## Checked against the real models
 
 The structure language was compared with the real code of Umbraco CMS (`main`, 18.5.0-rc),
@@ -121,9 +164,8 @@ and [#747](https://github.com/umbraco/Umbraco.AI/issues/747) (block settings use
 
 ## What it does not prove
 
-- **Real products.** The CMS page follows the real content model's shapes, but no definition yet maps to
-  `ContentCreateModel` / `ContentUpdateModel`, block envelopes and `IContentEditingService`. Commerce and
-  Automate definitions are also still stand-ins.
+- **Real Commerce and Automate.** Only CMS documents have a real definition. The Commerce and Automate
+  definitions are still stand-ins.
 - **A real model.** The tests script the tool calls. No LLM chose them.
 - **Persistence and scale.** Sets are in memory, and working state is recomputed by replaying every call
   on each read.

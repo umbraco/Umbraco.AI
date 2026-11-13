@@ -17,7 +17,8 @@ public sealed record RecordedCall(
     string? EntityType,
     Guid? EntityKey,
     bool Creates,
-    long? BaseVersion);
+    long? BaseVersion,
+    string? Subtype = null);
 
 public sealed class DraftSet
 {
@@ -75,7 +76,7 @@ public interface IEntityEditAbility : IAbility
     object? Apply(EntityDocument document, JsonObject input, EntityEditContext context);
 }
 
-public sealed record EntityEditTarget(string EntityType, Guid EntityKey, bool Creates);
+public sealed record EntityEditTarget(string EntityType, Guid EntityKey, bool Creates, string? Subtype = null);
 
 public sealed record EntityEditContext(IEntityDefinition Definition, EntityStructure Structure, ItemTypeRegistry ItemTypes);
 

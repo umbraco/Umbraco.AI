@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);NU1608;NU1902;NU1903</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Umbraco.Abilities/Umbraco.Abilities.csproj" />
+    <ProjectReference Include="../../src/Umbraco.Abilities.AI/Umbraco.Abilities.AI.csproj" />
+    <ProjectReference Include="../../src/Umbraco.Abilities.Cms/Umbraco.Abilities.Cms.csproj" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="NUnit" />
+    <PackageReference Include="NUnit3TestAdapter" />
+    <PackageReference Include="Umbraco.Cms.Tests.Integration" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" />
+  </ItemGroup>
+</Project>

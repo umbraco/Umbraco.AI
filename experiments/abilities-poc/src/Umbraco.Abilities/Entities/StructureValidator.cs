@@ -38,16 +38,16 @@ public static class StructureValidator
         }
 
         var context = new Context(document, structure, itemTypes, entityExists, variants, problems);
-        await ValidateElementAsync(context, document.Root, structure.Shape, string.Empty, scope: null);
+        await ValidateElementAsync(context, document.Root, structure.Shape, string.Empty, variants);
         return problems;
     }
 
-    /// <param name="scope">Set when inside a slot that varies: only that culture's values are checked below it.</param>
-    private static async Task ValidateElementAsync(Context context, JsonObject element, ElementShape shape, string path, VariantId? scope)
+    /// <param name="variants">The variants the element exists in. Below a slot that varies, only that slot's culture.</param>
+    private static async Task ValidateElementAsync(Context context, JsonObject element, ElementShape shape, string path, IReadOnlyList<VariantId> variants)
     {
         foreach (var field in shape.Fields)
         {
-            foreach (var variant in Targets(context, field.Varies, scope))
+            foreach (var variant in Targets(field.Varies, variants))
             {
                 var value = field.Varies == Variance.Invariant
                     ? Element.Fields(element)[field.Alias]
@@ -58,17 +58,18 @@ public static class StructureValidator
 
         foreach (var slot in shape.Slots)
         {
-            foreach (var variant in Targets(context, slot.Varies, scope))
+            foreach (var variant in Targets(slot.Varies, variants))
             {
                 var items = slot.Varies == Variance.Invariant
                     ? Element.Slot(element, slot.Alias)
                     : Element.VariantPartOrNull(element, variant)?["slots"]?[slot.Alias] as JsonArray ?? [];
-                await ValidateSlotAsync(context, slot, items, EntityEditor.Join(path, slot.Alias), slot.Varies == Variance.Invariant ? scope : variant);
+                var below = slot.Varies == Variance.Invariant ? variants : variants.Where(v => v.Culture == variant.Culture).ToList();
+                await ValidateSlotAsync(context, slot, items, EntityEditor.Join(path, slot.Alias), slot.Varies == Variance.Invariant ? null : variant, below);
             }
         }
     }
 
-    private static async Task ValidateSlotAsync(Context context, SlotDefinition slot, JsonArray items, string slotPath, VariantId? scope)
+    private static async Task ValidateSlotAsync(Context context, SlotDefinition slot, JsonArray items, string slotPath, VariantId? scope, IReadOnlyList<VariantId> variants)
     {
         var located = new Problem(slotPath, string.Empty) { Culture = scope?.Culture, Segment = scope?.Segment };
         if (slot.Min is { } min && items.Count < min)
@@ -91,16 +92,21 @@ public static class StructureValidator
                 continue;
             }
 
-            await ValidateElementAsync(context, item, itemType.Shape, itemPath, scope);
+            // An item exists in the cultures it has values for, or in every culture when it has none yet.
+            // This is the CMS's "expose": a block with only English values is not in the Danish page.
+            var own = (item["variants"] as JsonObject ?? []).Select(v => VariantId.Parse(v.Key).Culture).OfType<string>().ToHashSet();
+            var itemVariants = own.Count == 0 ? variants : variants.Where(v => v.Culture is null || own.Contains(v.Culture)).ToList();
+
+            await ValidateElementAsync(context, item, itemType.Shape, itemPath, itemVariants);
 
             if (itemType.SettingsShape is { } settings)
             {
-                await ValidateElementAsync(context, item["settings"] as JsonObject ?? Element.New(), settings, $"{itemPath}/@settings", scope);
+                await ValidateElementAsync(context, item["settings"] as JsonObject ?? Element.New(), settings, $"{itemPath}/@settings", itemVariants);
             }
 
             if (slot.ItemLayout is { } layout)
             {
-                await ValidateElementAsync(context, item["layout"] as JsonObject ?? Element.New(), layout, $"{itemPath}/@layout", scope);
+                await ValidateElementAsync(context, item["layout"] as JsonObject ?? Element.New(), layout, $"{itemPath}/@layout", itemVariants);
             }
         }
     }
@@ -146,16 +152,15 @@ public static class StructureValidator
         }
     }
 
-    /// <summary>The variants a value is checked in: once if invariant, else each of the entity's variants narrowed to what it varies by.</summary>
-    private static IEnumerable<VariantId> Targets(Context context, Variance varies, VariantId? scope)
+    /// <summary>The variants a value is checked in: once if invariant, else each variant the element exists in, narrowed to what it varies by.</summary>
+    private static IEnumerable<VariantId> Targets(Variance varies, IReadOnlyList<VariantId> variants)
     {
         if (varies == Variance.Invariant)
         {
             return [VariantId.Invariant];
         }
 
-        return context.Variants
-            .Where(v => scope?.Culture is null || v.Culture == scope.Culture)
+        return variants
             .Select(v => v.Narrow(varies))
             .Where(v => !varies.ByCulture() || v.Culture is not null)
             .Distinct();
@@ -203,7 +208,7 @@ public static class SchemaWriter
             ["max"] = slot.Max,
             ["itemLayout"] = slot.ItemLayout is { } layout ? Fields(layout) : null,
             ["allowedItemTypes"] = new JsonArray(itemTypes.InGroup(slot.ItemTypeGroup)
-                .Select(t => (JsonNode?)new JsonObject { ["alias"] = t.Alias, ["name"] = t.Name, ["description"] = t.Description })
+                .Select(t => (JsonNode?)new JsonObject { ["alias"] = t.Alias, ["group"] = t.Group, ["name"] = t.Name, ["description"] = t.Description })
                 .ToArray()),
         }).ToArray());
 

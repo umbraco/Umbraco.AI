@@ -21,7 +21,7 @@ public sealed class CollectionDefinition(InMemoryDatabase database)
         return key;
     }
 
-    public override Task<EntityStructure> DescribeAsync(CancellationToken cancellationToken = default)
+    public override Task<EntityStructure> DescribeAsync(string? subtype, CancellationToken cancellationToken = default)
         => Task.FromResult(new EntityStructure(EntityType, "Collection", "A product collection.", ElementShape.Of(
             new FieldDefinition("name", "Collection name.", FieldType.String, Required: true))));
 }
@@ -53,7 +53,7 @@ public sealed class DiscountDefinition(InMemoryDatabase database)
         itemTypes.Add(new ItemTypeDefinition(RewardGroup, "freeShipping", "Free shipping", "Shipping is free.", ElementShape.Of()));
     }
 
-    public override Task<EntityStructure> DescribeAsync(CancellationToken cancellationToken = default)
+    public override Task<EntityStructure> DescribeAsync(string? subtype, CancellationToken cancellationToken = default)
         => Task.FromResult(new EntityStructure(EntityType, "Discount", "A discount applied when all its rules match.", ElementShape
             .Of(
                 new FieldDefinition("name", "Name shown to editors.", FieldType.String, Required: true),

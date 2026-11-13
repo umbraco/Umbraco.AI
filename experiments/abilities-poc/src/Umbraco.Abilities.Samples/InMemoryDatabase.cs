@@ -67,9 +67,12 @@ public abstract class InMemoryEntityDefinition(InMemoryDatabase database, string
 
     public virtual bool CanCreate => true;
 
-    public abstract Task<EntityStructure> DescribeAsync(CancellationToken cancellationToken = default);
+    public abstract Task<EntityStructure> DescribeAsync(string? subtype, CancellationToken cancellationToken = default);
 
-    public EntityDocument New(Guid key) => new() { EntityType = EntityType, Key = key };
+    public Task<IReadOnlyList<EntitySubtype>> GetSubtypesAsync(CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyList<EntitySubtype>>([]);
+
+    public EntityDocument New(Guid key, string? subtype) => new() { EntityType = EntityType, Key = key };
 
     public Task<EntityDocument?> LoadAsync(Guid key, CancellationToken cancellationToken = default)
     {

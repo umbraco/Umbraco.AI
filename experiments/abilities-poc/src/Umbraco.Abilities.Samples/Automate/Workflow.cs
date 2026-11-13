@@ -32,7 +32,7 @@ public sealed class WorkflowDefinition(InMemoryDatabase database)
         }
     }
 
-    public override Task<EntityStructure> DescribeAsync(CancellationToken cancellationToken = default)
+    public override Task<EntityStructure> DescribeAsync(string? subtype, CancellationToken cancellationToken = default)
         => Task.FromResult(new EntityStructure(EntityType, "Workflow", "An automation: a trigger, then steps.", ElementShape
             .Of(
                 new FieldDefinition("name", "Workflow name.", FieldType.String, Required: true),

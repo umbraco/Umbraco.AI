@@ -11,10 +11,16 @@ public interface IEntityDefinition
     /// <summary>False for entities that can be found and referenced but not created here.</summary>
     bool CanCreate { get; }
 
-    /// <summary>May depend on what is installed, so it is resolved at run time.</summary>
-    Task<EntityStructure> DescribeAsync(CancellationToken cancellationToken = default);
+    /// <summary>
+    /// The subtypes an entity of this type can be created as, each with its own structure, such as the document
+    /// types of CMS content. Empty when the entity type has a single structure.
+    /// </summary>
+    Task<IReadOnlyList<EntitySubtype>> GetSubtypesAsync(CancellationToken cancellationToken = default);
 
-    EntityDocument New(Guid key);
+    /// <summary>The structure of a subtype (null when there are none). May depend on what is installed.</summary>
+    Task<EntityStructure> DescribeAsync(string? subtype, CancellationToken cancellationToken = default);
+
+    EntityDocument New(Guid key, string? subtype);
 
     Task<EntityDocument?> LoadAsync(Guid key, CancellationToken cancellationToken = default);
 
@@ -27,6 +33,8 @@ public interface IEntityDefinition
 
     EntityRef ToRef(EntityDocument document);
 }
+
+public sealed record EntitySubtype(string Alias, string Name);
 
 public sealed class EntityDefinitionRegistry
 {

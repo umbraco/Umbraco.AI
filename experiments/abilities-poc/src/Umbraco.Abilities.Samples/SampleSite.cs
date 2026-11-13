@@ -37,7 +37,8 @@ public sealed class SampleSite
 
         // CMS content.
         Pages = new CmsPageDefinition(Database);
-        Definitions.Add(Pages);
+        Media = new CmsMediaDefinition(Database);
+        Definitions.Add(Pages).Add(Media);
         CmsPageDefinition.RegisterItemTypes(ItemTypes);
 
         // Commerce.
@@ -78,6 +79,8 @@ public sealed class SampleSite
     public Outbox Outbox { get; } = new();
 
     public CmsPageDefinition Pages { get; }
+
+    public CmsMediaDefinition Media { get; }
 
     public CollectionDefinition Collections { get; }
 

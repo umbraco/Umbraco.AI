@@ -69,8 +69,16 @@ public enum FailureCategory
     Runtime,
 }
 
-/// <summary>A problem at a path. Paths use the same form as the entity edit abilities' paths.</summary>
-public sealed record Problem(string Path, string Message);
+/// <summary>
+/// A problem at a path. Paths use the same form as the entity edit abilities' paths; culture and segment say
+/// which variant of a value is wrong, as the CMS's PropertyValidationError does.
+/// </summary>
+public sealed record Problem(string Path, string Message)
+{
+    public string? Culture { get; init; }
+
+    public string? Segment { get; init; }
+}
 
 public sealed record AbilityFailure(FailureCategory Category, string Message, IReadOnlyList<Problem> Problems)
 {

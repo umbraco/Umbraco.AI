@@ -21,9 +21,12 @@ public class DraftSetTests
         var discount = Guid.NewGuid();
 
         // A page with nested blocks: a card grid holding a card is a slot inside an item.
-        await _agent.OkAsync("entity_create", $$"""{ "entityType": "cms.page", "key": "{{page}}", "fields": { "title": "Black Friday" } }""");
-        await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "cms.page", "key": "{{page}}", "slotPath": "blocks", "itemType": "hero", "fields": { "heading": "Black Friday deals" } }
+        await _agent.OkAsync("entity_create", $$"""{ "entityType": "cms.page", "key": "{{page}}", "culture": "en-US", "fields": { "title": "Black Friday" } }""");
+        var hero = await _agent.OkAsync("entity_addItem", $$"""
+            { "entityType": "cms.page", "key": "{{page}}", "slotPath": "blocks", "itemType": "hero", "culture": "en-US", "fields": { "heading": "Black Friday deals" } }
+            """);
+        await _agent.OkAsync("entity_setValue", $$"""
+            { "entityType": "cms.page", "key": "{{page}}", "elementPath": "{{hero.GetProperty("path").GetString()}}/@settings", "field": "theme", "value": "dark" }
             """);
         var grid = await _agent.OkAsync("entity_addItem", $$"""
             { "entityType": "cms.page", "key": "{{page}}", "slotPath": "blocks", "itemType": "cardGrid" }
@@ -67,7 +70,7 @@ public class DraftSetTests
     public async Task If_anything_fails_while_applying_nothing_is_applied()
     {
         await _agent.StartDraftSetAsync("Will fail");
-        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "cms.page", "fields": { "title": "Launch" } }""")).GetProperty("key").GetGuid();
+        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "cms.page", "culture": "en-US", "fields": { "title": "Launch" } }""")).GetProperty("key").GetGuid();
         await _agent.OkAsync("email_send", """{ "to": "list@bounce.test", "subject": "We launched" }""");
 
         var failure = await _agent.FailAsync("draftSet_apply", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
@@ -123,12 +126,12 @@ public class DraftSetTests
     public async Task Replaying_a_set_gives_the_same_entity_every_time()
     {
         await _agent.StartDraftSetAsync("Replay");
-        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "cms.page", "fields": { "title": "Replay" } }""")).GetProperty("key").GetGuid();
+        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "cms.page", "culture": "en-US", "fields": { "title": "Replay" } }""")).GetProperty("key").GetGuid();
         var hero = await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "cms.page", "key": "{{page}}", "slotPath": "blocks", "itemType": "hero", "fields": { "heading": "Hi" } }
+            { "entityType": "cms.page", "key": "{{page}}", "slotPath": "blocks", "itemType": "hero", "culture": "en-US", "fields": { "heading": "Hi" } }
             """);
         await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "cms.page", "key": "{{page}}", "slotPath": "blocks", "itemType": "hero", "fields": { "heading": "First" }, "position": 0 }
+            { "entityType": "cms.page", "key": "{{page}}", "slotPath": "blocks", "itemType": "hero", "culture": "en-US", "fields": { "heading": "First" }, "position": 0 }
             """);
         await _agent.OkAsync("entity_moveItem", $$"""
             { "entityType": "cms.page", "key": "{{page}}", "slotPath": "blocks", "itemKey": "{{hero.GetProperty("itemKey").GetGuid()}}", "position": 0 }

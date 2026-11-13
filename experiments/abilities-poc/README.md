@@ -50,6 +50,13 @@ Each design layer and where it lives:
 | Replay is deterministic, and keys handed to the model are the stored keys | `Replaying_a_set_gives_the_same_entity_every_time` |
 | Workflow step types are derived from abilities | `WorkflowTests.Step_types_are_derived_from_abilities` |
 | A workflow graph (edges as item references) is validated, and can refer to a discount created in the same set | `A_workflow_from_text_links_its_steps_and_can_refer_to_a_discount_in_the_same_set` |
+| Names and values vary by culture; invariant values are shared across cultures | `CmsContentTests.Names_and_values_vary_by_culture_while_invariant_values_are_shared` |
+| A value that varies by culture needs a known culture; an entity with no culture can't be applied | `A_value_that_varies_by_culture_needs_a_known_culture` |
+| Each culture is validated separately, and problems say which culture | `Each_culture_is_validated_separately_and_problems_say_which` |
+| Blocks in an invariant Block List hold per-culture values, and a block's settings element is edited and validated at `{item}/@settings` | `Block_values_vary_per_culture_inside_an_invariant_block_list_and_settings_are_their_own_element` |
+| Block Grid: column span is a placement value at `{item}/@layout`, areas are slots with limits, and a type can be allowed at the root and in areas | `Grid_blocks_have_placement_values_and_areas_that_are_slots` |
+| A culture-variant block property holds a separate list per culture | `A_culture_variant_block_property_holds_a_list_per_culture` |
+| A media picker and a multi-type picker refer to media and pages created in the same set | `Pickers_refer_to_media_and_pages_created_in_the_same_set` |
 
 ## What building it taught us
 
@@ -75,11 +82,48 @@ These feed back into the design doc.
 6. **Abilities as item types works.** Reflecting an ability's input type into fields made Automate's step
    types come for free, including an entity reference from `[EntityKey]`.
 
+## Checked against the real models
+
+The structure language was compared with the real code of Umbraco CMS (`main`, 18.5.0-rc),
+Umbraco.Commerce (`dev`) and Umbraco.Automate (`v18/dev`). The CMS sample now follows the real content
+model's shapes. What the contract gained from that:
+
+| Added to the structure language | Why (real model) |
+| --- | --- |
+| `Variance` on the entity, fields and slots, with `VariantId` narrowed per value | CMS property values carry a culture or segment only if their property varies that way, and Umbraco rejects values that don't match |
+| Variant values stored per variant (`variants["en-US"].fields`), names as a culture-variant field | CMS names vary by culture; block values inside an invariant block property vary per culture |
+| Culture-variant slots (a list per culture) | A culture-variant block property holds one whole envelope per culture |
+| `culture` / `segment` on `Problem` | The CMS's `PropertyValidationError` reports alias, culture and segment |
+| `ItemTypeDefinition.SettingsShape`, edited at `{item}/@settings` | Blocks have a settings element type next to their content type |
+| `SlotDefinition.ItemLayout`, edited at `{item}/@layout` | A Block Grid's column and row span belong to the block's place, not its values |
+| `ItemTypeDefinition.AlsoIn` | Grid blocks can be allowed at the root and in areas |
+| `Many`, `ReferencesAnyOf`, `FieldType.Json` | Tags and dropdowns are string arrays; a tree picker points at documents or media; focal points, crops and date-times are objects |
+
+What still does not fit, and needs a decision rather than more code:
+
+| Product | Gap | Consequence |
+| --- | --- | --- |
+| CMS | Blocks in rich text are placed by markup, not by slot order | Adding a block to rich text needs an anchor in the markup; editing existing ones fits |
+| CMS | Segments are not managed (no list to validate against); "expose" (which cultures a block exists in) is derived by the CMS on read | The CMS definition must produce expose entries and accept any segment |
+| CMS | Update replaces all properties, and saves invalid values while returning errors | The definition must send the full working copy and treat returned errors as a failed apply |
+| CMS | No concurrency token on update | Change detection has to compare `UpdateDate` or `VersionId` inside the apply scope |
+| Commerce | A discount's rules are one recursive tree under a group rule (AND/OR is a setting); rule and reward nodes have no ids | Fits as a single-item slot with nested slots, but the definition must assign item keys on load and drop them on save |
+| Commerce | Validation is message-only and stops at the first error; rule and reward settings are not validated on write | Problems by path have to come from the definition, not from Commerce |
+| Commerce | Saves use Commerce's own unit of work and connection, and can't join an Umbraco scope | **A page and a discount can't be applied all or nothing today.** Needs a Commerce change, or best effort with compensation |
+| Commerce | `Version` exists but isn't exposed, and conflicts are retried (last writer wins) | No change detection for discounts without a Commerce change |
+| Automate | Steps are a flat list and edges are their own list carrying data (outcome, handle, filter); loops and parallel paths come from edges, not nesting | Item references on fields are not enough: the contract needs **edges as a first-class part of an entity** |
+| Automate | Validation errors are strings with no path; unknown step types aren't caught at publish | Problems by path have to come from the definition |
+| Automate | Bindings (`${ trigger.x }`) resolve to strings | Typed step inputs from bindings need an Automate change |
+
+Two existing Umbraco.AI defects turned up on the way and were raised as issues:
+[#746](https://github.com/umbraco/Umbraco.AI/issues/746) (Multi URL Picker links saved without a target)
+and [#747](https://github.com/umbraco/Umbraco.AI/issues/747) (block settings use the content element type).
+
 ## What it does not prove
 
-- **Real products.** The CMS page is a stand-in. Real documents bring cultures and segments, which the
-  structure language does not cover yet, plus real Block List / Block Grid values and
-  `IContentEditingService`. Commerce and Automate models are guesses from the domain, not their code.
+- **Real products.** The CMS page follows the real content model's shapes, but no definition yet maps to
+  `ContentCreateModel` / `ContentUpdateModel`, block envelopes and `IContentEditingService`. Commerce and
+  Automate definitions are also still stand-ins.
 - **A real model.** The tests script the tool calls. No LLM chose them.
 - **Persistence and scale.** Sets are in memory, and working state is recomputed by replaying every call
   on each read.

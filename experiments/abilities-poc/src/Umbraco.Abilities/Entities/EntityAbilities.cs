@@ -14,6 +14,10 @@ public interface IEntityEditInput
     string EntityType { get; }
 
     Guid? Key { get; }
+
+    string? Culture { get; }
+
+    string? Segment { get; }
 }
 
 /// <summary>Base for entity edits: recorded into a draft set, applied to a working copy on replay.</summary>
@@ -52,6 +56,9 @@ public abstract class EntityEditAbilityBase<TInput> : AbilityBase<TInput, object
     private static TInput Read(JsonObject input)
         => input.Deserialize<TInput>(AbilityJson.Options) ?? throw new AbilityInputException("Input is required.");
 
+    protected static EditTarget Target(EntityDocument document, TInput input, EntityEditContext context)
+        => new(document, context.Structure, context.ItemTypes, new VariantId(input.Culture, input.Segment));
+
     protected static void EnsureKey(JsonObject input, string property)
     {
         if (input[property] is null || string.IsNullOrWhiteSpace(input[property]!.ToString()))
@@ -79,6 +86,8 @@ public sealed class GetEntitySchemaAbility(EntityDefinitionRegistry definitions,
             ["entityType"] = structure.EntityType,
             ["name"] = structure.Name,
             ["description"] = structure.Description,
+            ["varies"] = structure.Varies == Variance.Invariant ? null : structure.Varies.ToString(),
+            ["cultures"] = new JsonArray(structure.Cultures.Select(c => (JsonNode?)c).ToArray()),
             ["fields"] = SchemaWriter.Fields(structure.Shape),
             ["slots"] = SchemaWriter.Slots(structure.Shape, itemTypes),
         };
@@ -95,6 +104,7 @@ public sealed class GetEntitySchemaAbility(EntityDefinitionRegistry definitions,
                     ["name"] = itemType.Name,
                     ["fields"] = SchemaWriter.Fields(itemType.Shape),
                     ["slots"] = SchemaWriter.Slots(itemType.Shape, itemTypes),
+                    ["settings"] = itemType.SettingsShape is { } settings ? SchemaWriter.Fields(settings) : null,
                 };
             }
 
@@ -165,7 +175,9 @@ public sealed class GetEntityAbility(EntityDefinitionRegistry definitions, Draft
 public sealed record CreateEntityInput(
     [property: Description("Entity type to create.")] string EntityType,
     [property: Description("Optional key for the new entity. Choose one when other entities in the set must refer to it.")] Guid? Key = null,
-    [property: Description("Field values, keyed by field alias.")] JsonObject? Fields = null) : IEntityEditInput;
+    [property: Description("Field values, keyed by field alias.")] JsonObject? Fields = null,
+    [property: Description("Culture to edit, e.g. 'en-US'. Needed for values that vary by culture; ignored for invariant values.")] string? Culture = null,
+    [property: Description("Segment to edit. Omit for the default segment.")] string? Segment = null) : IEntityEditInput;
 
 [Ability("entity.create", "Create entity", Kind = AbilityKind.Write, Reversible = true,
     Description = "Creates an entity in the active draft set. Nothing goes live until the set is applied. " +
@@ -178,7 +190,8 @@ public sealed class CreateEntityAbility : EntityEditAbilityBase<CreateEntityInpu
 
     protected override object? Apply(EntityDocument document, CreateEntityInput input, EntityEditContext context)
     {
-        EntityEditor.SetFields(EntityEditor.ResolveElement(document, context.Structure, context.ItemTypes, string.Empty), input.Fields);
+        var target = Target(document, input, context);
+        EntityEditor.SetFields(target, EntityEditor.ResolveElement(target, string.Empty), input.Fields);
         return context.Definition.ToRef(document);
     }
 }
@@ -186,19 +199,22 @@ public sealed class CreateEntityAbility : EntityEditAbilityBase<CreateEntityInpu
 public sealed record SetEntityValueInput(
     [property: Description("Entity type.")] string EntityType,
     [property: Description("Entity key.")] Guid? Key,
-    [property: Description("Path of the element that holds the field: \"\" for the entity itself, or \"slot/itemKey\", e.g. \"rewards/3f2a...\".")] string? ElementPath,
+    [property: Description("Path of the element that holds the field: \"\" for the entity itself, \"slot/itemKey\" for an item, or \"slot/itemKey/@settings\" or \"@layout\".")] string? ElementPath,
     [property: Description("Field alias.")] string Field,
-    [property: Description("The new value, matching the field's schema. null clears it.")] JsonNode? Value) : IEntityEditInput;
+    [property: Description("The new value, matching the field's schema. null clears it.")] JsonNode? Value,
+    [property: Description("Culture to edit, e.g. 'en-US'. Needed for values that vary by culture; ignored for invariant values.")] string? Culture = null,
+    [property: Description("Segment to edit. Omit for the default segment.")] string? Segment = null) : IEntityEditInput;
 
 [Ability("entity.setValue", "Set entity value", Kind = AbilityKind.Write, Reversible = true,
-    Description = "Sets one field on the entity or on an item inside it, in the active draft set. " +
-                  "Problem paths from draftSet.validate have the same form: elementPath plus field.")]
+    Description = "Sets one field on the entity, on an item, or on an item's @settings or @layout, in the active draft set. " +
+                  "Give a culture for values that vary by culture. Problem paths from draftSet.validate have the same form: elementPath plus field.")]
 public sealed class SetEntityValueAbility : EntityEditAbilityBase<SetEntityValueInput>
 {
     protected override object? Apply(EntityDocument document, SetEntityValueInput input, EntityEditContext context)
     {
-        var element = EntityEditor.ResolveElement(document, context.Structure, context.ItemTypes, input.ElementPath);
-        EntityEditor.SetField(element, input.Field, input.Value);
+        var target = Target(document, input, context);
+        var element = EntityEditor.ResolveElement(target, input.ElementPath);
+        EntityEditor.SetField(target, element, input.Field, input.Value);
         return new { path = EntityEditor.Join(element.Path, input.Field) };
     }
 }
@@ -210,7 +226,9 @@ public sealed record AddEntityItemInput(
     [property: Description("Item type alias, from the slot's allowedItemTypes.")] string ItemType,
     [property: Description("Optional key for the new item. Choose one when another item must refer to it.")] Guid? ItemKey = null,
     [property: Description("Field values for the new item, keyed by field alias.")] JsonObject? Fields = null,
-    [property: Description("Optional zero-based position. Omit to append.")] int? Position = null) : IEntityEditInput;
+    [property: Description("Optional zero-based position. Omit to append.")] int? Position = null,
+    [property: Description("Culture to edit, e.g. 'en-US'. Needed for values that vary by culture; ignored for invariant values.")] string? Culture = null,
+    [property: Description("Segment to edit. Omit for the default segment.")] string? Segment = null) : IEntityEditInput;
 
 [Ability("entity.addItem", "Add entity item", Kind = AbilityKind.Write, Reversible = true,
     Description = "Adds a typed item to a slot, in the active draft set. Returns the item's path; use it as the " +
@@ -221,8 +239,9 @@ public sealed class AddEntityItemAbility : EntityEditAbilityBase<AddEntityItemIn
 
     protected override object? Apply(EntityDocument document, AddEntityItemInput input, EntityEditContext context)
     {
-        var item = EntityEditor.AddItem(document, context.Structure, context.ItemTypes, input.SlotPath, input.ItemType, input.ItemKey!.Value, input.Position);
-        EntityEditor.SetFields(item, input.Fields);
+        var target = Target(document, input, context);
+        var item = EntityEditor.AddItem(target, input.SlotPath, input.ItemType, input.ItemKey!.Value, input.Position);
+        EntityEditor.SetFields(target, item, input.Fields);
         return new { itemKey = input.ItemKey, path = item.Path };
     }
 }
@@ -231,7 +250,9 @@ public sealed record RemoveEntityItemInput(
     [property: Description("Entity type.")] string EntityType,
     [property: Description("Entity key.")] Guid? Key,
     [property: Description("Path of the slot.")] string SlotPath,
-    [property: Description("Key of the item to remove.")] Guid ItemKey) : IEntityEditInput;
+    [property: Description("Key of the item to remove.")] Guid ItemKey,
+    [property: Description("Culture to edit, e.g. 'en-US'. Needed for values that vary by culture; ignored for invariant values.")] string? Culture = null,
+    [property: Description("Segment to edit. Omit for the default segment.")] string? Segment = null) : IEntityEditInput;
 
 [Ability("entity.removeItem", "Remove entity item", Kind = AbilityKind.Write, Reversible = true,
     Description = "Removes an item from a slot, in the active draft set.")]
@@ -239,7 +260,7 @@ public sealed class RemoveEntityItemAbility : EntityEditAbilityBase<RemoveEntity
 {
     protected override object? Apply(EntityDocument document, RemoveEntityItemInput input, EntityEditContext context)
     {
-        EntityEditor.RemoveItem(document, context.Structure, context.ItemTypes, input.SlotPath, input.ItemKey);
+        EntityEditor.RemoveItem(Target(document, input, context), input.SlotPath, input.ItemKey);
         return new { removed = input.ItemKey };
     }
 }
@@ -249,7 +270,9 @@ public sealed record MoveEntityItemInput(
     [property: Description("Entity key.")] Guid? Key,
     [property: Description("Path of the slot.")] string SlotPath,
     [property: Description("Key of the item to move.")] Guid ItemKey,
-    [property: Description("New zero-based position.")] int Position) : IEntityEditInput;
+    [property: Description("New zero-based position.")] int Position,
+    [property: Description("Culture to edit, e.g. 'en-US'. Needed for values that vary by culture; ignored for invariant values.")] string? Culture = null,
+    [property: Description("Segment to edit. Omit for the default segment.")] string? Segment = null) : IEntityEditInput;
 
 [Ability("entity.moveItem", "Move entity item", Kind = AbilityKind.Write, Reversible = true,
     Description = "Moves an item within its slot, in the active draft set.")]
@@ -257,7 +280,7 @@ public sealed class MoveEntityItemAbility : EntityEditAbilityBase<MoveEntityItem
 {
     protected override object? Apply(EntityDocument document, MoveEntityItemInput input, EntityEditContext context)
     {
-        EntityEditor.MoveItem(document, context.Structure, context.ItemTypes, input.SlotPath, input.ItemKey, input.Position);
+        EntityEditor.MoveItem(Target(document, input, context), input.SlotPath, input.ItemKey, input.Position);
         return new { moved = input.ItemKey, position = input.Position };
     }
 }

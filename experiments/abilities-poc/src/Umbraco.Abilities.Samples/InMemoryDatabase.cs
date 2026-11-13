@@ -93,7 +93,7 @@ public abstract class InMemoryEntityDefinition(InMemoryDatabase database, string
             .ToList());
 
     public EntityRef ToRef(EntityDocument document)
-        => new(EntityType, document.Key, Element.Fields(document.Root)[nameField]?.GetValue<string>() ?? "(unnamed)", $"{editUrlPrefix}/{document.Key}");
+        => new(EntityType, document.Key, Element.ReadAny(document.Root, nameField)?.GetValue<string>() ?? "(unnamed)", $"{editUrlPrefix}/{document.Key}");
 
     protected static string? Text(JsonObject element, string alias) => Element.Fields(element)[alias]?.GetValue<string>();
 }

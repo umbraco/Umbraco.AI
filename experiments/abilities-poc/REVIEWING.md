@@ -1,8 +1,9 @@
 # Reviewing the proof of concept
 
 > **Status:** Experiment. This guide is for reviewing the design through its code: what to read, in what order, and
-> what to question. The design itself is in the "Abilities, entities and change sets" doc. [README.md](README.md) has
-> the findings.
+> what to question. The design itself is in
+> [docs/plans/abilities-entities-change-sets/ARCHITECTURE.md](../../docs/plans/abilities-entities-change-sets/ARCHITECTURE.md).
+> [README.md](README.md) has the findings.
 
 ## What you are reviewing
 
@@ -240,5 +241,6 @@ These are the judgments the PoC makes that a reviewer is best placed to challeng
 ## Where the decisions are written down
 
 - [README.md](README.md): findings, numbers, and the sections referred to above.
-- The "Abilities, entities and change sets" design doc: the design, with the same findings folded in.
+- [ARCHITECTURE.md](../../docs/plans/abilities-entities-change-sets/ARCHITECTURE.md): the design, with the same findings
+  folded in.
 - Commit messages on this branch: each records what changed and why, in order.

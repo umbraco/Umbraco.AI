@@ -7,7 +7,8 @@ It tests one claim: if packages declare **abilities** and **entity definitions**
 recorded into **change sets**, then "create an entity from a description" needs no per-product code. That
 covers a discount with a rule tree, a page with nested blocks, or a workflow whose steps form a graph.
 
-**Reviewing it?** Start with [REVIEWING.md](REVIEWING.md): what to read, in what order, and how the pieces connect.
+**Reviewing it?** Start with [REVIEWING.md](REVIEWING.md): what to read, in what order, and how the pieces connect. The
+design is in [docs/plans/abilities-entities-change-sets/ARCHITECTURE.md](../../docs/plans/abilities-entities-change-sets/ARCHITECTURE.md).
 
 ## Run it
 

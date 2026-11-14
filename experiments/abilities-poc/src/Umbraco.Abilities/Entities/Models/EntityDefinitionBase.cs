@@ -132,11 +132,7 @@ public abstract class EntityDefinitionBase<TModel> : IEntityDefinition
         return document;
     }
 
-    private static string AliasOf(LambdaExpression property)
-    {
-        var member = ModelBuilder<TModel>.PropertyOf(property);
-        return ModelShapes.Info(member.DeclaringType!).Fields.FirstOrDefault(f => f.Property.Name == member.Name)?.Field.Alias ?? ModelShapes.AliasOf(member);
-    }
+    private static string AliasOf(LambdaExpression property) => ModelShapes.AliasOf(ModelBuilder<TModel>.PropertyOf(property));
 }
 
 /// <summary>
@@ -161,7 +157,7 @@ public abstract class ModelEditAbilityBase<TInput, TModel>(EntityDefinitionBase<
     {
         var model = definition.ToModel(document);
         Edit(model, Read(input));
-        document.Root.ReplaceWith(definition.ToDocument(model).Root);
+        document.Root = definition.ToDocument(model).Root;
         return definition.ToRef(document);
     }
 

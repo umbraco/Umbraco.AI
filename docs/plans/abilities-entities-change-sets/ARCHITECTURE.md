@@ -118,7 +118,7 @@ Editing contract (DiscountEditModel)
 structure, JSON Schema, paths, validation, edit abilities, change sets, rebasing
 ```
 
-A contract is described in one of two ways, which mean the same thing. Attributes suit a class the package writes for the purpose. Fluent configuration suits a class it doesn't own, such as a Management API request model, and needs no base class.
+A contract is described in one of two ways. Attributes suit a class the package writes for the purpose. Fluent configuration suits a class it doesn't own, such as a Management API request model, and needs no base class. It covers what request models have needed so far, and gets an option when a model needs one.
 
 ```csharp
 // Attributes, on a class written for the purpose
@@ -162,7 +162,7 @@ The framework works out the rest from the contract:
 | Fields, value types (items included), required, allowed values, references and limits | Property types, plus attributes or fluent configuration |
 | JSON Schema for structured values | `JsonSchemaExporter` over the property type |
 | Culture variation | `Varying<T>`, a value per culture, on any field |
-| Block settings and grid placement | `[ItemSettings]`/`HasSettings`, `[ItemLayout]`/`HasLayout`, an items field's layout type |
+| Block settings and grid placement | `[ItemSettings]`, `[ItemLayout]`, an items field's layout type |
 | Turning the contract into the working copy and back | Done both ways, keeping item keys and giving each item its path |
 | Range and format checks on entity paths | DataAnnotations, as attributes or fluent `Rule(...)`. Each problem is reported once |
 | An edit ability that works inside a change set | One `Edit(model, input)` method |

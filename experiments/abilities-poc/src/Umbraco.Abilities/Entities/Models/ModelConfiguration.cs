@@ -3,8 +3,6 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using Umbraco.Cms.Core.Models;
-using Umbraco.Extensions;
 namespace Umbraco.Abilities.Entities.Models;
 
 /// <summary>What a property is to the framework.</summary>
@@ -24,8 +22,6 @@ internal sealed class PropertyConfig
 {
     public PropertyRole? Role { get; set; }
 
-    public string? Alias { get; set; }
-
     public string? Description { get; set; }
 
     public bool? Required { get; set; }
@@ -35,10 +31,6 @@ internal sealed class PropertyConfig
     public IReadOnlyList<string>? Allowed { get; set; }
 
     public IReadOnlyList<string>? References { get; set; }
-
-    public string? ItemReferenceIn { get; set; }
-
-    public ContentVariation? Variations { get; set; }
 
     public string? ItemTypeGroup { get; set; }
 
@@ -74,8 +66,8 @@ internal sealed class TypeConfig
 
 /// <summary>
 /// Fluent configuration, for classes a package can't or won't put attributes on: a Management API request model, a class
-/// in another assembly. It says the same things the attributes say, and the framework treats both alike. Properties
-/// nobody configures are fields, named in camelCase, as with attributes.
+/// in another assembly. The framework treats it and the attributes alike. It covers what request models have needed so
+/// far; add an option when a model needs it. Properties nobody configures are fields, named in camelCase.
 /// </summary>
 public static class ModelConfiguration
 {
@@ -122,12 +114,6 @@ public sealed class ModelBuilder<T>
     /// <summary>The property holding the stored version, for rebasing.</summary>
     public ModelBuilder<T> HasVersion<TValue>(Expression<Func<T, TValue>> property) => Role(property, PropertyRole.Version);
 
-    /// <summary>On an item: the property holding its settings element.</summary>
-    public ModelBuilder<T> HasSettings<TValue>(Expression<Func<T, TValue>> property) => Role(property, PropertyRole.Settings);
-
-    /// <summary>On an item: the property holding its placement values in its items field.</summary>
-    public ModelBuilder<T> HasLayout<TValue>(Expression<Func<T, TValue>> property) => Role(property, PropertyRole.Layout);
-
     /// <summary>Leaves a property out of the structure.</summary>
     public ModelBuilder<T> Ignore<TValue>(Expression<Func<T, TValue>> property) => Role(property, PropertyRole.Ignored);
 
@@ -168,25 +154,12 @@ public sealed class FieldBuilder<T>
 
     internal FieldBuilder(ModelBuilder<T> model, PropertyConfig config) => (_model, _config) = (model, config);
 
-    public FieldBuilder<T> Alias(string alias) => Set(() => _config.Alias = alias);
-
     public FieldBuilder<T> Description(string description) => Set(() => _config.Description = description);
 
     public FieldBuilder<T> Required() => Set(() => _config.Required = true);
 
     /// <summary>The field holds the entity's display name.</summary>
     public FieldBuilder<T> IsName() => Set(() => _config.IsName = true);
-
-    public FieldBuilder<T> Allowed(params string[] values) => Set(() => _config.Allowed = values);
-
-    /// <summary>A Guid key, or an <see cref="EntityReference"/>, of an entity of one of these types.</summary>
-    public FieldBuilder<T> References(params string[] entityTypes) => Set(() => _config.References = entityTypes);
-
-    /// <summary>A key of another item in the entity's root items field <paramref name="field"/>.</summary>
-    public FieldBuilder<T> ReferencesItemIn(string field) => Set(() => _config.ItemReferenceIn = field);
-
-    /// <summary>What a <see cref="Varying{T}"/> field varies by, when not by culture.</summary>
-    public FieldBuilder<T> Varies(ContentVariation variations) => Set(() => _config.Variations = variations);
 
     /// <summary>A DataAnnotations rule, e.g. <c>new RangeAttribute(1, 100)</c>, reported on the field's path.</summary>
     public FieldBuilder<T> Rule(ValidationAttribute rule) => Set(() => _config.Rules.Add(rule));
@@ -212,15 +185,6 @@ public sealed class ItemsBuilder<T>
     internal ItemsBuilder(ModelBuilder<T> model, PropertyConfig config) => (_model, _config) = (model, config);
 
     public ItemsBuilder<T> Description(string description) => Set(() => _config.Description = description);
-
-    public ItemsBuilder<T> Min(int min) => Set(() => _config.Min = min);
-
-    public ItemsBuilder<T> Max(int max) => Set(() => _config.Max = max);
-
-    /// <summary>The class describing an item's placement values in this field.</summary>
-    public ItemsBuilder<T> Layout<TLayout>() => Set(() => _config.Layout = typeof(TLayout));
-
-    public ItemsBuilder<T> Varies(ContentVariation variations) => Set(() => _config.Variations = variations);
 
     public FieldBuilder<T> Field<TValue>(Expression<Func<T, TValue>> property) => _model.Field(property);
 

@@ -25,14 +25,13 @@ using Umbraco.Extensions;
 namespace Umbraco.Abilities.Cms;
 
 /// <summary>
-/// The real entity definition for CMS documents. It is also the adapter to CMS Draft Sets: inside a change set, content
-/// changes are staged into a CMS draft set (per property) instead of being kept and replayed by the change set, so the
-/// draft set is the source of truth for content and its own rebasing, review and apply are used.
+/// The real entity definition for CMS documents: one entity type, <c>document</c> (the UDI entity type), whose subtypes are
+/// the document types. It reads through <see cref="IContentEditingService"/> in the editor (Management API) format, maps
+/// block editor values to items fields and back, and validates with Umbraco's own validation.
 /// <para>
-/// The real entity definition for CMS documents. One entity type, <c>document</c> (the UDI entity type), whose subtypes are the
-/// document types. It reads through <see cref="IContentEditingService"/> in the editor (Management API) format,
-/// maps block editor values to items fields and back, validates with Umbraco's own validation, and saves with
-/// <see cref="ContentCreateModel"/> / <see cref="ContentUpdateModel"/>.
+/// It is also the adapter to CMS Draft Sets: inside a change set, content changes are staged into a CMS draft set (per
+/// property) instead of being kept and replayed by the change set, so the draft set is the source of truth for content,
+/// and its own rebasing, review and apply (all or nothing, in one Umbraco scope) are used.
 /// </para>
 /// </summary>
 public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthorizingEntityDefinition
@@ -179,36 +178,9 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
         return problems;
     }
 
-    public async Task<EntityRef> SaveAsync(EntityDocument document, CancellationToken cancellationToken = default)
-    {
-        var model = await BuildModelAsync(document);
-        ContentEditingOperationStatus status;
-        ContentValidationResult validation;
-
-        if (document.LiveVersion is null)
-        {
-            var created = await _editing.CreateAsync(model.ToCreateModel(), _actingUser());
-            (status, validation) = (created.Status, created.Result.ValidationResult);
-        }
-        else
-        {
-            var updated = await _editing.UpdateAsync(document.Key, model.ToUpdateModel(), _actingUser());
-            (status, validation) = (updated.Status, updated.Result.ValidationResult);
-        }
-
-        // Umbraco saves invalid property values and reports them afterwards. A change set must not apply
-        // half-valid content, so any reported problem fails the save and the surrounding scope rolls back.
-        // Umbraco reports problems in every culture; only those in cultures the document has (or invariant) fail it.
-        var cultures = model.Variants.Select(v => v.Culture).ToHashSet();
-        var errors = validation.ValidationErrors.Where(e => e.Culture is null || cultures.Contains(null) || cultures.Contains(e.Culture)).ToList();
-        if (status is not (ContentEditingOperationStatus.Success or ContentEditingOperationStatus.PropertyValidationError) || errors.Count > 0)
-        {
-            var details = string.Join("; ", errors.Select(model.Index.ToProblem).Select(p => $"{p.Path}{(p.Culture is null ? "" : $" ({p.Culture})")}: {p}"));
-            throw new InvalidOperationException($"Umbraco did not save {ToRef(document).Name}: {status}. {details}".Trim());
-        }
-
-        return ToRef(document);
-    }
+    /// <summary>Not used: content in a change set is applied through its draft set (<see cref="ApplyDraftAsync"/>).</summary>
+    public Task<EntityRef> SaveAsync(EntityDocument document, CancellationToken cancellationToken = default)
+        => throw new NotSupportedException("Content is applied through its CMS draft set.");
 
     public Task<IReadOnlyList<EntityRef>> FindAsync(string query, CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<EntityRef>>(_entities.GetAll(UmbracoObjectTypes.Document)
@@ -535,9 +507,10 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
                 ?? throw new InvalidOperationException($"Block '{item.Type}' is not configured for '{property.Alias}'.");
             var elementMap = await _mapper.MapAsync(_mapper.RequireType(block.ContentElementTypeKey), isDocument: false);
 
-            var values = await WriteValuesAsync(item, elementMap, documentCultures, envelopeCulture, path);
+            var nested = new Envelopes();
+            var values = await WriteValuesAsync(item, elementMap, documentCultures, envelopeCulture, path, nested);
             contentData.Add(new BlockItemData { Key = item.Key, ContentTypeKey = block.ContentElementTypeKey, ContentTypeAlias = block.ContentAlias, Values = values });
-            index.Content.Add(new IndexedElement(item.Key, path, values));
+            index.Content.Add(new IndexedElement(item.Key, path, values, nested));
 
             // An element that varies by culture is exposed in each culture it has values for (or every culture
             // of the document when it has none yet); an invariant element is exposed once.
@@ -559,9 +532,10 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
             {
                 settingsKey = item.Extra.TryGetValue(SettingsKeyExtra, out var stored) ? Guid.Parse(stored) : DerivedKey(item.Key, "settings");
                 var settingsMap = await _mapper.MapAsync(_mapper.RequireType(settingsType), isDocument: false);
-                var settingsValues = await WriteValuesAsync(item.Settings ?? new EntityElement(), settingsMap, documentCultures, envelopeCulture, $"{path}/@settings");
+                var settingsNested = new Envelopes();
+                var settingsValues = await WriteValuesAsync(item.Settings ?? new EntityElement(), settingsMap, documentCultures, envelopeCulture, $"{path}/@settings", settingsNested);
                 settingsData.Add(new BlockItemData { Key = settingsKey.Value, ContentTypeKey = settingsType, Values = settingsValues });
-                index.Settings.Add(new IndexedElement(item.Key, $"{path}/@settings", settingsValues));
+                index.Settings.Add(new IndexedElement(item.Key, $"{path}/@settings", settingsValues, settingsNested));
             }
 
             if (property.Kind != PropertyKind.BlockGrid)
@@ -603,7 +577,7 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
             : new BlockListValue { Layout = blocks, ContentData = contentData, SettingsData = settingsData, Expose = expose };
     }
 
-    private async Task<List<BlockPropertyValue>> WriteValuesAsync(EntityElement element, ShapeMap map, IReadOnlyList<string> documentCultures, string? envelopeCulture, string path)
+    private async Task<List<BlockPropertyValue>> WriteValuesAsync(EntityElement element, ShapeMap map, IReadOnlyList<string> documentCultures, string? envelopeCulture, string path, Envelopes nested)
     {
         var values = new List<BlockPropertyValue>();
         foreach (var property in map.Properties.Values)
@@ -615,7 +589,7 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
                     Alias = property.Alias,
                     Culture = variant.Culture,
                     Segment = variant.Segment,
-                    Value = ToModelValue(await ToNodeAsync(value, property, documentCultures, variant.Culture ?? envelopeCulture, $"{path}/{property.Alias}", new EnvelopeIndex())),
+                    Value = ToModelValue(await ToNodeAsync(value, property, documentCultures, variant.Culture ?? envelopeCulture, $"{path}/{property.Alias}", nested.For(property.Alias, variant))),
                 });
             }
         }
@@ -643,10 +617,6 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
             Properties = Properties,
         };
 
-        // Templates aren't carried yet: the test document types have none. A real definition re-sends the
-        // current template key, because a null TemplateKey clears it.
-        public ContentUpdateModel ToUpdateModel() => new() { Variants = Variants, Properties = Properties };
-
         // Only the cultures the document has: validating all of them fails mandatory values in cultures it doesn't exist in.
         public ValidateContentUpdateModel ToValidateUpdateModel() => new()
         {
@@ -656,8 +626,10 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
         };
     }
 
-    private sealed record IndexedElement(Guid ContentKey, string Path, IList<BlockPropertyValue> Values);
+    /// <summary>A block element as written, with the envelopes of the block properties inside it.</summary>
+    private sealed record IndexedElement(Guid ContentKey, string Path, IList<BlockPropertyValue> Values, Envelopes Nested);
 
+    /// <summary>What was written into one block value, to map Umbraco's errors inside it back to entity paths.</summary>
     private sealed class EnvelopeIndex
     {
         public List<IndexedElement> Content { get; } = [];
@@ -667,43 +639,59 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
         public List<(Guid Key, string? Culture)> Exposed { get; } = [];
     }
 
-    /// <summary>
-    /// Turns Umbraco's validation errors (alias, culture, segment and a JSON path into the block value) back into
-    /// the paths the entity abilities use. Umbraco indexes <c>contentData[i]</c> over the blocks exposed in the
-    /// culture being validated, so the index replays that filter.
-    /// </summary>
-    private sealed class ErrorIndex
+    /// <summary>The block values written for an element's properties, by alias and variant.</summary>
+    private sealed class Envelopes
     {
         private readonly Dictionary<(string Alias, string? Culture, string? Segment), EnvelopeIndex> _envelopes = [];
 
-        public EnvelopeIndex ForProperty(string alias, VariantId variant)
+        public EnvelopeIndex For(string alias, VariantId variant)
         {
             var index = new EnvelopeIndex();
             _envelopes[(alias, variant.Culture, variant.Segment)] = index;
             return index;
         }
 
+        public EnvelopeIndex? Find(string alias, string? culture, string? segment)
+            => _envelopes.GetValueOrDefault((alias, culture, segment)) ?? _envelopes.GetValueOrDefault((alias, null, null));
+    }
+
+    /// <summary>
+    /// Turns Umbraco's validation errors (alias, culture, segment and a JSON path into the block value) back into
+    /// the paths the entity abilities use. Umbraco indexes <c>contentData[i]</c> over the blocks exposed in the
+    /// culture being validated, so the index replays that filter. A block property inside a block continues the JSON
+    /// path, so the lookup repeats one level down.
+    /// </summary>
+    private sealed class ErrorIndex
+    {
+        private readonly Envelopes _properties = new();
+
+        public EnvelopeIndex ForProperty(string alias, VariantId variant) => _properties.For(alias, variant);
+
         public Problem ToProblem(PropertyValidationError error)
         {
             // Same fields as Umbraco's error; only the alias and JSON path become one entity path.
             var located = new Problem(error.Alias, error.ErrorMessages.ToList()) { Culture = error.Culture, Segment = error.Segment };
-            var match = BlockValuePath.Match(error.JsonPath ?? string.Empty);
-            if (!match.Success)
+            if (string.IsNullOrEmpty(error.JsonPath) || error.JsonPath == "$")
             {
-                return string.IsNullOrEmpty(error.JsonPath) || error.JsonPath == "$"
-                    ? located
-                    : located with { Path = $"{error.Alias} {error.JsonPath}" };
+                return located;
             }
 
-            if (!_envelopes.TryGetValue((error.Alias, error.Culture, error.Segment), out var envelope)
-                && !_envelopes.TryGetValue((error.Alias, null, null), out envelope))
+            return Locate(_properties, error.Alias, error.Culture, error.Segment, error.JsonPath) is { } at
+                ? located with { Path = at.Path, Culture = at.Culture, Segment = at.Segment }
+                : located with { Path = $"{error.Alias} {error.JsonPath}" };
+        }
+
+        private static (string Path, string? Culture, string? Segment)? Locate(Envelopes envelopes, string alias, string? culture, string? segment, string jsonPath)
+        {
+            var match = BlockValuePath.Match(jsonPath);
+            if (!match.Success || envelopes.Find(alias, culture, segment) is not { } envelope)
             {
-                return located with { Path = $"{error.Alias} {error.JsonPath}" };
+                return null;
             }
 
             // Inside an invariant block property the culture is in the filter, not on the error.
-            var culture = match.Groups["culture"].Success ? match.Groups["culture"].Value : error.Culture;
-            var segment = match.Groups["segment"].Success ? match.Groups["segment"].Value : error.Segment;
+            culture = match.Groups["culture"].Success ? match.Groups["culture"].Value : culture;
+            segment = match.Groups["segment"].Success ? match.Groups["segment"].Value : segment;
 
             // contentData[i] counts only the blocks exposed in the culture being validated.
             var exposed = envelope.Exposed.Where(e => e.Culture == culture || e.Culture is null).Select(e => e.Key).ToHashSet();
@@ -711,18 +699,21 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
             var i = int.Parse(match.Groups["item"].Value);
             if (i >= elements.Count)
             {
-                return located with { Path = $"{error.Alias} {error.JsonPath}" };
+                return null;
             }
 
+            var element = elements[i];
             var field = match.Groups["alias"].Success
                 ? match.Groups["alias"].Value
-                : elements[i].Values.ElementAtOrDefault(int.Parse(match.Groups["value"].Value))?.Alias;
-            return located with
+                : element.Values.ElementAtOrDefault(int.Parse(match.Groups["value"].Value))?.Alias;
+            if (field is null)
             {
-                Path = field is null ? elements[i].Path : $"{elements[i].Path}/{field}",
-                Culture = culture,
-                Segment = segment,
-            };
+                return (element.Path, culture, segment);
+            }
+
+            // The error is inside a block property of this block: locate it there.
+            var rest = jsonPath[(match.Index + match.Length)..];
+            return (rest.Length > 0 ? Locate(element.Nested, field, culture, segment, rest) : null) ?? ($"{element.Path}/{field}", culture, segment);
         }
     }
 }

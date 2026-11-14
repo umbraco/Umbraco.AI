@@ -103,29 +103,6 @@ public class EntityElement : ElementValues
         }
     }
 
-    /// <summary>Replaces this element's values with another's.</summary>
-    public void ReplaceWith(EntityElement other)
-    {
-        var copy = EntityJson.Clone(other);
-        Fields.Clear();
-        Items.Clear();
-        Variants.Clear();
-        foreach (var (alias, value) in copy.Fields)
-        {
-            Fields[alias] = value;
-        }
-
-        foreach (var (alias, items) in copy.Items)
-        {
-            Items[alias] = items;
-        }
-
-        foreach (var (key, values) in copy.Variants)
-        {
-            Variants[key] = values;
-        }
-    }
-
     /// <summary>A field's value whether it is invariant or varies: the invariant value, else the first variant's.</summary>
     public JsonNode? ReadAny(string alias) => Values(alias).Select(v => v.Value).FirstOrDefault();
 }
@@ -168,7 +145,7 @@ public sealed class EntityDocument
     /// <summary>The stored version this copy was loaded from; null when the entity is new.</summary>
     public long? LiveVersion { get; init; }
 
-    public EntityElement Root { get; init; } = new();
+    public EntityElement Root { get; set; } = new();
 
     public EntityDocument Clone() => new()
     {
@@ -244,15 +221,51 @@ public static class EntityJson
     }
 
     /// <summary>
-    /// Whether a field's JSON is a list of items: a non-empty array whose entries all have a key and a type. Read without
-    /// the structure, so a JSON value field shaped exactly like that would be read as items.
+    /// Whether a field's JSON is a list of items: a non-empty array whose entries all have a key and a type. Reading the
+    /// JSON form has no structure to go by, so a JSON value shaped exactly like that is read as items; only the samples'
+    /// storage reads it back. Copies don't go through JSON (<see cref="Clone{T}"/>).
     /// </summary>
     private static bool IsItemList(JsonNode? value)
         => value is JsonArray { Count: > 0 } array && array.All(e => e is JsonObject o && o["key"] is not null && o["type"] is JsonValue);
 
+    /// <summary>A deep copy, following the element's own fields and items rather than its JSON form.</summary>
     public static T Clone<T>(T element)
         where T : EntityElement
-        => (T)(element is EntityItem ? ItemFromJson(ToJson(element)) : (EntityElement)FromJson(ToJson(element)));
+    {
+        EntityElement copy = element is EntityItem item
+            ? new EntityItem { Key = item.Key, Type = item.Type, Settings = item.Settings is { } s ? Clone(s) : null, Layout = item.Layout is { } l ? Clone(l) : null }
+            : new EntityElement();
+        CopyValues(element, copy);
+        foreach (var (key, values) in element.Variants)
+        {
+            var variant = new ElementValues();
+            CopyValues(values, variant);
+            copy.Variants[key] = variant;
+        }
+
+        if (element is EntityItem extra)
+        {
+            foreach (var (key, value) in extra.Extra)
+            {
+                ((EntityItem)copy).Extra[key] = value;
+            }
+        }
+
+        return (T)copy;
+    }
+
+    private static void CopyValues(ElementValues from, ElementValues to)
+    {
+        foreach (var (alias, value) in from.Fields)
+        {
+            to.Fields[alias] = value?.DeepClone();
+        }
+
+        foreach (var (alias, items) in from.Items)
+        {
+            to.Items[alias] = items.Select(Clone).ToList();
+        }
+    }
 
     // One "fields" object: a value field's JSON, or an items field's items (each with its key and type).
     private static JsonObject Values(ElementValues values) => new()

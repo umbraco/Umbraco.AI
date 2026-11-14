@@ -90,10 +90,19 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         var text = await CreateElementTypeAsync("textBlock", ContentVariation.Culture, ("text", ContentVariation.Culture, false));
         var row = await CreateElementTypeAsync("twoColumns", ContentVariation.Nothing, ("label", ContentVariation.Nothing, false));
 
+        // A block with a block property of its own: a group of cards, each with a mandatory title.
+        var card = await CreateElementTypeAsync("card", ContentVariation.Nothing, ("title", ContentVariation.Nothing, true));
+        var cards = await CreateDataTypeAsync(Constants.PropertyEditors.Aliases.BlockList, "Cards", new BlockListConfiguration.BlockConfiguration[] { new() { ContentElementTypeKey = card.Key } });
+        var cardGroup = new ContentTypeBuilder().WithAlias("cardGroup").WithName("cardGroup").WithIsElement(true).WithContentVariation(ContentVariation.Nothing)
+            .AddPropertyType().WithAlias("cards").WithName("cards").WithDataTypeId(cards.Id).WithVariations(ContentVariation.Nothing).Done()
+            .Build();
+        await ContentTypeService.CreateAsync(cardGroup, Constants.Security.SuperUserKey);
+
         var blockList = await CreateDataTypeAsync(Constants.PropertyEditors.Aliases.BlockList, "Page blocks", new BlockListConfiguration.BlockConfiguration[]
         {
             new() { ContentElementTypeKey = hero.Key, SettingsElementTypeKey = heroSettings.Key },
             new() { ContentElementTypeKey = text.Key },
+            new() { ContentElementTypeKey = cardGroup.Key },
         });
         var blockGrid = await CreateDataTypeAsync(Constants.PropertyEditors.Aliases.BlockGrid, "Page grid", new BlockGridConfiguration.BlockGridBlockConfiguration[]
         {
@@ -208,7 +217,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         Assert.That(schema.GetProperty("fields").GetProperty("properties").GetProperty("subtitle").GetProperty("x-variations").GetString(), Is.EqualTo("Culture"));
 
         var fields = schema.GetProperty("fields").GetProperty("properties");
-        Assert.That(TypesIn(fields.GetProperty("blocks")), Is.EquivalentTo(new[] { "hero", "textBlock" }));
+        Assert.That(TypesIn(fields.GetProperty("blocks")), Is.EquivalentTo(new[] { "hero", "textBlock", "cardGroup" }));
         Assert.That(TypesIn(fields.GetProperty("grid")), Is.EquivalentTo(new[] { "twoColumns", "textBlock" }));
         Assert.That(fields.GetProperty("grid").GetProperty("x-item-layout").GetProperty("required")[0].GetString(), Is.EqualTo("columnSpan"));
 
@@ -291,6 +300,22 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
     }
 
     [Test]
+    public async Task Umbraco_validation_problems_inside_a_block_in_a_block_come_back_on_its_path()
+    {
+        await _agent.StartChangeSetAsync("Cards");
+        var page = await CreatePageAsync();
+        await SetAsync(page, "", "subtitle", "\"Sun and sand\"", "en-US");
+        var group = await AddItemAsync(page, "blocks", "cardGroup", "{}");
+        await AddItemAsync(page, $"{group}/cards", "card", """{ "title": "Fine" }""");
+        var empty = await AddItemAsync(page, $"{group}/cards", "card", "{}");
+
+        var working = (await _changeSets.GetWorkingStateAsync(_changeSets.Get(_agent.ChangeSetId!.Value), "document", page))!;
+        var problems = (await _documents.ValidateAsync(working)).Select(p => p.Path).ToList();
+
+        Assert.That(problems, Is.EquivalentTo(new[] { $"{empty}/title" }), string.Join(", ", problems));
+    }
+
+    [Test]
     public async Task Editing_an_existing_page_keeps_everything_the_edit_did_not_touch()
     {
         await _agent.StartChangeSetAsync("Create");
@@ -345,6 +370,22 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         FailingOperationAbility.Fail = false;
         await _agent.OkAsync("changeSet_apply", SetJson());
         Assert.That(ContentService.GetById(page.Key)!.VersionId, Is.EqualTo(version), "resuming does not save the page again");
+    }
+
+    [Test]
+    public async Task A_page_deleted_in_the_backoffice_while_a_set_edits_it_is_still_summarized_and_refused_on_apply()
+    {
+        await _agent.StartChangeSetAsync("Create");
+        var page = await BuildSummerPageAsync();
+        await _agent.OkAsync("changeSet_apply", SetJson());
+
+        await _agent.StartChangeSetAsync("Edit");
+        await SetAsync(page.Key, "", "subtitle", "\"Sun, sand and sea\"", "en-US");
+        ContentService.Delete(ContentService.GetById(page.Key)!);
+
+        var summary = await _agent.OkAsync("changeSet_summarize", SetJson());
+        Assert.That(summary.GetProperty("entities")[0].GetProperty("entity").GetProperty("key").GetGuid(), Is.EqualTo(page.Key));
+        await _agent.FailAsync("changeSet_apply", SetJson());
     }
 
     [Test]
@@ -818,7 +859,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         private readonly Dictionary<string, AIFunction> _tools;
 
         public Agent(AbilityRegistry abilities, AbilityInvoker invoker)
-            => _tools = AbilityAITools.Create(abilities, invoker, () => new AbilityContext(UserKey, "ai", ChangeSetId)).ToDictionary(t => t.Name);
+            => _tools = AbilityAITools.Create(abilities, invoker, () => new AbilityContext(UserKey, ChangeSetId)).ToDictionary(t => t.Name);
 
         public Guid? ChangeSetId { get; private set; }
 

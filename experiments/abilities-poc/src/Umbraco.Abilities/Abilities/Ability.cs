@@ -59,19 +59,16 @@ public sealed record AbilityDescriptor(
     AbilityKind Kind,
     bool Reversible,
     Type InputType,
-    Type OutputType,
     int Retries = 0)
 {
-    public bool ChangesData => Kind == AbilityKind.Write;
-
     public bool RequiresApproval => Kind == AbilityKind.Write && !Reversible;
 }
 
 /// <summary>
-/// Who is calling (a backoffice user's key, as the CMS's services take it), from where, and which change set (if any) is
-/// active. An agent acts for a user: it gets that user's permissions, no more.
+/// Who is calling (a backoffice user's key, as the CMS's services take it) and which change set (if any) is active. An
+/// agent acts for a user: it gets that user's permissions, no more.
 /// </summary>
-public sealed record AbilityContext(Guid UserKey, string Caller, Guid? ChangeSetId = null);
+public sealed record AbilityContext(Guid UserKey, Guid? ChangeSetId = null);
 
 /// <summary>
 /// How an ability call ended. Mirrors the CMS's operation status enums (e.g. <c>ContentEditingOperationStatus</c>).
@@ -175,7 +172,6 @@ public abstract class AbilityBase<TInput, TOutput> : IAbility
             attribute.Kind,
             attribute.Reversible,
             typeof(TInput),
-            typeof(TOutput),
             attribute.Retries);
     }
 

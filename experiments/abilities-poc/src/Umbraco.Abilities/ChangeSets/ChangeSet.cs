@@ -10,16 +10,13 @@ namespace Umbraco.Abilities.ChangeSets;
 /// </summary>
 /// <param name="EntityType">Set for a change to an entity; null for a side effect that runs after the set is applied.</param>
 /// <param name="Creates">The call creates the entity, so its working state starts from <see cref="IEntityDefinition.New"/>.</param>
-/// <param name="BaseVersion">The live version the edit was made against, for detecting changes underneath the set.</param>
 public sealed record RecordedCall(
     string AbilityId,
     JsonObject Input,
-    string? EntityType,
-    Guid? EntityKey,
-    bool Creates,
-    long? BaseVersion,
-    string? Subtype = null,
-    Guid? UserKey = null);
+    string? EntityType = null,
+    Guid? EntityKey = null,
+    bool Creates = false,
+    string? Subtype = null);
 
 public sealed class ChangeSet
 {
@@ -57,14 +54,15 @@ public sealed class ChangeSet
     /// </summary>
     public Dictionary<string, Guid> Drafts { get; } = [];
 
-    /// <summary>How each conflict was resolved, keyed by <see cref="ResolutionKey"/>.</summary>
-    public Dictionary<string, ConflictSide> Resolutions { get; } = [];
+    /// <summary>How each conflict was resolved.</summary>
+    public Dictionary<ConflictKey, ConflictSide> Resolutions { get; } = [];
 
     /// <summary>An entity's identity in a set: its UDI, e.g. <c>umb://document/{key}</c>.</summary>
     public static string EntityKey(string entityType, Guid key) => EntityUdis.For(entityType, key).ToString();
-
-    public static string ResolutionKey(string entityType, Guid key, ChangedPath change) => $"{EntityKey(entityType, key)}|{change.Path}|{change.VariantKey}";
 }
+
+/// <summary>Where a conflict is: the entity (its <see cref="ChangeSet.EntityKey"/>), the path, and the variant.</summary>
+public sealed record ConflictKey(string Entity, string Path, string VariantKey);
 
 public enum ConflictSide
 {

@@ -13,10 +13,8 @@ public static class StructureValidator
 {
     private sealed record Context(
         EntityDocument Document,
-        EntityStructure Structure,
         ItemTypeRegistry ItemTypes,
         Func<string, Guid, Task<bool>> EntityExists,
-        IReadOnlyList<VariantId> Variants,
         List<Problem> Problems);
 
     /// <param name="entityExists">Whether an entity is live or created in the same change set.</param>
@@ -39,7 +37,7 @@ public static class StructureValidator
             problems.Add(new Problem(string.Empty, $"Unknown culture '{unknown.Culture}'.") { Culture = unknown.Culture, Segment = unknown.Segment });
         }
 
-        var context = new Context(document, structure, itemTypes, entityExists, variants, problems);
+        var context = new Context(document, itemTypes, entityExists, problems);
         await ValidateElementAsync(context, document.Root, structure.Shape, string.Empty, variants);
         return problems;
     }
@@ -157,7 +155,7 @@ public static class StructureValidator
         if (field.Type == FieldType.ItemReference && field.ReferencesItemIn is { } itemsAlias)
         {
             var key = Guid.Parse(value.GetValue<string>());
-            if (!context.Document.Root.ItemsOf(itemsAlias).Any(item => item.Key == key))
+            if (!(context.Document.Root.Items.GetValueOrDefault(itemsAlias) ?? []).Any(item => item.Key == key))
             {
                 context.Problems.Add(At($"No item with key {key} in '{itemsAlias}'."));
             }

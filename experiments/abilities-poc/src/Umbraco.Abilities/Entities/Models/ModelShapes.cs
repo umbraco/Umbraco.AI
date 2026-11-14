@@ -92,10 +92,10 @@ public static class ModelShapes
                     continue;
             }
 
-            var alias = config.Alias ?? AliasOf(property);
+            var alias = AliasOf(property);
             var description = config.Description ?? string.Empty;
             var (varying, valueType) = Unwrap(property.PropertyType);
-            var variations = varying ? config.Variations ?? ContentVariation.Culture : ContentVariation.Nothing;
+            var variations = varying ? ContentVariation.Culture : ContentVariation.Nothing;
 
             if (config.Role == PropertyRole.Items)
             {
@@ -158,8 +158,6 @@ public static class ModelShapes
             IsName = property.IsDefined(typeof(EntityNameAttribute)),
             Allowed = property.GetCustomAttribute<AllowedValuesAttribute>()?.Values.Select(v => v?.ToString() ?? string.Empty).ToList(),
             References = property.GetCustomAttribute<EntityKeyAttribute>()?.EntityTypes,
-            ItemReferenceIn = property.GetCustomAttribute<ItemReferenceAttribute>()?.Field,
-            Variations = property.GetCustomAttribute<VariationsAttribute>()?.Variations,
         };
 
         if (property.GetCustomAttribute<ItemsAttribute>() is { } items)
@@ -186,14 +184,11 @@ public static class ModelShapes
         var merged = new PropertyConfig
         {
             Role = fluent.Role ?? attributes.Role,
-            Alias = fluent.Alias ?? attributes.Alias,
             Description = fluent.Description ?? attributes.Description,
             Required = fluent.Required ?? attributes.Required,
             IsName = fluent.IsName || attributes.IsName,
             Allowed = fluent.Allowed ?? attributes.Allowed,
             References = fluent.References ?? attributes.References,
-            ItemReferenceIn = fluent.ItemReferenceIn ?? attributes.ItemReferenceIn,
-            Variations = fluent.Variations ?? attributes.Variations,
             ItemTypeGroup = fluent.ItemTypeGroup ?? attributes.ItemTypeGroup,
             Min = fluent.Min ?? attributes.Min,
             Max = fluent.Max ?? attributes.Max,
@@ -212,7 +207,6 @@ public static class ModelShapes
         var required = config.Required ?? false;
         var references = config.References;
         var allowed = config.Allowed;
-        var itemReference = config.ItemReferenceIn;
 
         var many = valueType != typeof(string) && ElementTypeOf(valueType) is not null;
         var single = many ? ElementTypeOf(valueType)! : valueType;
@@ -225,7 +219,6 @@ public static class ModelShapes
 
         FieldType? type = single switch
         {
-            _ when itemReference is not null => FieldType.ItemReference,
             _ when single == typeof(EntityReference) && references is { Count: > 0 } => FieldType.EntityReference,
             _ when single == typeof(Guid) && references is { Count: > 0 } => FieldType.EntityReference,
             _ when single == typeof(string) || single.IsEnum => FieldType.String,
@@ -251,7 +244,6 @@ public static class ModelShapes
             Allowed = allowed,
             ReferencesEntityType = single == typeof(Guid) ? references?.FirstOrDefault() : null,
             ReferencesAnyOf = single == typeof(EntityReference) ? references : null,
-            ReferencesItemIn = itemReference,
         };
     }
 
@@ -393,7 +385,7 @@ public static class ModelShapes
                 continue;
             }
 
-            var itemClass = itemTypes.Find(member.Field.ItemTypeGroup, item.Type)?.ClrType
+            var itemClass = itemTypes.Find(member.Field.ItemTypeGroup!, item.Type)?.ClrType
                 ?? throw new AbilityInputException($"Item type '{item.Type}' has no model class.", [new Problem(itemPath, "No model class for this item type.")]);
 
             var model = Read(itemClass, item, itemTypes, itemPath);

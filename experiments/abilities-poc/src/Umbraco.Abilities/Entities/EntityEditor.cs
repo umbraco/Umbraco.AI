@@ -24,7 +24,23 @@ public static class EntityEditor
 
     public static string Join(string path, string segment) => string.IsNullOrEmpty(path) ? segment : $"{path}/{segment}";
 
-    public static ResolvedElement ResolveElement(EditTarget target, string? path)
+    public static ResolvedElement ResolveElement(EditTarget target, string? path) => Walk(target, path, findHandled: false).Element;
+
+    /// <summary>A field whose value has a handler, found on the way along a path, and the path inside its value.</summary>
+    public sealed record HandledPath(ResolvedElement Owner, FieldDefinition Field, string Inner)
+    {
+        public string FieldPath => Join(Owner.Path, Field.Alias);
+    }
+
+    /// <summary>Finds whether a path goes into a field whose value has a handler.</summary>
+    public static HandledPath? FindHandled(EditTarget target, string? path) => Walk(target, path, findHandled: true).Handled;
+
+    /// <summary>
+    /// Follows a path: items field alias, item key, and so on, with <c>@settings</c> or <c>@layout</c> last. With
+    /// <paramref name="findHandled"/>, it stops at a field whose value has a handler, and where the path leaves the
+    /// items, so the built-in edit can report the problem.
+    /// </summary>
+    private static (ResolvedElement Element, HandledPath? Handled) Walk(EditTarget target, string? path, bool findHandled)
     {
         var segments = Split(path);
         var current = new ResolvedElement(target.Document.Root, target.Structure.Shape, string.Empty, null, null);
@@ -34,9 +50,22 @@ public static class EntityEditor
             var segment = segments[i];
             if (segment.StartsWith('@'))
             {
-                current = ResolveSubElement(current, segment, i == segments.Length - 1);
+                current = ResolveSubElement(current, segment, isLast: findHandled || i == segments.Length - 1);
                 i++;
                 continue;
+            }
+
+            if (findHandled)
+            {
+                if (current.Shape.Fields.FirstOrDefault(f => f.Alias == segment && f.Handler is not null) is { } handled)
+                {
+                    return (current, new HandledPath(current, handled, string.Join('/', segments[(i + 1)..])));
+                }
+
+                if (i + 1 >= segments.Length || !current.Shape.ItemFields.Any(f => f.Alias == segment))
+                {
+                    return (current, null);
+                }
             }
 
             if (i + 1 >= segments.Length)
@@ -60,42 +89,72 @@ public static class EntityEditor
             i += 2;
         }
 
-        return current;
+        return (current, null);
     }
 
-    /// <summary>A field whose value has a handler, found on the way along a path, and the path inside its value.</summary>
-    public sealed record HandledPath(ResolvedElement Owner, FieldDefinition Field, string Inner)
-    {
-        public string FieldPath => Join(Owner.Path, Field.Alias);
-    }
+    // ── Edits: into a handled value through its handler, else on the framework's own fields and items ────────────
 
-    /// <summary>Finds whether a path goes into a field whose value has a handler.</summary>
-    public static HandledPath? FindHandled(EditTarget target, string? path)
+    /// <summary>Sets a field, or a path inside a handled value (Rich Text's markup, a block's field). Returns its path.</summary>
+    public static string SetValue(EditTarget target, string? elementPath, string alias, JsonNode? value)
     {
-        var segments = Split(path);
-        for (var i = 0; i < segments.Length; i++)
+        var path = Join(elementPath ?? string.Empty, alias);
+        if (FindHandled(target, path) is { Inner.Length: > 0 } handled)
         {
-            ResolvedElement owner;
-            try
-            {
-                owner = ResolveElement(target, string.Join('/', segments[..i]));
-            }
-            catch (AbilityInputException)
-            {
-                continue;
-            }
-
-            if (owner.Shape.Fields.FirstOrDefault(f => f.Alias == segments[i] && f.Handler is not null) is { } field)
-            {
-                return new HandledPath(owner, field, string.Join('/', segments[(i + 1)..]));
-            }
+            UpdateHandled(target, handled, current => handled.Field.Handler!.SetValue(current, handled.Inner, value));
+            return path;
         }
 
-        return null;
+        var element = ResolveElement(target, elementPath);
+        SetField(target, element, alias, value);
+        return Join(element.Path, alias);
     }
 
+    /// <summary>Adds an item with field values, to an items field or a handled value. Returns the item's path.</summary>
+    public static string AddItem(EditTarget target, string fieldPath, string itemType, Guid key, JsonObject? fields, int? position)
+    {
+        if (FindHandled(target, fieldPath) is { } handled)
+        {
+            ValueItem? added = null;
+            UpdateHandled(target, handled, current => (added = handled.Field.Handler!.AddItem(current, handled.Inner, itemType, fields, key, position)).Value);
+            return Join(handled.FieldPath, added!.ItemPath);
+        }
+
+        var item = InsertItem(target, fieldPath, itemType, key, position);
+        SetFields(target, item, fields);
+        return item.Path;
+    }
+
+    public static void RemoveItem(EditTarget target, string fieldPath, Guid key)
+    {
+        if (FindHandled(target, fieldPath) is { } handled)
+        {
+            UpdateHandled(target, handled, current => handled.Field.Handler!.RemoveItem(current, handled.Inner, key));
+            return;
+        }
+
+        var items = ResolveItems(target, fieldPath);
+        items.Items.Remove(FindItem(items, key));
+    }
+
+    public static void MoveItem(EditTarget target, string fieldPath, Guid key, int position)
+    {
+        if (FindHandled(target, fieldPath) is { } handled)
+        {
+            UpdateHandled(target, handled, current => handled.Field.Handler!.MoveItem(current, handled.Inner, key, position));
+            return;
+        }
+
+        var items = ResolveItems(target, fieldPath);
+        var item = FindItem(items, key);
+        items.Items.Remove(item);
+        items.Items.Insert(Math.Clamp(position, 0, items.Items.Count), item);
+    }
+
+    private static EntityItem FindItem(ResolvedItems items, Guid key)
+        => items.Items.FirstOrDefault(i => i.Key == key) ?? throw Invalid(Join(items.Path, key.ToString()), "No item with this key in the field.");
+
     /// <summary>Changes a handled field's value through its handler, in the edit's variant.</summary>
-    public static void UpdateHandled(EditTarget target, HandledPath handled, Func<JsonNode?, JsonNode?> change)
+    private static void UpdateHandled(EditTarget target, HandledPath handled, Func<JsonNode?, JsonNode?> change)
     {
         var variant = RequireVariant(target, handled.Field.Variations, handled.FieldPath);
         var current = handled.Owner.Element.Get(handled.Field, variant);
@@ -161,7 +220,7 @@ public static class EntityEditor
         }
     }
 
-    public static ResolvedElement AddItem(EditTarget target, string fieldPath, string itemTypeAlias, Guid itemKey, int? position)
+    private static ResolvedElement InsertItem(EditTarget target, string fieldPath, string itemTypeAlias, Guid itemKey, int? position)
     {
         var items = ResolveItems(target, fieldPath);
         var allowed = target.ItemTypes.InGroup(items.Field.ItemTypeGroup!);
@@ -177,23 +236,6 @@ public static class EntityEditor
         var index = position is { } p ? Math.Clamp(p, 0, items.Items.Count) : items.Items.Count;
         items.Items.Insert(index, item);
         return new ResolvedElement(item, itemType.Shape, Join(items.Path, itemKey.ToString()), itemType, items.Field);
-    }
-
-    public static void RemoveItem(EditTarget target, string fieldPath, Guid itemKey)
-    {
-        var items = ResolveItems(target, fieldPath);
-        var item = items.Items.FirstOrDefault(i => i.Key == itemKey)
-            ?? throw Invalid(Join(items.Path, itemKey.ToString()), "No item with this key in the field.");
-        items.Items.Remove(item);
-    }
-
-    public static void MoveItem(EditTarget target, string fieldPath, Guid itemKey, int position)
-    {
-        var items = ResolveItems(target, fieldPath);
-        var item = items.Items.FirstOrDefault(i => i.Key == itemKey)
-            ?? throw Invalid(Join(items.Path, itemKey.ToString()), "No item with this key in the field.");
-        items.Items.Remove(item);
-        items.Items.Insert(Math.Clamp(position, 0, items.Items.Count), item);
     }
 
     /// <summary>

@@ -55,8 +55,9 @@ DiscountEditModel (the editing contract)
 structure, JSON Schema, paths, validation, edit abilities, change sets, rebasing
 ```
 
-There are two ways to describe a contract. They mean the same thing, and fluent configuration wins where both are
-used.
+There are two ways to describe a contract, and fluent configuration wins where both are used. Attributes cover
+everything; fluent configuration covers what request models have needed so far (key, version, name, ignore, fields with
+descriptions, required and rules, items fields), and gets an option when a model needs one.
 
 **Attributes**, for a class the package writes for the purpose (`Samples/Commerce/Commerce.cs`):
 
@@ -123,7 +124,7 @@ What the package no longer writes:
 | The structure: fields, types, required, allowed values, references, items fields and their limits | Property types, plus attributes or fluent configuration |
 | JSON Schema for structured values (a focal point) | `JsonSchemaExporter` over the property type |
 | Culture variation | `Varying<T>` (a value per culture), on value and items fields |
-| Block settings and grid placement shapes | `[ItemSettings]`/`HasSettings`, `[ItemLayout]`/`HasLayout`, an items field's layout type |
+| Block settings and grid placement shapes | `[ItemSettings]`, `[ItemLayout]`, an items field's layout type |
 | Turning the contract into the working copy and back | Done both ways, keeping item keys and giving each item its path |
 | Range and format checks reported on entity paths (`rewards/{key}/percent`) | DataAnnotations, as attributes or fluent `Rule(...)`, per item, settings and placement |
 | A path for a domain problem | `ProblemAt(x => x.EndDate, ...)`, or `ProblemAt(item, r => r.Percent, ...)` for an item |

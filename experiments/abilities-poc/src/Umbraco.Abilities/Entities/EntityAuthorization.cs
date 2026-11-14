@@ -38,28 +38,43 @@ public static class EntityAccess
 
     /// <summary>
     /// Item types the change adds that the user may not use, such as an Automate action that needs a section they don't
-    /// have. Items the entity already had are left alone.
+    /// have. Items the entity already had are left alone. Each item's type is looked up in its own field's group, since
+    /// the same alias can be a different type in another group.
     /// </summary>
-    public static IReadOnlyList<string> NewItemTypesNotAvailable(EntityDocument? before, EntityDocument after, ItemTypeRegistry itemTypes, Guid userKey)
+    public static IReadOnlyList<string> NewItemTypesNotAvailable(EntityDocument? before, EntityDocument after, ElementShape shape, ItemTypeRegistry itemTypes, Guid userKey)
     {
-        var existing = before is null ? [] : Items(before.Root).Select(i => i.Key).ToHashSet();
-        return Items(after.Root)
-            .Where(i => !existing.Contains(i.Key))
-            .Select(i => i.Type)
+        var existing = before is null ? [] : Items(before.Root, shape, itemTypes).Select(i => i.Item.Key).ToHashSet();
+        return Items(after.Root, shape, itemTypes)
+            .Where(i => !existing.Contains(i.Item.Key) && i.Type is { } type && !type.IsAvailableTo(userKey))
+            .Select(i => i.Item.Type)
             .Distinct()
-            .Where(type => itemTypes.Find(type) is { } itemType && !itemType.IsAvailableTo(userKey))
             .ToList();
     }
 
-    private static IEnumerable<EntityItem> Items(EntityElement element)
+    // Every item in an element, with its item type, including items in items, settings and placement.
+    private static IEnumerable<(EntityItem Item, ItemTypeDefinition? Type)> Items(EntityElement element, ElementShape shape, ItemTypeRegistry itemTypes)
     {
-        var parts = new ElementValues[] { element }.Concat(element.Variants.Values);
-        foreach (var item in parts.SelectMany(p => p.Items.Values).SelectMany(items => items))
+        foreach (var field in shape.ItemFields)
         {
-            yield return item;
-            foreach (var nested in Items(item))
+            foreach (var item in element.ItemValues(field.Alias).SelectMany(v => v.Items))
             {
-                yield return nested;
+                var type = itemTypes.Find(field.ItemTypeGroup!, item.Type);
+                yield return (item, type);
+                IEnumerable<(EntityItem, ItemTypeDefinition?)> nested = type is null ? [] : Items(item, type.Shape, itemTypes);
+                if (type?.SettingsShape is { } settingsShape && item.Settings is { } settings)
+                {
+                    nested = nested.Concat(Items(settings, settingsShape, itemTypes));
+                }
+
+                if (field.ItemLayout is { } layoutShape && item.Layout is { } layout)
+                {
+                    nested = nested.Concat(Items(layout, layoutShape, itemTypes));
+                }
+
+                foreach (var inner in nested)
+                {
+                    yield return inner;
+                }
             }
         }
     }

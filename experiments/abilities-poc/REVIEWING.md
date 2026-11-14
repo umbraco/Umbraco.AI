@@ -170,10 +170,10 @@ limit to raise with Commerce.
 In `ChangeSetService.cs`, read the public methods in this order:
 
 1. `RecordAsync`: how an edit becomes a recorded change (or a staged draft change), including the authorization check.
-2. `GetWorkingStateAsync`: an entity as the set would leave it. The set's edits are replayed onto the **current** live
-   version, which is what rebasing means here.
-3. `GetRebasedAsync` and `ResolveConflictAsync`: what others changed since, where both sides changed the same value, and
-   keeping yours or theirs.
+2. `ComputeAsync` (private, behind `GetWorkingStateAsync` and `GetRebasedAsync`): one entity's state, worked out once.
+   The set's edits are replayed onto the **current** live version, which is what rebasing means here, and replayed onto
+   the starting version to find where both sides changed the same value. Validate, summarize and apply all use it.
+3. `ResolveConflictAsync`: keeping yours or theirs for one conflict.
 4. `ValidateAsync`: structure, product rules and unresolved conflicts, per entity.
 5. `ApplyAsync`: authorize for the applying user, validate, the cancelable notification, then one step per product (each
    all or nothing, resumable), then side effects (inline, or queued with Polly retries).
@@ -190,7 +190,7 @@ In `ChangeSetService.cs`, read the public methods in this order:
 | File | What it is |
 | --- | --- |
 | `Umbraco.Abilities.Cms/CmsStructureMapper.cs` | Builds the structure from document types and data type configuration: Block List, Block Grid (areas become items fields, column span becomes placement), pickers, variation |
-| `Umbraco.Abilities.Cms/CmsDocumentDefinition.cs` | The real definition. Reads go through Umbraco's own block value classes in editor format. Validation uses Umbraco's, with its JSON paths translated back to entity paths (`ErrorIndex`). Saves go through `IContentEditingService`. It is also the **draft set adapter** (stage, read, rebase, resolve, apply), and **authorization** goes through `IContentPermissionService` |
+| `Umbraco.Abilities.Cms/CmsDocumentDefinition.cs` | The real definition. Reads go through Umbraco's own block value classes in editor format. Validation uses Umbraco's, with its JSON paths translated back to entity paths (`ErrorIndex`). Content is applied through its draft set, so its `SaveAsync` is unused. It is also the **draft set adapter** (stage, read, rebase, resolve, apply), and **authorization** goes through `IContentPermissionService` |
 | `Umbraco.Cms.DraftSets/DraftSetService.cs` | The stand-in for CMS core's Draft Sets. It records per-property changes over live content and reads through them, reports what others changed and the conflicts, and applies in one scope. It writes audit entries and raises notifications through the scope. It references Umbraco only |
 | `tests/Umbraco.Abilities.Cms.Tests/CmsDocumentDefinitionTests.cs` | Everything above against Umbraco 18 on SQLite: blocks, settings, grids and cultures saved by Umbraco; validation paths; rollback; resume; rebasing; draft sets; vetoes; real user permissions; the background queue |
 

@@ -16,7 +16,7 @@ public sealed class ScriptedAgent
     public ScriptedAgent(SampleSite site)
     {
         Tools = AbilityAITools
-            .Create(site.Abilities, site.Invoker, () => new AbilityContext(UserKey, "ai", ChangeSetId))
+            .Create(site.Abilities, site.Invoker, () => new AbilityContext(UserKey, ChangeSetId))
             .ToDictionary(t => t.Name);
     }
 

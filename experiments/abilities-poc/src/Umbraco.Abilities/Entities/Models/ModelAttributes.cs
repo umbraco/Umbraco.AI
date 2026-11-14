@@ -66,13 +66,6 @@ public sealed class ItemLayoutAttribute : Attribute
 {
 }
 
-/// <summary>A key of another item in the entity's root items field <paramref name="field"/>: how graph edges are modelled.</summary>
-[AttributeUsage(AttributeTargets.Property)]
-public sealed class ItemReferenceAttribute(string field) : Attribute
-{
-    public string Field { get; } = field;
-}
-
 /// <summary>
 /// The handler that owns the property's value model, for a value whose editor defines one (Rich Text). The handler type
 /// needs a parameterless constructor and may have a static <c>Schema</c> property giving the value's JSON Schema.
@@ -81,13 +74,6 @@ public sealed class ItemReferenceAttribute(string field) : Attribute
 public sealed class ValueHandlerAttribute(Type handlerType) : Attribute
 {
     public Type HandlerType { get; } = handlerType;
-}
-
-/// <summary>What a <see cref="Varying{T}"/> property varies by, when not by culture.</summary>
-[AttributeUsage(AttributeTargets.Property)]
-public sealed class VariationsAttribute(ContentVariation variations) : Attribute
-{
-    public ContentVariation Variations { get; } = variations;
 }
 
 /// <summary>The base class for item models. The key identifies the item within its field; leave it empty for a new item.</summary>

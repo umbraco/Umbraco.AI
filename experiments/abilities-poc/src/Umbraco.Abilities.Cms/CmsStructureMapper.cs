@@ -33,7 +33,12 @@ internal sealed record ShapeMap(ElementShape Shape, ContentVariation Variations,
 /// become items fields whose item types are registered per data type, because the same element type can be used by
 /// several block editors with different settings types and areas.
 /// </summary>
-internal sealed class CmsStructureMapper(IContentTypeService contentTypes, IDataTypeService dataTypes, ItemTypeRegistry itemTypes)
+internal sealed class CmsStructureMapper(
+    IContentTypeService contentTypes,
+    IDataTypeService dataTypes,
+    ItemTypeRegistry itemTypes,
+    IPropertyEditorSchemaService? schemas,
+    IReadOnlyDictionary<string, IValueHandler> editorHandlers)
 {
     public const string NameField = "name";
     public const string ParentField = "parent";
@@ -104,9 +109,41 @@ internal sealed class CmsStructureMapper(IContentTypeService contentTypes, IData
             case Constants.PropertyEditors.Aliases.BlockGrid:
                 return await MapBlockEditorAsync(propertyType, description, varies);
             default:
-                // The escape hatch: any other editor's value passes through as JSON in its editor format.
-                return AsField(FieldType.Json);
+                return await MapByEditorAsync(propertyType, description, varies);
         }
+    }
+
+    /// <summary>
+    /// Any other editor defines its own value model. Its handler, when one is registered for the editor, owns the paths
+    /// inside the value; otherwise the value is set whole, described by the editor's own value schema when it has one
+    /// (<see cref="IPropertyEditorSchemaService"/>), and checked by Umbraco when saved.
+    /// </summary>
+    private async Task<PropertyMap> MapByEditorAsync(IPropertyType propertyType, string description, ContentVariation varies)
+    {
+        var editor = propertyType.PropertyEditorAlias;
+        var dataType = await dataTypes.GetAsync(propertyType.DataTypeKey);
+        System.Text.Json.Nodes.JsonObject? schema = null;
+        try
+        {
+            schema = schemas?.GetValueSchema(editor, dataType?.ConfigurationObject);
+        }
+        catch (Exception)
+        {
+            // An editor whose schema can't be built is treated like one without a schema.
+        }
+
+        var handler = editorHandlers.GetValueOrDefault(editor);
+        if (schema is null && handler is null)
+        {
+            description = $"{description} A value in the '{editor}' editor's own format.";
+        }
+
+        return new PropertyMap(propertyType.Alias, editor, PropertyKind.Field, new FieldDefinition(propertyType.Alias, description, FieldType.Json, propertyType.Mandatory)
+        {
+            Variations = varies,
+            Schema = schema,
+            Handler = handler,
+        }, []);
     }
 
     private async Task<PropertyMap> MapBlockEditorAsync(IPropertyType propertyType, string description, ContentVariation varies)

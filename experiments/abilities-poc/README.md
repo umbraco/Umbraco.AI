@@ -165,6 +165,48 @@ a class to describe, so `CmsDocumentDefinition` and `WorkflowDefinition` impleme
 `BlockItemData`, `BlockPropertyValue`, `BlockGridLayoutItem` and `BlockItemVariation` instead of hand-built
 envelopes, and Umbraco's serializer reads and writes them. Moving to the typed document took it from 621 lines to 599.
 
+## Value types and handlers
+
+A field's value is opaque to the framework unless its value type has a **handler**. That's how CMS properties already
+work: a property can hold anything, and only its editor defines the model inside. Rich Text is markup plus blocks, with
+the markup placing each block by key, and a Block Grid's layout is the Block Grid's own business. The framework doesn't
+model those. It routes paths that go into a field to the field's handler (`IValueHandler`), which owns:
+
+- the **paths** inside the value (`intro/markup`, `intro/blocks/{key}/text`);
+- what **setting, adding, removing and moving** mean there, through the same tools (`entity.setValue`,
+  `entity.addItem` …), so a model doesn't learn anything new;
+- the **rules between its parts**, such as "every block tag in the markup has a block, and every block has a tag";
+- its **problems**, reported on paths inside the value.
+
+A value without a handler is set whole, described by its schema. For CMS properties that's the editor's own value
+schema, from Umbraco's `IPropertyEditorSchemaService`, and Umbraco checks it on save.
+
+| Value type | Who owns the model inside | Example |
+| --- | --- | --- |
+| A scalar or a reference | Nobody: there's nothing inside | Name, landing page |
+| JSON with a schema | Nobody: it's set whole, and checked against the schema and on save | An eyedropper colour, a date (`date-time`) |
+| JSON with a handler | The handler | Rich Text (`Samples/Cms/RichTextValue.cs`) |
+| Keyed items | The framework's built-in handler | Discount rules, workflow steps, the sample page's blocks |
+
+**Keyed items are the built-in value type** for products with fixed models. A discount is a fixed model whose `rules`
+and `rewards` are items, with item types from Commerce's providers and child rules nested in group rules. They keep
+everything the framework does for items: paths, problems, rebasing and references per item, and the item types offered
+per user.
+
+A typed model declares a handler with `[ValueHandler(typeof(...))]`. The CMS definition takes handlers by editor alias,
+so a third party's editor can bring its own.
+
+**What a handled value gives up**, until handlers add the capability:
+
+- **Rebasing is per field.** Two people editing different blocks in the same Rich Text conflict. A handler could offer
+  a merge.
+- **References inside the value aren't seen**, so they aren't checked before save and give Deploy no dependencies. A
+  handler could list them.
+
+**Not done yet.** The CMS definition still maps Block List and Block Grid itself, to the built-in items. The next step
+is to make those editors' handlers the ones Umbraco.AI already has (`IAIPropertyValueHandler`), so Abilities and
+Umbraco.AI's tools share one handler model and the CMS definition loses its block code.
+
 ## Item types for plugin seams
 
 Discount rules and rewards, and Automate triggers and actions, are plugin seams. Products and third parties register
@@ -426,6 +468,8 @@ drafted without a new API.
 | A side effect with retries is queued after apply and retried with backoff; it gives up after its limit; correctable input isn't retried; on real Umbraco it runs on the background queue | `SideEffectRetryTests`, `A_side_effect_with_retries_runs_on_Umbracos_background_queue_after_the_content_commits` |
 | Rule and reward types come from Commerce's provider collections, with the label fallback and editor references; a provider registered later shows up; a group rule nests children and is stored as Commerce's rule tree | `PluginItemTypeTests` |
 | Automate's triggers and actions come from its collections, settings can be bindings, and users are only offered the types they may use | `PluginItemTypeTests.Automates_triggers_and_actions_come_from_its_collections_and_settings_can_be_bindings`, `A_user_is_only_offered_plugin_types_they_may_use` |
+| A value whose model is its editor's (Rich Text's markup plus blocks) is edited inside through its handler, with the same tools; the handler keeps markup and blocks in step and reports its problems on paths inside the value | `ValueHandlerTests` |
+| Editors the CMS definition has no rule for are fields described by Umbraco's own value schemas | `CmsDocumentDefinitionTests.Editors_the_definition_has_no_rule_for_are_fields_described_by_Umbracos_value_schemas` |
 | Workflow step types are derived from abilities | `WorkflowTests.Step_types_are_derived_from_abilities` |
 | A workflow graph (edges as item references) is validated, and can refer to a discount created in the same set | `A_workflow_from_text_links_its_steps_and_can_refer_to_a_discount_in_the_same_set` |
 | Names and values vary by culture; invariant values are shared across cultures | `CmsContentTests.Names_and_values_vary_by_culture_while_invariant_values_are_shared` |
@@ -476,6 +520,13 @@ These feed back into the design doc.
    a `fieldPath`; the typed layer has `[Items]` and fluent `.Items(...)`. It also removes a question that only existed
    because of the split: whether a property editor is a field or a slot. An editor declares its value type, and
    items are one value type.
+9. **Values are their editor's model.** Items as a field type still assumed items sit directly in a field, and the
+   Block Grid's placement values leaked into the language. But a CMS property can hold anything, and only its editor
+   knows the model inside, which is how Umbraco.AI's update tools already work. So a value type can have a handler that
+   owns its inner paths, operations, rules and problems, and the framework routes the same tools to it. Keyed items stay
+   as the built-in value type for fixed models such as discounts. Umbraco 18 describes every core editor tried here
+   with a value schema, including a date (`date-time`) and a dropdown (an array of strings). So the "no schema at all"
+   fallback is mainly for third parties' editors.
 
 ## Applying a set
 

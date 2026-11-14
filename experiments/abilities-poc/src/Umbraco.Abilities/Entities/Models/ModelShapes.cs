@@ -111,7 +111,18 @@ public static class ModelShapes
                 continue;
             }
 
-            fields.Add(new FieldMember(property, FieldFor(config, alias, description, valueType) with { Variations = variations }, varying, valueType, config.Rules));
+            var field = FieldFor(config, alias, description, valueType) with { Variations = variations };
+            if (property.GetCustomAttribute<ValueHandlerAttribute>() is { } handled)
+            {
+                field = field with
+                {
+                    Type = FieldType.Json,
+                    Handler = (IValueHandler)Activator.CreateInstance(handled.HandlerType)!,
+                    Schema = handled.HandlerType.GetProperty("Schema", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) as JsonObject ?? field.Schema,
+                };
+            }
+
+            fields.Add(new FieldMember(property, field, varying, valueType, config.Rules));
             ordered.Add(fields[^1].Field);
             if (config.IsName)
             {

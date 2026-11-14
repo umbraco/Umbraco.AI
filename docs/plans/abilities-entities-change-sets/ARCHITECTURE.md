@@ -93,6 +93,17 @@ References between items in the same entity are what let graphs fit: a workflow'
 
 **Item types register separately from the entity.** A third-party discount rule provider registers a rule item type, and discounts using it become creatable from text with no more work. Automate step types are abilities, so a workflow is an entity whose steps are abilities.
 
+**A value's inner model belongs to whoever defines it.** A CMS property can hold anything, and only its editor knows the model inside: Rich Text is markup plus blocks, placed by key in the markup, and a Block Grid's layout is the Block Grid's own. The framework doesn't model those. A value type can have a **handler** that owns the paths inside the value, what setting, adding, removing and moving mean there, the rules between its parts, and its problems. The framework routes the same tools to it. That's how Umbraco.AI's update tools already work, with one handler per property editor. Without a handler a value is set whole, described by its schema: for CMS properties, the editor's own value schema, which Umbraco 18 gives for every core editor tried.
+
+| Value type | Who owns the model inside | Example |
+| --- | --- | --- |
+| Scalar or reference | Nothing inside | Name, landing page |
+| JSON with a schema | Set whole; checked against the schema and on save | A colour, a date |
+| JSON with a handler | The handler | Rich Text |
+| Keyed items | The framework's built-in handler | Discount rules, workflow steps |
+
+Keyed items are the built-in value type for products with fixed models, such as a discount whose rules and rewards come from providers. They keep per-item paths, problems, rebasing and reference checks. A handled value rebases per field, and its references aren't seen, until a handler adds those capabilities.
+
 An earlier draft kept "slots" (lists of items) apart from fields. The proof of concept folded them together: what a slot added are properties of the items value type, and the split raised a question that shouldn't exist, whether a property editor is a field or a slot. An editor declares its value type, and items are one value type.
 
 ### What a package implements

@@ -116,6 +116,7 @@ This is the core idea: a product-neutral way to describe and edit any entity. Re
 | `Entities/StructureValidator.cs` | Generic validation from the structure: required (per culture), allowed values, references that exist (including in the same set), item counts. It also renders the JSON Schema the model sees |
 | `Entities/EntityAbilities.cs` | The generic tools every entity gets: `entity.getSchema`, `find`, `get`, `create`, `setValue`, `addItem`, `removeItem`, `moveItem` |
 | `Entities/EntityUdis.cs` | Identity is a UDI. Entity types are UDI entity types, registered with `UdiParser` |
+| `Entities/ValueHandlers.cs` | `IValueHandler`: a value type's own inner model (paths, set, add, remove and move, rules between its parts, problems). The framework routes paths that go into a handled field to it |
 | `Entities/EntityAuthorization.cs` | `IAuthorizingEntityDefinition`: the product answers "may this user read, create or update this entity, in these cultures?" |
 | `Entities/ItemTypeFields.cs` | Turns a product's setting metadata (CLR type, rules, editor alias, bindings) into fields: how plugin seams become item types with nothing written per plugin |
 | `Entities/AbilityItemTypes.cs` | Abilities become item types: workflow steps can be any package's abilities |
@@ -146,6 +147,7 @@ These are what a package would write. Judge them as such: how short, how obvious
 | `Samples/Acme/AcmeWeekdayRule.cs` | A third party's rule, written as a plain Commerce provider with no Abilities code |
 | `Samples/Automate/Plugins.cs`, `Workflow.cs` | Automate's plugin model (triggers and actions with `[Field]` settings and required sections), and its item type sources |
 | `Samples/Commerce/CommerceAutomate.cs` | Commerce's Automate package: a trigger and an action, one with settings that take bindings |
+| `Samples/Cms/RichTextValue.cs` | A Rich Text-shaped value (markup plus blocks) and its handler: the inner model is the editor's, not the framework's |
 | `Samples/Cms/CmsPage.cs` | CMS-shaped content: culture variation, blocks with settings, a grid with placement and areas, per-culture block lists, pickers. Media is described **fluently** over plain request models |
 | `Samples/Automate/Workflow.cs` | A document-level definition, the escape hatch for structure that is data, not code. Step types are abilities |
 | `Samples/Email/SendEmail.cs` | A side effect with retries |
@@ -225,6 +227,7 @@ The interfaces a product implements are the extension points. Everything else is
 | `IDraftingEntityDefinition` | Keep your own drafts (CMS Draft Sets) instead of the set replaying edits |
 | `IAuthorizingEntityDefinition` | Apply your own permission model |
 | `IItemTypeSource` | Turn a plugin registry (providers, triggers, actions) into item types |
+| `IValueHandler` | Own the model inside a value: an editor's (Rich Text) or a product's |
 
 ## What to question most
 
@@ -240,9 +243,12 @@ These are the judgments the PoC makes that a reviewer is best placed to challeng
    transaction?
 5. **Item types from registries.** One source and one mapper per plugin seam, plus an editor table. Is the metadata
    your registry already has enough, and is a field of `DynamicItem`s acceptable in a typed contract?
-6. **Who owns the coordinator.** Abilities owns it here. The README's "If core owned the change set" covers the
+6. **Values as their editor's model.** The framework edits inside a value only through its handler, and keyed items
+   are one built-in value type. Is that the right line between the language and the editors? Handled values rebase per
+   field and their references aren't seen: acceptable as fallbacks?
+7. **Who owns the coordinator.** Abilities owns it here. The README's "If core owned the change set" covers the
    alternative, and what core's Draft Sets must do to make it possible.
-7. **What it doesn't prove.** No LLM is in the loop. Change sets and draft sets aren't stored. Retried side effects aren't
+8. **What it doesn't prove.** No LLM is in the loop. Change sets and draft sets aren't stored. Retried side effects aren't
    durable. See "What it does not prove" in the README.
 
 ## Where the decisions are written down

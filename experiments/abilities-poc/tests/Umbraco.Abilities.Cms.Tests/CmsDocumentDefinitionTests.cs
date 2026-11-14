@@ -111,6 +111,9 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
             new() { ContentElementTypeKey = text.Key, AllowAtRoot = true, AllowInAreas = true },
         });
 
+        // Editors the mapper has no rule for. Umbraco describes each one's value with a schema.
+        var accent = await CreateEditorDataTypeAsync(Constants.PropertyEditors.Aliases.ColorPickerEyeDropper, "Accent colour");
+
         _page = new ContentTypeBuilder()
             .WithAlias("landingPage")
             .WithName("Landing page")
@@ -125,6 +128,18 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
                 .Done()
             .AddPropertyType()
                 .WithAlias("grid").WithName("Grid").WithDataTypeId(blockGrid.Id).WithVariations(ContentVariation.Nothing)
+                .Done()
+            .AddPropertyType()
+                .WithAlias("accent").WithName("Accent").WithDataTypeId(accent.Id)
+                .WithPropertyEditorAlias(Constants.PropertyEditors.Aliases.ColorPickerEyeDropper).WithVariations(ContentVariation.Nothing)
+                .Done()
+            .AddPropertyType()
+                .WithAlias("launchDate").WithName("Launch date").WithDataTypeId(Constants.DataTypes.DateTime)
+                .WithPropertyEditorAlias(Constants.PropertyEditors.Aliases.DateTime).WithVariations(ContentVariation.Nothing)
+                .Done()
+            .AddPropertyType()
+                .WithAlias("size").WithName("Size").WithDataTypeId(Constants.DataTypes.DropDownSingle)
+                .WithPropertyEditorAlias(Constants.PropertyEditors.Aliases.DropDownListFlexible).WithVariations(ContentVariation.Nothing)
                 .Done()
             .Build();
         _page.AllowedAsRoot = true;
@@ -157,7 +172,8 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
             GetRequiredService<IJsonSerializer>(),
             itemTypes,
             new CmsScopeUnitOfWorkProvider(GetRequiredService<ICoreScopeProvider>()),
-            () => Constants.Security.SuperUserKey);
+            () => Constants.Security.SuperUserKey,
+            GetRequiredService<IPropertyEditorSchemaService>());
         definitions.Add(_documents);
 
         abilities
@@ -621,6 +637,30 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         });
     }
 
+    [Test]
+    public async Task Editors_the_definition_has_no_rule_for_are_fields_described_by_Umbracos_value_schemas()
+    {
+        var schema = await _agent.OkAsync("entity_getSchema", """{ "entityType": "document", "subtype": "landingPage" }""");
+        var fields = schema.GetProperty("fields").GetProperty("properties");
+        var accent = fields.GetProperty("accent");
+        var launchDate = fields.GetProperty("launchDate");
+        var size = fields.GetProperty("size");
+        Assert.Multiple(() =>
+        {
+            Assert.That(accent.TryGetProperty("type", out _), Is.True, $"the eyedropper describes its value: {accent}");
+            Assert.That(launchDate.GetProperty("format").GetString(), Is.EqualTo("date-time"));
+            Assert.That(size.GetProperty("items").GetProperty("type").GetString(), Is.EqualTo("string"), size.ToString());
+        });
+
+        // Set whole, in the editor's own format, and saved by Umbraco.
+        await _agent.StartChangeSetAsync("Accent");
+        var page = await CreatePageAsync();
+        await SetAsync(page, "", "subtitle", "\"Sun and sand\"", "en-US");
+        await SetAsync(page, "", "accent", "\"#336699\"");
+        await _agent.OkAsync("changeSet_apply", SetJson());
+        Assert.That(ContentService.GetById(page)!.GetValue<string>("accent"), Is.EqualTo("#336699"));
+    }
+
     private sealed record SummerPage(Guid Key, Guid Hero, Guid AreaText);
 
     private async Task<SummerPage> BuildSummerPageAsync()
@@ -676,6 +716,20 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         var elementType = builder.Build();
         await ContentTypeService.CreateAsync(elementType, Constants.Security.SuperUserKey);
         return elementType;
+    }
+
+    private async Task<IDataType> CreateEditorDataTypeAsync(string editorAlias, string name)
+    {
+        var dataType = new DataType(GetRequiredService<PropertyEditorCollection>()[editorAlias], GetRequiredService<IConfigurationEditorJsonSerializer>())
+        {
+            Name = name,
+            DatabaseType = ValueStorageType.Nvarchar,
+            ParentId = Constants.System.Root,
+            CreateDate = DateTime.UtcNow,
+        };
+
+        await GetRequiredService<IDataTypeService>().CreateAsync(dataType, Constants.Security.SuperUserKey);
+        return dataType;
     }
 
     private async Task<IDataType> CreateDataTypeAsync<T>(string editorAlias, string name, T blocks)

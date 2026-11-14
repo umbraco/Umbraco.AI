@@ -120,6 +120,18 @@ public static class StructureValidator
             return;
         }
 
+        // A value with a handler is checked by its handler, which knows its inner model.
+        if (field.Handler is { } handler)
+        {
+            context.Problems.AddRange(handler.Validate(value).Select(p => p with
+            {
+                Path = EntityEditor.Join(path, p.Path),
+                Culture = p.Culture ?? variant.Culture,
+                Segment = p.Segment ?? variant.Segment,
+            }));
+            return;
+        }
+
         if (FieldChecker.Check(field, value, path) is { } problem)
         {
             context.Problems.Add(At(problem.ToString()));
@@ -192,6 +204,11 @@ public static class SchemaWriter
             }
 
             schema["description"] = field.Description;
+            if (field.Handler is { } handler)
+            {
+                schema["x-edit"] = handler.Usage;
+            }
+
             if (field.AcceptsBindings)
             {
                 schema["x-bindings"] = true;

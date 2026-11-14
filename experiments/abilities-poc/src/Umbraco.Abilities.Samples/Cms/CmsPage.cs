@@ -35,6 +35,10 @@ public sealed class Page
     [Description("Tags.")]
     public List<string>? Tags { get; set; }
 
+    // Its model is the editor's (markup plus blocks), so its handler owns it.
+    [ValueHandler(typeof(RichTextValueHandler)), Description("An introduction: rich text with blocks.")]
+    public System.Text.Json.Nodes.JsonObject? Intro { get; set; }
+
     [EntityKey("document", "media"), Description("Related pages or media.")]
     public List<EntityReference>? Related { get; set; }
 

@@ -84,6 +84,12 @@ public sealed record FieldDefinition(string Alias, string Description, FieldType
     /// <summary>The value can be a binding to an earlier step's output, e.g. <c>{{trigger.orderId}}</c>, instead of a literal.</summary>
     public bool AcceptsBindings { get; init; }
 
+    /// <summary>
+    /// The handler that owns the value's inner model, for a value type whose editor defines one (Rich Text's markup and
+    /// blocks). Paths into the field go to it. Without one, the value is set whole.
+    /// </summary>
+    public IValueHandler? Handler { get; init; }
+
     // ── For FieldType.Items ──────────────────────────────────────────────────────────────────────
 
     /// <summary>The group whose registered item types the field holds. Item types come from a registry, so other packages add them.</summary>

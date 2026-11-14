@@ -245,6 +245,15 @@ public sealed class SetEntityValueAbility : EntityEditAbilityBase<SetEntityValue
     protected override object? Apply(EntityDocument document, SetEntityValueInput input, EntityEditContext context)
     {
         var target = Target(document, input, context);
+
+        // Inside a value whose type has a handler (Rich Text's markup, a block's field): the handler sets it.
+        var path = EntityEditor.Join(input.ElementPath ?? string.Empty, input.Field);
+        if (EntityEditor.FindHandled(target, path) is { Inner.Length: > 0 } handled)
+        {
+            EntityEditor.UpdateHandled(target, handled, value => handled.Field.Handler!.SetValue(value, handled.Inner, input.Value));
+            return new { path };
+        }
+
         var element = EntityEditor.ResolveElement(target, input.ElementPath);
         EntityEditor.SetField(target, element, input.Field, input.Value);
         return new { path = EntityEditor.Join(element.Path, input.Field) };
@@ -272,6 +281,17 @@ public sealed class AddEntityItemAbility : EntityEditAbilityBase<AddEntityItemIn
     protected override object? Apply(EntityDocument document, AddEntityItemInput input, EntityEditContext context)
     {
         var target = Target(document, input, context);
+        if (EntityEditor.FindHandled(target, input.FieldPath) is { } handled)
+        {
+            ValueItem? added = null;
+            EntityEditor.UpdateHandled(target, handled, value =>
+            {
+                added = handled.Field.Handler!.AddItem(value, handled.Inner, input.ItemType, input.Fields, input.ItemKey!.Value, input.Position);
+                return added.Value;
+            });
+            return new { itemKey = input.ItemKey, path = EntityEditor.Join(handled.FieldPath, added!.ItemPath) };
+        }
+
         var item = EntityEditor.AddItem(target, input.FieldPath, input.ItemType, input.ItemKey!.Value, input.Position);
         EntityEditor.SetFields(target, item, input.Fields);
         return new { itemKey = input.ItemKey, path = item.Path };
@@ -292,7 +312,16 @@ public sealed class RemoveEntityItemAbility : EntityEditAbilityBase<RemoveEntity
 {
     protected override object? Apply(EntityDocument document, RemoveEntityItemInput input, EntityEditContext context)
     {
-        EntityEditor.RemoveItem(Target(document, input, context), input.FieldPath, input.ItemKey);
+        var target = Target(document, input, context);
+        if (EntityEditor.FindHandled(target, input.FieldPath) is { } handled)
+        {
+            EntityEditor.UpdateHandled(target, handled, value => handled.Field.Handler!.RemoveItem(value, handled.Inner, input.ItemKey));
+        }
+        else
+        {
+            EntityEditor.RemoveItem(target, input.FieldPath, input.ItemKey);
+        }
+
         return new { removed = input.ItemKey };
     }
 }
@@ -312,7 +341,16 @@ public sealed class MoveEntityItemAbility : EntityEditAbilityBase<MoveEntityItem
 {
     protected override object? Apply(EntityDocument document, MoveEntityItemInput input, EntityEditContext context)
     {
-        EntityEditor.MoveItem(Target(document, input, context), input.FieldPath, input.ItemKey, input.Position);
+        var target = Target(document, input, context);
+        if (EntityEditor.FindHandled(target, input.FieldPath) is { } handled)
+        {
+            EntityEditor.UpdateHandled(target, handled, value => handled.Field.Handler!.MoveItem(value, handled.Inner, input.ItemKey, input.Position));
+        }
+        else
+        {
+            EntityEditor.MoveItem(target, input.FieldPath, input.ItemKey, input.Position);
+        }
+
         return new { moved = input.ItemKey, position = input.Position };
     }
 }

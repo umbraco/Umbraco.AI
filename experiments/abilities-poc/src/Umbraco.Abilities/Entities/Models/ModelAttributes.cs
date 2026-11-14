@@ -73,6 +73,16 @@ public sealed class ItemReferenceAttribute(string field) : Attribute
     public string Field { get; } = field;
 }
 
+/// <summary>
+/// The handler that owns the property's value model, for a value whose editor defines one (Rich Text). The handler type
+/// needs a parameterless constructor and may have a static <c>Schema</c> property giving the value's JSON Schema.
+/// </summary>
+[AttributeUsage(AttributeTargets.Property)]
+public sealed class ValueHandlerAttribute(Type handlerType) : Attribute
+{
+    public Type HandlerType { get; } = handlerType;
+}
+
 /// <summary>What a <see cref="Varying{T}"/> property varies by, when not by culture.</summary>
 [AttributeUsage(AttributeTargets.Property)]
 public sealed class VariationsAttribute(ContentVariation variations) : Attribute

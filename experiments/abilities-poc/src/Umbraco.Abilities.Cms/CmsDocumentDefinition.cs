@@ -72,7 +72,9 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
         IJsonSerializer json,
         ItemTypeRegistry itemTypes,
         IUnitOfWorkProvider unitOfWork,
-        Func<Guid> actingUser)
+        Func<Guid> actingUser,
+        IPropertyEditorSchemaService? schemas = null,
+        IReadOnlyDictionary<string, IValueHandler>? editorHandlers = null)
     {
         UnitOfWork = unitOfWork;
         _contentTypes = contentTypes;
@@ -84,7 +86,7 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
         _permissions = permissions;
         _json = json;
         _actingUser = actingUser;
-        _mapper = new CmsStructureMapper(contentTypes, dataTypes, itemTypes);
+        _mapper = new CmsStructureMapper(contentTypes, dataTypes, itemTypes, schemas, editorHandlers ?? new Dictionary<string, IValueHandler>());
     }
 
     public string EntityType => Type;

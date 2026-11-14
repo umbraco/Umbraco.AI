@@ -63,6 +63,45 @@ public static class EntityEditor
         return current;
     }
 
+    /// <summary>A field whose value has a handler, found on the way along a path, and the path inside its value.</summary>
+    public sealed record HandledPath(ResolvedElement Owner, FieldDefinition Field, string Inner)
+    {
+        public string FieldPath => Join(Owner.Path, Field.Alias);
+    }
+
+    /// <summary>Finds whether a path goes into a field whose value has a handler.</summary>
+    public static HandledPath? FindHandled(EditTarget target, string? path)
+    {
+        var segments = Split(path);
+        for (var i = 0; i < segments.Length; i++)
+        {
+            ResolvedElement owner;
+            try
+            {
+                owner = ResolveElement(target, string.Join('/', segments[..i]));
+            }
+            catch (AbilityInputException)
+            {
+                continue;
+            }
+
+            if (owner.Shape.Fields.FirstOrDefault(f => f.Alias == segments[i] && f.Handler is not null) is { } field)
+            {
+                return new HandledPath(owner, field, string.Join('/', segments[(i + 1)..]));
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Changes a handled field's value through its handler, in the edit's variant.</summary>
+    public static void UpdateHandled(EditTarget target, HandledPath handled, Func<JsonNode?, JsonNode?> change)
+    {
+        var variant = RequireVariant(target, handled.Field.Variations, handled.FieldPath);
+        var current = handled.Owner.Element.Get(handled.Field, variant);
+        handled.Owner.Element.Set(handled.Field, variant, change(current?.DeepClone()));
+    }
+
     public static ResolvedItems ResolveItems(EditTarget target, string fieldPath)
     {
         var segments = Split(fieldPath);

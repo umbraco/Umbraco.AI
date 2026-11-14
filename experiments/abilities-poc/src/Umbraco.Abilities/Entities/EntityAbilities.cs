@@ -4,6 +4,8 @@ using System.Text.Json.Nodes;
 
 using Umbraco.Abilities.ChangeSets;
 
+using Umbraco.Cms.Core.Models;
+using Umbraco.Extensions;
 namespace Umbraco.Abilities.Entities;
 
 // The generic entity abilities. They work for every registered entity definition, so no package writes
@@ -99,7 +101,7 @@ public sealed class GetEntitySchemaAbility(EntityDefinitionRegistry definitions,
             ["entityType"] = structure.EntityType,
             ["name"] = structure.Name,
             ["description"] = structure.Description,
-            ["variations"] = structure.Variations == Variation.Invariant ? null : structure.Variations.ToString(),
+            ["variations"] = structure.Variations == ContentVariation.Nothing ? null : structure.Variations.ToString(),
             ["cultures"] = new JsonArray(structure.Cultures.Select(c => (JsonNode?)c).ToArray()),
             ["fields"] = SchemaWriter.Fields(structure.Shape),
             ["slots"] = SchemaWriter.Slots(structure.Shape, itemTypes),

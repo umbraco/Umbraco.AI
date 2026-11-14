@@ -186,6 +186,37 @@ Moving to UDIs found a bug: conflict resolutions were keyed by their own `type:k
 shared identity. They matched only by coincidence, and stopped matching once identity changed. There is now one
 identity function.
 
+## What the CMS already gives us
+
+Before building something, check whether the CMS has it. This is where the PoC landed:
+
+| Need | Uses | Notes |
+| --- | --- | --- |
+| Entity identity | UDIs (`GuidUdi`, `UdiParser`) | See "Identity: UDIs" |
+| What a value varies by | `ContentVariation` | Replaced the PoC's own `Variation` enum, which had the same four values |
+| Block editor values | `BlockListValue`, `BlockGridValue`, `BlockItemData`, … | Read and written with Umbraco's serializer |
+| A product's transaction, for content | `ICoreScopeProvider` | Behind `IUnitOfWorkProvider`, which stays because Commerce and Automate have their own connections |
+| Packages reacting to, or vetoing, an apply | Notifications through `IEventAggregator` | `ChangeSetApplyingNotification` and `DraftSetApplyingNotification` are cancelable, like `ContentSavingNotification`. Then applied and discarded |
+| A record of who applied what | The audit log | The draft set writes an entry per document it applies, inside its scope |
+
+Checked, and not usable:
+
+| CMS feature | Why not |
+| --- | --- |
+| Content versions, as the version a set started from | A save updates the current version in place; only publishing creates a new one. Tested against Umbraco 18: three saves left one version holding the last value. So the draft set keeps its own base values |
+| Relations and tracked references, for references between entities | A relation's parent and child are node ids plus a CMS object type, so only entities with a CMS node can take part. A Commerce discount can't |
+| The audit log, for non-CMS entities | Its object id is a node id. A Commerce entity can only be logged against no node, with its UDI in the comment |
+
+Still to decide, not swaps:
+
+- **Authorization.** Every apply runs as the super user, and the Access failure category is unused. Abilities should check the
+  acting user's backoffice permissions (user groups, granular document permissions, sections) and report refusals as Access
+  failures, not build their own model.
+- **Side effects that need retries.** Webhooks or the background task queue could run them, as an option.
+- **Storage.** Change sets and draft sets are in memory, which doesn't work across load-balanced servers.
+- **Results.** `AbilityResult` and `Problem` overlap with the CMS's `Attempt` plus operation status and `PropertyValidationError`.
+  They're the contract AI and Automate see, so they stay, but should mirror the CMS's fields.
+
 ## CMS Draft Sets as a participant
 
 The CMS is building Draft Sets for content. It shouldn't depend on Abilities, and Abilities shouldn't keep and replay
@@ -255,13 +286,13 @@ mind.
 | --- | --- | --- |
 | 1 | Address entities by UDI (`umb://document/{key}`), even if v1 does only documents | Media created in the same set, then other products' entities, without a redesign |
 | 2 | Record per-property changes (alias, culture, segment) over a base, not whole update models | An update model replaces every value, so it can only overwrite or refuse; per-property changes rebase |
-| 3 | Keep a base version (and base values) per entity from its first change | To show what others changed since, and find conflicts |
+| 3 | Keep a base version (and base values) per entity from its first change | To show what others changed since, and find conflicts. Content versions can't serve as the base: a save updates the current version in place, and only publishing creates a new one |
 | 4 | Report conflicts in a neutral form: entity, property alias, culture, segment, base, draft and live values | So a coordinator, the backoffice or an agent can show and resolve them |
 | 5 | Let the caller choose keys for new content | So other changes in the set can refer to content before it exists |
 | 6 | Make reads draft-aware: get by key, and find, through a draft set | So whoever builds the set sees their own changes |
 | 7 | Validate a whole set, per entity, only in the cultures each document has | Before anyone approves it; see finding 1 |
 | 8 | Apply all or nothing in one scope, record that it applied, and refuse to apply twice | A coordinator applies products one after another and resumes after a failure |
-| 9 | Raise notifications: applying, applied, discarded | Audit, cache and other packages hook in |
+| 9 | Raise CMS notifications: a cancelable applying, then applied and discarded | So packages can veto applying a set as they veto saving a document, and audit, caches and integrations can react. The stand-in does this |
 | 10 | Make the draft set's id, create, apply and discard public, with no assumption about who started it | A coordinator, the backoffice or Automate can drive it |
 | 11 | Shape the coordinator and the participant contract generically from day one, with content as its first participant | The step from content-only to the generic change set is then adding participants, not redesigning |
 | 12 | Leave side effects, approval and the AI-facing structure language out of core | Core has no "operation to run afterwards". Approval is per caller. The structure language is a large, fast-moving API |
@@ -298,6 +329,7 @@ drafted without a new API.
 | Content changes in a change set are a CMS draft set: the backoffice can read it, it records only what changed, and discarding the set discards it | `CmsDocumentDefinitionTests.Content_changes_in_a_change_set_are_a_CMS_draft_set_that_records_only_what_changed` |
 | The CMS draft set works on its own, with no abilities: stage, read through, conflict, resolve, validate, apply | `A_draft_set_works_on_its_own_with_no_abilities` |
 | Entity types are UDI entity types, package types are registered, and references can be given as UDIs, stored in the field's own form, with the wrong type refused | `UdiTests` |
+| A package can veto applying a change set or its CMS draft set with a cancelable notification, and both raise applied notifications; applying writes to the CMS audit log | `CmsDocumentDefinitionTests.A_package_can_veto_applying_a_change_set_or_its_draft_set_with_a_CMS_notification`, `A_draft_set_works_on_its_own_with_no_abilities` |
 | Workflow step types are derived from abilities | `WorkflowTests.Step_types_are_derived_from_abilities` |
 | A workflow graph (edges as item references) is validated, and can refer to a discount created in the same set | `A_workflow_from_text_links_its_steps_and_can_refer_to_a_discount_in_the_same_set` |
 | Names and values vary by culture; invariant values are shared across cultures | `CmsContentTests.Names_and_values_vary_by_culture_while_invariant_values_are_shared` |

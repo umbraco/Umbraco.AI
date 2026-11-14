@@ -26,7 +26,7 @@ internal sealed record PropertyMap(string Alias, string EditorAlias, PropertyKin
 }
 
 /// <summary>The shape of a document or element type, plus how each of its properties maps.</summary>
-internal sealed record ShapeMap(ElementShape Shape, Variation Variations, IReadOnlyDictionary<string, PropertyMap> Properties);
+internal sealed record ShapeMap(ElementShape Shape, ContentVariation Variations, IReadOnlyDictionary<string, PropertyMap> Properties);
 
 /// <summary>
 /// Builds the structure language from Umbraco document types, element types and data types. Block editors
@@ -39,14 +39,6 @@ internal sealed class CmsStructureMapper(IContentTypeService contentTypes, IData
     public const string ParentField = "parent";
 
     private readonly HashSet<Guid> _dataTypesInProgress = [];
-
-    public static Variation ToVariation(ContentVariation variation) => variation switch
-    {
-        ContentVariation.Culture => Variation.Culture,
-        ContentVariation.Segment => Variation.Segment,
-        ContentVariation.CultureAndSegment => Variation.CultureAndSegment,
-        _ => Variation.Invariant,
-    };
 
     public IContentType RequireType(Guid key)
         => contentTypes.Get(key) ?? throw new InvalidOperationException($"No content type with key {key}.");
@@ -61,7 +53,7 @@ internal sealed class CmsStructureMapper(IContentTypeService contentTypes, IData
         {
             fields.Add(new FieldDefinition(NameField, "The document's name.", FieldType.String, Required: true)
             {
-                Variations = type.VariesByCulture() ? Variation.Culture : Variation.Invariant,
+                Variations = type.VariesByCulture() ? ContentVariation.Culture : ContentVariation.Nothing,
             });
             fields.Add(new FieldDefinition(ParentField, "The parent document. Only used when creating; moving is a separate operation.", FieldType.EntityReference)
             {
@@ -83,7 +75,7 @@ internal sealed class CmsStructureMapper(IContentTypeService contentTypes, IData
             }
         }
 
-        return new ShapeMap(new ElementShape(fields, slots), ToVariation(type.Variations), properties);
+        return new ShapeMap(new ElementShape(fields, slots), type.Variations, properties);
     }
 
     private async Task<PropertyMap> MapPropertyAsync(IPropertyType propertyType)
@@ -91,7 +83,7 @@ internal sealed class CmsStructureMapper(IContentTypeService contentTypes, IData
         var alias = propertyType.Alias;
         var editor = propertyType.PropertyEditorAlias;
         var description = string.IsNullOrWhiteSpace(propertyType.Description) ? propertyType.Name : propertyType.Description;
-        var varies = ToVariation(propertyType.Variations);
+        var varies = propertyType.Variations;
 
         PropertyMap AsField(FieldType type, bool many = false, string? references = null)
             => new(alias, editor, PropertyKind.Field, new FieldDefinition(alias, description, type, propertyType.Mandatory)
@@ -125,7 +117,7 @@ internal sealed class CmsStructureMapper(IContentTypeService contentTypes, IData
         }
     }
 
-    private async Task<PropertyMap> MapBlockEditorAsync(IPropertyType propertyType, string description, Variation varies)
+    private async Task<PropertyMap> MapBlockEditorAsync(IPropertyType propertyType, string description, ContentVariation varies)
     {
         var dataType = await dataTypes.GetAsync(propertyType.DataTypeKey)
             ?? throw new InvalidOperationException($"No data type {propertyType.DataTypeKey} for property '{propertyType.Alias}'.");

@@ -3,6 +3,8 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using Umbraco.Cms.Core.Models;
+using Umbraco.Extensions;
 namespace Umbraco.Abilities.Entities.Models;
 
 /// <summary>What a property is to the framework.</summary>
@@ -36,7 +38,7 @@ internal sealed class PropertyConfig
 
     public string? ItemReferenceSlot { get; set; }
 
-    public Variation? Variations { get; set; }
+    public ContentVariation? Variations { get; set; }
 
     public string? SlotGroup { get; set; }
 
@@ -184,7 +186,7 @@ public sealed class FieldBuilder<T>
     public FieldBuilder<T> ReferencesItemIn(string slot) => Set(() => _config.ItemReferenceSlot = slot);
 
     /// <summary>What a <see cref="Varying{T}"/> field varies by, when not by culture.</summary>
-    public FieldBuilder<T> Varies(Variation variations) => Set(() => _config.Variations = variations);
+    public FieldBuilder<T> Varies(ContentVariation variations) => Set(() => _config.Variations = variations);
 
     /// <summary>A DataAnnotations rule, e.g. <c>new RangeAttribute(1, 100)</c>, reported on the field's path.</summary>
     public FieldBuilder<T> Rule(ValidationAttribute rule) => Set(() => _config.Rules.Add(rule));
@@ -218,7 +220,7 @@ public sealed class SlotBuilder<T>
     /// <summary>The class describing an item's placement values in this slot.</summary>
     public SlotBuilder<T> Layout<TLayout>() => Set(() => _config.Layout = typeof(TLayout));
 
-    public SlotBuilder<T> Varies(Variation variations) => Set(() => _config.Variations = variations);
+    public SlotBuilder<T> Varies(ContentVariation variations) => Set(() => _config.Variations = variations);
 
     public FieldBuilder<T> Field<TValue>(Expression<Func<T, TValue>> property) => _model.Field(property);
 

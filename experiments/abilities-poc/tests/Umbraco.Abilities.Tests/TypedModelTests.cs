@@ -5,6 +5,8 @@ using Umbraco.Abilities.Samples.Cms;
 using Umbraco.Abilities.Samples.Commerce;
 using Umbraco.Abilities.Samples.Commerce.Domain;
 
+using Umbraco.Cms.Core.Models;
+using Umbraco.Extensions;
 namespace Umbraco.Abilities.Tests;
 
 /// <summary>What the framework works out from a package's model classes, so the package doesn't write it.</summary>
@@ -40,12 +42,12 @@ public class TypedModelTests
         var page = await _site.Pages.DescribeAsync(null);
         var fields = page.Shape.Fields.ToDictionary(f => f.Alias);
 
-        Assert.Equal(Variation.Culture, page.Variations);
+        Assert.Equal(ContentVariation.Culture, page.Variations);
         Assert.Equal(["en-US", "da-DK"], page.Cultures);
-        Assert.Equal(Variation.Culture, fields["title"].Variations);
+        Assert.Equal(ContentVariation.Culture, fields["title"].Variations);
         Assert.True(fields["tags"].Many);
         Assert.Equal(["document", "media"], fields["related"].ReferencesAnyOf);
-        Assert.Equal(Variation.Culture, page.Shape.Slots.Single(s => s.Alias == "promos").Variations);
+        Assert.Equal(ContentVariation.Culture, page.Shape.Slots.Single(s => s.Alias == "promos").Variations);
         Assert.Equal("columnSpan", page.Shape.Slots.Single(s => s.Alias == "grid").ItemLayout!.Fields[0].Alias);
 
         var hero = _site.ItemTypes.Find(CmsPageDefinition.BlockGroup, "hero")!;

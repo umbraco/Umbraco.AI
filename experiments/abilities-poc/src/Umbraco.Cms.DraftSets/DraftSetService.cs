@@ -3,9 +3,11 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 
 using Umbraco.Cms.Core;
+using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Models.ContentEditing;
 using Umbraco.Cms.Core.Models.ContentEditing.Validation;
+using Umbraco.Cms.Core.Notifications;
 using Umbraco.Cms.Core.PropertyEditors;
 using Umbraco.Cms.Core.Scoping;
 using Umbraco.Cms.Core.Serialization;
@@ -68,6 +70,22 @@ public enum DraftKeep
     Live,
 }
 
+/// <summary>A draft set is about to be applied. Cancel it to refuse; nothing is applied.</summary>
+public sealed class DraftSetApplyingNotification(DraftSet draftSet, EventMessages messages) : CancelableNotification(messages)
+{
+    public DraftSet DraftSet { get; } = draftSet;
+}
+
+public sealed class DraftSetAppliedNotification(DraftSet draftSet) : INotification
+{
+    public DraftSet DraftSet { get; } = draftSet;
+}
+
+public sealed class DraftSetDiscardedNotification(DraftSet draftSet) : INotification
+{
+    public DraftSet DraftSet { get; } = draftSet;
+}
+
 public sealed class DraftSet
 {
     public Guid Id { get; } = Guid.NewGuid();
@@ -110,7 +128,9 @@ public sealed class DraftSetService(
     IContentEditingService editing,
     PropertyEditorCollection editors,
     IJsonSerializer json,
-    ICoreScopeProvider scopes)
+    ICoreScopeProvider scopes,
+    IEventAggregator events,
+    IAuditService audit)
 {
     /// <summary>The alias a name has in <see cref="DraftValue"/>s and conflicts.</summary>
     public const string NameAlias = "#name";
@@ -128,7 +148,13 @@ public sealed class DraftSetService(
 
     public DraftSet? Get(Guid id) => _sets.GetValueOrDefault(id);
 
-    public void Discard(Guid id) => _sets.TryRemove(id, out _);
+    public void Discard(Guid id)
+    {
+        if (_sets.TryRemove(id, out var set))
+        {
+            events.Publish(new DraftSetDiscardedNotification(set));
+        }
+    }
 
     // ── Recording ───────────────────────────────────────────────────────────────────────────────
 
@@ -320,6 +346,12 @@ public sealed class DraftSetService(
     public async Task ApplyAsync(Guid id, Guid userKey)
     {
         var set = Open(id);
+        var messages = new EventMessages();
+        if (await events.PublishCancelableAsync(new DraftSetApplyingNotification(set, messages)))
+        {
+            throw new InvalidOperationException($"Applying draft set '{set.Name}' was refused. {string.Join(" ", messages.GetAll().Select(m => m.Message))}".Trim());
+        }
+
         using var scope = scopes.CreateCoreScope();
         foreach (var entity in set.Entities)
         {
@@ -327,15 +359,16 @@ public sealed class DraftSetService(
             var key = content.Key;
             ContentEditingOperationStatus status;
             ContentValidationResult validation;
+            IContent? saved;
             if (content.IsNew)
             {
                 var created = await editing.CreateAsync(ToCreateModel(content), userKey);
-                (status, validation) = (created.Status, created.Result.ValidationResult);
+                (status, validation, saved) = (created.Status, created.Result.ValidationResult, created.Result.Content);
             }
             else
             {
                 var updated = await editing.UpdateAsync(key, new ContentUpdateModel { Variants = Variants(content), Properties = Properties(content) }, userKey);
-                (status, validation) = (updated.Status, updated.Result.ValidationResult);
+                (status, validation, saved) = (updated.Status, updated.Result.ValidationResult, updated.Result.Content);
             }
 
             // Umbraco reports problems in every culture; only those in cultures the document has (or invariant) fail it.
@@ -346,10 +379,17 @@ public sealed class DraftSetService(
                 var details = string.Join("; ", errors.Select(e => $"{e.Alias}{(e.Culture is null ? string.Empty : $" ({e.Culture})")}: {string.Join(" ", e.ErrorMessages)}"));
                 throw new InvalidOperationException($"Umbraco did not save {content.Names.Values.FirstOrDefault() ?? key.ToString()}: {status}. {details}".Trim());
             }
+
+            // In the scope, so the entry rolls back with the documents.
+            if (saved is not null)
+            {
+                await audit.AddAsync(AuditType.Custom, userKey, saved.Id, "Document", $"Applied with draft set '{set.Name}'", null);
+            }
         }
 
         scope.Complete();
         set.Applied = true;
+        await events.PublishAsync(new DraftSetAppliedNotification(set));
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────────────────────────────

@@ -446,7 +446,7 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition
     /// </summary>
     private static IEnumerable<(VariantId Variant, object Value)> Values(EntityElement element, PropertyMap property)
     {
-        var invariant = (property.Field?.Variations ?? property.Slot!.Variations) == Variation.Invariant;
+        var invariant = (property.Field?.Variations ?? property.Slot!.Variations) == ContentVariation.Nothing;
         var values = property.Field is not null
             ? element.Values(property.Alias).Where(v => v.Value is not JsonArray { Count: 0 }).Select(v => (v.Variant, (object)v.Value))
             : element.SlotItems(property.Alias).Select(v => (v.Variant, (object)v.Items));

@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 
 using Umbraco.Abilities.Entities;
+using Umbraco.Cms.Core.Events;
 
 namespace Umbraco.Abilities.ChangeSets;
 
@@ -20,7 +21,8 @@ public sealed class ChangeSetService(
     IChangeSetStore store,
     AbilityRegistry abilities,
     EntityDefinitionRegistry definitions,
-    ItemTypeRegistry itemTypes)
+    ItemTypeRegistry itemTypes,
+    IEventAggregator? events = null)
 {
     public ChangeSet Create(string name)
     {
@@ -41,6 +43,10 @@ public sealed class ChangeSetService(
         }
 
         store.Remove(set.Id);
+        if (events is not null)
+        {
+            await events.PublishAsync(new ChangeSetDiscardedNotification(set), cancellationToken);
+        }
     }
 
     public async Task<AbilityResult> RecordAsync(Guid setId, IAbility ability, JsonObject input, CancellationToken cancellationToken = default)
@@ -431,6 +437,14 @@ public sealed class ChangeSetService(
             return AbilityResult.Fail(FailureCategory.Input, "The change set has problems. Fix them and apply again.", problems);
         }
 
+        // Packages can veto applying a set, as they can veto saving a document.
+        var messages = new EventMessages();
+        if (events is not null && await events.PublishCancelableAsync(new ChangeSetApplyingNotification(set, messages)))
+        {
+            var reasons = string.Join(" ", messages.GetAll().Select(m => m.Message));
+            return AbilityResult.Fail(FailureCategory.Runtime, $"Applying was refused. {reasons}".Trim());
+        }
+
         var saved = new List<EntityRef>();
         var steps = new List<Problem>();
         string? failure = null;
@@ -511,6 +525,11 @@ public sealed class ChangeSetService(
         }
 
         store.Remove(set.Id);
+        if (events is not null)
+        {
+            await events.PublishAsync(new ChangeSetAppliedNotification(set, saved), cancellationToken);
+        }
+
         return AbilityResult.Ok(saved);
     }
 

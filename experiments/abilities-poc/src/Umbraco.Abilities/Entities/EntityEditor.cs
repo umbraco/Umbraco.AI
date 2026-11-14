@@ -1,6 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
+using Umbraco.Cms.Core.Models;
+using Umbraco.Extensions;
 namespace Umbraco.Abilities.Entities;
 
 /// <summary>What an edit works on: the document, its structure, the item types, and the variant being edited.</summary>
@@ -154,7 +156,7 @@ public static class EntityEditor
     /// The variant to use for a value that varies as given. Invariant values ignore the edit's variant; a value that
     /// varies by culture needs a known culture, or the entity's only culture when it has just one.
     /// </summary>
-    public static VariantId RequireVariant(EditTarget target, Variation varies, string path)
+    public static VariantId RequireVariant(EditTarget target, ContentVariation varies, string path)
     {
         var variant = target.Variant.Narrow(varies);
         if (!varies.VariesByCulture())

@@ -1,5 +1,7 @@
 using System.Text.Json.Nodes;
 
+using Umbraco.Cms.Core.Models;
+using Umbraco.Extensions;
 namespace Umbraco.Abilities.Entities;
 
 /// <summary>
@@ -59,8 +61,8 @@ public static class StructureValidator
             foreach (var variant in Targets(slot.Variations, variants))
             {
                 var items = element.VariantOrNull(variant.Narrow(slot.Variations))?.Slots.GetValueOrDefault(slot.Alias) ?? [];
-                var below = slot.Variations == Variation.Invariant ? variants : variants.Where(v => v.Culture == variant.Culture).ToList();
-                await ValidateSlotAsync(context, slot, items, EntityEditor.Join(path, slot.Alias), slot.Variations == Variation.Invariant ? null : variant, below);
+                var below = slot.Variations == ContentVariation.Nothing ? variants : variants.Where(v => v.Culture == variant.Culture).ToList();
+                await ValidateSlotAsync(context, slot, items, EntityEditor.Join(path, slot.Alias), slot.Variations == ContentVariation.Nothing ? null : variant, below);
             }
         }
     }
@@ -149,9 +151,9 @@ public static class StructureValidator
     }
 
     /// <summary>The variants a value is checked in: once if invariant, else each variant the element exists in, narrowed to what it varies by.</summary>
-    private static IEnumerable<VariantId> Targets(Variation varies, IReadOnlyList<VariantId> variants)
+    private static IEnumerable<VariantId> Targets(ContentVariation varies, IReadOnlyList<VariantId> variants)
     {
-        if (varies == Variation.Invariant)
+        if (varies == ContentVariation.Nothing)
         {
             return [VariantId.Invariant];
         }
@@ -178,7 +180,7 @@ public static class SchemaWriter
             }
 
             schema["description"] = field.Description;
-            if (field.Variations != Variation.Invariant)
+            if (field.Variations != ContentVariation.Nothing)
             {
                 schema["x-variations"] = field.Variations.ToString();
             }
@@ -199,7 +201,7 @@ public static class SchemaWriter
         {
             ["alias"] = slot.Alias,
             ["description"] = slot.Description,
-            ["variations"] = slot.Variations == Variation.Invariant ? null : slot.Variations.ToString(),
+            ["variations"] = slot.Variations == ContentVariation.Nothing ? null : slot.Variations.ToString(),
             ["min"] = slot.Min,
             ["max"] = slot.Max,
             ["itemLayout"] = slot.ItemLayout is { } layout ? Fields(layout) : null,

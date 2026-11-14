@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
 
+using Umbraco.Cms.Core.Models;
+using Umbraco.Extensions;
 namespace Umbraco.Abilities.Entities.Models;
 
 /// <summary>Declares a C# class as an entity type's model.</summary>
@@ -73,9 +75,9 @@ public sealed class ItemReferenceAttribute(string slot) : Attribute
 
 /// <summary>What a <see cref="Varying{T}"/> property varies by, when not by culture.</summary>
 [AttributeUsage(AttributeTargets.Property)]
-public sealed class VariationsAttribute(Variation variations) : Attribute
+public sealed class VariationsAttribute(ContentVariation variations) : Attribute
 {
-    public Variation Variations { get; } = variations;
+    public ContentVariation Variations { get; } = variations;
 }
 
 /// <summary>The base class for item models. The key identifies the item within its slot; leave it empty for a new item.</summary>

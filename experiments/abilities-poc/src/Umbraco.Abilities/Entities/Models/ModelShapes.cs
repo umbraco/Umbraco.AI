@@ -9,6 +9,8 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Schema;
 using System.Text.Json.Serialization;
 
+using Umbraco.Cms.Core.Models;
+using Umbraco.Extensions;
 namespace Umbraco.Abilities.Entities.Models;
 
 internal sealed record FieldMember(PropertyInfo Property, FieldDefinition Field, bool Varying, Type ValueType, IReadOnlyList<ValidationAttribute> Rules);
@@ -24,7 +26,7 @@ internal sealed record ModelInfo(
     PropertyInfo? Version,
     PropertyInfo? Settings,
     PropertyInfo? Layout,
-    Variation Variations,
+    ContentVariation Variations,
     (string EntityType, string Name, string Description)? Entity,
     (string Alias, string Name, string Description)? ItemType);
 
@@ -92,7 +94,7 @@ public static class ModelShapes
             var alias = config.Alias ?? AliasOf(property);
             var description = config.Description ?? string.Empty;
             var (varying, valueType) = Unwrap(property.PropertyType);
-            var variations = varying ? config.Variations ?? Variation.Culture : Variation.Invariant;
+            var variations = varying ? config.Variations ?? ContentVariation.Culture : ContentVariation.Nothing;
 
             if (config.Role == PropertyRole.Slot)
             {
@@ -114,7 +116,7 @@ public static class ModelShapes
         }
 
         var all = fields.Select(f => f.Field.Variations).Concat(slots.Select(s => s.Slot.Variations));
-        var entityVariations = all.Any(v => v.VariesByCulture()) ? Variation.Culture : Variation.Invariant;
+        var entityVariations = all.Any(v => v.VariesByCulture()) ? ContentVariation.Culture : ContentVariation.Nothing;
         var entity = typeConfig?.Entity ?? (type.GetCustomAttribute<EntityAttribute>() is { } e ? (e.EntityType, e.Name, e.Description) : null);
         var itemType = typeConfig?.ItemType ?? (type.GetCustomAttribute<ItemTypeAttribute>() is { } i ? (i.Alias, i.Name, i.Description) : null);
         return new ModelInfo(

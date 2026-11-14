@@ -26,6 +26,7 @@ using Umbraco.Cms.Tests.Common.Testing;
 using Umbraco.Cms.Tests.Integration.Testing;
 
 
+using Umbraco.Extensions;
 namespace Umbraco.Abilities.Cms.Tests;
 
 /// <summary>
@@ -51,7 +52,15 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
 
     // A third-party handler that vetoes saving a page called "Refused", to make a save fail after validation.
     protected override void CustomTestSetup(IUmbracoBuilder builder)
-        => builder.AddNotificationHandler<ContentSavingNotification, RefuseSavingHandler>();
+    {
+        builder.AddNotificationHandler<ContentSavingNotification, RefuseSavingHandler>();
+
+        // A package's handlers: veto sets with certain names, and record what was applied.
+        builder.AddNotificationHandler<ChangeSetApplyingNotification, VetoHandler>();
+        builder.AddNotificationHandler<DraftSetApplyingNotification, VetoHandler>();
+        builder.AddNotificationHandler<ChangeSetAppliedNotification, VetoHandler>();
+        builder.AddNotificationHandler<DraftSetAppliedNotification, VetoHandler>();
+    }
 
     protected override void SetUpTestConfiguration(IConfigurationBuilder configBuilder)
     {
@@ -122,12 +131,15 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         var abilities = new AbilityRegistry();
         var definitions = new EntityDefinitionRegistry();
         var itemTypes = new ItemTypeRegistry();
-        _changeSets = new ChangeSetService(new InMemoryChangeSetStore(), abilities, definitions, itemTypes);
+        VetoHandler.Applied.Clear();
+        _changeSets = new ChangeSetService(new InMemoryChangeSetStore(), abilities, definitions, itemTypes, GetRequiredService<IEventAggregator>());
         _draftSets = new DraftSetService(
             ContentEditingService,
             GetRequiredService<PropertyEditorCollection>(),
             GetRequiredService<IJsonSerializer>(),
-            GetRequiredService<ICoreScopeProvider>());
+            GetRequiredService<ICoreScopeProvider>(),
+            GetRequiredService<IEventAggregator>(),
+            GetRequiredService<IAuditService>());
         _documents = new CmsDocumentDefinition(
             ContentTypeService,
             GetRequiredService<IDataTypeService>(),
@@ -450,6 +462,35 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
             Assert.That(content.GetValue<string>("subtitle", "en-US"), Is.EqualTo("Three"));
             Assert.That(draft.Applied, Is.True);
         });
+
+        // Applying wrote to the CMS audit log, and raised the applied notification.
+        var audit = await GetRequiredService<IAuditService>().GetItemsByKeyAsync(key, UmbracoObjectTypes.Document, 0, 10, Direction.Descending, null, [AuditType.Custom]);
+        Assert.That(audit.Items.Select(i => i.Comment), Does.Contain("Applied with draft set 'Rename'"));
+        Assert.That(VetoHandler.Applied, Does.Contain("draft set: Rename"));
+    }
+
+    [Test]
+    public async Task A_package_can_veto_applying_a_change_set_or_its_draft_set_with_a_CMS_notification()
+    {
+        // Vetoed at the change set: nothing runs.
+        await _agent.StartChangeSetAsync("Not today");
+        var page = await BuildSummerPageAsync();
+        var refused = await _agent.FailAsync("changeSet_apply", SetJson());
+        Assert.That(refused.GetProperty("message").GetString(), Is.EqualTo("Applying was refused. Change sets called 'Not today' can't be applied."));
+        Assert.That(ContentService.GetById(page.Key), Is.Null);
+
+        // Vetoed at the CMS draft set: the Content step fails and rolls back.
+        await _agent.StartChangeSetAsync("Not this content");
+        page = await BuildSummerPageAsync();
+        refused = await _agent.FailAsync("changeSet_apply", SetJson());
+        Assert.That(refused.GetProperty("message").GetString(), Does.Contain("Content failed and was rolled back").And.Contain("Draft sets called 'Not this content' can't be applied."));
+        Assert.That(ContentService.GetById(page.Key), Is.Null);
+
+        // Applied: both notifications are raised.
+        await _agent.StartChangeSetAsync("Fine");
+        await BuildSummerPageAsync();
+        await _agent.OkAsync("changeSet_apply", SetJson());
+        Assert.That(VetoHandler.Applied, Is.EquivalentTo(new[] { "draft set: Fine", "change set: Fine" }));
     }
 
     private sealed record SummerPage(Guid Key, Guid Hero, Guid AreaText);
@@ -492,7 +533,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
 
     private static IEnumerable<string?> TypesIn(JsonElement slot) => slot.GetProperty("allowedItemTypes").EnumerateArray().Select(t => t.GetProperty("alias").GetString());
 
-    private async Task<IContentType> CreateElementTypeAsync(string alias, ContentVariation variation, params (string Alias, ContentVariation Variation, bool Mandatory)[] properties)
+    private async Task<IContentType> CreateElementTypeAsync(string alias, ContentVariation variation, params (string Alias, ContentVariation ContentVariation, bool Mandatory)[] properties)
     {
         var builder = new ContentTypeBuilder().WithAlias(alias).WithName(alias).WithIsElement(true).WithContentVariation(variation);
         foreach (var property in properties)
@@ -500,7 +541,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
             builder.AddPropertyType()
                 .WithAlias(property.Alias).WithName(property.Alias)
                 .WithDataTypeId(Constants.DataTypes.Textbox).WithPropertyEditorAlias(Constants.PropertyEditors.Aliases.TextBox)
-                .WithValueStorageType(ValueStorageType.Nvarchar).WithVariations(property.Variation).WithMandatory(property.Mandatory)
+                .WithValueStorageType(ValueStorageType.Nvarchar).WithVariations(property.ContentVariation).WithMandatory(property.Mandatory)
                 .Done();
         }
 
@@ -543,6 +584,35 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
                 notification.CancelOperation(new EventMessage("Test", "Pages called Refused can't be saved.", EventMessageType.Error));
             }
         }
+    }
+
+    private sealed class VetoHandler :
+        INotificationHandler<ChangeSetApplyingNotification>,
+        INotificationHandler<DraftSetApplyingNotification>,
+        INotificationHandler<ChangeSetAppliedNotification>,
+        INotificationHandler<DraftSetAppliedNotification>
+    {
+        public static List<string> Applied { get; } = [];
+
+        public void Handle(ChangeSetApplyingNotification notification)
+        {
+            if (notification.ChangeSet.Name == "Not today")
+            {
+                notification.CancelOperation(new EventMessage("Test", "Change sets called 'Not today' can't be applied.", EventMessageType.Error));
+            }
+        }
+
+        public void Handle(DraftSetApplyingNotification notification)
+        {
+            if (notification.DraftSet.Name == "Not this content")
+            {
+                notification.CancelOperation(new EventMessage("Test", "Draft sets called 'Not this content' can't be applied.", EventMessageType.Error));
+            }
+        }
+
+        public void Handle(ChangeSetAppliedNotification notification) => Applied.Add($"change set: {notification.ChangeSet.Name}");
+
+        public void Handle(DraftSetAppliedNotification notification) => Applied.Add($"draft set: {notification.DraftSet.Name}");
     }
 
     /// <summary>Calls the AI tools by name with JSON arguments, as a model would.</summary>

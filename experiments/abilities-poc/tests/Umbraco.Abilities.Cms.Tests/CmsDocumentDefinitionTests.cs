@@ -10,22 +10,23 @@ using Umbraco.Abilities.AI;
 using Umbraco.Abilities.ChangeSets;
 using Umbraco.Abilities.Entities;
 using Umbraco.Cms.Core;
+using Umbraco.Cms.Core.Actions;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Models.ContentEditing;
+using Umbraco.Cms.Core.Models.Membership;
 using Umbraco.Cms.Core.Notifications;
 using Umbraco.Cms.Core.PropertyEditors;
 using Umbraco.Cms.Core.Scoping;
 using Umbraco.Cms.Core.Serialization;
 using Umbraco.Cms.Core.Services;
+using Umbraco.Cms.Core.Strings;
 using Umbraco.Cms.DraftSets;
 using Umbraco.Cms.Tests.Common.Builders;
 using Umbraco.Cms.Tests.Common.Builders.Extensions;
 using Umbraco.Cms.Tests.Common.Testing;
 using Umbraco.Cms.Tests.Integration.Testing;
-
-
 using Umbraco.Extensions;
 namespace Umbraco.Abilities.Cms.Tests;
 
@@ -147,6 +148,8 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
             ContentEditingService,
             GetRequiredService<IEntityService>(),
             _draftSets,
+            GetRequiredService<IUserService>(),
+            GetRequiredService<IContentPermissionService>(),
             GetRequiredService<IJsonSerializer>(),
             itemTypes,
             new CmsScopeUnitOfWorkProvider(GetRequiredService<ICoreScopeProvider>()),
@@ -493,6 +496,94 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         Assert.That(VetoHandler.Applied, Is.EquivalentTo(new[] { "draft set: Fine", "change set: Fine" }));
     }
 
+    [Test]
+    public async Task An_agent_gets_the_CMS_permissions_of_the_user_it_acts_for()
+    {
+        await _agent.StartChangeSetAsync("Create");
+        var page = await BuildSummerPageAsync();
+        await _agent.OkAsync("changeSet_apply", SetJson());
+
+        // A user who may browse content but not update it can read the page, and can't change it.
+        var reader = await CreateUserAsync("Readers", ActionBrowse.ActionLetter);
+        _agent.UserKey = reader;
+        await _agent.StartChangeSetAsync("Edit");
+        await _agent.OkAsync("entity_get", $$"""{ "entityType": "document", "key": "{{page.Key}}" }""");
+        var refused = await _agent.FailAsync("entity_setValue", $$"""{ "entityType": "document", "key": "{{page.Key}}", "elementPath": "", "field": "subtitle", "value": "Changed", "culture": "en-US" }""");
+        Assert.Multiple(() =>
+        {
+            Assert.That(refused.GetProperty("status").GetString(), Is.EqualTo("AccessDenied"));
+            Assert.That(refused.GetProperty("message").GetString(), Is.EqualTo("You don't have permission to update this document."));
+        });
+
+        // A set made by someone who may change the page, applied by the reader: refused, nothing changes.
+        _agent.UserKey = Constants.Security.SuperUserKey;
+        await _agent.StartChangeSetAsync("Edit for the reader");
+        await SetAsync(page.Key, "", "subtitle", "\"Changed\"", "en-US");
+        _agent.UserKey = reader;
+        refused = await _agent.FailAsync("changeSet_apply", SetJson());
+        Assert.Multiple(() =>
+        {
+            Assert.That(refused.GetProperty("status").GetString(), Is.EqualTo("AccessDenied"));
+            Assert.That(ContentService.GetById(page.Key)!.GetValue<string>("subtitle", "en-US"), Is.EqualTo("Sun and sand"));
+        });
+    }
+
+    [Test]
+    public async Task A_draft_set_applied_inside_a_scope_that_rolls_back_is_not_applied_and_raises_nothing()
+    {
+        var key = Guid.NewGuid();
+        await ContentEditingService.CreateAsync(
+            new ContentCreateModel
+            {
+                Key = key,
+                ContentTypeKey = _page.Key,
+                Variants = [new VariantModel { Culture = "en-US", Name = "Plain" }],
+                Properties = [new PropertyValueModel { Alias = "subtitle", Culture = "en-US", Value = "One" }],
+            },
+            Constants.Security.SuperUserKey);
+        var udi = new GuidUdi(Constants.UdiEntityType.Document, key);
+        var draft = _draftSets.Create("Rolled back");
+        await _draftSets.StageChangesAsync(draft.Id, udi, [new DraftValue("subtitle", "en-US", null, JsonValue.Create("Two"))]);
+
+        // The draft set's own scope completes, but the outer one doesn't.
+        using (GetRequiredService<ICoreScopeProvider>().CreateCoreScope())
+        {
+            await _draftSets.ApplyAsync(draft.Id, Constants.Security.SuperUserKey);
+        }
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ContentService.GetById(key)!.GetValue<string>("subtitle", "en-US"), Is.EqualTo("One"));
+            Assert.That(draft.Applied, Is.False, "it can still be applied");
+            Assert.That(VetoHandler.Applied, Is.Empty, "no applied notification for a rollback");
+        });
+
+        await _draftSets.ApplyAsync(draft.Id, Constants.Security.SuperUserKey);
+        Assert.That(ContentService.GetById(key)!.GetValue<string>("subtitle", "en-US"), Is.EqualTo("Two"));
+        Assert.That(VetoHandler.Applied, Is.EqualTo(new[] { "draft set: Rolled back" }));
+    }
+
+    private async Task<Guid> CreateUserAsync(string name, params string[] permissions)
+    {
+        var group = new UserGroup(GetRequiredService<IShortStringHelper>())
+        {
+            Alias = name.ToLowerInvariant(),
+            Name = name,
+            Permissions = permissions.ToHashSet(),
+            StartContentId = Constants.System.Root,
+            HasAccessToAllLanguages = true,
+        };
+        group.AddAllowedSection(Constants.Applications.Content);
+        Assert.That((await GetRequiredService<IUserGroupService>().CreateAsync(group, Constants.Security.SuperUserKey)).Success, Is.True);
+
+        var created = await GetRequiredService<IUserService>().CreateAsync(
+            Constants.Security.SuperUserKey,
+            new UserCreateModel { Email = $"{group.Alias}@example.com", UserName = $"{group.Alias}@example.com", Name = name, UserGroupKeys = new HashSet<Guid> { group.Key } },
+            approveUser: true);
+        Assert.That(created.Success, Is.True, created.Status.ToString());
+        return created.Result.CreatedUser!.Key;
+    }
+
     private sealed record SummerPage(Guid Key, Guid Hero, Guid AreaText);
 
     private async Task<SummerPage> BuildSummerPageAsync()
@@ -621,9 +712,12 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         private readonly Dictionary<string, AIFunction> _tools;
 
         public Agent(AbilityRegistry abilities, AbilityInvoker invoker)
-            => _tools = AbilityAITools.Create(abilities, invoker, () => new AbilityContext("admin", "ai", ChangeSetId)).ToDictionary(t => t.Name);
+            => _tools = AbilityAITools.Create(abilities, invoker, () => new AbilityContext(UserKey, "ai", ChangeSetId)).ToDictionary(t => t.Name);
 
         public Guid? ChangeSetId { get; private set; }
+
+        /// <summary>The user the agent acts for. It gets their permissions, no more.</summary>
+        public Guid UserKey { get; set; } = Constants.Security.SuperUserKey;
 
         public async Task StartChangeSetAsync(string name)
         {
@@ -635,7 +729,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         {
             var result = await CallAsync(tool, json);
             Assert.That(result.GetProperty("success").GetBoolean(), Is.True, $"{tool} failed: {result}");
-            return result.GetProperty("output");
+            return result.GetProperty("result");
         }
 
         public async Task<JsonElement> FailAsync(string tool, string json)

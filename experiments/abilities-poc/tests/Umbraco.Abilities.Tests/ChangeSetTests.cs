@@ -89,11 +89,11 @@ public class ChangeSetTests
 
         _site.Outbox.ServerDown = true;
         var failure = await _agent.FailAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
-        Assert.Equal("Runtime", failure.GetProperty("category").GetString());
+        Assert.Equal("Failed", failure.GetProperty("status").GetString());
         Assert.Contains("Partly applied", failure.GetProperty("message").GetString());
         Assert.Equal(
             ["Content: Applied.", "email.send: Failed: The mail server is not responding."],
-            failure.GetProperty("problems").EnumerateArray().Select(p => $"{p.GetProperty("path").GetString()}: {p.GetProperty("message").GetString()}"));
+            failure.GetProperty("problems").EnumerateArray().Select(p => $"{p.GetProperty("path").GetString()}: {p.GetProperty("errorMessages")[0].GetString()}"));
 
         // The page is applied; the set is kept, and its applied part can no longer be edited in it.
         Assert.Equal(1, (await _site.Pages.LoadAsync(page))!.LiveVersion);
@@ -176,8 +176,8 @@ public class ChangeSetTests
         var refused = await _agent.FailAsync("changeSet_apply", SetJson());
         var problem = refused.GetProperty("problems")[0];
         Assert.Equal($"umbraco-commerce-discount:{discount}/name", problem.GetProperty("path").GetString());
-        Assert.Contains("Renamed in set", problem.GetProperty("message").GetString());
-        Assert.Contains("Changed live", problem.GetProperty("message").GetString());
+        Assert.Contains("Renamed in set", problem.GetProperty("errorMessages")[0].GetString());
+        Assert.Contains("Changed live", problem.GetProperty("errorMessages")[0].GetString());
         Assert.True(refused.GetProperty("correctable").GetBoolean());
 
         await _agent.OkAsync("changeSet_resolveConflict", $$"""
@@ -287,7 +287,7 @@ public class ChangeSetTests
         _site.ContentDatabase.ForgetHistory(); // e.g. a version clean-up
 
         var refused = await _agent.FailAsync("changeSet_apply", SetJson());
-        Assert.Contains("version the set started from is gone", refused.GetProperty("problems")[0].GetProperty("message").GetString());
+        Assert.Contains("version the set started from is gone", refused.GetProperty("problems")[0].GetProperty("errorMessages")[0].GetString());
     }
 
     private Task<JsonElement> SetDiscountAsync(Guid discount, string elementPath, string field, string valueJson)

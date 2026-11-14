@@ -52,7 +52,7 @@ public abstract class EntityEditAbilityBase<TInput> : AbilityBase<TInput, object
 
     protected override Task<AbilityResult> ExecuteAsync(TInput input, AbilityContext context, CancellationToken cancellationToken)
         => Task.FromResult(AbilityResult.Fail(
-            FailureCategory.Input,
+            AbilityOperationStatus.InvalidInput,
             "Entity edits are recorded in a change set. Call changeSet_create first and run with its id as the active change set."));
 
     private static TInput Read(JsonObject input)
@@ -162,7 +162,19 @@ public sealed class FindEntityAbility(EntityDefinitionRegistry definitions, Chan
             }
         }
 
-        return Success(found);
+        // Only what the user may read. (What the set itself touches was checked when it was recorded.)
+        var readable = new List<EntityRef>();
+        var inSet = context.ChangeSetId is { } id ? changeSets.Get(id).Changes.Where(c => c.EntityType == input.EntityType).Select(c => c.EntityKey).ToHashSet() : [];
+        foreach (var reference in found)
+        {
+            if (inSet.Contains(reference.Key)
+                || await EntityAccess.CheckAsync(definition, new EntityAccessRequest(context.UserKey, EntityPermission.Read, reference.Key, null, new HashSet<string>()), cancellationToken) is null)
+            {
+                readable.Add(reference);
+            }
+        }
+
+        return Success(readable);
     }
 }
 
@@ -177,12 +189,18 @@ public sealed class GetEntityAbility(EntityDefinitionRegistry definitions, Chang
 {
     protected override async Task<AbilityResult> ExecuteAsync(GetEntityInput input, AbilityContext context, CancellationToken cancellationToken)
     {
+        var definition = definitions.Get(input.EntityType);
+        if (await EntityAccess.CheckAsync(definition, new EntityAccessRequest(context.UserKey, EntityPermission.Read, input.Key, null, new HashSet<string>()), cancellationToken) is { } denied)
+        {
+            return EntityAccess.Denied(denied, "key");
+        }
+
         var document = context.ChangeSetId is { } setId
             ? await changeSets.GetWorkingStateAsync(changeSets.Get(setId), input.EntityType, input.Key, cancellationToken)
             : await definitions.Get(input.EntityType).LoadAsync(input.Key, cancellationToken);
 
         return document is null
-            ? AbilityResult.Fail(FailureCategory.Input, $"No {input.EntityType} with key {input.Key}.", [new Problem("key", "Not found.")])
+            ? AbilityResult.Fail(AbilityOperationStatus.InvalidInput, $"No {input.EntityType} with key {input.Key}.", [new Problem("key", "Not found.")])
             : Success(document.ToJson());
     }
 }

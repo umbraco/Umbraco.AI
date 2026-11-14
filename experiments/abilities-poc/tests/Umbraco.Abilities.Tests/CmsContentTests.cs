@@ -47,15 +47,15 @@ public class CmsContentTests
         var missing = await _agent.FailAsync("entity_create", """{ "entityType": "document", "fields": { "title": "No culture" } }""");
         Assert.True(missing.GetProperty("correctable").GetBoolean());
         Assert.Equal("title", missing.GetProperty("problems")[0].GetProperty("path").GetString());
-        Assert.Contains("en-US, da-DK", missing.GetProperty("problems")[0].GetProperty("message").GetString());
+        Assert.Contains("en-US, da-DK", missing.GetProperty("problems")[0].GetProperty("errorMessages")[0].GetString());
 
         var unknown = await _agent.FailAsync("entity_create", """{ "entityType": "document", "culture": "fr-FR", "fields": { "title": "Bonjour" } }""");
-        Assert.Contains("Unknown culture 'fr-FR'", unknown.GetProperty("problems")[0].GetProperty("message").GetString());
+        Assert.Contains("Unknown culture 'fr-FR'", unknown.GetProperty("problems")[0].GetProperty("errorMessages")[0].GetString());
 
         // A page with no culture at all can be started, but not applied.
         await _agent.OkAsync("entity_create", """{ "entityType": "document" }""");
         var validation = await ValidateAsync();
-        Assert.Contains("no culture yet", validation.GetProperty("entities")[0].GetProperty("problems")[0].GetProperty("message").GetString());
+        Assert.Contains("no culture yet", validation.GetProperty("entities")[0].GetProperty("problems")[0].GetProperty("errorMessages")[0].GetString());
     }
 
     [Fact]
@@ -165,7 +165,7 @@ public class CmsContentTests
         await SetAsync(page, "", "related", $$"""[{ "entityType": "media", "key": "{{media}}" }, { "entityType": "document", "key": "{{missingPage}}" }]""");
         var problem = (await ValidateAsync()).GetProperty("entities")[0].GetProperty("problems")[0];
         Assert.Equal("related", problem.GetProperty("path").GetString());
-        Assert.Contains(missingPage.ToString(), problem.GetProperty("message").GetString());
+        Assert.Contains(missingPage.ToString(), problem.GetProperty("errorMessages")[0].GetString());
 
         var wrongType = await _agent.FailAsync("entity_setValue", SetJson(page, "", "related", $$"""[{ "entityType": "umbraco-commerce-discount", "key": "{{media}}" }]"""));
         Assert.True(wrongType.GetProperty("correctable").GetBoolean());

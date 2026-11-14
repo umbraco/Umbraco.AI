@@ -118,8 +118,14 @@ public sealed class CollectionDefinition(InMemoryDatabase database, ItemTypeRegi
 /// hand; the structure, schemas, paths, validation and change sets come from <see cref="DiscountEditModel"/>.
 /// </summary>
 public sealed class DiscountDefinition(DiscountService discounts, InMemoryDatabase unitOfWork, ItemTypeRegistry itemTypes)
-    : EntityDefinitionBase<DiscountEditModel>(itemTypes, unitOfWork)
+    : EntityDefinitionBase<DiscountEditModel>(itemTypes, unitOfWork), IAuthorizingEntityDefinition
 {
+    /// <summary>Real Commerce would check the Commerce section and the user's access to the discount's store.</summary>
+    public SampleAccess? Access { get; set; }
+
+    public Task<string?> AuthorizeAsync(EntityAccessRequest request, CancellationToken cancellationToken = default)
+        => Task.FromResult(Access?.Authorize(EntityType, request));
+
     public const string RuleGroup = "commerce.discount.rule";
     public const string RewardGroup = "commerce.discount.reward";
 

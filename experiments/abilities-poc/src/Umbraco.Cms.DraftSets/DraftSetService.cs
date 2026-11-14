@@ -387,9 +387,19 @@ public sealed class DraftSetService(
             }
         }
 
+        // Through the scope, so it fires only once the outermost scope commits, and never on a rollback: a change set
+        // wraps this in its own scope for the Content step, which can still roll back after this one completes.
+        scope.Notifications.Publish(new DraftSetAppliedNotification(set));
+
+        // Likewise the set counts as applied only once the outermost scope commits.
+        scopes.Context!.Enlist($"draft-set-applied:{set.Id}", committed =>
+        {
+            if (committed)
+            {
+                set.Applied = true;
+            }
+        });
         scope.Complete();
-        set.Applied = true;
-        await events.PublishAsync(new DraftSetAppliedNotification(set));
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────────────────────────────

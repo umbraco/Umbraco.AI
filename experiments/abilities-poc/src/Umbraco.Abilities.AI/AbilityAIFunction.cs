@@ -61,15 +61,16 @@ public sealed class AbilityAIFunction : AIFunction
         var result = await _invoker.InvokeAsync(_ability.Descriptor.Id, input, _context(), cancellationToken);
 
         // Failures go back to the model as data, so it can correct Input failures and stop on the others.
+        // The same shape as the CMS's Attempt: a status and a result, plus a message and problems when it failed.
         object payload = result.Success
-            ? new { success = true, output = result.Output }
+            ? new { success = true, status = result.Status.ToString(), result = result.Result }
             : new
             {
                 success = false,
-                category = result.Failure!.Category.ToString(),
-                correctable = result.Failure.Correctable,
-                message = result.Failure.Message,
-                problems = result.Failure.Problems,
+                status = result.Status.ToString(),
+                correctable = result.Correctable,
+                message = result.Message,
+                problems = result.Problems,
             };
 
         return JsonSerializer.SerializeToElement(payload, AbilityJson.Options);

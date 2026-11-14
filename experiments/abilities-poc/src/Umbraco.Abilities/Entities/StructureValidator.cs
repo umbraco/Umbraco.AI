@@ -72,12 +72,12 @@ public static class StructureValidator
         var located = new Problem(slotPath, string.Empty) { Culture = scope?.Culture, Segment = scope?.Segment };
         if (slot.Min is { } min && items.Count < min)
         {
-            context.Problems.Add(located with { Message = $"Needs at least {min} item(s)." });
+            context.Problems.Add(located with { ErrorMessages = [$"Needs at least {min} item(s)."] });
         }
 
         if (slot.Max is { } max && items.Count > max)
         {
-            context.Problems.Add(located with { Message = $"Holds at most {max} item(s)." });
+            context.Problems.Add(located with { ErrorMessages = [$"Holds at most {max} item(s)."] });
         }
 
         var allowed = context.ItemTypes.InGroup(slot.ItemTypeGroup).ToDictionary(t => t.Alias);
@@ -86,7 +86,7 @@ public static class StructureValidator
             var itemPath = EntityEditor.Join(slotPath, item.Key.ToString());
             if (!allowed.TryGetValue(item.Type, out var itemType))
             {
-                context.Problems.Add(located with { Path = itemPath, Message = $"Item type '{item.Type}' is not allowed here." });
+                context.Problems.Add(located with { Path = itemPath, ErrorMessages = [$"Item type '{item.Type}' is not allowed here."] });
                 continue;
             }
 
@@ -125,7 +125,7 @@ public static class StructureValidator
 
         if (FieldChecker.Check(field, value, path) is { } problem)
         {
-            context.Problems.Add(At(problem.Message));
+            context.Problems.Add(At(problem.ToString()));
             return;
         }
 

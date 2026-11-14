@@ -18,7 +18,8 @@ public sealed record RecordedCall(
     Guid? EntityKey,
     bool Creates,
     long? BaseVersion,
-    string? Subtype = null);
+    string? Subtype = null,
+    Guid? UserKey = null);
 
 public sealed class ChangeSet
 {

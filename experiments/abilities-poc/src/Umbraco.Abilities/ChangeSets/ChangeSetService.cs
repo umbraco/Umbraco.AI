@@ -49,7 +49,7 @@ public sealed class ChangeSetService(
         }
     }
 
-    public async Task<AbilityResult> RecordAsync(Guid setId, IAbility ability, JsonObject input, CancellationToken cancellationToken = default)
+    public async Task<AbilityResult> RecordAsync(Guid setId, IAbility ability, JsonObject input, AbilityContext context, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -59,7 +59,7 @@ public sealed class ChangeSetService(
             if (ability is not IEntityEditAbility edit)
             {
                 // A side effect (send an email, call another system): not a change, so it runs after the set is applied.
-                set.AfterApply.Add(new RecordedCall(ability.Descriptor.Id, recorded, null, null, false, null));
+                set.AfterApply.Add(new RecordedCall(ability.Descriptor.Id, recorded, null, null, false, null, UserKey: context.UserKey));
                 store.Save(set);
                 return AbilityResult.Ok(new
                 {
@@ -125,23 +125,30 @@ public sealed class ChangeSetService(
 
             var structure = await definition.DescribeAsync(working.Subtype, cancellationToken);
             var output = edit.Apply(working, recorded, new EntityEditContext(definition, structure, itemTypes));
+
+            // The user the edit is made for must be allowed to make it, in the cultures it touches.
+            var permission = working.LiveVersion is null ? EntityPermission.Create : EntityPermission.Update;
+            if (await EntityAccess.CheckAsync(definition, new EntityAccessRequest(context.UserKey, permission, target.EntityKey, working, EntityAccess.CulturesChanged(before, working)), cancellationToken) is { } denied)
+            {
+                return EntityAccess.Denied(denied);
+            }
             if (definition is IDraftingEntityDefinition drafting)
             {
                 // The product's draft records the change; the set only remembers that it touched the entity.
                 await drafting.StageAsync(await EnsureDraftAsync(set, drafting, cancellationToken), target.Creates ? null : before, working, cancellationToken);
             }
 
-            set.Changes.Add(new RecordedCall(ability.Descriptor.Id, recorded, target.EntityType, target.EntityKey, target.Creates, working.LiveVersion, working.Subtype));
+            set.Changes.Add(new RecordedCall(ability.Descriptor.Id, recorded, target.EntityType, target.EntityKey, target.Creates, working.LiveVersion, working.Subtype, context.UserKey));
             store.Save(set);
             return AbilityResult.Ok(output);
         }
         catch (AbilityInputException ex)
         {
-            return AbilityResult.Fail(FailureCategory.Input, ex.Message, ex.Problems);
+            return AbilityResult.Fail(AbilityOperationStatus.InvalidInput, ex.Message, ex.Problems);
         }
         catch (JsonException ex)
         {
-            return AbilityResult.Fail(FailureCategory.Input, $"The input does not match the schema: {ex.Message}");
+            return AbilityResult.Fail(AbilityOperationStatus.InvalidInput, $"The input does not match the schema: {ex.Message}");
         }
     }
 
@@ -427,14 +434,34 @@ public sealed class ChangeSetService(
         }
         catch (AbilityInputException ex)
         {
-            return AbilityResult.Fail(FailureCategory.Input, ex.Message, ex.Problems);
+            return AbilityResult.Fail(AbilityOperationStatus.InvalidInput, ex.Message, ex.Problems);
+        }
+
+        // First, before validating: the user applying the set must be allowed every change in it: they may not be who made the changes, and
+        // permissions can change while a set is open.
+        var denials = new List<Problem>();
+        foreach (var (entityType, key) in PendingEntities(set))
+        {
+            var definition = definitions.Get(entityType);
+            var working = (await GetWorkingStateAsync(set, entityType, key, cancellationToken))!;
+            var live = await definition.LoadAsync(key, cancellationToken);
+            var permission = live is null ? EntityPermission.Create : EntityPermission.Update;
+            if (await EntityAccess.CheckAsync(definition, new EntityAccessRequest(context.UserKey, permission, key, working, EntityAccess.CulturesChanged(live, working)), cancellationToken) is { } denied)
+            {
+                denials.Add(new Problem($"{entityType}:{key}", denied));
+            }
+        }
+
+        if (denials.Count > 0)
+        {
+            return AbilityResult.Fail(AbilityOperationStatus.AccessDenied, "You may not apply some of the changes in this set. Nothing was applied.", denials);
         }
 
         var invalid = await ValidateAsync(setId, cancellationToken);
         if (invalid.Count > 0)
         {
             var problems = invalid.SelectMany(e => e.Problems.Select(p => p with { Path = $"{e.Entity.EntityType}:{e.Entity.Key}/{p.Path}" })).ToList();
-            return AbilityResult.Fail(FailureCategory.Input, "The change set has problems. Fix them and apply again.", problems);
+            return AbilityResult.Fail(AbilityOperationStatus.InvalidInput, "The change set has problems. Fix them and apply again.", problems);
         }
 
         // Packages can veto applying a set, as they can veto saving a document.
@@ -442,7 +469,7 @@ public sealed class ChangeSetService(
         if (events is not null && await events.PublishCancelableAsync(new ChangeSetApplyingNotification(set, messages)))
         {
             var reasons = string.Join(" ", messages.GetAll().Select(m => m.Message));
-            return AbilityResult.Fail(FailureCategory.Runtime, $"Applying was refused. {reasons}".Trim());
+            return AbilityResult.Fail(AbilityOperationStatus.Failed, $"Applying was refused. {reasons}".Trim());
         }
 
         var saved = new List<EntityRef>();
@@ -496,7 +523,7 @@ public sealed class ChangeSetService(
                     var result = await abilities.Find(step.Call!.AbilityId)!.InvokeAsync(step.Call.Input, runContext, cancellationToken);
                     if (!result.Success)
                     {
-                        throw new ChangeSetApplyException(result.Failure!.Message);
+                        throw new ChangeSetApplyException(result.Message);
                     }
                 }
 
@@ -517,7 +544,7 @@ public sealed class ChangeSetService(
         {
             var appliedSome = set.AppliedSteps.Count > 0;
             return AbilityResult.Fail(
-                FailureCategory.Runtime,
+                AbilityOperationStatus.Failed,
                 appliedSome
                     ? $"Partly applied. {failure} Earlier steps stay applied. Fix the cause and apply again to apply the rest; nothing is applied twice."
                     : $"Nothing was applied. {failure}",
@@ -600,14 +627,14 @@ public sealed class AbilityInvoker(AbilityRegistry abilities, ChangeSetService c
         var ability = abilities.Find(abilityId);
         if (ability is null)
         {
-            return AbilityResult.Fail(FailureCategory.Input, $"Unknown ability '{abilityId}'.");
+            return AbilityResult.Fail(AbilityOperationStatus.InvalidInput, $"Unknown ability '{abilityId}'.");
         }
 
         if (context.ChangeSetId is { } setId
             && ability.Descriptor.Kind == AbilityKind.Write
             && ability is not IChangeSetLifecycleAbility)
         {
-            return await changeSets.RecordAsync(setId, ability, input, cancellationToken);
+            return await changeSets.RecordAsync(setId, ability, input, context, cancellationToken);
         }
 
         return await ability.InvokeAsync(input, context, cancellationToken);

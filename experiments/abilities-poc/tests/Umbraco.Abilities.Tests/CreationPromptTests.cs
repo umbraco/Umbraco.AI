@@ -93,7 +93,7 @@ public class CreationPromptTests
 
         // Applying now fails, and the failure says it can be corrected.
         var refused = await _agent.FailAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
-        Assert.Equal("Input", refused.GetProperty("category").GetString());
+        Assert.Equal("InvalidInput", refused.GetProperty("status").GetString());
         Assert.True(refused.GetProperty("correctable").GetBoolean());
 
         // Each problem path is an element path plus a field, so it maps straight onto entity_setValue.

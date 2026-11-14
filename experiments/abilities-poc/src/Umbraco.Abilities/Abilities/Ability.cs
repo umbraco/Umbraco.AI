@@ -59,43 +59,64 @@ public sealed record AbilityDescriptor(
     public bool RequiresApproval => Kind == AbilityKind.Write && !Reversible;
 }
 
-/// <summary>Who is calling, from where, and which change set (if any) is active.</summary>
-public sealed record AbilityContext(string ActingUser, string Caller, Guid? ChangeSetId = null);
+/// <summary>
+/// Who is calling (a backoffice user's key, as the CMS's services take it), from where, and which change set (if any) is
+/// active. An agent acts for a user: it gets that user's permissions, no more.
+/// </summary>
+public sealed record AbilityContext(Guid UserKey, string Caller, Guid? ChangeSetId = null);
 
-public enum FailureCategory
+/// <summary>
+/// How an ability call ended. Mirrors the CMS's operation status enums (e.g. <c>ContentEditingOperationStatus</c>).
+/// </summary>
+public enum AbilityOperationStatus
 {
+    Success,
+
     /// <summary>The input was wrong. The caller can correct it and try again.</summary>
-    Input,
+    InvalidInput,
 
     /// <summary>The acting user may not do this.</summary>
-    Access,
+    AccessDenied,
 
     /// <summary>Something failed while running. Retrying the same input will not help.</summary>
-    Runtime,
+    Failed,
 }
 
 /// <summary>
-/// A problem at a path. Paths use the same form as the entity edit abilities' paths; culture and segment say
-/// which variant of a value is wrong, as the CMS's PropertyValidationError does.
+/// A problem at a path. Mirrors the CMS's <c>PropertyValidationError</c>: error messages per culture and segment, at a
+/// path. The path is the entity path the edit abilities take (an alias, or a path into items), where the CMS splits it
+/// into an alias and a JSON path into the value.
 /// </summary>
-public sealed record Problem(string Path, string Message)
+public sealed record Problem(string Path, IReadOnlyList<string> ErrorMessages)
 {
+    public Problem(string path, string message)
+        : this(path, [message])
+    {
+    }
+
     public string? Culture { get; init; }
 
     public string? Segment { get; init; }
+
+    /// <summary>The error messages as one sentence.</summary>
+    public override string ToString() => string.Join(" ", ErrorMessages);
 }
 
-public sealed record AbilityFailure(FailureCategory Category, string Message, IReadOnlyList<Problem> Problems)
+/// <summary>
+/// The result of an ability call. Mirrors the CMS's <c>Attempt&lt;TResult, TStatus&gt;</c>: a status and a result, plus a
+/// message and problems when it failed.
+/// </summary>
+public sealed record AbilityResult(AbilityOperationStatus Status, object? Result, string? Message = null, IReadOnlyList<Problem>? Problems = null)
 {
-    public bool Correctable => Category == FailureCategory.Input;
-}
+    public bool Success => Status == AbilityOperationStatus.Success;
 
-public sealed record AbilityResult(bool Success, object? Output, AbilityFailure? Failure)
-{
-    public static AbilityResult Ok(object? output) => new(true, output, null);
+    /// <summary>The caller can correct the input and try again.</summary>
+    public bool Correctable => Status == AbilityOperationStatus.InvalidInput;
 
-    public static AbilityResult Fail(FailureCategory category, string message, IReadOnlyList<Problem>? problems = null)
-        => new(false, null, new AbilityFailure(category, message, problems ?? []));
+    public static AbilityResult Ok(object? result) => new(AbilityOperationStatus.Success, result);
+
+    public static AbilityResult Fail(AbilityOperationStatus status, string message, IReadOnlyList<Problem>? problems = null)
+        => new(status, null, message, problems ?? []);
 }
 
 /// <summary>The standard way an ability points at an entity it created, changed or found.</summary>
@@ -160,12 +181,12 @@ public abstract class AbilityBase<TInput, TOutput> : IAbility
         }
         catch (JsonException ex)
         {
-            return AbilityResult.Fail(FailureCategory.Input, $"The input does not match the schema: {ex.Message}");
+            return AbilityResult.Fail(AbilityOperationStatus.InvalidInput, $"The input does not match the schema: {ex.Message}");
         }
 
         if (typed is null)
         {
-            return AbilityResult.Fail(FailureCategory.Input, "Input is required.");
+            return AbilityResult.Fail(AbilityOperationStatus.InvalidInput, "Input is required.");
         }
 
         try
@@ -174,11 +195,11 @@ public abstract class AbilityBase<TInput, TOutput> : IAbility
         }
         catch (AbilityInputException ex)
         {
-            return AbilityResult.Fail(FailureCategory.Input, ex.Message, ex.Problems);
+            return AbilityResult.Fail(AbilityOperationStatus.InvalidInput, ex.Message, ex.Problems);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            return AbilityResult.Fail(FailureCategory.Runtime, ex.Message);
+            return AbilityResult.Fail(AbilityOperationStatus.Failed, ex.Message);
         }
     }
 

@@ -170,7 +170,16 @@ public abstract class ModelEditAbilityBase<TInput, TModel>(EntityDefinitionBase<
         var key = KeyOf(input);
         var model = await definition.LoadModelAsync(key, cancellationToken)
             ?? throw new AbilityInputException($"No {definition.EntityType} with key {key}.", [new Problem("key", "Not found.")]);
+        var before = definition.ToDocument(model);
         Edit(model, input);
+
+        // Run directly, the ability saves: the user must be allowed to change the entity, as inside a change set.
+        var after = definition.ToDocument(model);
+        if (await EntityAccess.CheckAsync(definition, new EntityAccessRequest(context.UserKey, EntityPermission.Update, key, after, EntityAccess.CulturesChanged(before, after)), cancellationToken) is { } denied)
+        {
+            return EntityAccess.Denied(denied);
+        }
+
         await definition.SaveModelAsync(model, cancellationToken);
         return Success(definition.ToRef(definition.ToDocument(model)));
     }

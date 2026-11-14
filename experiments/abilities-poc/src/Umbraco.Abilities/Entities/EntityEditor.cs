@@ -85,7 +85,7 @@ public static class EntityEditor
         value = FieldChecker.Normalize(field, value);
         if (FieldChecker.Check(field, value, path) is { } problem)
         {
-            throw new AbilityInputException(problem.Message, [problem with { Culture = variant.Culture, Segment = variant.Segment }]);
+            throw new AbilityInputException(problem.ToString(), [problem with { Culture = variant.Culture, Segment = variant.Segment }]);
         }
 
         element.Element.Set(field, variant, value);

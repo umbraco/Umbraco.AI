@@ -77,10 +77,15 @@ public sealed class InMemoryDatabase(string name) : IUnitOfWorkProvider
 /// model instead (Commerce's discount service, for example), and its definition is just as short.
 /// </summary>
 public abstract class InMemoryModelDefinition<TModel>(InMemoryDatabase database, ItemTypeRegistry itemTypes, string editUrlPrefix)
-    : EntityDefinitionBase<TModel>(itemTypes, database)
+    : EntityDefinitionBase<TModel>(itemTypes, database), IAuthorizingEntityDefinition
     where TModel : class
 {
     protected InMemoryDatabase Database { get; } = database;
+
+    public SampleAccess? Access { get; set; }
+
+    public Task<string?> AuthorizeAsync(EntityAccessRequest request, CancellationToken cancellationToken = default)
+        => Task.FromResult(Access?.Authorize(EntityType, request));
 
     public override Task<TModel?> LoadModelAsync(Guid key, CancellationToken cancellationToken = default)
         => Task.FromResult(Database.Get(EntityType, key) is { } row ? ToModel(Document(key, row)) : null);
@@ -113,9 +118,14 @@ public abstract class InMemoryModelDefinition<TModel>(InMemoryDatabase database,
 /// structure isn't a C# class, such as an Automate workflow whose step types are other packages' abilities.
 /// </summary>
 public abstract class InMemoryEntityDefinition(InMemoryDatabase database, string entityType, string nameField, string editUrlPrefix)
-    : IEntityDefinition
+    : IAuthorizingEntityDefinition
 {
     protected InMemoryDatabase Database { get; } = database;
+
+    public SampleAccess? Access { get; set; }
+
+    public Task<string?> AuthorizeAsync(EntityAccessRequest request, CancellationToken cancellationToken = default)
+        => Task.FromResult(Access?.Authorize(EntityType, request));
 
     public string EntityType { get; } = entityType;
 

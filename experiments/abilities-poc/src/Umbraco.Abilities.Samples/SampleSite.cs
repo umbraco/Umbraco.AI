@@ -66,7 +66,14 @@ public sealed class SampleSite
         Workflows = new WorkflowDefinition(AutomateDatabase);
         Definitions.Add(Workflows);
         WorkflowDefinition.RegisterItemTypes(ItemTypes, [sendEmail, activateDiscount]);
+
+        // Each product checks access with its own permission model.
+        Pages.Access = Media.Access = Access;
+        Collections.Access = Discounts.Access = Access;
+        Workflows.Access = Access;
     }
+
+    public SampleAccess Access { get; } = new();
 
     // Separate databases, as the products can each have their own connection string.
     public InMemoryDatabase ContentDatabase { get; } = new("Content");

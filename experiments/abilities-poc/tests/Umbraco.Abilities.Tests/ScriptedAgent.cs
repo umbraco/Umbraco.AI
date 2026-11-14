@@ -16,13 +16,16 @@ public sealed class ScriptedAgent
     public ScriptedAgent(SampleSite site)
     {
         Tools = AbilityAITools
-            .Create(site.Abilities, site.Invoker, () => new AbilityContext("editor@example.com", "ai", ChangeSetId))
+            .Create(site.Abilities, site.Invoker, () => new AbilityContext(UserKey, "ai", ChangeSetId))
             .ToDictionary(t => t.Name);
     }
 
     public IReadOnlyDictionary<string, AIFunction> Tools { get; }
 
     public Guid? ChangeSetId { get; set; }
+
+    /// <summary>The user the agent acts for. It gets their permissions, no more.</summary>
+    public Guid UserKey { get; set; } = SampleAccess.Editor;
 
     public async Task<JsonElement> CallAsync(string tool, string argumentsJson)
     {
@@ -39,7 +42,7 @@ public sealed class ScriptedAgent
     {
         var result = await CallAsync(tool, argumentsJson);
         Assert.True(result.GetProperty("success").GetBoolean(), $"{tool} failed: {result}");
-        return result.GetProperty("output");
+        return result.GetProperty("result");
     }
 
     /// <summary>Calls a tool and asserts it failed. Returns the failure.</summary>

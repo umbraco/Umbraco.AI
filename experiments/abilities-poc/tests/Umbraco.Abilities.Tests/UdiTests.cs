@@ -42,6 +42,6 @@ public class UdiTests
 
         // A UDI of the wrong type says which type was expected.
         var wrong = await _agent.FailAsync("entity_setValue", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "elementPath": "", "field": "landingPage", "value": "umb://media/{{media:N}}" }""");
-        Assert.Equal("Expected a document, not a media.", wrong.GetProperty("problems")[0].GetProperty("message").GetString());
+        Assert.Equal("Expected a document, not a media.", wrong.GetProperty("problems")[0].GetProperty("errorMessages")[0].GetString());
     }
 }

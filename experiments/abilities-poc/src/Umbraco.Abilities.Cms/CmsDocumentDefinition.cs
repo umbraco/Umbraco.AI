@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using Umbraco.Abilities.ChangeSets;
 using Umbraco.Abilities.Entities;
 using Umbraco.Cms.Core;
+using Umbraco.Cms.Core.Actions;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Models.Blocks;
 using Umbraco.Cms.Core.Models.ContentEditing;
@@ -15,6 +16,7 @@ using Umbraco.Cms.Core.PropertyEditors;
 using Umbraco.Cms.Core.Scoping;
 using Umbraco.Cms.Core.Serialization;
 using Umbraco.Cms.Core.Services;
+using Umbraco.Cms.Core.Services.AuthorizationStatus;
 using Umbraco.Cms.Core.Services.OperationStatus;
 using Umbraco.Cms.DraftSets;
 using Umbraco.Cms.Infrastructure.Serialization;
@@ -33,7 +35,7 @@ namespace Umbraco.Abilities.Cms;
 /// <see cref="ContentCreateModel"/> / <see cref="ContentUpdateModel"/>.
 /// </para>
 /// </summary>
-public sealed class CmsDocumentDefinition : IDraftingEntityDefinition
+public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthorizingEntityDefinition
 {
     public const string Type = Constants.UdiEntityType.Document;
 
@@ -52,6 +54,8 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition
     private readonly IContentEditingService _editing;
     private readonly IEntityService _entities;
     private readonly DraftSetService _draftSets;
+    private readonly IUserService _users;
+    private readonly IContentPermissionService _permissions;
     private readonly IJsonSerializer _json;
     private readonly Func<Guid> _actingUser;
     private readonly CmsStructureMapper _mapper;
@@ -63,6 +67,8 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition
         IContentEditingService editing,
         IEntityService entities,
         DraftSetService draftSets,
+        IUserService users,
+        IContentPermissionService permissions,
         IJsonSerializer json,
         ItemTypeRegistry itemTypes,
         IUnitOfWorkProvider unitOfWork,
@@ -74,6 +80,8 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition
         _editing = editing;
         _entities = entities;
         _draftSets = draftSets;
+        _users = users;
+        _permissions = permissions;
         _json = json;
         _actingUser = actingUser;
         _mapper = new CmsStructureMapper(contentTypes, dataTypes, itemTypes);
@@ -193,7 +201,7 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition
         var errors = validation.ValidationErrors.Where(e => e.Culture is null || cultures.Contains(null) || cultures.Contains(e.Culture)).ToList();
         if (status is not (ContentEditingOperationStatus.Success or ContentEditingOperationStatus.PropertyValidationError) || errors.Count > 0)
         {
-            var details = string.Join("; ", errors.Select(model.Index.ToProblem).Select(p => $"{p.Path}{(p.Culture is null ? "" : $" ({p.Culture})")}: {p.Message}"));
+            var details = string.Join("; ", errors.Select(model.Index.ToProblem).Select(p => $"{p.Path}{(p.Culture is null ? "" : $" ({p.Culture})")}: {p}"));
             throw new InvalidOperationException($"Umbraco did not save {ToRef(document).Name}: {status}. {details}".Trim());
         }
 
@@ -208,6 +216,59 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition
 
     public EntityRef ToRef(EntityDocument document)
         => new(Type, document.Key, document.Root.ReadAny(CmsStructureMapper.NameField)?.GetValue<string>() ?? "(unnamed)", EditUrl(document.Key));
+
+    // ── Authorization: the CMS's own permission model ─────────────────────────────────────────────
+
+    /// <summary>
+    /// The backoffice's checks, through the CMS's own services: the Content section, the document permission on the
+    /// document (or, for a new one, its parent or the root), and access to the cultures the change touches.
+    /// </summary>
+    public async Task<string?> AuthorizeAsync(EntityAccessRequest request, CancellationToken cancellationToken = default)
+    {
+        var user = await _users.GetAsync(request.UserKey);
+        if (user is null)
+        {
+            return "Unknown user.";
+        }
+
+        if (!user.AllowedSections.Contains(Constants.Applications.Content))
+        {
+            return "You don't have access to the Content section.";
+        }
+
+        var (permission, verb) = request.Permission switch
+        {
+            EntityPermission.Read => (ActionBrowse.ActionLetter, "read"),
+            EntityPermission.Create => (ActionNew.ActionLetter, "create"),
+            _ => (ActionUpdate.ActionLetter, "update"),
+        };
+
+        ContentAuthorizationStatus status;
+        if (request.Permission == EntityPermission.Create)
+        {
+            var parent = request.Document?.Root.Fields.GetValueOrDefault(CmsStructureMapper.ParentField) is { } node && Guid.TryParse(node.ToString(), out var key) ? key : (Guid?)null;
+            status = parent is { } parentKey
+                ? await _permissions.AuthorizeAccessAsync(user, parentKey, permission)
+                : await _permissions.AuthorizeRootAccessAsync(user, permission);
+        }
+        else
+        {
+            status = await _permissions.AuthorizeAccessAsync(user, request.Key, permission);
+        }
+
+        if (status != ContentAuthorizationStatus.Success)
+        {
+            return status == ContentAuthorizationStatus.NotFound ? "Not found." : $"You don't have permission to {verb} this document.";
+        }
+
+        if (request.Cultures.Count > 0
+            && await _permissions.AuthorizeCultureAccessAsync(user, request.Cultures.ToHashSet()) != ContentAuthorizationStatus.Success)
+        {
+            return $"You don't have access to edit {string.Join(", ", request.Cultures)}.";
+        }
+
+        return null;
+    }
 
     // ── CMS Draft Sets: the change set hands content changes to a CMS draft set ─────────────────────
 
@@ -622,8 +683,8 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition
 
         public Problem ToProblem(PropertyValidationError error)
         {
-            var message = string.Join(" ", error.ErrorMessages);
-            var located = new Problem(error.Alias, message) { Culture = error.Culture, Segment = error.Segment };
+            // Same fields as Umbraco's error; only the alias and JSON path become one entity path.
+            var located = new Problem(error.Alias, error.ErrorMessages.ToList()) { Culture = error.Culture, Segment = error.Segment };
             var match = BlockValuePath.Match(error.JsonPath ?? string.Empty);
             if (!match.Success)
             {

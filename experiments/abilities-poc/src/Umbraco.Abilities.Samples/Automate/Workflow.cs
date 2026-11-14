@@ -7,7 +7,7 @@ namespace Umbraco.Abilities.Samples.Automate;
 /// Edges between steps are item references, so a graph fits the same structure language as a tree.
 /// </summary>
 public sealed class WorkflowDefinition(InMemoryDatabase database)
-    : InMemoryEntityDefinition(database, "automate.workflow", "name", "/umbraco/section/automate/workflow")
+    : InMemoryEntityDefinition(database, "umbraco-automate-workflow", "name", "/umbraco/section/automate/workflow")
 {
     public const string TriggerGroup = "automate.trigger";
     public const string StepGroup = "automate.step";

@@ -57,6 +57,7 @@ public sealed class EntityDefinitionRegistry
     public EntityDefinitionRegistry Add(IEntityDefinition definition)
     {
         _definitions.Add(definition.EntityType, definition);
+        EntityUdis.Register(definition.EntityType);
         return this;
     }
 

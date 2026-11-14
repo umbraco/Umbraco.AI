@@ -17,7 +17,7 @@ namespace Umbraco.Abilities.Samples.Cms;
 /// <item><c>tags</c> is a string array, and <c>related</c> a multi-node tree picker pointing at documents or media.</item>
 /// </list>
 /// </summary>
-[Entity("cms.page", "Page", Description = "A content page.")]
+[Entity("document", "Page", Description = "A content page.")]
 public sealed class Page
 {
     [Key]
@@ -35,7 +35,7 @@ public sealed class Page
     [Description("Tags.")]
     public List<string>? Tags { get; set; }
 
-    [EntityKey("cms.page", "cms.media"), Description("Related pages or media.")]
+    [EntityKey("document", "media"), Description("Related pages or media.")]
     public List<EntityReference>? Related { get; set; }
 
     [Slot(CmsPageDefinition.BlockGroup), Description("The page's content blocks.")]
@@ -147,7 +147,7 @@ public sealed class Promo : EntityItemModel
 [ItemType("mediaEntry", "Media", Description = "A picked media item.")]
 public sealed class MediaEntry : EntityItemModel
 {
-    [Required, EntityKey("cms.media"), Description("The media item.")]
+    [Required, EntityKey("media"), Description("The media item.")]
     public Guid? Media { get; set; }
 
     [Description("Optional focal point.")]
@@ -231,7 +231,7 @@ public sealed class CmsMediaDefinition(InMemoryDatabase database, ItemTypeRegist
     static CmsMediaDefinition()
     {
         ModelConfiguration.Configure<MediaRequestModel>(media => media
-            .IsEntity("cms.media", "Media", "An image or file.")
+            .IsEntity("media", "Media", "An image or file.")
             .HasKey(x => x.Id)
             .HasVersion(x => x.Version)
             .Ignore(x => x.UpdateDate)

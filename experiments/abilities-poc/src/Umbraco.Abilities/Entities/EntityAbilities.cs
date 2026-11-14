@@ -69,7 +69,7 @@ public abstract class EntityEditAbilityBase<TInput> : AbilityBase<TInput, object
 }
 
 public sealed record GetEntitySchemaInput(
-    [property: Description("Entity type, e.g. 'commerce.discount'.")] string EntityType,
+    [property: Description("Entity type, e.g. 'umbraco-commerce-discount' (a UDI entity type).")] string EntityType,
     [property: Description("Optional item type aliases (from a slot's allowedItemTypes) to get the full schema for. Use group:alias when an alias appears in several groups.")] string[]? ItemTypes = null,
     [property: Description("The subtype, for entity types that have them, e.g. a document's content type alias.")] string? Subtype = null);
 
@@ -129,7 +129,7 @@ public sealed class GetEntitySchemaAbility(EntityDefinitionRegistry definitions,
 }
 
 public sealed record FindEntityInput(
-    [property: Description("Entity type to search, e.g. 'commerce.collection'.")] string EntityType,
+    [property: Description("Entity type to search, e.g. 'umbraco-commerce-collection'.")] string EntityType,
     [property: Description("Words in the entity's name.")] string Query);
 
 [Ability("entity.find", "Find entities", Kind = AbilityKind.Read,

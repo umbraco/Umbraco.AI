@@ -15,7 +15,7 @@ namespace Umbraco.Abilities.Samples.Commerce;
 // ── The editing contracts: plain C# classes, separate from Commerce's domain model (Domain.cs). Everything the
 // AI and change sets need is derived from them; the definition maps them to and from the domain. ─────────────
 
-[Entity("commerce.collection", "Collection", Description = "A product collection.")]
+[Entity("umbraco-commerce-collection", "Collection", Description = "A product collection.")]
 public sealed class Collection
 {
     [Key]
@@ -28,7 +28,7 @@ public sealed class Collection
     public string? Name { get; set; }
 }
 
-[Entity("commerce.discount", "Discount", Description = "A discount applied when all its rules match.")]
+[Entity("umbraco-commerce-discount", "Discount", Description = "A discount applied when all its rules match.")]
 public sealed class DiscountEditModel
 {
     [Key]
@@ -49,7 +49,7 @@ public sealed class DiscountEditModel
     [Description("Last day the discount applies.")]
     public DateOnly? EndDate { get; set; }
 
-    [EntityKey("cms.page"), Description("Optional page that promotes the discount.")]
+    [EntityKey("document"), Description("Optional page that promotes the discount.")]
     public Guid? LandingPage { get; set; }
 
     [Description("Whether the discount is live. Use commerce.activateDiscount to switch it on.")]
@@ -82,7 +82,7 @@ public sealed class CustomerGroupRule : DiscountRule
 [ItemType("productCollection", "Product collection", Description = "The order contains a product from a collection.")]
 public sealed class ProductCollectionRule : DiscountRule
 {
-    [Required, EntityKey("commerce.collection"), Description("The collection.")]
+    [Required, EntityKey("umbraco-commerce-collection"), Description("The collection.")]
     public Guid? Collection { get; set; }
 }
 
@@ -248,7 +248,7 @@ internal static class ProviderSettings
 // ── A product ability that changes a discount, written against the model. ───────────────────────────────
 
 public sealed record ActivateDiscountInput(
-    [property: Description("The discount to switch on."), EntityKey("commerce.discount")] Guid Discount);
+    [property: Description("The discount to switch on."), EntityKey("umbraco-commerce-discount")] Guid Discount);
 
 /// <summary>Run directly it saves the discount; inside a change set it is recorded as a change to the discount.</summary>
 [Ability("commerce.activateDiscount", "Activate discount", Kind = AbilityKind.Write,

@@ -80,6 +80,7 @@ public static class EntityEditor
             ?? throw Invalid(path, $"No field '{alias}' here. Fields: {Names(element.Shape.Fields.Select(f => f.Alias))}.");
 
         var variant = RequireVariant(target, field.Variations, path);
+        value = FieldChecker.Normalize(field, value);
         if (FieldChecker.Check(field, value, path) is { } problem)
         {
             throw new AbilityInputException(problem.Message, [problem with { Culture = variant.Culture, Segment = variant.Segment }]);
@@ -229,6 +230,33 @@ public static class EntityEditor
 /// <summary>Checks one field value against its definition.</summary>
 public static class FieldChecker
 {
+    /// <summary>A reference given as a UDI (<c>umb://document/…</c>) becomes the field's own form: a key, or <c>{ entityType, key }</c>.</summary>
+    public static JsonNode? Normalize(FieldDefinition field, JsonNode? value)
+    {
+        if (value is null || field.Type != FieldType.EntityReference)
+        {
+            return value;
+        }
+
+        if (field.Many)
+        {
+            return value is JsonArray array ? new JsonArray(array.Select(v => Normalize(field with { Many = false }, v?.DeepClone())).ToArray()) : value;
+        }
+
+        if (value is not JsonValue scalar || !scalar.TryGetValue<string>(out var text) || !EntityUdis.TryParse(text, out var udi))
+        {
+            return value;
+        }
+
+        if (field.ReferencesAnyOf is { Count: > 0 })
+        {
+            return new JsonObject { ["entityType"] = udi.EntityType, ["key"] = udi.Guid.ToString() };
+        }
+
+        // A UDI of another type stays as it is, so the check says which type was expected.
+        return udi.EntityType == field.ReferencesEntityType ? JsonValue.Create(udi.Guid.ToString()) : value;
+    }
+
     public static Problem? Check(FieldDefinition field, JsonNode? value, string path)
     {
         if (value is null)
@@ -260,6 +288,11 @@ public static class FieldChecker
                 && Guid.TryParse(reference["key"]?.ToString(), out _)
                     ? null
                     : new Problem(path, $"Expected {{ \"entityType\": one of {string.Join(", ", types)}, \"key\": a GUID }}.");
+        }
+
+        if (field.Type == FieldType.EntityReference && value is JsonValue udiValue && udiValue.TryGetValue<string>(out var text) && EntityUdis.TryParse(text, out var udi))
+        {
+            return new Problem(path, $"Expected a {field.ReferencesEntityType}, not a {udi.EntityType}.");
         }
 
         if (value is not JsonValue scalar)

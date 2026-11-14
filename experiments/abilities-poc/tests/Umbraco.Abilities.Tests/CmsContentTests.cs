@@ -44,16 +44,16 @@ public class CmsContentTests
     {
         await _agent.StartChangeSetAsync("Cultures");
 
-        var missing = await _agent.FailAsync("entity_create", """{ "entityType": "cms.page", "fields": { "title": "No culture" } }""");
+        var missing = await _agent.FailAsync("entity_create", """{ "entityType": "document", "fields": { "title": "No culture" } }""");
         Assert.True(missing.GetProperty("correctable").GetBoolean());
         Assert.Equal("title", missing.GetProperty("problems")[0].GetProperty("path").GetString());
         Assert.Contains("en-US, da-DK", missing.GetProperty("problems")[0].GetProperty("message").GetString());
 
-        var unknown = await _agent.FailAsync("entity_create", """{ "entityType": "cms.page", "culture": "fr-FR", "fields": { "title": "Bonjour" } }""");
+        var unknown = await _agent.FailAsync("entity_create", """{ "entityType": "document", "culture": "fr-FR", "fields": { "title": "Bonjour" } }""");
         Assert.Contains("Unknown culture 'fr-FR'", unknown.GetProperty("problems")[0].GetProperty("message").GetString());
 
         // A page with no culture at all can be started, but not applied.
-        await _agent.OkAsync("entity_create", """{ "entityType": "cms.page" }""");
+        await _agent.OkAsync("entity_create", """{ "entityType": "document" }""");
         var validation = await ValidateAsync();
         Assert.Contains("no culture yet", validation.GetProperty("entities")[0].GetProperty("problems")[0].GetProperty("message").GetString());
     }
@@ -156,21 +156,21 @@ public class CmsContentTests
     {
         await _agent.StartChangeSetAsync("Media");
         var media = Guid.NewGuid();
-        await _agent.OkAsync("entity_create", $$"""{ "entityType": "cms.media", "key": "{{media}}", "fields": { "name": "Beach.jpg" } }""");
+        await _agent.OkAsync("entity_create", $$"""{ "entityType": "media", "key": "{{media}}", "fields": { "name": "Beach.jpg" } }""");
 
         var page = await CreatePageAsync("Beach", "en-US");
         await AddItemAsync(page, "image", "mediaEntry", $$"""{ "media": "{{media}}", "focalPoint": { "left": 0.5, "top": 0.3 } }""");
 
         var missingPage = Guid.NewGuid();
-        await SetAsync(page, "", "related", $$"""[{ "entityType": "cms.media", "key": "{{media}}" }, { "entityType": "cms.page", "key": "{{missingPage}}" }]""");
+        await SetAsync(page, "", "related", $$"""[{ "entityType": "media", "key": "{{media}}" }, { "entityType": "document", "key": "{{missingPage}}" }]""");
         var problem = (await ValidateAsync()).GetProperty("entities")[0].GetProperty("problems")[0];
         Assert.Equal("related", problem.GetProperty("path").GetString());
         Assert.Contains(missingPage.ToString(), problem.GetProperty("message").GetString());
 
-        var wrongType = await _agent.FailAsync("entity_setValue", SetJson(page, "", "related", $$"""[{ "entityType": "commerce.discount", "key": "{{media}}" }]"""));
+        var wrongType = await _agent.FailAsync("entity_setValue", SetJson(page, "", "related", $$"""[{ "entityType": "umbraco-commerce-discount", "key": "{{media}}" }]"""));
         Assert.True(wrongType.GetProperty("correctable").GetBoolean());
 
-        await SetAsync(page, "", "related", $$"""[{ "entityType": "cms.media", "key": "{{media}}" }]""");
+        await SetAsync(page, "", "related", $$"""[{ "entityType": "media", "key": "{{media}}" }]""");
         await AssertValidAsync();
         await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
 
@@ -180,7 +180,7 @@ public class CmsContentTests
     }
 
     private async Task<Guid> CreatePageAsync(string title, string culture)
-        => (await _agent.OkAsync("entity_create", $$"""{ "entityType": "cms.page", "culture": "{{culture}}", "fields": { "title": "{{title}}" } }""")).GetProperty("key").GetGuid();
+        => (await _agent.OkAsync("entity_create", $$"""{ "entityType": "document", "culture": "{{culture}}", "fields": { "title": "{{title}}" } }""")).GetProperty("key").GetGuid();
 
     private Task<JsonElement> SetAsync(Guid page, string elementPath, string field, string valueJson, string? culture = null)
         => _agent.OkAsync("entity_setValue", SetJson(page, elementPath, field, valueJson, culture));
@@ -188,7 +188,7 @@ public class CmsContentTests
     private Task<JsonElement> AddItemAsync(Guid page, string slotPath, string itemType, string? fieldsJson, string? culture = null)
         => _agent.OkAsync("entity_addItem", AddJson(page, slotPath, itemType, fieldsJson, culture));
 
-    private Task<JsonElement> GetAsync(Guid page) => _agent.OkAsync("entity_get", $$"""{ "entityType": "cms.page", "key": "{{page}}" }""");
+    private Task<JsonElement> GetAsync(Guid page) => _agent.OkAsync("entity_get", $$"""{ "entityType": "document", "key": "{{page}}" }""");
 
     private Task<JsonElement> ValidateAsync() => _agent.OkAsync("changeSet_validate", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
 
@@ -199,10 +199,10 @@ public class CmsContentTests
     }
 
     private static string SetJson(Guid page, string elementPath, string field, string valueJson, string? culture = null)
-        => $$"""{ "entityType": "cms.page", "key": "{{page}}", "elementPath": "{{elementPath}}", "field": "{{field}}", "value": {{valueJson}}{{Culture(culture)}} }""";
+        => $$"""{ "entityType": "document", "key": "{{page}}", "elementPath": "{{elementPath}}", "field": "{{field}}", "value": {{valueJson}}{{Culture(culture)}} }""";
 
     private static string AddJson(Guid page, string slotPath, string itemType, string? fieldsJson, string? culture = null)
-        => $$"""{ "entityType": "cms.page", "key": "{{page}}", "slotPath": "{{slotPath}}", "itemType": "{{itemType}}"{{(fieldsJson is null ? "" : $", \"fields\": {fieldsJson}")}}{{Culture(culture)}} }""";
+        => $$"""{ "entityType": "document", "key": "{{page}}", "slotPath": "{{slotPath}}", "itemType": "{{itemType}}"{{(fieldsJson is null ? "" : $", \"fields\": {fieldsJson}")}}{{Culture(culture)}} }""";
 
     private static string Culture(string? culture) => culture is null ? "" : $", \"culture\": \"{culture}\"";
 }

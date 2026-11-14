@@ -164,10 +164,10 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
     [Test]
     public async Task The_schema_comes_from_the_document_type_and_its_block_editors()
     {
-        var subtypes = await _agent.OkAsync("entity_getSchema", """{ "entityType": "cms.document" }""");
+        var subtypes = await _agent.OkAsync("entity_getSchema", """{ "entityType": "document" }""");
         Assert.That(subtypes.GetProperty("subtypes").EnumerateArray().Select(s => s.GetProperty("alias").GetString()), Does.Contain("landingPage"));
 
-        var schema = await _agent.OkAsync("entity_getSchema", """{ "entityType": "cms.document", "subtype": "landingPage" }""");
+        var schema = await _agent.OkAsync("entity_getSchema", """{ "entityType": "document", "subtype": "landingPage" }""");
         Assert.That(schema.GetProperty("cultures").EnumerateArray().Select(c => c.GetString()), Is.EquivalentTo(new[] { "en-US", "da-DK" }));
         Assert.That(schema.GetProperty("fields").GetProperty("properties").GetProperty("subtitle").GetProperty("x-variations").GetString(), Is.EqualTo("Culture"));
 
@@ -176,7 +176,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         Assert.That(TypesIn(slots["grid"]), Is.EquivalentTo(new[] { "twoColumns", "textBlock" }));
         Assert.That(slots["grid"].GetProperty("itemLayout").GetProperty("required")[0].GetString(), Is.EqualTo("columnSpan"));
 
-        var hero = await _agent.OkAsync("entity_getSchema", """{ "entityType": "cms.document", "subtype": "landingPage", "itemTypes": ["hero", "twoColumns"] }""");
+        var hero = await _agent.OkAsync("entity_getSchema", """{ "entityType": "document", "subtype": "landingPage", "itemTypes": ["hero", "twoColumns"] }""");
         Assert.That(hero.GetProperty("itemTypes").GetProperty("hero").GetProperty("settings").GetProperty("properties").TryGetProperty("theme", out _), Is.True);
         var areas = hero.GetProperty("itemTypes").GetProperty("twoColumns").GetProperty("slots").EnumerateArray().Select(s => s.GetProperty("alias").GetString());
         Assert.That(areas, Is.EquivalentTo(new[] { "left", "right" }));
@@ -242,7 +242,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         await SetAsync(page, $"{empty}/@settings", "theme", "\"light\"");
 
         // Ask Umbraco directly, skipping the generic structure check, to see its own errors mapped back.
-        var working = (await _changeSets.GetWorkingStateAsync(_changeSets.Get(_agent.ChangeSetId!.Value), "cms.document", page))!;
+        var working = (await _changeSets.GetWorkingStateAsync(_changeSets.Get(_agent.ChangeSetId!.Value), "document", page))!;
         var problems = (await _documents.ValidateAsync(working)).Select(p => $"{p.Path}|{p.Culture}").ToList();
 
         Assert.That(problems, Is.EquivalentTo(new[] { "subtitle|da-DK", $"{empty}/heading|en-US", $"{empty}/heading|da-DK" }), string.Join(", ", problems));
@@ -283,7 +283,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
     {
         await _agent.StartChangeSetAsync("Two pages");
         var page = await BuildSummerPageAsync();
-        var refused = (await _agent.OkAsync("entity_create", """{ "entityType": "cms.document", "subtype": "landingPage", "culture": "en-US", "fields": { "name": "Refused", "subtitle": "No" } }"""))
+        var refused = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "subtype": "landingPage", "culture": "en-US", "fields": { "name": "Refused", "subtitle": "No" } }"""))
             .GetProperty("key").GetGuid();
 
         var failure = await _agent.FailAsync("changeSet_apply", SetJson());
@@ -364,7 +364,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         });
 
         await _agent.OkAsync("changeSet_resolveConflict", $$"""
-            { "changeSetId": "{{_agent.ChangeSetId}}", "entityType": "cms.document", "key": "{{page.Key}}", "path": "subtitle", "culture": "en-US", "keep": "theirs" }
+            { "changeSetId": "{{_agent.ChangeSetId}}", "entityType": "document", "key": "{{page.Key}}", "path": "subtitle", "culture": "en-US", "keep": "theirs" }
             """);
         await _agent.OkAsync("changeSet_apply", SetJson());
         Assert.That(ContentService.GetById(page.Key)!.GetValue<string>("subtitle", "en-US"), Is.EqualTo("Changed in the backoffice"));
@@ -383,11 +383,11 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         // The change set holds a CMS draft set for content, which the backoffice can read and preview.
         var draftId = _changeSets.Get(_agent.ChangeSetId!.Value).Drafts["Content"];
         var draft = _draftSets.Get(draftId)!;
-        var inDraft = (await _draftSets.GetAsync(draftId, page.Key))!;
+        var inDraft = (await _draftSets.GetAsync(draftId, new GuidUdi(Constants.UdiEntityType.Document, page.Key)))!;
         Assert.Multiple(() =>
         {
             Assert.That(draft.Name, Is.EqualTo("Edit"));
-            Assert.That(draft.ContentKeys, Is.EqualTo(new[] { page.Key }));
+            Assert.That(draft.Entities.Select(e => e.ToString()), Is.EqualTo(new[] { $"umb://document/{page.Key:N}" }));
             Assert.That(inDraft.Values.Single(v => v.Alias == "subtitle" && v.Culture == "en-US").Value!.ToString(), Is.EqualTo("Sun, sand and sea"));
             Assert.That(ContentService.GetById(page.Key)!.GetValue<string>("subtitle", "en-US"), Is.EqualTo("Sun and sand"), "live is untouched");
         });
@@ -422,13 +422,14 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
             Constants.Security.SuperUserKey);
         Assert.That(created.Success, Is.True);
 
+        var udi = new GuidUdi(Constants.UdiEntityType.Document, key);
         var draft = _draftSets.Create("Rename");
-        await _draftSets.StageChangesAsync(draft.Id, key,
+        await _draftSets.StageChangesAsync(draft.Id, udi,
         [
             new DraftValue(DraftSetService.NameAlias, "en-US", null, JsonValue.Create("Renamed")),
             new DraftValue("subtitle", "en-US", null, JsonValue.Create("Two")),
         ]);
-        Assert.That((await _draftSets.GetAsync(draft.Id, key))!.Names["en-US"], Is.EqualTo("Renamed"));
+        Assert.That((await _draftSets.GetAsync(draft.Id, udi))!.Names["en-US"], Is.EqualTo("Renamed"));
 
         // Someone changes the subtitle meanwhile: a conflict. They keep the live value.
         await Task.Delay(20);
@@ -437,9 +438,9 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         ContentService.Save(content);
         var conflict = (await _draftSets.GetRebaseAsync(draft.Id)).Single().Conflicts.Single();
         Assert.That((conflict.Alias, conflict.Draft!.ToString(), conflict.Live!.ToString()), Is.EqualTo(("subtitle", "Two", "Three")));
-        await _draftSets.ResolveAsync(draft.Id, key, "subtitle", "en-US", null, DraftKeep.Live);
+        await _draftSets.ResolveAsync(draft.Id, udi, "subtitle", "en-US", null, DraftKeep.Live);
 
-        var errors = (await _draftSets.ValidateAsync(draft.Id, Constants.Security.SuperUserKey))[key];
+        var errors = (await _draftSets.ValidateAsync(draft.Id, Constants.Security.SuperUserKey))[udi];
         Assert.That(errors.Select(e => $"{e.Alias}|{e.Culture}|{e.JsonPath}|{string.Join(" ", e.ErrorMessages)}"), Is.Empty);
         await _draftSets.ApplyAsync(draft.Id, Constants.Security.SuperUserKey);
         content = ContentService.GetById(key)!;
@@ -475,14 +476,14 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
     }
 
     private async Task<Guid> CreatePageAsync()
-        => (await _agent.OkAsync("entity_create", """{ "entityType": "cms.document", "subtype": "landingPage", "culture": "en-US", "fields": { "name": "Summer" } }"""))
+        => (await _agent.OkAsync("entity_create", """{ "entityType": "document", "subtype": "landingPage", "culture": "en-US", "fields": { "name": "Summer" } }"""))
             .GetProperty("key").GetGuid();
 
     private Task<JsonElement> SetAsync(Guid page, string elementPath, string field, string valueJson, string? culture = null)
-        => _agent.OkAsync("entity_setValue", $$"""{ "entityType": "cms.document", "key": "{{page}}", "elementPath": "{{elementPath}}", "field": "{{field}}", "value": {{valueJson}}{{Culture(culture)}} }""");
+        => _agent.OkAsync("entity_setValue", $$"""{ "entityType": "document", "key": "{{page}}", "elementPath": "{{elementPath}}", "field": "{{field}}", "value": {{valueJson}}{{Culture(culture)}} }""");
 
     private async Task<string> AddItemAsync(Guid page, string slotPath, string itemType, string fieldsJson, string? culture = null)
-        => (await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "cms.document", "key": "{{page}}", "slotPath": "{{slotPath}}", "itemType": "{{itemType}}", "fields": {{fieldsJson}}{{Culture(culture)}} }"""))
+        => (await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "document", "key": "{{page}}", "slotPath": "{{slotPath}}", "itemType": "{{itemType}}", "fields": {{fieldsJson}}{{Culture(culture)}} }"""))
             .GetProperty("path").GetString()!;
 
     private string SetJson() => $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""";

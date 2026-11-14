@@ -59,9 +59,10 @@ public sealed class ChangeSet
     /// <summary>How each conflict was resolved, keyed by <see cref="ResolutionKey"/>.</summary>
     public Dictionary<string, ConflictSide> Resolutions { get; } = [];
 
-    public static string EntityKey(string entityType, Guid key) => $"{entityType}:{key}";
+    /// <summary>An entity's identity in a set: its UDI, e.g. <c>umb://document/{key}</c>.</summary>
+    public static string EntityKey(string entityType, Guid key) => EntityUdis.For(entityType, key).ToString();
 
-    public static string ResolutionKey(string entityType, Guid key, ChangedPath change) => $"{entityType}:{key}|{change.Path}|{change.VariantKey}";
+    public static string ResolutionKey(string entityType, Guid key, ChangedPath change) => $"{EntityKey(entityType, key)}|{change.Path}|{change.VariantKey}";
 }
 
 public enum ConflictSide

@@ -23,7 +23,7 @@ public class TypedModelTests
 
         Assert.True(fields["name"].Required);
         Assert.Equal(FieldType.Date, fields["startDate"].Type);
-        Assert.Equal("cms.page", fields["landingPage"].ReferencesEntityType);
+        Assert.Equal("document", fields["landingPage"].ReferencesEntityType);
         Assert.Equal(1, discount.Shape.Slots.Single(s => s.Alias == "rules").Min);
         Assert.Equal(3, discount.Shape.Slots.Single(s => s.Alias == "rewards").Max);
         Assert.DoesNotContain("key", fields.Keys);
@@ -44,7 +44,7 @@ public class TypedModelTests
         Assert.Equal(["en-US", "da-DK"], page.Cultures);
         Assert.Equal(Variation.Culture, fields["title"].Variations);
         Assert.True(fields["tags"].Many);
-        Assert.Equal(["cms.page", "cms.media"], fields["related"].ReferencesAnyOf);
+        Assert.Equal(["document", "media"], fields["related"].ReferencesAnyOf);
         Assert.Equal(Variation.Culture, page.Shape.Slots.Single(s => s.Alias == "promos").Variations);
         Assert.Equal("columnSpan", page.Shape.Slots.Single(s => s.Alias == "grid").ItemLayout!.Fields[0].Alias);
 
@@ -113,7 +113,7 @@ public class TypedModelTests
         var media = await _site.Media.DescribeAsync(null);
         var fields = media.Shape.Fields.ToDictionary(f => f.Alias);
 
-        Assert.Equal("cms.media", media.EntityType);
+        Assert.Equal("media", media.EntityType);
         Assert.True(fields["name"].Required);
         Assert.Equal(["name", "altText"], fields.Keys); // the key, version and server-side UpdateDate are not fields
         Assert.Equal(CmsMediaDefinition.CropGroup, Assert.Single(media.Shape.Slots).ItemTypeGroup);
@@ -139,9 +139,9 @@ public class TypedModelTests
     public async Task A_fluently_described_entity_is_created_from_text_like_any_other()
     {
         await _agent.StartChangeSetAsync("Media");
-        var media = (await _agent.OkAsync("entity_create", """{ "entityType": "cms.media", "fields": { "name": "Hero image" } }""")).GetProperty("key").GetGuid();
+        var media = (await _agent.OkAsync("entity_create", """{ "entityType": "media", "fields": { "name": "Hero image" } }""")).GetProperty("key").GetGuid();
         await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "cms.media", "key": "{{media}}", "slotPath": "crops", "itemType": "crop", "fields": { "alias": "wide", "width": 1600, "height": 600 } }
+            { "entityType": "media", "key": "{{media}}", "slotPath": "crops", "itemType": "crop", "fields": { "alias": "wide", "width": 1600, "height": 600 } }
             """);
         await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
 
@@ -154,9 +154,9 @@ public class TypedModelTests
     public async Task Commerce_keeps_its_own_model_and_the_definition_maps_to_it()
     {
         await _agent.StartChangeSetAsync("Sale");
-        var discount = (await _agent.OkAsync("entity_create", """{ "entityType": "commerce.discount", "fields": { "name": "Sale", "endDate": "2026-12-31" } }""")).GetProperty("key").GetGuid();
-        var rule = (await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "commerce.discount", "key": "{{discount}}", "slotPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 50 } }""")).GetProperty("itemKey").GetGuid();
-        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "commerce.discount", "key": "{{discount}}", "slotPath": "rewards", "itemType": "freeShipping" }""");
+        var discount = (await _agent.OkAsync("entity_create", """{ "entityType": "umbraco-commerce-discount", "fields": { "name": "Sale", "endDate": "2026-12-31" } }""")).GetProperty("key").GetGuid();
+        var rule = (await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 50 } }""")).GetProperty("itemKey").GetGuid();
+        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rewards", "itemType": "freeShipping" }""");
         await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
 
         // Stored in Commerce's own shape: a provider alias and string settings, UTC dates.

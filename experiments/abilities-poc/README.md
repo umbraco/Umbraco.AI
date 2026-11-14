@@ -58,14 +58,14 @@ used.
 **Attributes**, for a class the package writes for the purpose (`Samples/Commerce/Commerce.cs`):
 
 ```csharp
-[Entity("commerce.discount", "Discount")]
+[Entity("umbraco-commerce-discount", "Discount")]
 public sealed class DiscountEditModel
 {
     [Key] public Guid Key { get; set; }
     [EntityVersion] public long? Version { get; set; }
     [EntityName, Required] public string? Name { get; set; }
     public DateOnly? EndDate { get; set; }
-    [EntityKey("cms.page")] public Guid? LandingPage { get; set; }
+    [EntityKey("document")] public Guid? LandingPage { get; set; }
     [Slot(RuleGroup, Min = 1)] public List<DiscountRule> Rules { get; set; } = [];
 }
 
@@ -82,7 +82,7 @@ model in another assembly. It needs no base class either: items name their own k
 
 ```csharp
 ModelConfiguration.Configure<MediaRequestModel>(media => media
-    .IsEntity("cms.media", "Media")
+    .IsEntity("media", "Media")
     .HasKey(x => x.Id)
     .HasVersion(x => x.Version)
     .Ignore(x => x.UpdateDate)
@@ -161,6 +161,31 @@ a class to describe, so `CmsDocumentDefinition` and `WorkflowDefinition` impleme
 `BlockItemData`, `BlockPropertyValue`, `BlockGridLayoutItem` and `BlockItemVariation` instead of hand-built
 envelopes, and Umbraco's serializer reads and writes them. Moving to the typed document took it from 621 lines to 599.
 
+## Identity: UDIs
+
+An entity's identity is a UDI, as in Deploy and the CMS: `umb://document/{key}`. Entity types are UDI entity types
+(`document`, `media`, `umbraco-commerce-discount`), and adding a definition registers its type with `UdiParser` unless
+the CMS or a package already has. Change sets key their snapshots, versions and resolutions by UDI, and the CMS draft
+set addresses what it changes by UDI.
+
+Tools still take and return `{ "entityType": "document", "key": "<dashed guid>" }`. A UDI writes its key without
+dashes, and the same key in two forms invites copy errors. They also accept a UDI wherever they take a reference, and
+store it in the field's own form:
+
+| Field | Given | Stored |
+| --- | --- | --- |
+| A reference to one type (`[EntityKey("document")]`) | `"umb://document/3f2a…"` | `"3f2a…-…"`, a dashed key |
+| A reference to one of several types | `"umb://media/3f2a…"` | `{ "entityType": "media", "key": "3f2a…-…" }` |
+| Either, with the wrong type | `"umb://media/3f2a…"` for a document | Refused: "Expected a document, not a media." |
+
+The type names follow each product's Deploy package. Commerce Deploy defines `umbraco-commerce-discount`, but doesn't
+register it or deploy discounts today, so the definition registers it. The sample's collection has no Commerce
+equivalent, and `umbraco-automate-workflow` follows the convention but isn't checked against Automate.
+
+Moving to UDIs found a bug: conflict resolutions were keyed by their own `type:key` string rather than the set's
+shared identity. They matched only by coincidence, and stopped matching once identity changed. There is now one
+identity function.
+
 ## CMS Draft Sets as a participant
 
 The CMS is building Draft Sets for content. It shouldn't depend on Abilities, and Abilities shouldn't keep and replay
@@ -228,7 +253,7 @@ mind.
 
 | # | Must | Why |
 | --- | --- | --- |
-| 1 | Address entities by type plus key (`document`, `media`, …), even if v1 does only documents | Media created in the same set, then other products' entities, without a redesign |
+| 1 | Address entities by UDI (`umb://document/{key}`), even if v1 does only documents | Media created in the same set, then other products' entities, without a redesign |
 | 2 | Record per-property changes (alias, culture, segment) over a base, not whole update models | An update model replaces every value, so it can only overwrite or refuse; per-property changes rebase |
 | 3 | Keep a base version (and base values) per entity from its first change | To show what others changed since, and find conflicts |
 | 4 | Report conflicts in a neutral form: entity, property alias, culture, segment, base, draft and live values | So a coordinator, the backoffice or an agent can show and resolve them |
@@ -272,6 +297,7 @@ drafted without a new API.
 | Each problem is reported once, whether it comes from the structure, an attribute or a domain rule | `Each_problem_is_reported_once_whether_it_comes_from_the_structure_or_an_attribute` |
 | Content changes in a change set are a CMS draft set: the backoffice can read it, it records only what changed, and discarding the set discards it | `CmsDocumentDefinitionTests.Content_changes_in_a_change_set_are_a_CMS_draft_set_that_records_only_what_changed` |
 | The CMS draft set works on its own, with no abilities: stage, read through, conflict, resolve, validate, apply | `A_draft_set_works_on_its_own_with_no_abilities` |
+| Entity types are UDI entity types, package types are registered, and references can be given as UDIs, stored in the field's own form, with the wrong type refused | `UdiTests` |
 | Workflow step types are derived from abilities | `WorkflowTests.Step_types_are_derived_from_abilities` |
 | A workflow graph (edges as item references) is validated, and can refer to a discount created in the same set | `A_workflow_from_text_links_its_steps_and_can_refer_to_a_discount_in_the_same_set` |
 | Names and values vary by culture; invariant values are shared across cultures | `CmsContentTests.Names_and_values_vary_by_culture_while_invariant_values_are_shared` |
@@ -360,7 +386,7 @@ the history (version clean-up removes old ones) needs checking before it can rel
 
 ## Against a real Umbraco
 
-`CmsDocumentDefinition` is a real definition for documents. One entity type, `cms.document`, has a subtype per
+`CmsDocumentDefinition` is a real definition for documents. One entity type, `document`, has a subtype per
 document type. It builds the structure from the document type and its data types (Block List and Block Grid
 configuration, settings element types, areas, variance), loads through `IContentEditingService` in the editor
 format, writes block envelopes with layout, settings, grid areas and expose entries, validates with Umbraco's

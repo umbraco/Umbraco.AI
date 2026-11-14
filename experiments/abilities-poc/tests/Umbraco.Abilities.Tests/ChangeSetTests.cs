@@ -25,35 +25,35 @@ public class ChangeSetTests
         var discount = Guid.NewGuid();
 
         // A page with nested blocks: a card grid holding a card is a slot inside an item.
-        await _agent.OkAsync("entity_create", $$"""{ "entityType": "cms.page", "key": "{{page}}", "culture": "en-US", "fields": { "title": "Black Friday" } }""");
+        await _agent.OkAsync("entity_create", $$"""{ "entityType": "document", "key": "{{page}}", "culture": "en-US", "fields": { "title": "Black Friday" } }""");
         var hero = await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "cms.page", "key": "{{page}}", "slotPath": "blocks", "itemType": "hero", "culture": "en-US", "fields": { "heading": "Black Friday deals" } }
+            { "entityType": "document", "key": "{{page}}", "slotPath": "blocks", "itemType": "hero", "culture": "en-US", "fields": { "heading": "Black Friday deals" } }
             """);
         await _agent.OkAsync("entity_setValue", $$"""
-            { "entityType": "cms.page", "key": "{{page}}", "elementPath": "{{hero.GetProperty("path").GetString()}}/@settings", "field": "theme", "value": "dark" }
+            { "entityType": "document", "key": "{{page}}", "elementPath": "{{hero.GetProperty("path").GetString()}}/@settings", "field": "theme", "value": "dark" }
             """);
         var grid = await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "cms.page", "key": "{{page}}", "slotPath": "blocks", "itemType": "cardGrid" }
+            { "entityType": "document", "key": "{{page}}", "slotPath": "blocks", "itemType": "cardGrid" }
             """);
         await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "cms.page", "key": "{{page}}", "slotPath": "{{grid.GetProperty("path").GetString()}}/cards", "itemType": "card", "fields": { "title": "20% off everything" } }
+            { "entityType": "document", "key": "{{page}}", "slotPath": "{{grid.GetProperty("path").GetString()}}/cards", "itemType": "card", "fields": { "title": "20% off everything" } }
             """);
 
         // A discount pointing at the page created in the same set, using the key the agent chose.
         await _agent.OkAsync("entity_create", $$"""
-            { "entityType": "commerce.discount", "key": "{{discount}}", "fields": { "name": "Black Friday", "landingPage": "{{page}}" } }
+            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fields": { "name": "Black Friday", "landingPage": "{{page}}" } }
             """);
         await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "commerce.discount", "key": "{{discount}}", "slotPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 0 } }
+            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 0 } }
             """);
         await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "commerce.discount", "key": "{{discount}}", "slotPath": "rewards", "itemType": "percentageOff", "fields": { "percent": 20 } }
+            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rewards", "itemType": "percentageOff", "fields": { "percent": 20 } }
             """);
 
         // Activating the discount is a change to it, not a side effect: it shows in the discount's working state
         // before anything is applied, and is saved with the discount in Commerce's step.
         await _agent.OkAsync("commerce_activateDiscount", $$"""{ "discount": "{{discount}}" }""");
-        var working = await _agent.OkAsync("entity_get", $$"""{ "entityType": "commerce.discount", "key": "{{discount}}" }""");
+        var working = await _agent.OkAsync("entity_get", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}" }""");
         Assert.True(working.GetProperty("fields").GetProperty("active").GetBoolean());
 
         // A side effect is kept apart, to run once every change is applied.
@@ -63,7 +63,7 @@ public class ChangeSetTests
         var summary = await _agent.OkAsync("changeSet_summarize", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
         Assert.Equal(2, summary.GetProperty("entities").GetArrayLength());
         Assert.Equal(["email.send"], summary.GetProperty("afterApply").EnumerateArray().Select(a => a.GetString()));
-        Assert.Empty(_site.ContentDatabase.All("cms.page"));
+        Assert.Empty(_site.ContentDatabase.All("document"));
         Assert.Empty(_site.Outbox.Sent);
 
         // The plan says how it will apply: each product in its own transaction, then the side effects.
@@ -84,7 +84,7 @@ public class ChangeSetTests
     public async Task A_failed_step_leaves_earlier_steps_applied_and_applying_again_resumes()
     {
         await _agent.StartChangeSetAsync("Launch");
-        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "cms.page", "culture": "en-US", "fields": { "title": "Launch" } }""")).GetProperty("key").GetGuid();
+        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "culture": "en-US", "fields": { "title": "Launch" } }""")).GetProperty("key").GetGuid();
         await _agent.OkAsync("email_send", """{ "to": "list@example.com", "subject": "We launched" }""");
 
         _site.Outbox.ServerDown = true;
@@ -98,7 +98,7 @@ public class ChangeSetTests
         // The page is applied; the set is kept, and its applied part can no longer be edited in it.
         Assert.Equal(1, (await _site.Pages.LoadAsync(page))!.LiveVersion);
         var locked = await _agent.FailAsync("entity_setValue", $$"""
-            { "entityType": "cms.page", "key": "{{page}}", "elementPath": "", "field": "title", "value": "Changed", "culture": "en-US" }
+            { "entityType": "document", "key": "{{page}}", "elementPath": "", "field": "title", "value": "Changed", "culture": "en-US" }
             """);
         Assert.Contains("already applied", locked.GetProperty("message").GetString());
 
@@ -113,7 +113,7 @@ public class ChangeSetTests
     public async Task A_product_whose_save_fails_rolls_back_all_of_its_changes_and_can_be_fixed_and_resumed()
     {
         await _agent.StartChangeSetAsync("Two discounts");
-        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "cms.page", "culture": "en-US", "fields": { "title": "Deals" } }""")).GetProperty("key").GetGuid();
+        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "culture": "en-US", "fields": { "title": "Deals" } }""")).GetProperty("key").GetGuid();
         var first = await CreateDiscountAsync("First", "DEAL");
         var second = await CreateDiscountAsync("Second", "DEAL"); // passes validation (only live codes are checked), fails on save
 
@@ -127,7 +127,7 @@ public class ChangeSetTests
 
         // Commerce isn't applied, so it can still be fixed in the set; applying again finishes the job.
         await _agent.OkAsync("entity_setValue", $$"""
-            { "entityType": "commerce.discount", "key": "{{second}}", "elementPath": "", "field": "code", "value": "DEAL2" }
+            { "entityType": "umbraco-commerce-discount", "key": "{{second}}", "elementPath": "", "field": "code", "value": "DEAL2" }
             """);
         await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
         Assert.NotNull(await _site.Discounts.LoadAsync(first));
@@ -136,9 +136,9 @@ public class ChangeSetTests
 
     private async Task<Guid> CreateDiscountAsync(string name, string code)
     {
-        var discount = (await _agent.OkAsync("entity_create", $$"""{ "entityType": "commerce.discount", "fields": { "name": "{{name}}", "code": "{{code}}" } }""")).GetProperty("key").GetGuid();
-        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "commerce.discount", "key": "{{discount}}", "slotPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 0 } }""");
-        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "commerce.discount", "key": "{{discount}}", "slotPath": "rewards", "itemType": "freeShipping" }""");
+        var discount = (await _agent.OkAsync("entity_create", $$"""{ "entityType": "umbraco-commerce-discount", "fields": { "name": "{{name}}", "code": "{{code}}" } }""")).GetProperty("key").GetGuid();
+        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 0 } }""");
+        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rewards", "itemType": "freeShipping" }""");
         return discount;
     }
 
@@ -175,13 +175,13 @@ public class ChangeSetTests
 
         var refused = await _agent.FailAsync("changeSet_apply", SetJson());
         var problem = refused.GetProperty("problems")[0];
-        Assert.Equal($"commerce.discount:{discount}/name", problem.GetProperty("path").GetString());
+        Assert.Equal($"umbraco-commerce-discount:{discount}/name", problem.GetProperty("path").GetString());
         Assert.Contains("Renamed in set", problem.GetProperty("message").GetString());
         Assert.Contains("Changed live", problem.GetProperty("message").GetString());
         Assert.True(refused.GetProperty("correctable").GetBoolean());
 
         await _agent.OkAsync("changeSet_resolveConflict", $$"""
-            { "changeSetId": "{{_agent.ChangeSetId}}", "entityType": "commerce.discount", "key": "{{discount}}", "path": "name", "keep": "theirs" }
+            { "changeSetId": "{{_agent.ChangeSetId}}", "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "path": "name", "keep": "theirs" }
             """);
         await _agent.OkAsync("changeSet_apply", SetJson());
         Assert.Equal("Changed live", (await _site.Discounts.LoadModelAsync(discount))!.Name);
@@ -197,7 +197,7 @@ public class ChangeSetTests
         await SaveLiveAsync(discount, d => d.SetName("Changed live"));
 
         await _agent.OkAsync("changeSet_resolveConflict", $$"""
-            { "changeSetId": "{{_agent.ChangeSetId}}", "entityType": "commerce.discount", "key": "{{discount}}", "path": "name", "keep": "yours" }
+            { "changeSetId": "{{_agent.ChangeSetId}}", "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "path": "name", "keep": "yours" }
             """);
         await _agent.OkAsync("changeSet_apply", SetJson());
         Assert.Equal("Renamed in set", (await _site.Discounts.LoadModelAsync(discount))!.Name);
@@ -220,12 +220,12 @@ public class ChangeSetTests
         Assert.Contains($"rules/{rule}", JsonAssert.ProblemPaths(validation));
 
         var keepYours = await _agent.FailAsync("changeSet_resolveConflict", $$"""
-            { "changeSetId": "{{_agent.ChangeSetId}}", "entityType": "commerce.discount", "key": "{{discount}}", "path": "rules/{{rule}}", "keep": "yours" }
+            { "changeSetId": "{{_agent.ChangeSetId}}", "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "path": "rules/{{rule}}", "keep": "yours" }
             """);
         Assert.Contains("removed this item", keepYours.GetProperty("message").GetString());
 
         await _agent.OkAsync("changeSet_resolveConflict", $$"""
-            { "changeSetId": "{{_agent.ChangeSetId}}", "entityType": "commerce.discount", "key": "{{discount}}", "path": "rules/{{rule}}", "keep": "theirs" }
+            { "changeSetId": "{{_agent.ChangeSetId}}", "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "path": "rules/{{rule}}", "keep": "theirs" }
             """);
         await _agent.OkAsync("changeSet_apply", SetJson());
 
@@ -250,16 +250,16 @@ public class ChangeSetTests
     public async Task An_entity_with_version_history_is_rebased_from_its_history_without_a_snapshot()
     {
         await _agent.StartChangeSetAsync("Create");
-        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "cms.page", "culture": "en-US", "fields": { "title": "Launch" } }""")).GetProperty("key").GetGuid();
+        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "culture": "en-US", "fields": { "title": "Launch" } }""")).GetProperty("key").GetGuid();
         await _agent.OkAsync("changeSet_apply", SetJson());
 
         await _agent.StartChangeSetAsync("Edit");
-        await _agent.OkAsync("entity_setValue", $$"""{ "entityType": "cms.page", "key": "{{page}}", "elementPath": "", "field": "title", "value": "Big launch", "culture": "en-US" }""");
+        await _agent.OkAsync("entity_setValue", $$"""{ "entityType": "document", "key": "{{page}}", "elementPath": "", "field": "title", "value": "Big launch", "culture": "en-US" }""");
 
         // Pages keep version history, so the set remembers only the version it started from.
         var set = _site.ChangeSets.Get(_agent.ChangeSetId!.Value);
         Assert.Empty(set.Bases);
-        Assert.Equal(1, set.BaseVersions[$"cms.page:{page}"]);
+        Assert.Equal(1, set.BaseVersions[$"umb://document/{page:N}"]);
 
         // Someone sets the URL segment meanwhile: rebased automatically, both kept.
         var live = (await _site.Pages.LoadModelAsync(page))!;
@@ -276,11 +276,11 @@ public class ChangeSetTests
     public async Task If_the_starting_version_is_gone_from_the_history_the_entity_cant_be_rebased()
     {
         await _agent.StartChangeSetAsync("Create");
-        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "cms.page", "culture": "en-US", "fields": { "title": "Launch" } }""")).GetProperty("key").GetGuid();
+        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "culture": "en-US", "fields": { "title": "Launch" } }""")).GetProperty("key").GetGuid();
         await _agent.OkAsync("changeSet_apply", SetJson());
 
         await _agent.StartChangeSetAsync("Edit");
-        await _agent.OkAsync("entity_setValue", $$"""{ "entityType": "cms.page", "key": "{{page}}", "elementPath": "", "field": "title", "value": "Big launch", "culture": "en-US" }""");
+        await _agent.OkAsync("entity_setValue", $$"""{ "entityType": "document", "key": "{{page}}", "elementPath": "", "field": "title", "value": "Big launch", "culture": "en-US" }""");
 
         var live = (await _site.Pages.LoadAsync(page))!;
         await _site.Pages.SaveAsync(live);
@@ -291,7 +291,7 @@ public class ChangeSetTests
     }
 
     private Task<JsonElement> SetDiscountAsync(Guid discount, string elementPath, string field, string valueJson)
-        => _agent.OkAsync("entity_setValue", $$"""{ "entityType": "commerce.discount", "key": "{{discount}}", "elementPath": "{{elementPath}}", "field": "{{field}}", "value": {{valueJson}} }""");
+        => _agent.OkAsync("entity_setValue", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "elementPath": "{{elementPath}}", "field": "{{field}}", "value": {{valueJson}} }""");
 
     /// <summary>Someone saves the discount in the backoffice, through Commerce's own service.</summary>
     private Task SaveLiveAsync(Guid discount, Action<Discount> change)
@@ -311,14 +311,14 @@ public class ChangeSetTests
 
         var set = await _agent.StartChangeSetAsync("Rename");
         await _agent.OkAsync("entity_setValue", $$"""
-            { "entityType": "commerce.discount", "key": "{{discount}}", "elementPath": "", "field": "name", "value": "Draft name" }
+            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "elementPath": "", "field": "name", "value": "Draft name" }
             """);
-        var inSet = await _agent.OkAsync("entity_get", $$"""{ "entityType": "commerce.discount", "key": "{{discount}}" }""");
+        var inSet = await _agent.OkAsync("entity_get", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}" }""");
         Assert.Equal("Draft name", inSet.GetProperty("fields").GetProperty("name").GetString());
-        Assert.Single((await _agent.OkAsync("entity_find", """{ "entityType": "commerce.discount", "query": "Draft" }""")).EnumerateArray());
+        Assert.Single((await _agent.OkAsync("entity_find", """{ "entityType": "umbraco-commerce-discount", "query": "Draft" }""")).EnumerateArray());
 
         _agent.ChangeSetId = null;
-        var live = await _agent.OkAsync("entity_get", $$"""{ "entityType": "commerce.discount", "key": "{{discount}}" }""");
+        var live = await _agent.OkAsync("entity_get", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}" }""");
         Assert.Equal("Live name", live.GetProperty("fields").GetProperty("name").GetString());
 
         await _agent.OkAsync("changeSet_discard", $$"""{ "changeSetId": "{{set}}" }""");
@@ -329,33 +329,33 @@ public class ChangeSetTests
     public async Task Replaying_a_set_gives_the_same_entity_every_time()
     {
         await _agent.StartChangeSetAsync("Replay");
-        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "cms.page", "culture": "en-US", "fields": { "title": "Replay" } }""")).GetProperty("key").GetGuid();
+        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "culture": "en-US", "fields": { "title": "Replay" } }""")).GetProperty("key").GetGuid();
         var hero = await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "cms.page", "key": "{{page}}", "slotPath": "blocks", "itemType": "hero", "culture": "en-US", "fields": { "heading": "Hi" } }
+            { "entityType": "document", "key": "{{page}}", "slotPath": "blocks", "itemType": "hero", "culture": "en-US", "fields": { "heading": "Hi" } }
             """);
         await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "cms.page", "key": "{{page}}", "slotPath": "blocks", "itemType": "hero", "culture": "en-US", "fields": { "heading": "First" }, "position": 0 }
+            { "entityType": "document", "key": "{{page}}", "slotPath": "blocks", "itemType": "hero", "culture": "en-US", "fields": { "heading": "First" }, "position": 0 }
             """);
         await _agent.OkAsync("entity_moveItem", $$"""
-            { "entityType": "cms.page", "key": "{{page}}", "slotPath": "blocks", "itemKey": "{{hero.GetProperty("itemKey").GetGuid()}}", "position": 0 }
+            { "entityType": "document", "key": "{{page}}", "slotPath": "blocks", "itemKey": "{{hero.GetProperty("itemKey").GetGuid()}}", "position": 0 }
             """);
 
         var set = _site.ChangeSets.Get(_agent.ChangeSetId!.Value);
-        var first = (await _site.ChangeSets.GetWorkingStateAsync(set, "cms.page", page))!.ToJson().ToJsonString();
-        var second = (await _site.ChangeSets.GetWorkingStateAsync(set, "cms.page", page))!.ToJson().ToJsonString();
+        var first = (await _site.ChangeSets.GetWorkingStateAsync(set, "document", page))!.ToJson().ToJsonString();
+        var second = (await _site.ChangeSets.GetWorkingStateAsync(set, "document", page))!.ToJson().ToJsonString();
         Assert.Equal(first, second);
 
         // The key the agent was given is the key that is stored, so later calls can refer to it.
-        var blocks = (await _site.ChangeSets.GetWorkingStateAsync(set, "cms.page", page))!.Root.Slot("blocks");
+        var blocks = (await _site.ChangeSets.GetWorkingStateAsync(set, "document", page))!.Root.Slot("blocks");
         Assert.Equal(hero.GetProperty("itemKey").GetGuid(), blocks[0].Key);
     }
 
     private async Task<Guid> CreateLiveDiscountAsync(string name)
     {
         var set = await _agent.StartChangeSetAsync("Seed");
-        var discount = (await _agent.OkAsync("entity_create", $$"""{ "entityType": "commerce.discount", "fields": { "name": "{{name}}" } }""")).GetProperty("key").GetGuid();
-        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "commerce.discount", "key": "{{discount}}", "slotPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 50 } }""");
-        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "commerce.discount", "key": "{{discount}}", "slotPath": "rewards", "itemType": "freeShipping" }""");
+        var discount = (await _agent.OkAsync("entity_create", $$"""{ "entityType": "umbraco-commerce-discount", "fields": { "name": "{{name}}" } }""")).GetProperty("key").GetGuid();
+        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 50 } }""");
+        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rewards", "itemType": "freeShipping" }""");
         await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{set}}" }""");
         _agent.ChangeSetId = null;
         return discount;

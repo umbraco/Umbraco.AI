@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
+using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Models.ContentEditing;
 using Umbraco.Cms.Core.Models.ContentEditing.Validation;
@@ -40,6 +41,9 @@ public sealed class DraftContent
 
     public bool IsNew => Version is null;
 
+    /// <summary>The document's identity: <c>umb://document/{key}</c>.</summary>
+    public GuidUdi Udi => new(Constants.UdiEntityType.Document, Key);
+
     internal DraftContent Clone() => new()
     {
         Key = Key,
@@ -56,7 +60,7 @@ public sealed class DraftContent
 public sealed record DraftConflict(string Alias, string? Culture, string? Segment, JsonNode? Base, JsonNode? Draft, JsonNode? Live);
 
 /// <summary>A document someone else changed since the draft set started editing it.</summary>
-public sealed record DraftRebase(Guid ContentKey, bool DeletedLive, IReadOnlyList<DraftValue> ChangedSince, IReadOnlyList<DraftConflict> Conflicts);
+public sealed record DraftRebase(GuidUdi Entity, bool DeletedLive, IReadOnlyList<DraftValue> ChangedSince, IReadOnlyList<DraftConflict> Conflicts);
 
 public enum DraftKeep
 {
@@ -72,9 +76,13 @@ public sealed class DraftSet
 
     public bool Applied { get; internal set; }
 
-    public IReadOnlyCollection<Guid> ContentKeys => Entries.Keys;
+    /// <summary>
+    /// What the set changes, by UDI. Entities are addressed by type plus key, so media and other types can join the
+    /// set later without a redesign; this stand-in handles documents.
+    /// </summary>
+    public IReadOnlyCollection<GuidUdi> Entities => Entries.Keys;
 
-    internal Dictionary<Guid, DraftEntry> Entries { get; } = [];
+    internal Dictionary<GuidUdi, DraftEntry> Entries { get; } = [];
 }
 
 internal sealed class DraftEntry
@@ -128,21 +136,21 @@ public sealed class DraftSetService(
     public void StageNew(Guid id, DraftContent content)
     {
         var set = Open(id);
-        set.Entries[content.Key] = new DraftEntry { Created = content.Clone() };
+        set.Entries[content.Udi] = new DraftEntry { Created = content.Clone() };
     }
 
     /// <summary>
     /// Stages changes to existing content: only the values given, compared with the content when the draft set first
     /// changed it. A value set back to what it was is no longer a change.
     /// </summary>
-    public async Task StageChangesAsync(Guid id, Guid key, IEnumerable<DraftValue> values)
+    public async Task StageChangesAsync(Guid id, GuidUdi entity, IEnumerable<DraftValue> values)
     {
         var set = Open(id);
-        if (!set.Entries.TryGetValue(key, out var entry))
+        if (!set.Entries.TryGetValue(entity, out var entry))
         {
-            var live = await GetLiveAsync(key) ?? throw new InvalidOperationException($"No content {key}.");
+            var live = await GetLiveAsync(entity) ?? throw new InvalidOperationException($"No {entity}.");
             entry = new DraftEntry { Base = live };
-            set.Entries[key] = entry;
+            set.Entries[entity] = entry;
         }
 
         if (entry.Created is { } created)
@@ -172,8 +180,9 @@ public sealed class DraftSetService(
     // ── Reading ─────────────────────────────────────────────────────────────────────────────────
 
     /// <summary>The live content in editor format, as the backoffice loads it.</summary>
-    public async Task<DraftContent?> GetLiveAsync(Guid key)
+    public async Task<DraftContent?> GetLiveAsync(GuidUdi entity)
     {
+        var key = DocumentKey(entity);
         var content = await editing.GetAsync(key);
         if (content is null)
         {
@@ -200,12 +209,12 @@ public sealed class DraftSetService(
     }
 
     /// <summary>The content as the draft set would leave it: live with the set's changes over it, or the set's new content.</summary>
-    public async Task<DraftContent?> GetAsync(Guid id, Guid key)
+    public async Task<DraftContent?> GetAsync(Guid id, GuidUdi entity)
     {
         var set = _sets.GetValueOrDefault(id);
-        if (set is null || set.Applied || !set.Entries.TryGetValue(key, out var entry))
+        if (set is null || set.Applied || !set.Entries.TryGetValue(entity, out var entry))
         {
-            return await GetLiveAsync(key);
+            return await GetLiveAsync(entity);
         }
 
         if (entry.Created is { } created)
@@ -213,7 +222,7 @@ public sealed class DraftSetService(
             return created.Clone();
         }
 
-        var live = await GetLiveAsync(key);
+        var live = await GetLiveAsync(entity);
         if (live is null)
         {
             return null;
@@ -272,9 +281,9 @@ public sealed class DraftSetService(
     }
 
     /// <summary>Keeps the draft set's value or the live one for a conflict.</summary>
-    public async Task ResolveAsync(Guid id, Guid key, string alias, string? culture, string? segment, DraftKeep keep)
+    public async Task ResolveAsync(Guid id, GuidUdi entity, string alias, string? culture, string? segment, DraftKeep keep)
     {
-        var entry = Open(id).Entries.GetValueOrDefault(key) ?? throw new InvalidOperationException($"The draft set has no changes to {key}.");
+        var entry = Open(id).Entries.GetValueOrDefault(entity) ?? throw new InvalidOperationException($"The draft set has no changes to {entity}.");
         var change = new DraftValue(alias, culture, segment, null);
         if (keep == DraftKeep.Live)
         {
@@ -282,20 +291,21 @@ public sealed class DraftSetService(
             return;
         }
 
-        entry.KeptOver[change.Id] = ValueIn((await GetLiveAsync(key))!, change)?.DeepClone();
+        entry.KeptOver[change.Id] = ValueIn((await GetLiveAsync(entity))!, change)?.DeepClone();
     }
 
     /// <summary>Umbraco's own validation of every document in the set, as it would be saved.</summary>
-    public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<PropertyValidationError>>> ValidateAsync(Guid id, Guid userKey)
+    public async Task<IReadOnlyDictionary<GuidUdi, IReadOnlyList<PropertyValidationError>>> ValidateAsync(Guid id, Guid userKey)
     {
-        var result = new Dictionary<Guid, IReadOnlyList<PropertyValidationError>>();
-        foreach (var key in Open(id).ContentKeys)
+        var result = new Dictionary<GuidUdi, IReadOnlyList<PropertyValidationError>>();
+        foreach (var entity in Open(id).Entities)
         {
-            var content = (await GetAsync(id, key))!;
+            var content = (await GetAsync(id, entity))!;
+            var key = content.Key;
             var attempt = content.IsNew
                 ? await editing.ValidateCreateAsync(ToCreateModel(content), userKey)
                 : await editing.ValidateUpdateAsync(key, new ValidateContentUpdateModel { Variants = Variants(content), Properties = Properties(content), Cultures = Cultures(content) }, userKey);
-            result[key] = attempt.Result.ValidationErrors.ToList();
+            result[entity] = attempt.Result.ValidationErrors.ToList();
         }
 
         return result;
@@ -311,9 +321,10 @@ public sealed class DraftSetService(
     {
         var set = Open(id);
         using var scope = scopes.CreateCoreScope();
-        foreach (var key in set.ContentKeys)
+        foreach (var entity in set.Entities)
         {
-            var content = (await GetAsync(id, key))!;
+            var content = (await GetAsync(id, entity))!;
+            var key = content.Key;
             ContentEditingOperationStatus status;
             ContentValidationResult validation;
             if (content.IsNew)
@@ -342,6 +353,12 @@ public sealed class DraftSetService(
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────────────────────────────
+
+    /// <summary>This stand-in handles documents; the UDI address leaves room for media and other types.</summary>
+    private static Guid DocumentKey(GuidUdi entity)
+        => entity.EntityType == Constants.UdiEntityType.Document
+            ? entity.Guid
+            : throw new NotSupportedException($"This draft set handles documents, not {entity.EntityType}.");
 
     private DraftSet Open(Guid id)
     {

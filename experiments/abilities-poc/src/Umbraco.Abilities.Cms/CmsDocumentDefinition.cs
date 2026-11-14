@@ -27,7 +27,7 @@ namespace Umbraco.Abilities.Cms;
 /// changes are staged into a CMS draft set (per property) instead of being kept and replayed by the change set, so the
 /// draft set is the source of truth for content and its own rebasing, review and apply are used.
 /// <para>
-/// The real entity definition for CMS documents. One entity type, <c>cms.document</c>, whose subtypes are the
+/// The real entity definition for CMS documents. One entity type, <c>document</c> (the UDI entity type), whose subtypes are the
 /// document types. It reads through <see cref="IContentEditingService"/> in the editor (Management API) format,
 /// maps block editor values to slots and back, validates with Umbraco's own validation, and saves with
 /// <see cref="ContentCreateModel"/> / <see cref="ContentUpdateModel"/>.
@@ -35,7 +35,7 @@ namespace Umbraco.Abilities.Cms;
 /// </summary>
 public sealed class CmsDocumentDefinition : IDraftingEntityDefinition
 {
-    public const string Type = "cms.document";
+    public const string Type = Constants.UdiEntityType.Document;
 
     // A block's settings key, kept on the item so a save reuses it.
     private const string SettingsKeyExtra = "settingsKey";
@@ -106,7 +106,7 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition
     public EntityDocument New(Guid key, string? subtype) => new() { EntityType = Type, Key = key, Subtype = subtype };
 
     public async Task<EntityDocument?> LoadAsync(Guid key, CancellationToken cancellationToken = default)
-        => await _draftSets.GetLiveAsync(key) is { } live ? await ToDocumentAsync(live) : null;
+        => await _draftSets.GetLiveAsync(EntityUdis.For(Type, key)) is { } live ? await ToDocumentAsync(live) : null;
 
     /// <summary>A document in editor format, live or as a draft set would leave it, as an entity document.</summary>
     private async Task<EntityDocument> ToDocumentAsync(DraftContent content)
@@ -215,7 +215,7 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition
         => Task.FromResult(_draftSets.Create(name).Id);
 
     public async Task<EntityDocument?> LoadDraftAsync(Guid draftId, Guid key, CancellationToken cancellationToken = default)
-        => await _draftSets.GetAsync(draftId, key) is { } content ? await ToDocumentAsync(content) : null;
+        => await _draftSets.GetAsync(draftId, EntityUdis.For(Type, key)) is { } content ? await ToDocumentAsync(content) : null;
 
     /// <summary>
     /// Stages an edit. New content is staged whole. For existing content only the values the edit changed are staged,
@@ -259,7 +259,7 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition
         var values = touched.Select(t => t.Alias == DraftSetService.NameAlias
             ? new DraftValue(t.Alias, t.Culture, null, model.Variants.FirstOrDefault(v => v.Culture == t.Culture)?.Name is { } name ? JsonValue.Create(name) : null)
             : model.Values.FirstOrDefault(v => v.Alias == t.Alias && v.Culture == t.Culture && v.Segment == t.Segment) ?? new DraftValue(t.Alias, t.Culture, t.Segment, null));
-        await _draftSets.StageChangesAsync(draftId, after.Key, values);
+        await _draftSets.StageChangesAsync(draftId, EntityUdis.For(Type, after.Key), values);
     }
 
     public async Task<IReadOnlyList<RebasedEntity>> GetRebasedAsync(Guid draftId, CancellationToken cancellationToken = default)
@@ -267,8 +267,8 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition
         var result = new List<RebasedEntity>();
         foreach (var rebase in await _draftSets.GetRebaseAsync(draftId))
         {
-            var live = await LoadAsync(rebase.ContentKey, cancellationToken);
-            var entity = live is not null ? ToRef(live) : new EntityRef(Type, rebase.ContentKey, "(deleted)", EditUrl(rebase.ContentKey));
+            var live = await LoadAsync(rebase.Entity.Guid, cancellationToken);
+            var entity = live is not null ? ToRef(live) : new EntityRef(Type, rebase.Entity.Guid, "(deleted)", EditUrl(rebase.Entity.Guid));
             if (rebase.DeletedLive)
             {
                 result.Add(new RebasedEntity(entity, ["(deleted)"], [new ChangeSetConflict(entity, string.Empty, null, null, null, null, null, null)]));
@@ -287,7 +287,7 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition
     public Task ResolveConflictAsync(Guid draftId, Guid key, string path, VariantId variant, ConflictSide keep, CancellationToken cancellationToken = default)
         => _draftSets.ResolveAsync(
             draftId,
-            key,
+            EntityUdis.For(Type, key),
             path == CmsStructureMapper.NameField ? DraftSetService.NameAlias : path,
             variant.Culture,
             variant.Segment,

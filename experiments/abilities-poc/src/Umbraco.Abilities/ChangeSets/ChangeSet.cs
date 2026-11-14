@@ -8,7 +8,7 @@ namespace Umbraco.Abilities.ChangeSets;
 /// One recorded Write ability call. This replaces the Draft Sets PoC's content-only
 /// <c>DraftSetOperation { Kind, ContentKey, ParentKey, PayloadJson }</c>.
 /// </summary>
-/// <param name="EntityType">Set for entity edits; null for operations run when the set is applied.</param>
+/// <param name="EntityType">Set for a change to an entity; null for a side effect that runs after the set is applied.</param>
 /// <param name="Creates">The call creates the entity, so its working state starts from <see cref="IEntityDefinition.New"/>.</param>
 /// <param name="BaseVersion">The live version the edit was made against, for detecting changes underneath the set.</param>
 public sealed record RecordedCall(
@@ -26,7 +26,14 @@ public sealed class ChangeSet
 
     public required string Name { get; set; }
 
-    public List<RecordedCall> Calls { get; } = [];
+    /// <summary>Changes to entities: reviewable, validated, and saved product by product.</summary>
+    public List<RecordedCall> Changes { get; } = [];
+
+    /// <summary>
+    /// Side effects, such as sending an email: not changes to anything that can be reviewed or undone, so they
+    /// are kept apart and run only once every change is applied.
+    /// </summary>
+    public List<RecordedCall> AfterApply { get; } = [];
 
     /// <summary>The apply steps already done, so a failed apply resumes where it stopped and nothing applies twice.</summary>
     public HashSet<string> AppliedSteps { get; } = [];
@@ -96,12 +103,12 @@ public sealed record EntityProblems(EntityRef Entity, IReadOnlyList<Problem> Pro
 
 public sealed record ChangeSetChange(EntityRef Entity, string Change, int Edits);
 
-/// <summary>One step of applying a set: a product's changes in its own transaction, or one recorded operation.</summary>
+/// <summary>One step of applying a set: a product's changes in its own transaction, or one side effect after them.</summary>
 public sealed record ApplyStep(string Name, string Description, bool Applied);
 
 public sealed record ChangeSetSummary(
     Guid Id,
     string Name,
     IReadOnlyList<ChangeSetChange> Entities,
-    IReadOnlyList<string> OperationsOnApply,
+    IReadOnlyList<string> AfterApply,
     IReadOnlyList<ApplyStep> ApplyPlan);

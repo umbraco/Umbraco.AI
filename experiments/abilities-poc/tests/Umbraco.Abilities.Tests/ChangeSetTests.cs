@@ -14,7 +14,7 @@ public class ChangeSetTests
     public ChangeSetTests() => _agent = new ScriptedAgent(_site);
 
     [Fact]
-    public async Task A_campaign_spanning_content_commerce_and_operations_is_applied_together()
+    public async Task A_campaign_spanning_content_commerce_and_a_side_effect_is_applied_together()
     {
         await _agent.StartChangeSetAsync("Black Friday");
         var page = Guid.NewGuid();
@@ -46,17 +46,24 @@ public class ChangeSetTests
             { "entityType": "commerce.discount", "key": "{{discount}}", "slotPath": "rewards", "itemType": "percentageOff", "fields": { "percent": 20 } }
             """);
 
-        // A plain operation is recorded, not run.
-        var recorded = await _agent.OkAsync("commerce_activateDiscount", $$"""{ "discount": "{{discount}}" }""");
-        Assert.True(recorded.GetProperty("runsWhenApplied").GetBoolean());
+        // Activating the discount is a change to it, not a side effect: it shows in the discount's working state
+        // before anything is applied, and is saved with the discount in Commerce's step.
+        await _agent.OkAsync("commerce_activateDiscount", $$"""{ "discount": "{{discount}}" }""");
+        var working = await _agent.OkAsync("entity_get", $$"""{ "entityType": "commerce.discount", "key": "{{discount}}" }""");
+        Assert.True(working.GetProperty("fields").GetProperty("active").GetBoolean());
+
+        // A side effect is kept apart, to run once every change is applied.
+        var email = await _agent.OkAsync("email_send", """{ "to": "list@example.com", "subject": "Black Friday is live" }""");
+        Assert.True(email.GetProperty("runsAfterApply").GetBoolean());
 
         var summary = await _agent.OkAsync("changeSet_summarize", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
         Assert.Equal(2, summary.GetProperty("entities").GetArrayLength());
-        Assert.Equal("commerce.activateDiscount", summary.GetProperty("operationsOnApply")[0].GetString());
+        Assert.Equal(["email.send"], summary.GetProperty("afterApply").EnumerateArray().Select(a => a.GetString()));
         Assert.Empty(_site.ContentDatabase.All("cms.page"));
+        Assert.Empty(_site.Outbox.Sent);
 
-        // The plan says how it will apply: each product in its own transaction, the switch-on last.
-        Assert.Equal(["Content", "Commerce", "commerce.activateDiscount"], summary.GetProperty("applyPlan").EnumerateArray().Select(s => s.GetProperty("name").GetString()));
+        // The plan says how it will apply: each product in its own transaction, then the side effects.
+        Assert.Equal(["Content", "Commerce", "email.send"], summary.GetProperty("applyPlan").EnumerateArray().Select(s => s.GetProperty("name").GetString()));
 
         await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
 
@@ -66,7 +73,8 @@ public class ChangeSetTests
 
         var liveDiscount = (await _site.Discounts.LoadAsync(discount))!;
         Assert.Equal(page.ToString(), Element.Fields(liveDiscount.Root)["landingPage"]!.GetValue<string>());
-        Assert.True(Element.Fields(liveDiscount.Root)["active"]!.GetValue<bool>()); // the recorded operation ran after the saves
+        Assert.True(Element.Fields(liveDiscount.Root)["active"]!.GetValue<bool>()); // saved as part of the discount
+        Assert.Single(_site.Outbox.Sent); // the side effect ran after the changes
     }
 
     [Fact]
@@ -81,7 +89,7 @@ public class ChangeSetTests
         Assert.Equal("Runtime", failure.GetProperty("category").GetString());
         Assert.Contains("Partly applied", failure.GetProperty("message").GetString());
         Assert.Equal(
-            ["Content: Applied.", "email.send: Failed and rolled back: The mail server is not responding."],
+            ["Content: Applied.", "email.send: Failed: The mail server is not responding."],
             failure.GetProperty("problems").EnumerateArray().Select(p => $"{p.GetProperty("path").GetString()}: {p.GetProperty("message").GetString()}"));
 
         // The page is applied; the set is kept, and its applied part can no longer be edited in it.

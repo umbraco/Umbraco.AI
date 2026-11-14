@@ -46,7 +46,7 @@ Each design layer and where it lives:
 | Bad edits are correctable Input failures with a path; edits never run outside a set | `Bad_edits_are_correctable_input_failures_with_paths` |
 | A third party's item type is creatable with no change to Commerce or the AI adapter | `A_third_party_rule_type_is_creatable_with_no_change_to_commerce` |
 | Every ability becomes an AI tool; only irreversible Writes are wrapped for approval | `Every_ability_is_an_AI_tool_and_only_irreversible_writes_need_approval` |
-| One set holds a page with nested blocks, a discount referring to that new page, and a recorded operation, all applied together | `ChangeSetTests.A_campaign_spanning_content_commerce_and_operations_is_applied_together` |
+| One set holds a page with nested blocks, a discount referring to that new page and switched on, and an email to send afterwards; activating the discount is a change shown in its working state, the email runs after every change | `ChangeSetTests.A_campaign_spanning_content_commerce_and_a_side_effect_is_applied_together` |
 | A failed step leaves earlier products' changes applied; applying again resumes at the failed step and applies nothing twice | `A_failed_step_leaves_earlier_steps_applied_and_applying_again_resumes` |
 | A product whose save fails rolls back all of its changes in the set, which can then be fixed and resumed | `A_product_whose_save_fails_rolls_back_all_of_its_changes_and_can_be_fixed_and_resumed` |
 | Apply is refused if live data changed under the set | `Applying_is_refused_when_live_data_changed_underneath_the_set` |
@@ -71,7 +71,7 @@ These feed back into the design doc.
    approval belongs on `changeSet.apply`. M.E.AI's `ApprovalRequiredAIFunction` wraps a tool once, so the
    adapter can't express "only outside a set". The contract needs approval decided per call, from the
    context.
-2. **Recorded operations are not checked when recorded.** An `email.send` with a bad recipient is
+2. **Side effects are not checked when recorded.** An `email.send` with a bad recipient is
    accepted into the set and only fails at apply. Abilities need an optional "check this input without
    running it" hook, so a set can be validated fully before anyone approves it.
 3. **Every read must be draft-aware.** `entity.find` first missed an existing entity renamed in the set.
@@ -94,13 +94,22 @@ work, and applying a set runs in steps:
 
 1. **One step per product**, in the order the set first touched them: all of that product's changes save
    in its own transaction, so they apply all or nothing.
-2. **Recorded operations last**, one step each, so switching something on (`commerce.activateDiscount`)
-   happens after it is saved.
+2. **Side effects last**, one step each, once every change is applied.
 
-Progress is kept on the set after each step. If a step fails, it rolls back, earlier steps stay applied, and
-the set is kept. Its applied products can't be edited in it any more, the rest can be fixed, and applying
-again resumes at the failed step without applying anything twice. `changeSet.summarize` lists the plan (each
-product, then each operation) so a person sees before approving which parts are all or nothing.
+A change set holds two kinds of thing, kept apart:
+
+- **Changes** to entities, which can be reviewed, validated and saved per product. Generic edits are changes,
+  and so is a product ability that changes an entity, if it says which entity it edits and how
+  (`IEntityEditAbility`). `commerce.activateDiscount` does: inside a set it is recorded as a change to the
+  discount and shows in its working state; run directly, it saves the discount as before.
+- **Side effects**, such as `email.send`: any other Write ability. They change nothing that can be reviewed or
+  undone, so they are listed separately as "after apply" and run only after every change is applied.
+
+Progress is kept on the set after each step. If a product's step fails, it rolls back; if a side effect fails,
+there is nothing to roll back. Either way earlier steps stay applied and the set is kept. Its applied products
+can't be edited in it any more, the rest can be fixed, and applying again resumes at the failed step without
+applying anything twice. `changeSet.summarize` lists the changes, the side effects and the plan, so a person
+sees before approving which parts are all or nothing and what runs afterwards.
 
 ## Against a real Umbraco
 
@@ -118,7 +127,7 @@ inside one Umbraco scope.
 | Umbraco's validation errors come back on the entity paths and cultures, and the generic check agrees with Umbraco | `Umbraco_validation_problems_come_back_on_the_entity_paths_and_cultures` |
 | Editing an existing page keeps what the edit didn't touch (other cultures, settings, the grid) | `Editing_an_existing_page_keeps_everything_the_edit_did_not_touch` |
 | A page refused on save (by a notification handler) rolls back the page saved before it in the same Umbraco scope | `A_failed_save_rolls_back_every_document_in_the_Umbraco_scope` |
-| A recorded operation failing after Content's step leaves the content applied, and resuming doesn't save it again | `A_failed_operation_after_the_content_leaves_the_content_applied_and_the_set_resumable` |
+| A side effect failing after Content's step leaves the content applied, and resuming doesn't save it again | `A_failed_side_effect_after_the_content_leaves_the_content_applied_and_the_set_resumable` |
 | Apply is refused when the page was saved in Umbraco after being edited in the set | `Applying_is_refused_when_the_page_changed_in_Umbraco_after_it_was_edited_in_the_set` |
 
 What running against Umbraco taught us:

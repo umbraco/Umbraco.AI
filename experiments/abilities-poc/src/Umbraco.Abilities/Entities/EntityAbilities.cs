@@ -146,7 +146,7 @@ public sealed class FindEntityAbility(EntityDefinitionRegistry definitions, Chan
         {
             // Entities the set touches are matched on their working state, not their live name.
             var set = changeSets.Get(setId);
-            var touched = set.Calls.Where(c => c.EntityType == input.EntityType).Select(c => c.EntityKey!.Value).Distinct().ToList();
+            var touched = set.Changes.Where(c => c.EntityType == input.EntityType).Select(c => c.EntityKey!.Value).Distinct().ToList();
             found.RemoveAll(r => touched.Contains(r.Key));
 
             foreach (var key in touched)

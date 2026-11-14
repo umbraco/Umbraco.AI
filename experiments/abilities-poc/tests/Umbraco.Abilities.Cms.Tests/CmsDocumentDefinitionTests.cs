@@ -286,7 +286,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
     }
 
     [Test]
-    public async Task A_failed_operation_after_the_content_leaves_the_content_applied_and_the_set_resumable()
+    public async Task A_failed_side_effect_after_the_content_leaves_the_content_applied_and_the_set_resumable()
     {
         await _agent.StartChangeSetAsync("Content, then an operation");
         var page = await BuildSummerPageAsync();

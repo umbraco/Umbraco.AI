@@ -11,7 +11,7 @@ namespace Umbraco.Abilities.ChangeSets;
 /// <see cref="IEntityDefinition.LoadAsync"/> plus the recorded edits, so it works for any entity type.
 /// <para>
 /// Applying is atomic per product, not across products: each product's changes save in that product's own
-/// transaction, one product after another, and recorded operations (such as switching a discount on) run last.
+/// transaction, one product after another, and side effects (such as sending an email) run last.
 /// If a step fails, the steps before it stay applied, the set is kept, and applying again resumes from the
 /// failed step.
 /// </para>
@@ -43,10 +43,15 @@ public sealed class ChangeSetService(
 
             if (ability is not IEntityEditAbility edit)
             {
-                // A plain operation (send an email, activate a discount): run when the set is applied.
-                set.Calls.Add(new RecordedCall(ability.Descriptor.Id, recorded, null, null, false, null));
+                // A side effect (send an email, call another system): not a change, so it runs after the set is applied.
+                set.AfterApply.Add(new RecordedCall(ability.Descriptor.Id, recorded, null, null, false, null));
                 store.Save(set);
-                return AbilityResult.Ok(new { recorded = true, runsWhenApplied = true });
+                return AbilityResult.Ok(new
+                {
+                    recorded = true,
+                    runsAfterApply = true,
+                    note = "This is a side effect, not a change: it runs once every change in the set is applied, and can't be undone.",
+                });
             }
 
             var target = edit.Prepare(recorded);
@@ -90,7 +95,7 @@ public sealed class ChangeSetService(
             var structure = await definition.DescribeAsync(working.Subtype, cancellationToken);
             var output = edit.Apply(working, recorded, new EntityEditContext(definition, structure, itemTypes));
 
-            set.Calls.Add(new RecordedCall(ability.Descriptor.Id, recorded, target.EntityType, target.EntityKey, target.Creates, working.LiveVersion, working.Subtype));
+            set.Changes.Add(new RecordedCall(ability.Descriptor.Id, recorded, target.EntityType, target.EntityKey, target.Creates, working.LiveVersion, working.Subtype));
             store.Save(set);
             return AbilityResult.Ok(output);
         }
@@ -108,7 +113,7 @@ public sealed class ChangeSetService(
     public async Task<EntityDocument?> GetWorkingStateAsync(ChangeSet set, string entityType, Guid key, CancellationToken cancellationToken = default)
     {
         var definition = definitions.Get(entityType);
-        var calls = set.Calls.Where(c => c.EntityType == entityType && c.EntityKey == key).ToList();
+        var calls = set.Changes.Where(c => c.EntityType == entityType && c.EntityKey == key).ToList();
 
         var document = calls.FirstOrDefault() is { Creates: true } create
             ? definition.New(key, create.Subtype)
@@ -161,13 +166,13 @@ public sealed class ChangeSetService(
         foreach (var (entityType, key) in TouchedEntities(set))
         {
             var document = (await GetWorkingStateAsync(set, entityType, key, cancellationToken))!;
-            var calls = set.Calls.Where(c => c.EntityType == entityType && c.EntityKey == key).ToList();
+            var calls = set.Changes.Where(c => c.EntityType == entityType && c.EntityKey == key).ToList();
             changes.Add(new ChangeSetChange(definitions.Get(entityType).ToRef(document), calls[0].Creates ? "created" : "updated", calls.Count));
         }
 
-        var operations = set.Calls.Where(c => c.EntityType is null).Select(c => c.AbilityId).ToList();
+        var afterApply = set.AfterApply.Select(c => c.AbilityId).ToList();
         var plan = Plan(set).Select(s => new ApplyStep(s.Name, s.Description, set.AppliedSteps.Contains(s.Key))).ToList();
-        return new ChangeSetSummary(set.Id, set.Name, changes, operations, plan);
+        return new ChangeSetSummary(set.Id, set.Name, changes, afterApply, plan);
     }
 
     /// <summary>
@@ -197,7 +202,7 @@ public sealed class ChangeSetService(
         var conflicts = new List<Problem>();
         foreach (var (entityType, key) in PendingEntities(set))
         {
-            var first = set.Calls.First(c => c.EntityType == entityType && c.EntityKey == key);
+            var first = set.Changes.First(c => c.EntityType == entityType && c.EntityKey == key);
             if (first.Creates)
             {
                 continue;
@@ -262,8 +267,10 @@ public sealed class ChangeSetService(
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                failure = $"{step.Name} failed and was rolled back: {ex.Message}";
-                steps.Add(new Problem(step.Name, $"Failed and rolled back: {ex.Message}"));
+                // A product's changes roll back with its transaction; a side effect has nothing to roll back.
+                var outcome = step.UnitOfWork is not null ? "failed and was rolled back" : "failed";
+                failure = $"{step.Name} {outcome}: {ex.Message}";
+                steps.Add(new Problem(step.Name, $"{char.ToUpperInvariant(outcome[0])}{outcome[1..]}: {ex.Message}"));
             }
         }
 
@@ -284,7 +291,7 @@ public sealed class ChangeSetService(
 
     /// <summary>
     /// The steps of applying a set: one per product transaction, in the order the set first touched them, then each
-    /// recorded operation in the order it was recorded, so that switching things on comes after saving them.
+    /// side effect in the order it was recorded, once every change is saved.
     /// </summary>
     private IReadOnlyList<PlannedStep> Plan(ChangeSet set)
     {
@@ -299,9 +306,8 @@ public sealed class ChangeSetService(
                 null))
             .ToList();
 
-        var operations = set.Calls.Select((call, index) => (call, index)).Where(c => c.call.EntityType is null);
-        steps.AddRange(operations.Select(o => new PlannedStep(
-            $"operation:{o.index}", o.call.AbilityId, "Runs after the changes are saved.", null, [], o.call)));
+        steps.AddRange(set.AfterApply.Select((call, index) => new PlannedStep(
+            $"after:{index}", call.AbilityId, "Side effect: runs after every change is applied, and can't be undone.", null, [], call)));
         return steps;
     }
 
@@ -321,7 +327,7 @@ public sealed class ChangeSetService(
         => definitions.Find(entityType) is not null && await GetWorkingStateAsync(set, entityType, key, cancellationToken) is not null;
 
     private static IEnumerable<(string EntityType, Guid Key)> TouchedEntities(ChangeSet set)
-        => set.Calls.Where(c => c.EntityType is not null).Select(c => (c.EntityType!, c.EntityKey!.Value)).Distinct();
+        => set.Changes.Select(c => (c.EntityType!, c.EntityKey!.Value)).Distinct();
 
     private sealed class ChangeSetApplyException(string message) : Exception(message);
 }

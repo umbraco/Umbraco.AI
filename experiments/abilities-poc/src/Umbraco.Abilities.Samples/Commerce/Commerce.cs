@@ -1,6 +1,8 @@
 using System.ComponentModel;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
+using Umbraco.Abilities.ChangeSets;
 using Umbraco.Abilities.Entities;
 using Umbraco.Abilities.Samples.Cms;
 
@@ -112,11 +114,28 @@ public sealed class DiscountDefinition(InMemoryDatabase database)
 public sealed record ActivateDiscountInput(
     [property: Description("The discount to switch on."), EntityKey("commerce.discount")] Guid Discount);
 
-/// <summary>A plain operation ability. Inside a change set it is recorded and runs when the set is applied.</summary>
+/// <summary>
+/// A product ability that changes an entity. Run directly, it saves the discount. Inside a change set it says which
+/// entity it edits and how, so it is recorded as a change to the discount: shown in its working state, validated,
+/// and saved in Commerce's step, rather than run as a side effect afterwards.
+/// </summary>
 [Ability("commerce.activateDiscount", "Activate discount", Kind = AbilityKind.Write,
     Description = "Switches a discount on so customers get it.")]
-public sealed class ActivateDiscountAbility(DiscountDefinition discounts) : AbilityBase<ActivateDiscountInput, EntityRef>
+public sealed class ActivateDiscountAbility(DiscountDefinition discounts) : AbilityBase<ActivateDiscountInput, EntityRef>, IEntityEditAbility
 {
+    public EntityEditTarget Prepare(JsonObject input)
+    {
+        var typed = input.Deserialize<ActivateDiscountInput>(AbilityJson.Options)
+            ?? throw new AbilityInputException("Input is required.");
+        return new EntityEditTarget(discounts.EntityType, typed.Discount, Creates: false);
+    }
+
+    public object? Apply(EntityDocument document, JsonObject input, EntityEditContext context)
+    {
+        Element.Fields(document.Root)["active"] = true;
+        return context.Definition.ToRef(document);
+    }
+
     protected override async Task<AbilityResult> ExecuteAsync(ActivateDiscountInput input, AbilityContext context, CancellationToken cancellationToken)
     {
         var discount = await discounts.LoadAsync(input.Discount, cancellationToken)

@@ -3,6 +3,7 @@ using Umbraco.Abilities.Entities.Models;
 using Umbraco.Abilities.Samples;
 using Umbraco.Abilities.Samples.Cms;
 using Umbraco.Abilities.Samples.Commerce;
+using Umbraco.Abilities.Samples.Commerce.Domain;
 
 namespace Umbraco.Abilities.Tests;
 
@@ -10,6 +11,9 @@ namespace Umbraco.Abilities.Tests;
 public class TypedModelTests
 {
     private readonly SampleSite _site = SampleSite.Create();
+    private readonly ScriptedAgent _agent;
+
+    public TypedModelTests() => _agent = new ScriptedAgent(_site);
 
     [Fact]
     public async Task The_structure_comes_from_the_model_class_and_its_attributes()
@@ -81,7 +85,7 @@ public class TypedModelTests
     [Fact]
     public async Task Each_problem_is_reported_once_whether_it_comes_from_the_structure_or_an_attribute()
     {
-        var discount = new Discount
+        var discount = new DiscountEditModel
         {
             Key = Guid.NewGuid(),
             Rules = [new OrderTotalRule()],
@@ -101,5 +105,70 @@ public class TypedModelTests
         Assert.Equal(
             ["endDate", "name", $"rewards/{discount.Rewards[0].Key}/percent", $"rules/{discount.Rules[0].Key}/minTotal"],
             problems.Select(p => p.Path).Order());
+    }
+
+    [Fact]
+    public async Task A_class_with_no_attributes_or_base_class_is_described_fluently()
+    {
+        var media = await _site.Media.DescribeAsync(null);
+        var fields = media.Shape.Fields.ToDictionary(f => f.Alias);
+
+        Assert.Equal("cms.media", media.EntityType);
+        Assert.True(fields["name"].Required);
+        Assert.Equal(["name", "altText"], fields.Keys); // the key, version and server-side UpdateDate are not fields
+        Assert.Equal(CmsMediaDefinition.CropGroup, Assert.Single(media.Shape.Slots).ItemTypeGroup);
+
+        var crop = _site.ItemTypes.Find(CmsMediaDefinition.CropGroup, "crop")!;
+        Assert.Equal(typeof(MediaCropRequestModel), crop.ClrType);
+        Assert.All(crop.Shape.Fields, f => Assert.True(f.Required));
+
+        // Items keep their own key property and get a path without deriving from EntityItemModel.
+        var request = new MediaRequestModel { Id = Guid.NewGuid(), Name = "Hero", Crops = [new MediaCropRequestModel { Alias = "wide", Width = 0, Height = 600 }] };
+        var copy = _site.Media.ToModel(_site.Media.ToDocument(request));
+        var key = request.Crops[0].Id;
+        Assert.NotEqual(Guid.Empty, key);
+        Assert.Equal(key, copy.Crops[0].Id);
+        Assert.Equal($"crops/{key}", ModelShapes.PathOf(copy.Crops[0]));
+
+        // A fluent rule is reported on the item's path, like an attribute.
+        var problems = await _site.Media.ValidateAsync(_site.Media.ToDocument(copy));
+        Assert.Equal([$"crops/{key}/width"], problems.Select(p => p.Path));
+    }
+
+    [Fact]
+    public async Task A_fluently_described_entity_is_created_from_text_like_any_other()
+    {
+        await _agent.StartChangeSetAsync("Media");
+        var media = (await _agent.OkAsync("entity_create", """{ "entityType": "cms.media", "fields": { "name": "Hero image" } }""")).GetProperty("key").GetGuid();
+        await _agent.OkAsync("entity_addItem", $$"""
+            { "entityType": "cms.media", "key": "{{media}}", "slotPath": "crops", "itemType": "crop", "fields": { "alias": "wide", "width": 1600, "height": 600 } }
+            """);
+        await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
+
+        var live = (await _site.Media.LoadModelAsync(media))!;
+        Assert.Equal("Hero image", live.Name);
+        Assert.Equal(1600, Assert.Single(live.Crops).Width);
+    }
+
+    [Fact]
+    public async Task Commerce_keeps_its_own_model_and_the_definition_maps_to_it()
+    {
+        await _agent.StartChangeSetAsync("Sale");
+        var discount = (await _agent.OkAsync("entity_create", """{ "entityType": "commerce.discount", "fields": { "name": "Sale", "endDate": "2026-12-31" } }""")).GetProperty("key").GetGuid();
+        var rule = (await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "commerce.discount", "key": "{{discount}}", "slotPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 50 } }""")).GetProperty("itemKey").GetGuid();
+        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "commerce.discount", "key": "{{discount}}", "slotPath": "rewards", "itemType": "freeShipping" }""");
+        await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
+
+        // Stored in Commerce's own shape: a provider alias and string settings, UTC dates.
+        var stored = _site.DiscountService.GetDiscount(discount)!;
+        Assert.Equal(new DateTime(2026, 12, 31, 0, 0, 0, DateTimeKind.Utc), stored.ExpiryDate);
+        Assert.Equal("orderTotal", stored.Rules[0].RuleProviderAlias);
+        Assert.Equal("50", stored.Rules[0].Settings["MinTotal"]);
+
+        // Commerce's rules have no ids, so keys are derived: stable across loads, but not the key the agent was given.
+        var first = (await _site.Discounts.LoadModelAsync(discount))!.Rules[0].Key;
+        var second = (await _site.Discounts.LoadModelAsync(discount))!.Rules[0].Key;
+        Assert.Equal(first, second);
+        Assert.NotEqual(rule, first);
     }
 }

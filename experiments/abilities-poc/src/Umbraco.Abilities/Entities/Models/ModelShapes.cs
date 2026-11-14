@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Schema;
@@ -10,7 +11,7 @@ using System.Text.Json.Serialization;
 
 namespace Umbraco.Abilities.Entities.Models;
 
-internal sealed record FieldMember(PropertyInfo Property, FieldDefinition Field, bool Varying, Type ValueType);
+internal sealed record FieldMember(PropertyInfo Property, FieldDefinition Field, bool Varying, Type ValueType, IReadOnlyList<ValidationAttribute> Rules);
 
 internal sealed record SlotMember(PropertyInfo Property, SlotDefinition Slot, bool Varying, Type ListType);
 
@@ -23,7 +24,9 @@ internal sealed record ModelInfo(
     PropertyInfo? Version,
     PropertyInfo? Settings,
     PropertyInfo? Layout,
-    Variation Variations);
+    Variation Variations,
+    (string EntityType, string Name, string Description)? Entity,
+    (string Alias, string Name, string Description)? ItemType);
 
 /// <summary>
 /// Everything the framework works out from a model class, so package developers don't write it: the structure
@@ -34,69 +37,77 @@ public static class ModelShapes
 {
     private static readonly ConcurrentDictionary<Type, ModelInfo> Cache = new();
 
+    // Where each item read from a document sits, for problem paths on items that don't derive from EntityItemModel.
+    private static readonly ConditionalWeakTable<object, string> Paths = [];
+
     /// <summary>The structure of a model class.</summary>
     public static ElementShape ShapeOf(Type type) => Info(type).Shape;
 
     internal static ModelInfo Info(Type type) => Cache.GetOrAdd(type, Build);
 
+    internal static void Forget(Type type) => Cache.TryRemove(type, out _);
+
+    /// <summary>Where an item read from a document sits, e.g. <c>"rewards/{key}"</c>; empty for an item not read from one.</summary>
+    public static string PathOf(object item) => Paths.TryGetValue(item, out var path) ? path : string.Empty;
+
+    /// <summary>The key of an item model, by its configured key property.</summary>
+    public static Guid KeyOf(object item)
+        => Info(item.GetType()).Key?.GetValue(item) is Guid key ? key : throw new InvalidOperationException($"{item.GetType().Name} has no key property.");
+
     // ── Describing ───────────────────────────────────────────────────────────────────────────────────
 
     private static ModelInfo Build(Type type)
     {
+        var typeConfig = ModelConfiguration.Find(type);
         var fields = new List<FieldMember>();
         var slots = new List<SlotMember>();
         PropertyInfo? key = null, name = null, version = null, settings = null, layout = null;
 
         foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
         {
-            if (!property.CanRead || !property.CanWrite || property.DeclaringType == typeof(EntityItemModel) || property.IsDefined(typeof(JsonIgnoreAttribute)))
+            if (!property.CanRead || !property.CanWrite)
             {
                 continue;
             }
 
-            if (property.IsDefined(typeof(KeyAttribute)))
+            var config = Merge(FromAttributes(property), typeConfig?.Properties.GetValueOrDefault(property.Name));
+            switch (config.Role)
             {
-                key = property;
-                continue;
+                case PropertyRole.Ignored:
+                    continue;
+                case PropertyRole.Key:
+                    key = property;
+                    continue;
+                case PropertyRole.Version:
+                    version = property;
+                    continue;
+                case PropertyRole.Settings:
+                    settings = property;
+                    continue;
+                case PropertyRole.Layout:
+                    layout = property;
+                    continue;
             }
 
-            if (property.IsDefined(typeof(EntityVersionAttribute)))
-            {
-                version = property;
-                continue;
-            }
-
-            if (property.IsDefined(typeof(ItemSettingsAttribute)))
-            {
-                settings = property;
-                continue;
-            }
-
-            if (property.IsDefined(typeof(ItemLayoutAttribute)))
-            {
-                layout = property;
-                continue;
-            }
-
-            var alias = AliasOf(property);
-            var description = property.GetCustomAttribute<DescriptionAttribute>()?.Description ?? string.Empty;
+            var alias = config.Alias ?? AliasOf(property);
+            var description = config.Description ?? string.Empty;
             var (varying, valueType) = Unwrap(property.PropertyType);
-            var variations = varying ? property.GetCustomAttribute<VariationsAttribute>()?.Variations ?? Variation.Culture : Variation.Invariant;
+            var variations = varying ? config.Variations ?? Variation.Culture : Variation.Invariant;
 
-            if (property.GetCustomAttribute<SlotAttribute>() is { } slotAttribute)
+            if (config.Role == PropertyRole.Slot)
             {
-                slots.Add(new SlotMember(property, new SlotDefinition(alias, description, slotAttribute.ItemTypeGroup)
+                slots.Add(new SlotMember(property, new SlotDefinition(alias, description, config.SlotGroup!)
                 {
-                    Min = slotAttribute.Min >= 0 ? slotAttribute.Min : null,
-                    Max = slotAttribute.Max >= 0 ? slotAttribute.Max : null,
+                    Min = config.Min,
+                    Max = config.Max,
                     Variations = variations,
-                    ItemLayout = slotAttribute.Layout is { } layoutType ? ShapeOf(layoutType) : null,
+                    ItemLayout = config.Layout is { } layoutType ? ShapeOf(layoutType) : null,
                 }, varying, valueType));
                 continue;
             }
 
-            fields.Add(new FieldMember(property, FieldFor(property, alias, description, valueType) with { Variations = variations }, varying, valueType));
-            if (property.IsDefined(typeof(EntityNameAttribute)))
+            fields.Add(new FieldMember(property, FieldFor(config, alias, description, valueType) with { Variations = variations }, varying, valueType, config.Rules));
+            if (config.IsName)
             {
                 name = property;
             }
@@ -104,17 +115,83 @@ public static class ModelShapes
 
         var all = fields.Select(f => f.Field.Variations).Concat(slots.Select(s => s.Slot.Variations));
         var entityVariations = all.Any(v => v.VariesByCulture()) ? Variation.Culture : Variation.Invariant;
+        var entity = typeConfig?.Entity ?? (type.GetCustomAttribute<EntityAttribute>() is { } e ? (e.EntityType, e.Name, e.Description) : null);
+        var itemType = typeConfig?.ItemType ?? (type.GetCustomAttribute<ItemTypeAttribute>() is { } i ? (i.Alias, i.Name, i.Description) : null);
         return new ModelInfo(
             new ElementShape(fields.Select(f => f.Field).ToList(), slots.Select(s => s.Slot).ToList()),
-            fields, slots, key, name, version, settings, layout, entityVariations);
+            fields, slots, key, name, version, settings, layout, entityVariations, entity, itemType);
     }
 
-    private static FieldDefinition FieldFor(PropertyInfo property, string alias, string description, Type valueType)
+    /// <summary>What a property's attributes say, as configuration.</summary>
+    private static PropertyConfig FromAttributes(PropertyInfo property)
     {
-        var required = property.IsDefined(typeof(RequiredAttribute));
-        var references = property.GetCustomAttribute<EntityKeyAttribute>()?.EntityTypes;
-        var allowed = property.GetCustomAttribute<AllowedValuesAttribute>()?.Values.Select(v => v?.ToString() ?? string.Empty).ToList();
-        var itemReference = property.GetCustomAttribute<ItemReferenceAttribute>()?.Slot;
+        var config = new PropertyConfig
+        {
+            Role = property.IsDefined(typeof(JsonIgnoreAttribute)) ? PropertyRole.Ignored
+                : property.DeclaringType == typeof(EntityItemModel) && property.Name == nameof(EntityItemModel.Key) ? PropertyRole.Key
+                : property.DeclaringType == typeof(EntityItemModel) ? PropertyRole.Ignored
+                : property.IsDefined(typeof(KeyAttribute)) ? PropertyRole.Key
+                : property.IsDefined(typeof(EntityVersionAttribute)) ? PropertyRole.Version
+                : property.IsDefined(typeof(ItemSettingsAttribute)) ? PropertyRole.Settings
+                : property.IsDefined(typeof(ItemLayoutAttribute)) ? PropertyRole.Layout
+                : property.IsDefined(typeof(SlotAttribute)) ? PropertyRole.Slot
+                : null,
+            Description = property.GetCustomAttribute<DescriptionAttribute>()?.Description,
+            Required = property.IsDefined(typeof(RequiredAttribute)) ? true : null,
+            IsName = property.IsDefined(typeof(EntityNameAttribute)),
+            Allowed = property.GetCustomAttribute<AllowedValuesAttribute>()?.Values.Select(v => v?.ToString() ?? string.Empty).ToList(),
+            References = property.GetCustomAttribute<EntityKeyAttribute>()?.EntityTypes,
+            ItemReferenceSlot = property.GetCustomAttribute<ItemReferenceAttribute>()?.Slot,
+            Variations = property.GetCustomAttribute<VariationsAttribute>()?.Variations,
+        };
+
+        if (property.GetCustomAttribute<SlotAttribute>() is { } slot)
+        {
+            config.SlotGroup = slot.ItemTypeGroup;
+            config.Min = slot.Min >= 0 ? slot.Min : null;
+            config.Max = slot.Max >= 0 ? slot.Max : null;
+            config.Layout = slot.Layout;
+        }
+
+        // [Required] and [AllowedValues] are part of the structure, which the generic validator checks per variant.
+        config.Rules.AddRange(property.GetCustomAttributes<ValidationAttribute>().Where(a => a is not RequiredAttribute and not AllowedValuesAttribute));
+        return config;
+    }
+
+    /// <summary>Attribute configuration with fluent configuration laid over it.</summary>
+    private static PropertyConfig Merge(PropertyConfig attributes, PropertyConfig? fluent)
+    {
+        if (fluent is null)
+        {
+            return attributes;
+        }
+
+        var merged = new PropertyConfig
+        {
+            Role = fluent.Role ?? attributes.Role,
+            Alias = fluent.Alias ?? attributes.Alias,
+            Description = fluent.Description ?? attributes.Description,
+            Required = fluent.Required ?? attributes.Required,
+            IsName = fluent.IsName || attributes.IsName,
+            Allowed = fluent.Allowed ?? attributes.Allowed,
+            References = fluent.References ?? attributes.References,
+            ItemReferenceSlot = fluent.ItemReferenceSlot ?? attributes.ItemReferenceSlot,
+            Variations = fluent.Variations ?? attributes.Variations,
+            SlotGroup = fluent.SlotGroup ?? attributes.SlotGroup,
+            Min = fluent.Min ?? attributes.Min,
+            Max = fluent.Max ?? attributes.Max,
+            Layout = fluent.Layout ?? attributes.Layout,
+        };
+        merged.Rules.AddRange(attributes.Rules.Concat(fluent.Rules));
+        return merged;
+    }
+
+    private static FieldDefinition FieldFor(PropertyConfig config, string alias, string description, Type valueType)
+    {
+        var required = config.Required ?? false;
+        var references = config.References;
+        var allowed = config.Allowed;
+        var itemReference = config.ItemReferenceSlot;
 
         var many = valueType != typeof(string) && ElementTypeOf(valueType) is not null;
         var single = many ? ElementTypeOf(valueType)! : valueType;
@@ -247,19 +324,21 @@ public static class ModelShapes
 
     private static void WriteItems(IEnumerable? models, List<EntityItem> items)
     {
-        foreach (EntityItemModel model in models ?? Array.Empty<EntityItemModel>())
+        foreach (var model in models ?? Array.Empty<object>())
         {
-            var itemType = model.GetType().GetCustomAttribute<ItemTypeAttribute>()
-                ?? throw new InvalidOperationException($"{model.GetType().Name} has no [ItemType] attribute.");
-            if (model.Key == Guid.Empty)
+            var info = Info(model.GetType());
+            var itemType = info.ItemType
+                ?? throw new InvalidOperationException($"{model.GetType().Name} is not an item type: add [ItemType] or configure it with IsItemType.");
+            var keyProperty = info.Key
+                ?? throw new InvalidOperationException($"{model.GetType().Name} has no key: derive from EntityItemModel, add [Key] or configure HasKey.");
+            if ((Guid)keyProperty.GetValue(model)! == Guid.Empty)
             {
-                model.Key = Guid.NewGuid();
+                keyProperty.SetValue(model, Guid.NewGuid());
             }
 
-            var item = new EntityItem { Key = model.Key, Type = itemType.Alias };
+            var item = new EntityItem { Key = (Guid)keyProperty.GetValue(model)!, Type = itemType.Alias };
             Write(model, item);
 
-            var info = Info(model.GetType());
             if (info.Settings?.GetValue(model) is { } settings)
             {
                 Write(settings, item.EnsureSettings());
@@ -283,11 +362,16 @@ public static class ModelShapes
             var itemClass = itemTypes.Find(slot.Slot.ItemTypeGroup, item.Type)?.ClrType
                 ?? throw new AbilityInputException($"Item type '{item.Type}' has no model class.", [new Problem(itemPath, "No model class for this item type.")]);
 
-            var model = (EntityItemModel)Read(itemClass, item, itemTypes, itemPath);
-            model.Key = item.Key;
-            model.Path = itemPath;
-
+            var model = Read(itemClass, item, itemTypes, itemPath);
             var info = Info(itemClass);
+            info.Key?.SetValue(model, item.Key);
+            if (model is EntityItemModel itemModel)
+            {
+                itemModel.Path = itemPath;
+            }
+
+            Paths.AddOrUpdate(model, itemPath);
+
             if (info.Settings is { } settingsProperty && item.Settings is { } settings)
             {
                 settingsProperty.SetValue(model, Read(settingsProperty.PropertyType, settings, itemTypes, $"{itemPath}/@settings"));
@@ -324,10 +408,7 @@ public static class ModelShapes
         {
             var value = field.Property.GetValue(model);
             var context = new ValidationContext(model) { MemberName = field.Property.Name, DisplayName = field.Field.Alias };
-
-            // [Required] and [AllowedValues] are part of the structure, which the generic validator checks per variant.
-            foreach (var attribute in field.Property.GetCustomAttributes<ValidationAttribute>()
-                .Where(a => a is not RequiredAttribute and not AllowedValuesAttribute))
+            foreach (var attribute in field.Rules)
             {
                 if (attribute.GetValidationResult(value, context) is { } result && result != ValidationResult.Success)
                 {
@@ -340,9 +421,9 @@ public static class ModelShapes
         {
             var value = slot.Property.GetValue(model);
             var lists = slot.Varying ? ((IDictionary?)value)?.Values.Cast<IEnumerable>() ?? [] : [(IEnumerable?)value ?? Array.Empty<object>()];
-            foreach (EntityItemModel item in lists.SelectMany(l => l.Cast<EntityItemModel>()))
+            foreach (var item in lists.SelectMany(l => l.Cast<object>()))
             {
-                var itemPath = EntityEditor.Join(EntityEditor.Join(path, slot.Slot.Alias), item.Key.ToString());
+                var itemPath = EntityEditor.Join(EntityEditor.Join(path, slot.Slot.Alias), KeyOf(item).ToString());
                 ValidateObject(item, itemPath, problems);
 
                 var itemInfo = Info(item.GetType());

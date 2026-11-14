@@ -5,6 +5,7 @@ using Umbraco.Abilities.Entities;
 using Umbraco.Abilities.Samples;
 using Umbraco.Abilities.Samples.Cms;
 using Umbraco.Abilities.Samples.Commerce;
+using Umbraco.Abilities.Samples.Commerce.Domain;
 
 namespace Umbraco.Abilities.Tests;
 
@@ -150,7 +151,7 @@ public class ChangeSetTests
         await SetDiscountAsync(discount, "", "name", "\"Renamed in set\"");
 
         // Someone sets a code on the same discount while the set is open.
-        await SaveLiveAsync(discount, d => d.Code = "SAVE10");
+        await SaveLiveAsync(discount, d => d.SetCode("SAVE10"));
 
         var summary = await _agent.OkAsync("changeSet_summarize", SetJson());
         var rebased = summary.GetProperty("rebased")[0];
@@ -170,7 +171,7 @@ public class ChangeSetTests
 
         await _agent.StartChangeSetAsync("Rename");
         await SetDiscountAsync(discount, "", "name", "\"Renamed in set\"");
-        await SaveLiveAsync(discount, d => d.Name = "Changed live");
+        await SaveLiveAsync(discount, d => d.SetName("Changed live"));
 
         var refused = await _agent.FailAsync("changeSet_apply", SetJson());
         var problem = refused.GetProperty("problems")[0];
@@ -193,7 +194,7 @@ public class ChangeSetTests
 
         await _agent.StartChangeSetAsync("Rename");
         await SetDiscountAsync(discount, "", "name", "\"Renamed in set\"");
-        await SaveLiveAsync(discount, d => d.Name = "Changed live");
+        await SaveLiveAsync(discount, d => d.SetName("Changed live"));
 
         await _agent.OkAsync("changeSet_resolveConflict", $$"""
             { "changeSetId": "{{_agent.ChangeSetId}}", "entityType": "commerce.discount", "key": "{{discount}}", "path": "name", "keep": "yours" }
@@ -213,7 +214,7 @@ public class ChangeSetTests
         await SetDiscountAsync(discount, "", "name", "\"Raised\"");
 
         // Someone replaces the rule while the set is open.
-        await SaveLiveAsync(discount, d => d.Rules = [new CustomerGroupRule { Group = "VIP" }]);
+        await SaveLiveAsync(discount, d => d.SetRules([new DiscountRuleConfig("customerGroup", new Dictionary<string, string> { ["Group"] = "VIP" })]));
 
         var validation = await _agent.OkAsync("changeSet_validate", SetJson());
         Assert.Contains($"rules/{rule}", JsonAssert.ProblemPaths(validation));
@@ -240,7 +241,7 @@ public class ChangeSetTests
 
         await _agent.StartChangeSetAsync("Rename");
         await SetDiscountAsync(discount, "", "name", "\"Summer sale\"");
-        await SaveLiveAsync(discount, d => d.Name = "Summer sale");
+        await SaveLiveAsync(discount, d => d.SetName("Summer sale"));
 
         await _agent.OkAsync("changeSet_apply", SetJson());
     }
@@ -292,11 +293,13 @@ public class ChangeSetTests
     private Task<JsonElement> SetDiscountAsync(Guid discount, string elementPath, string field, string valueJson)
         => _agent.OkAsync("entity_setValue", $$"""{ "entityType": "commerce.discount", "key": "{{discount}}", "elementPath": "{{elementPath}}", "field": "{{field}}", "value": {{valueJson}} }""");
 
-    private async Task SaveLiveAsync(Guid discount, Action<Discount> change)
+    /// <summary>Someone saves the discount in the backoffice, through Commerce's own service.</summary>
+    private Task SaveLiveAsync(Guid discount, Action<Discount> change)
     {
-        var live = (await _site.Discounts.LoadModelAsync(discount))!;
+        var live = _site.DiscountService.GetDiscount(discount)!.AsWritable();
         change(live);
-        await _site.Discounts.SaveModelAsync(live);
+        _site.DiscountService.SaveDiscount(live);
+        return Task.CompletedTask;
     }
 
     private string SetJson() => $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""";

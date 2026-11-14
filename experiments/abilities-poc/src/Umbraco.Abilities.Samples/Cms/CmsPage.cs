@@ -156,20 +156,34 @@ public sealed class MediaEntry : EntityItemModel
 
 public sealed record FocalPoint(double Left, double Top);
 
-[Entity("cms.media", "Media", Description = "An image or file.")]
-public sealed class MediaItem
-{
-    [Key]
-    public Guid Key { get; set; }
+// ── Media: request models with no attributes and no base class, configured fluently ───────────────────────
 
-    [EntityVersion]
+/// <summary>Stands in for a Management API request model in another assembly: a package can't put attributes on it.</summary>
+public sealed class MediaRequestModel
+{
+    public Guid Id { get; set; }
+
     public long? Version { get; set; }
 
-    [EntityName, Required, Description("Media name.")]
     public string? Name { get; set; }
 
-    [Description("Alternative text.")]
     public string? AltText { get; set; }
+
+    public List<MediaCropRequestModel> Crops { get; set; } = [];
+
+    /// <summary>Server-side state the editing contract leaves out.</summary>
+    public DateTime? UpdateDate { get; set; }
+}
+
+public sealed class MediaCropRequestModel
+{
+    public Guid Id { get; set; }
+
+    public string? Alias { get; set; }
+
+    public int? Width { get; set; }
+
+    public int? Height { get; set; }
 }
 
 // ── Definitions ─────────────────────────────────────────────────────────────────────────────────────────
@@ -205,6 +219,33 @@ public sealed class CmsPageDefinition(InMemoryDatabase database, ItemTypeRegistr
         => Task.FromResult(LoadVersion(key, version));
 }
 
-/// <summary>Media items, so pickers and references can point at media created in the same change set.</summary>
+/// <summary>
+/// Media items, so pickers and references can point at media created in the same change set. The model is described
+/// fluently, so the request models stay as they are.
+/// </summary>
 public sealed class CmsMediaDefinition(InMemoryDatabase database, ItemTypeRegistry itemTypes)
-    : InMemoryModelDefinition<MediaItem>(database, itemTypes, "/umbraco/section/media/workspace/media/edit");
+    : InMemoryModelDefinition<MediaRequestModel>(database, itemTypes, "/umbraco/section/media/workspace/media/edit")
+{
+    public const string CropGroup = "cms.media.crop";
+
+    static CmsMediaDefinition()
+    {
+        ModelConfiguration.Configure<MediaRequestModel>(media => media
+            .IsEntity("cms.media", "Media", "An image or file.")
+            .HasKey(x => x.Id)
+            .HasVersion(x => x.Version)
+            .Ignore(x => x.UpdateDate)
+            .Field(x => x.Name).IsName().Required().Description("Media name.")
+            .Field(x => x.AltText).Description("Alternative text.")
+            .Slot(x => x.Crops, CropGroup).Description("Named crops of the image."));
+
+        ModelConfiguration.Configure<MediaCropRequestModel>(crop => crop
+            .IsItemType("crop", "Crop", "A named crop.")
+            .HasKey(x => x.Id)
+            .Field(x => x.Alias).Required().Description("Crop alias, e.g. thumbnail.")
+            .Field(x => x.Width).Required().Rule(new RangeAttribute(1, 10000)).Description("Width in pixels.")
+            .Field(x => x.Height).Required().Rule(new RangeAttribute(1, 10000)).Description("Height in pixels."));
+    }
+
+    public static void RegisterItemTypes(ItemTypeRegistry itemTypes) => itemTypes.Add<MediaCropRequestModel>(CropGroup);
+}

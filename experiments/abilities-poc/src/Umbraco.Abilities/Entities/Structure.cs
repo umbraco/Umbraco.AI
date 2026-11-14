@@ -148,12 +148,17 @@ public sealed class ItemTypeRegistry
     /// nested slots from its properties, and the settings from its <c>[ItemSettings]</c> property.
     /// </summary>
     public ItemTypeRegistry Add<T>(string group, params string[] alsoIn)
-        where T : Models.EntityItemModel
+        where T : class
     {
-        var attribute = typeof(T).GetCustomAttributes(typeof(Models.ItemTypeAttribute), false).OfType<Models.ItemTypeAttribute>().FirstOrDefault()
-            ?? throw new InvalidOperationException($"{typeof(T).Name} has no [ItemType] attribute.");
         var info = Models.ModelShapes.Info(typeof(T));
-        return Add(new ItemTypeDefinition(group, attribute.Alias, attribute.Name, attribute.Description, info.Shape)
+        var (alias, name, description) = info.ItemType
+            ?? throw new InvalidOperationException($"{typeof(T).Name} is not an item type: add [ItemType] or configure it with IsItemType.");
+        if (info.Key is null)
+        {
+            throw new InvalidOperationException($"{typeof(T).Name} has no key: derive from EntityItemModel, add [Key] or configure HasKey.");
+        }
+
+        return Add(new ItemTypeDefinition(group, alias, name, description, info.Shape)
         {
             SettingsShape = info.Settings is { } settings ? Models.ModelShapes.ShapeOf(settings.PropertyType) : null,
             AlsoIn = alsoIn,

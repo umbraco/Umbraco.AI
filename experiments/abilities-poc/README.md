@@ -39,16 +39,31 @@ Each design layer and where it lives:
 
 ## Writing a definition
 
-A package describes an entity with C# classes, and implements load and save. The framework does the rest.
+A package describes an **editing contract**: C# classes that say what an AI, Automate or MCP can set on an entity.
+The contract is not the product's domain model, and nothing goes on the domain model. The definition maps between
+the two in load and save. The framework works out everything else from the contract.
+
+```
+Commerce's domain (DiscountReadOnly, AsWritable, provider settings)
+        ↑  LoadModelAsync / SaveModelAsync: the mapping the package writes
+DiscountEditModel (the editing contract)
+        ↓  derived by the framework
+structure, JSON Schema, paths, validation, edit abilities, change sets, rebasing
+```
+
+There are two ways to describe a contract. They mean the same thing, and fluent configuration wins where both are
+used.
+
+**Attributes**, for a class the package writes for the purpose (`Samples/Commerce/Commerce.cs`):
 
 ```csharp
-[Entity("commerce.discount", "Discount", Description = "A discount applied when all its rules match.")]
-public sealed class Discount
+[Entity("commerce.discount", "Discount")]
+public sealed class DiscountEditModel
 {
     [Key] public Guid Key { get; set; }
     [EntityVersion] public long? Version { get; set; }
     [EntityName, Required] public string? Name { get; set; }
-    public DateOnly? StartDate { get; set; }
+    public DateOnly? EndDate { get; set; }
     [EntityKey("cms.page")] public Guid? LandingPage { get; set; }
     [Slot(RuleGroup, Min = 1)] public List<DiscountRule> Rules { get; set; } = [];
 }
@@ -58,62 +73,92 @@ public sealed class PercentageOffReward : DiscountReward
 {
     [Required, Range(1, 100)] public decimal? Percent { get; set; }
 }
-
-public sealed class DiscountDefinition(...) : EntityDefinitionBase<Discount>(itemTypes, unitOfWork)
-{
-    public override Task<Discount?> LoadModelAsync(Guid key, CancellationToken ct) => ...;   // the product's own load
-    public override Task SaveModelAsync(Discount discount, CancellationToken ct) => ...;     // the product's own save
-    protected override Task<IReadOnlyList<Problem>> ValidateModelAsync(Discount d, CancellationToken ct)
-        => ... ProblemAt(x => x.EndDate, "Must be on or after startDate.") ...;              // only rules attributes can't say
-}
-
-itemTypes.Add<PercentageOffReward>(DiscountDefinition.RewardGroup);   // another package adds a type the same way
 ```
 
-What the package no longer writes, because the framework works it out from the classes:
+**Fluent configuration**, for a class the package doesn't own or won't annotate, such as a Management API request
+model in another assembly. It needs no base class either: items name their own key property
+(`Samples/Cms/CmsPage.cs`).
+
+```csharp
+ModelConfiguration.Configure<MediaRequestModel>(media => media
+    .IsEntity("cms.media", "Media")
+    .HasKey(x => x.Id)
+    .HasVersion(x => x.Version)
+    .Ignore(x => x.UpdateDate)
+    .Field(x => x.Name).IsName().Required()
+    .Slot(x => x.Crops, CropGroup));
+
+ModelConfiguration.Configure<MediaCropRequestModel>(crop => crop
+    .IsItemType("crop", "Crop")
+    .HasKey(x => x.Id)
+    .Field(x => x.Width).Required().Rule(new RangeAttribute(1, 10000)));
+```
+
+**The definition** maps to the domain and adds the rules the contract can't express:
+
+```csharp
+public sealed class DiscountDefinition(DiscountService discounts, ...) : EntityDefinitionBase<DiscountEditModel>(...)
+{
+    public override Task<DiscountEditModel?> LoadModelAsync(Guid key, CancellationToken ct) => /* domain → contract */;
+    public override Task SaveModelAsync(DiscountEditModel model, CancellationToken ct)
+    {
+        var discount = discounts.GetDiscount(model.Key)?.AsWritable() ?? discounts.CreateDiscount(model.Key, model.Name!);
+        discount.SetName(model.Name!).SetDates(...).SetRules(model.Rules.Select(ToRuleConfig));
+        discounts.SaveDiscount(discount);
+        return Task.CompletedTask;
+    }
+    protected override Task<IReadOnlyList<Problem>> ValidateModelAsync(DiscountEditModel d, CancellationToken ct)
+        => /* ProblemAt(x => x.EndDate, "Must be on or after startDate.") */;
+}
+```
+
+What the package no longer writes:
 
 | Was hand-written | Now comes from |
 | --- | --- |
-| The structure: fields, types, required, allowed values, references, slots and their limits | Property types and attributes (`[Required]`, `[AllowedValues]`, `[EntityKey]`, `[Slot]`, `[Description]`) |
+| The structure: fields, types, required, allowed values, references, slots and their limits | Property types, plus attributes or fluent configuration |
 | JSON Schema for structured values (a focal point) | `JsonSchemaExporter` over the property type |
 | Culture variation | `Varying<T>` (a value per culture), on fields and slots |
-| Block settings and grid placement shapes | `[ItemSettings]` and `[ItemLayout]` properties, `[Slot(Layout = typeof(...))]` |
-| Mapping between the product model and the working copy | `ModelShapes`, both ways, keeping item keys |
-| Range and format checks reported on entity paths (`rewards/{key}/percent`) | The model's DataAnnotations, run per item, settings and placement |
+| Block settings and grid placement shapes | `[ItemSettings]`/`HasSettings`, `[ItemLayout]`/`HasLayout`, a slot's layout type |
+| Turning the contract into the working copy and back | Done both ways, keeping item keys and giving each item its path |
+| Range and format checks reported on entity paths (`rewards/{key}/percent`) | DataAnnotations, as attributes or fluent `Rule(...)`, per item, settings and placement |
 | A path for a domain problem | `ProblemAt(x => x.EndDate, ...)`, or `ProblemAt(item, r => r.Percent, ...)` for an item |
-| An ability that edits an entity, and works both directly and inside a change set | `ModelEditAbilityBase<TInput, TModel>`: one `Edit(model, input)` method |
-| Reading values out of JSON in tests | `LoadModelAsync`, then plain C# (`Assert.IsType<CustomerGroupRule>(live.Rules[0])`) |
+| An ability that edits an entity, both directly and inside a change set | `ModelEditAbilityBase<TInput, TModel>`: one `Edit(model, input)` method |
 
-The rules and code are typed end to end. A renamed property is a compile error, not a wrong string key at run time.
+`[Required]` and `[AllowedValues]` become part of the structure, so the generic validator checks them per culture.
+Every other rule runs on the contract. Each problem is reported once. A renamed property is a compile error, not a
+wrong string key at run time.
 
-`[Required]` and `[AllowedValues]` become part of the structure, so the generic validator checks them per
-culture. Every other DataAnnotation runs on the model. Each problem is reported once.
+### What the mapping costs
 
-**Line counts don't fall much. What the lines are does change.**
+The Commerce sample now has a domain shaped like the real one (`Samples/Commerce/Domain.cs`). Its read-only entity
+has internal constructors and is changed through `AsWritable()`. Dates are UTC `DateTime`s, and rules and rewards
+are a provider alias plus string settings, with no ids.
 
-| | Before (statement lines) | After |
-| --- | --- | --- |
-| Commerce sample | 74 | 62 |
-| CMS page sample | 72 | 71 |
-| Real CMS definition | 621 lines | 599 lines |
+| Part | Statement lines |
+| --- | --- |
+| Editing contract and its five item classes | 27 |
+| Mapping for the discount: load, save, dates, keys | about 35 |
+| Domain rules (dates in order, unique code) and item registration | about 18 |
+| Provider settings helper: item class ↔ alias plus string settings. Written once for every Commerce rule and reward type, third parties' included | 22 |
 
-Before, a discount's structure was written twice: once as `FieldDefinition`s, and again as string-keyed
-JSON reads in validation and in the activate ability. Now it is written once, as the class, and validation
-and the ability are a few lines of C# against it.
+The mapping is ordinary typed C#, roughly the size of a Management API mapper. It is the only per-entity code the
+package writes besides the contract.
 
-There are two caveats:
+**One limit the mapping exposed:** Commerce's rules have no ids, so the definition derives each item's key from the
+discount, the position and the provider alias. A rule's key is stable across loads. But a rule the agent added gets
+a new key once saved, and moving a rule changes its key, so rebasing sees a move as a remove and an add. Stable ids
+on Commerce's rule nodes would fix this. It is a change to suggest to the Commerce team, not something a mapping can
+paper over.
 
-- **This is best when the product's model is a plain class.** Commerce's `DiscountReadOnly` has internal
-  constructors and a builder, so a real Commerce definition would write a small projection class and map
-  it in `LoadModelAsync`/`SaveModelAsync`. That is still less code than describing the structure by hand,
-  and the mapping is typed.
-- **Entities whose structure is data, not code, stay document-level.** A CMS document type is defined in
-  the backoffice, and a workflow's step types are other packages' abilities. `IEntityDefinition` over
-  `EntityDocument` remains the escape hatch, and is what `CmsDocumentDefinition` and `WorkflowDefinition` use. They
-  still get the typed document: no `JsonObject` digging, and `item.Settings` or `item.Layout`, not
-  `item["settings"]["fields"]`. The CMS definition now builds Umbraco's own `BlockListValue`,
-  `BlockGridValue`, `BlockItemData`, `BlockPropertyValue`, `BlockGridLayoutItem` and `BlockItemVariation`
-  instead of hand-built envelopes. Umbraco's serializer reads and writes them.
+### Entities whose structure is data
+
+A CMS document type is defined in the backoffice. A workflow's step types are other packages' abilities. Neither has
+a class to describe, so `CmsDocumentDefinition` and `WorkflowDefinition` implement `IEntityDefinition` over the typed
+`EntityDocument`. There is still no `JsonObject` digging: they use `item.Settings` or `item.Layout`, not
+`item["settings"]["fields"]`. The CMS definition builds Umbraco's own `BlockListValue`, `BlockGridValue`,
+`BlockItemData`, `BlockPropertyValue`, `BlockGridLayoutItem` and `BlockItemVariation` instead of hand-built
+envelopes, and Umbraco's serializer reads and writes them. Moving to the typed document took it from 621 lines to 599.
 
 ## What the tests show
 
@@ -134,7 +179,9 @@ There are two caveats:
 | An entity whose product keeps version history is rebased from that history, with no snapshot in the set | `An_entity_with_version_history_is_rebased_from_its_history_without_a_snapshot` |
 | If the starting version is gone from the history, the entity can't be rebased, and says why | `If_the_starting_version_is_gone_from_the_history_the_entity_cant_be_rebased` |
 | Reads inside a set show its edits; reads outside show live data | `Reads_inside_a_set_show_its_edits_and_reads_outside_show_live_data` |
-| Replay is deterministic, and keys handed to the model are the stored keys | `Replaying_a_set_gives_the_same_entity_every_time` |
+| Replay is deterministic, and keys handed to the model are the stored keys (for products that store item ids; see Commerce's derived keys) | `Replaying_a_set_gives_the_same_entity_every_time` |
+| A class with no attributes and no base class is described fluently, and created from text like any other | `TypedModelTests.A_class_with_no_attributes_or_base_class_is_described_fluently`, `A_fluently_described_entity_is_created_from_text_like_any_other` |
+| Commerce keeps its own model; the definition maps to it, and rule keys are derived because Commerce rules have no ids | `Commerce_keeps_its_own_model_and_the_definition_maps_to_it` |
 | The structure (types, required, allowed values, references, slots, variation, settings, placement, JSON Schema) comes from model classes and attributes | `TypedModelTests.The_structure_comes_from_the_model_class_and_its_attributes`, `Varying_values_settings_layout_and_json_values_are_described_too` |
 | A model round-trips through its working copy, keeping item keys and giving each item its path | `A_model_round_trips_through_its_document_with_item_keys_and_paths` |
 | Each problem is reported once, whether it comes from the structure, an attribute or a domain rule | `Each_problem_is_reported_once_whether_it_comes_from_the_structure_or_an_attribute` |
@@ -166,6 +213,8 @@ These feed back into the design doc.
 4. **Caller-chosen keys solve references between new items.** Writing generated keys into the recorded
    input made replay deterministic, and let a discount refer to a page created in the same set, and a
    workflow step refer to a later step. No key remapping was needed.
+   That holds only where the product stores item ids. Commerce's rules have none, so their keys are derived
+   on load and change once saved (see "What the mapping costs").
 5. **Problem paths that equal edit paths matter.** Because `rewards/{key}/percent` is both what
    validation reports and what `entity.setValue` takes (`elementPath` + `field`), the fix loop needs no
    translation.

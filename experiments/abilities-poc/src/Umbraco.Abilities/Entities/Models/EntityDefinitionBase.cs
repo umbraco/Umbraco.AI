@@ -15,19 +15,19 @@ namespace Umbraco.Abilities.Entities.Models;
 public abstract class EntityDefinitionBase<TModel> : IEntityDefinition
     where TModel : class
 {
-    private readonly EntityAttribute _entity;
+    private readonly (string EntityType, string Name, string Description) _entity;
     private readonly ModelInfo _info;
 
     protected EntityDefinitionBase(ItemTypeRegistry itemTypes, IUnitOfWorkProvider unitOfWork)
     {
         ItemTypes = itemTypes;
         UnitOfWork = unitOfWork;
-        _entity = typeof(TModel).GetCustomAttribute<EntityAttribute>()
-            ?? throw new InvalidOperationException($"{typeof(TModel).Name} has no [Entity] attribute.");
         _info = ModelShapes.Info(typeof(TModel));
+        _entity = _info.Entity
+            ?? throw new InvalidOperationException($"{typeof(TModel).Name} is not an entity: add [Entity] or configure it with IsEntity.");
         if (_info.Key is null || _info.Key.PropertyType != typeof(Guid))
         {
-            throw new InvalidOperationException($"{typeof(TModel).Name} needs a [Key] Guid property.");
+            throw new InvalidOperationException($"{typeof(TModel).Name} needs a Guid key: add [Key] or configure HasKey.");
         }
     }
 
@@ -69,8 +69,8 @@ public abstract class EntityDefinitionBase<TModel> : IEntityDefinition
 
     /// <summary>A problem on a property of an item in the model, e.g. <c>ProblemAt(reward, r => r.Percent, "...")</c>.</summary>
     protected static Problem ProblemAt<TItem, TValue>(TItem item, Expression<Func<TItem, TValue>> property, string message)
-        where TItem : EntityItemModel
-        => new(EntityEditor.Join(item.Path, AliasOf(property)), message);
+        where TItem : class
+        => new(EntityEditor.Join(ModelShapes.PathOf(item), AliasOf(property)), message);
 
     // ── IEntityDefinition, done by the framework ───────────────────────────────────────────────────
 
@@ -133,8 +133,10 @@ public abstract class EntityDefinitionBase<TModel> : IEntityDefinition
     }
 
     private static string AliasOf(LambdaExpression property)
-        => property.Body is MemberExpression { Member: var member } ? ModelShapes.AliasOf(member)
-            : throw new ArgumentException("Pass a property, e.g. m => m.Name.", nameof(property));
+    {
+        var member = ModelBuilder<TModel>.PropertyOf(property);
+        return ModelShapes.Info(member.DeclaringType!).Fields.FirstOrDefault(f => f.Property.Name == member.Name)?.Field.Alias ?? ModelShapes.AliasOf(member);
+    }
 }
 
 /// <summary>

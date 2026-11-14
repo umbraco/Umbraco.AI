@@ -4,6 +4,7 @@ using Umbraco.Abilities.Samples.Acme;
 using Umbraco.Abilities.Samples.Automate;
 using Umbraco.Abilities.Samples.Cms;
 using Umbraco.Abilities.Samples.Commerce;
+using Umbraco.Abilities.Samples.Commerce.Domain;
 using Umbraco.Abilities.Samples.Email;
 
 namespace Umbraco.Abilities.Samples;
@@ -41,10 +42,12 @@ public sealed class SampleSite
         Media = new CmsMediaDefinition(ContentDatabase, ItemTypes);
         Definitions.Add(Pages).Add(Media);
         CmsPageDefinition.RegisterItemTypes(ItemTypes);
+        CmsMediaDefinition.RegisterItemTypes(ItemTypes);
 
         // Commerce.
         Collections = new CollectionDefinition(CommerceDatabase, ItemTypes);
-        Discounts = new DiscountDefinition(CommerceDatabase, ItemTypes);
+        DiscountService = new DiscountService(CommerceDatabase);
+        Discounts = new DiscountDefinition(DiscountService, CommerceDatabase, ItemTypes);
         Definitions.Add(Collections).Add(Discounts);
         DiscountDefinition.RegisterItemTypes(ItemTypes);
         var activateDiscount = new ActivateDiscountAbility(Discounts);
@@ -89,6 +92,8 @@ public sealed class SampleSite
     public CmsMediaDefinition Media { get; }
 
     public CollectionDefinition Collections { get; }
+
+    public DiscountService DiscountService { get; }
 
     public DiscountDefinition Discounts { get; }
 

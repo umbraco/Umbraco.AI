@@ -198,6 +198,10 @@ Before building something, check whether the CMS has it. This is where the PoC l
 | A product's transaction, for content | `ICoreScopeProvider` | Behind `IUnitOfWorkProvider`, which stays because Commerce and Automate have their own connections |
 | Packages reacting to, or vetoing, an apply | Notifications through `IEventAggregator` | `ChangeSetApplyingNotification` and `DraftSetApplyingNotification` are cancelable, like `ContentSavingNotification`. Then applied and discarded |
 | A record of who applied what | The audit log | The draft set writes an entry per document it applies, inside its scope |
+| Work after a transaction commits | Scopes: notifications published through `scope.Notifications`, and `Context.Enlist` actions | Both run only when the outermost scope commits. The draft set's applied notification and its "applied" flag use them, so neither happens when an outer scope rolls back |
+| Who may do what | The CMS's own permission model, through `IContentPermissionService` | See "Authorization" |
+| Side effects that need retries | `IBackgroundTaskQueue`, run by `QueuedHostedService`, with Polly | See "Retries". Webhooks weren't used, as they're going away |
+| Results and problems | `Attempt<TResult, TStatus>` and `PropertyValidationError`, mirrored | `AbilityResult` has a status (`AbilityOperationStatus`: Success, InvalidInput, AccessDenied, Failed) and a result. `Problem` has `ErrorMessages`, culture and segment. The CMS definition passes Umbraco's messages straight through |
 
 Checked, and not usable:
 
@@ -207,15 +211,45 @@ Checked, and not usable:
 | Relations and tracked references, for references between entities | A relation's parent and child are node ids plus a CMS object type, so only entities with a CMS node can take part. A Commerce discount can't |
 | The audit log, for non-CMS entities | Its object id is a node id. A Commerce entity can only be logged against no node, with its UDI in the comment |
 
-Still to decide, not swaps:
+Left for later:
 
-- **Authorization.** Every apply runs as the super user, and the Access failure category is unused. Abilities should check the
-  acting user's backoffice permissions (user groups, granular document permissions, sections) and report refusals as Access
-  failures, not build their own model.
-- **Side effects that need retries.** Webhooks or the background task queue could run them, as an option.
 - **Storage.** Change sets and draft sets are in memory, which doesn't work across load-balanced servers.
-- **Results.** `AbilityResult` and `Problem` overlap with the CMS's `Attempt` plus operation status and `PropertyValidationError`.
-  They're the contract AI and Automate see, so they stay, but should mirror the CMS's fields.
+
+## Authorization
+
+An agent acts for a user and gets that user's permissions, no more. `AbilityContext` carries the user's key, as the CMS's
+services take it. Abilities never build their own permission model: a definition that has one implements
+`IAuthorizingEntityDefinition`, and is asked whether a user may read, create or update an entity, in the cultures a
+change touches. It answers with a reason when not.
+
+| When | Who is checked |
+| --- | --- |
+| An edit is recorded into a change set | The user making it |
+| A change set is applied | The user applying it, for every change, before validating. If any is refused, nothing is applied: the user applying may not be who made the changes, and permissions can change while a set is open |
+| An entity is found | The user: results are only what they may read |
+| An entity is read | The user: a refusal is an `AccessDenied` result |
+| A product ability is run directly | The user, the same as inside a set |
+
+The CMS definition asks the CMS. The user must have the Content section, then the document permission (browse, create
+or update) on the document. For a new document that's its parent, or the root. Then they need access to the cultures
+the change touches. Refusals are not correctable: retrying won't help, so an agent should stop and tell the user. The
+in-memory samples stand in for each product's model with `SampleAccess`, where a content editor may not touch Commerce.
+
+## Retries
+
+A side effect that may fail for a while declares `[Ability(..., Retries = 3)]`. Applied in a change set, it runs on
+Umbraco's `IBackgroundTaskQueue` once every change is applied, so a slow mail server doesn't hold up the apply. It is
+retried with Polly (`Polly.Core` 8.5.0, the version an Umbraco 18 site already resolves through NPoco): exponential
+backoff with jitter. Only `Failed` results are retried, never `InvalidInput` or `AccessDenied`. The outcome is a
+`ChangeSetSideEffectCompletedNotification` with the result and the number of attempts, since the set is applied by then.
+A side effect without retries runs inline, as before.
+
+Two limits:
+
+- **The queue is in memory.** Work still queued when the site restarts is lost. Durable side effects would need stored
+  work, which ties into storage above.
+- **Umbraco's `QueuedHostedService` processes the queue.** A site registers it (in `AddBackgroundJobs`). The integration
+  test host doesn't, so the test starts Umbraco's own processor itself.
 
 ## CMS Draft Sets as a participant
 
@@ -330,6 +364,9 @@ drafted without a new API.
 | The CMS draft set works on its own, with no abilities: stage, read through, conflict, resolve, validate, apply | `A_draft_set_works_on_its_own_with_no_abilities` |
 | Entity types are UDI entity types, package types are registered, and references can be given as UDIs, stored in the field's own form, with the wrong type refused | `UdiTests` |
 | A package can veto applying a change set or its CMS draft set with a cancelable notification, and both raise applied notifications; applying writes to the CMS audit log | `CmsDocumentDefinitionTests.A_package_can_veto_applying_a_change_set_or_its_draft_set_with_a_CMS_notification`, `A_draft_set_works_on_its_own_with_no_abilities` |
+| An agent gets the permissions of the user it acts for: recording, applying (checked for the applying user, nothing applied if any change is refused), finding, reading and direct runs; with the CMS's real document permissions | `AuthorizationTests`, `CmsDocumentDefinitionTests.An_agent_gets_the_CMS_permissions_of_the_user_it_acts_for` |
+| A draft set applied in a scope that then rolls back isn't applied and raises no applied notification | `A_draft_set_applied_inside_a_scope_that_rolls_back_is_not_applied_and_raises_nothing` |
+| A side effect with retries is queued after apply and retried with backoff; it gives up after its limit; correctable input isn't retried; on real Umbraco it runs on the background queue | `SideEffectRetryTests`, `A_side_effect_with_retries_runs_on_Umbracos_background_queue_after_the_content_commits` |
 | Workflow step types are derived from abilities | `WorkflowTests.Step_types_are_derived_from_abilities` |
 | A workflow graph (edges as item references) is validated, and can refer to a discount created in the same set | `A_workflow_from_text_links_its_steps_and_can_refer_to_a_discount_in_the_same_set` |
 | Names and values vary by culture; invariant values are shared across cultures | `CmsContentTests.Names_and_values_vary_by_culture_while_invariant_values_are_shared` |

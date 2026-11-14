@@ -2,6 +2,8 @@
   <ItemGroup>
     <PackageVersion Include="Microsoft.Extensions.AI.Abstractions" Version="10.7.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
+    <!-- The version an Umbraco 18 site already resolves (through NPoco.SqlServer), so retries add nothing new. -->
+    <PackageVersion Include="Polly.Core" Version="8.5.0" />
     <!-- Real Umbraco CMS, for the CMS document definition and its integration tests -->
     <PackageVersion Include="Umbraco.Cms.Core" Version="[18.0.0,19)" />
     <PackageVersion Include="Umbraco.Cms.Infrastructure" Version="[18.0.0,19)" />

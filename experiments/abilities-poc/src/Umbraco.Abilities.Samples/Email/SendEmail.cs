@@ -15,9 +15,14 @@ public sealed class Outbox
     public List<SentEmail> Sent { get; } = [];
 
     public bool ServerDown { get; set; }
+
+    /// <summary>How many more sends fail before the server recovers, to show retries.</summary>
+    public int FailNextSends { get; set; }
+
+    public int Attempts { get; set; }
 }
 
-[Ability("email.send", "Send email", Kind = AbilityKind.Write,
+[Ability("email.send", "Send email", Kind = AbilityKind.Write, Retries = 3,
     Description = "Sends an email.")]
 public sealed class SendEmailAbility(Outbox outbox) : AbilityBase<SendEmailInput, SentEmail>
 {
@@ -28,7 +33,8 @@ public sealed class SendEmailAbility(Outbox outbox) : AbilityBase<SendEmailInput
             throw new AbilityInputException("A valid recipient is required.", [new Problem("to", "Not an email address.")]);
         }
 
-        if (outbox.ServerDown)
+        outbox.Attempts++;
+        if (outbox.ServerDown || outbox.FailNextSends-- > 0)
         {
             throw new InvalidOperationException("The mail server is not responding.");
         }

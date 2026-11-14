@@ -6,6 +6,8 @@ using Umbraco.Abilities.Samples.Cms;
 using Umbraco.Abilities.Samples.Commerce;
 using Umbraco.Abilities.Samples.Commerce.Domain;
 using Umbraco.Abilities.Samples.Email;
+using Umbraco.Cms.Core.Events;
+using Umbraco.Cms.Core.HostedServices;
 
 namespace Umbraco.Abilities.Samples;
 
@@ -15,9 +17,9 @@ namespace Umbraco.Abilities.Samples;
 /// </summary>
 public sealed class SampleSite
 {
-    private SampleSite()
+    private SampleSite(IBackgroundTaskQueue? background, IEventAggregator? events)
     {
-        ChangeSets = new ChangeSetService(new InMemoryChangeSetStore(), Abilities, Definitions, ItemTypes);
+        ChangeSets = new ChangeSetService(new InMemoryChangeSetStore(), Abilities, Definitions, ItemTypes, events, background, TimeSpan.Zero);
         Invoker = new AbilityInvoker(Abilities, ChangeSets);
 
         // Framework: the generic entity and change set abilities.
@@ -108,5 +110,8 @@ public sealed class SampleSite
 
     public Guid SummerCollection { get; }
 
-    public static SampleSite Create() => new();
+    public static SampleSite Create() => new(null, null);
+
+    /// <summary>A site whose side effects with retries run on a background queue, with notifications.</summary>
+    public static SampleSite Create(IBackgroundTaskQueue background, IEventAggregator events) => new(background, events);
 }

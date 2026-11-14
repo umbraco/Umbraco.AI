@@ -13,6 +13,7 @@ using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Actions;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Events;
+using Umbraco.Cms.Core.HostedServices;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Models.ContentEditing;
 using Umbraco.Cms.Core.Models.Membership;
@@ -23,6 +24,7 @@ using Umbraco.Cms.Core.Serialization;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Strings;
 using Umbraco.Cms.DraftSets;
+using Umbraco.Cms.Infrastructure.HostedServices;
 using Umbraco.Cms.Tests.Common.Builders;
 using Umbraco.Cms.Tests.Common.Builders.Extensions;
 using Umbraco.Cms.Tests.Common.Testing;
@@ -61,6 +63,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         builder.AddNotificationHandler<DraftSetApplyingNotification, VetoHandler>();
         builder.AddNotificationHandler<ChangeSetAppliedNotification, VetoHandler>();
         builder.AddNotificationHandler<DraftSetAppliedNotification, VetoHandler>();
+        builder.AddNotificationHandler<ChangeSetSideEffectCompletedNotification, VetoHandler>();
     }
 
     protected override void SetUpTestConfiguration(IConfigurationBuilder configBuilder)
@@ -133,7 +136,8 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         var definitions = new EntityDefinitionRegistry();
         var itemTypes = new ItemTypeRegistry();
         VetoHandler.Applied.Clear();
-        _changeSets = new ChangeSetService(new InMemoryChangeSetStore(), abilities, definitions, itemTypes, GetRequiredService<IEventAggregator>());
+        VetoHandler.SideEffects.Clear();
+        _changeSets = new ChangeSetService(new InMemoryChangeSetStore(), abilities, definitions, itemTypes, GetRequiredService<IEventAggregator>(), GetRequiredService<IBackgroundTaskQueue>(), TimeSpan.Zero);
         _draftSets = new DraftSetService(
             ContentEditingService,
             GetRequiredService<PropertyEditorCollection>(),
@@ -171,7 +175,8 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
             .Add(new ApplyChangeSetAbility(_changeSets))
             .Add(new DiscardChangeSetAbility(_changeSets))
             .Add(new ResolveConflictAbility(_changeSets))
-            .Add(new FailingOperationAbility());
+            .Add(new FailingOperationAbility())
+            .Add(new FlakyOperationAbility());
 
         _agent = new Agent(abilities, new AbilityInvoker(abilities, _changeSets));
     }
@@ -584,6 +589,37 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         return created.Result.CreatedUser!.Key;
     }
 
+    [Test]
+    public async Task A_side_effect_with_retries_runs_on_Umbracos_background_queue_after_the_content_commits()
+    {
+        FlakyOperationAbility.FailuresLeft = 1;
+        await _agent.StartChangeSetAsync("Content, then a flaky operation");
+        var page = await BuildSummerPageAsync();
+        await _agent.OkAsync("test_flaky", "{}");
+        await _agent.OkAsync("changeSet_apply", SetJson());
+        Assert.That(ContentService.GetById(page.Key), Is.Not.Null);
+
+        // A site runs Umbraco's queued hosted service; the test host doesn't start it, so the test does.
+        var processor = new QueuedHostedService(GetRequiredService<IBackgroundTaskQueue>(), Microsoft.Extensions.Logging.Abstractions.NullLogger<QueuedHostedService>.Instance);
+        await processor.StartAsync(CancellationToken.None);
+
+        // Wait for the notification.
+        var deadline = DateTime.UtcNow.AddSeconds(15);
+        while (VetoHandler.SideEffects.IsEmpty && DateTime.UtcNow < deadline)
+        {
+            await Task.Delay(50);
+        }
+
+        await processor.StopAsync(CancellationToken.None);
+        Assert.That(VetoHandler.SideEffects.TryPeek(out var completed), Is.True, "the background queue never ran the side effect");
+        Assert.Multiple(() =>
+        {
+            Assert.That(completed!.AbilityId, Is.EqualTo("test.flaky"));
+            Assert.That(completed.Result.Success, Is.True);
+            Assert.That(completed.Attempts, Is.EqualTo(2));
+        });
+    }
+
     private sealed record SummerPage(Guid Key, Guid Hero, Guid AreaText);
 
     private async Task<SummerPage> BuildSummerPageAsync()
@@ -666,6 +702,16 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
             => Fail ? throw new InvalidOperationException("The operation failed on purpose.") : Task.FromResult(Success(new { ran = true }));
     }
 
+    /// <summary>Fails its first <see cref="FailuresLeft"/> runs, then succeeds: a side effect worth retrying.</summary>
+    [Ability("test.flaky", "Flaky", Kind = AbilityKind.Write, Retries = 2, Description = "Fails a few times, then works.")]
+    private sealed class FlakyOperationAbility : AbilityBase<JsonObject, object>
+    {
+        public static int FailuresLeft { get; set; }
+
+        protected override Task<AbilityResult> ExecuteAsync(JsonObject input, AbilityContext context, CancellationToken cancellationToken)
+            => FailuresLeft-- > 0 ? throw new InvalidOperationException("Not yet.") : Task.FromResult(Success(new { ran = true }));
+    }
+
     private sealed class RefuseSavingHandler : INotificationHandler<ContentSavingNotification>
     {
         public void Handle(ContentSavingNotification notification)
@@ -681,8 +727,13 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         INotificationHandler<ChangeSetApplyingNotification>,
         INotificationHandler<DraftSetApplyingNotification>,
         INotificationHandler<ChangeSetAppliedNotification>,
-        INotificationHandler<DraftSetAppliedNotification>
+        INotificationHandler<DraftSetAppliedNotification>,
+        INotificationHandler<ChangeSetSideEffectCompletedNotification>
     {
+        public static System.Collections.Concurrent.ConcurrentQueue<ChangeSetSideEffectCompletedNotification> SideEffects { get; } = new();
+
+        public void Handle(ChangeSetSideEffectCompletedNotification notification) => SideEffects.Enqueue(notification);
+
         public static List<string> Applied { get; } = [];
 
         public void Handle(ChangeSetApplyingNotification notification)

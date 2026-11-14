@@ -20,6 +20,21 @@ public sealed class ChangeSetAppliedNotification(ChangeSet changeSet, IReadOnlyL
     public IReadOnlyList<EntityRef> Saved { get; } = saved;
 }
 
+/// <summary>
+/// A side effect that runs in the background finished: it succeeded, or failed after its retries (or at once, for a
+/// failure retrying can't fix). The change set is already applied, so this is the only place a failure shows.
+/// </summary>
+public sealed class ChangeSetSideEffectCompletedNotification(ChangeSet changeSet, string abilityId, AbilityResult result, int attempts) : INotification
+{
+    public ChangeSet ChangeSet { get; } = changeSet;
+
+    public string AbilityId { get; } = abilityId;
+
+    public AbilityResult Result { get; } = result;
+
+    public int Attempts { get; } = attempts;
+}
+
 public sealed class ChangeSetDiscardedNotification(ChangeSet changeSet) : INotification
 {
     public ChangeSet ChangeSet { get; } = changeSet;

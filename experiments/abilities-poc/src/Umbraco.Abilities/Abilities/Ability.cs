@@ -31,6 +31,13 @@ public sealed class AbilityAttribute(string id, string name) : Attribute
     /// creating or discarding a set). Approval is only needed for a Write that is not reversible.
     /// </summary>
     public bool Reversible { get; set; }
+
+    /// <summary>
+    /// For a side effect that may fail for a while (a mail server, an external API): applied in a change set, it runs in
+    /// the background once every change is applied, retried up to this many times with backoff. Only failures are
+    /// retried, never correctable input or a refusal. Zero runs it inline, once.
+    /// </summary>
+    public int Retries { get; set; }
 }
 
 /// <summary>
@@ -52,7 +59,8 @@ public sealed record AbilityDescriptor(
     AbilityKind Kind,
     bool Reversible,
     Type InputType,
-    Type OutputType)
+    Type OutputType,
+    int Retries = 0)
 {
     public bool ChangesData => Kind == AbilityKind.Write;
 
@@ -167,7 +175,8 @@ public abstract class AbilityBase<TInput, TOutput> : IAbility
             attribute.Kind,
             attribute.Reversible,
             typeof(TInput),
-            typeof(TOutput));
+            typeof(TOutput),
+            attribute.Retries);
     }
 
     public AbilityDescriptor Descriptor { get; }

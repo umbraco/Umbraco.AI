@@ -5,5 +5,6 @@
   -->
   <ItemGroup>
     <PackageReference Include="Umbraco.Cms.Core" />
+    <PackageReference Include="Polly.Core" />
   </ItemGroup>
 </Project>

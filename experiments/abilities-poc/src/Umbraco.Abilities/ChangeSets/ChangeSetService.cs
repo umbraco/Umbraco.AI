@@ -1,8 +1,12 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
+using Polly;
+using Polly.Retry;
+
 using Umbraco.Abilities.Entities;
 using Umbraco.Cms.Core.Events;
+using Umbraco.Cms.Core.HostedServices;
 
 namespace Umbraco.Abilities.ChangeSets;
 
@@ -22,7 +26,9 @@ public sealed class ChangeSetService(
     AbilityRegistry abilities,
     EntityDefinitionRegistry definitions,
     ItemTypeRegistry itemTypes,
-    IEventAggregator? events = null)
+    IEventAggregator? events = null,
+    IBackgroundTaskQueue? background = null,
+    TimeSpan? retryDelay = null)
 {
     public ChangeSet Create(string name)
     {
@@ -491,6 +497,7 @@ public sealed class ChangeSetService(
                 continue;
             }
 
+            var outcome = "Applied.";
             try
             {
                 if (step.UnitOfWork is { } unitOfWork)
@@ -518,25 +525,30 @@ public sealed class ChangeSetService(
 
                     transaction.Complete();
                 }
+                else if (abilities.Find(step.Call!.AbilityId)! is { Descriptor.Retries: > 0 } retried && background is not null)
+                {
+                    QueueSideEffect(set, retried, step.Call, runContext);
+                    outcome = $"Queued: runs in the background, retried up to {retried.Descriptor.Retries} times.";
+                }
                 else
                 {
                     var result = await abilities.Find(step.Call!.AbilityId)!.InvokeAsync(step.Call.Input, runContext, cancellationToken);
                     if (!result.Success)
                     {
-                        throw new ChangeSetApplyException(result.Message);
+                        throw new ChangeSetApplyException(result.Message!);
                     }
                 }
 
                 set.AppliedSteps.Add(step.Key);
                 store.Save(set);
-                steps.Add(new Problem(step.Name, "Applied."));
+                steps.Add(new Problem(step.Name, outcome));
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 // A product's changes roll back with its transaction; a side effect has nothing to roll back.
-                var outcome = step.UnitOfWork is not null ? "failed and was rolled back" : "failed";
-                failure = $"{step.Name} {outcome}: {ex.Message}";
-                steps.Add(new Problem(step.Name, $"{char.ToUpperInvariant(outcome[0])}{outcome[1..]}: {ex.Message}"));
+                var failed = step.UnitOfWork is not null ? "failed and was rolled back" : "failed";
+                failure = $"{step.Name} {failed}: {ex.Message}";
+                steps.Add(new Problem(step.Name, $"{char.ToUpperInvariant(failed[0])}{failed[1..]}: {ex.Message}"));
             }
         }
 
@@ -599,6 +611,44 @@ public sealed class ChangeSetService(
 
     private static IEnumerable<(string EntityType, Guid Key)> TouchedEntities(ChangeSet set)
         => set.Changes.Select(c => (c.EntityType!, c.EntityKey!.Value)).Distinct();
+
+    /// <summary>
+    /// Queues a side effect on Umbraco's background task queue, retried with Polly: exponential backoff with jitter, and
+    /// only for failures trying again can fix. The outcome is a notification, since the set is applied by then. The queue
+    /// is in memory, so work still queued when the site restarts is lost.
+    /// </summary>
+    private void QueueSideEffect(ChangeSet set, IAbility ability, RecordedCall call, AbilityContext context)
+    {
+        var pipeline = new ResiliencePipelineBuilder<AbilityResult>()
+            .AddRetry(new RetryStrategyOptions<AbilityResult>
+            {
+                MaxRetryAttempts = ability.Descriptor.Retries,
+                BackoffType = DelayBackoffType.Exponential,
+                UseJitter = true,
+                Delay = retryDelay ?? TimeSpan.FromSeconds(2),
+                ShouldHandle = new PredicateBuilder<AbilityResult>()
+                    .Handle<Exception>(e => e is not OperationCanceledException)
+                    .HandleResult(r => r.Status == AbilityOperationStatus.Failed),
+            })
+            .Build();
+
+        background!.QueueBackgroundWorkItem(async cancellationToken =>
+        {
+            var attempts = 0;
+            var result = await pipeline.ExecuteAsync(
+                async token =>
+                {
+                    attempts++;
+                    return await ability.InvokeAsync(call.Input, context, token);
+                },
+                cancellationToken);
+
+            if (events is not null)
+            {
+                await events.PublishAsync(new ChangeSetSideEffectCompletedNotification(set, ability.Descriptor.Id, result, attempts), cancellationToken);
+            }
+        });
+    }
 
     private async Task<Guid> EnsureDraftAsync(ChangeSet set, IDraftingEntityDefinition drafting, CancellationToken cancellationToken)
     {

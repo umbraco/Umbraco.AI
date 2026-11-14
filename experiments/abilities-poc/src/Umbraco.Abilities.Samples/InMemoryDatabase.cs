@@ -15,6 +15,9 @@ public sealed class InMemoryDatabase(string name) : IUnitOfWorkProvider
 
     private Dictionary<string, Dictionary<Guid, Row>> _tables = [];
 
+    // Every saved version, for products that keep version history.
+    private readonly Dictionary<(string EntityType, Guid Key, long Version), JsonObject> _history = [];
+
     public sealed record Row(JsonObject Root, long Version);
 
     public Row? Get(string entityType, Guid key)
@@ -35,7 +38,16 @@ public sealed class InMemoryDatabase(string name) : IUnitOfWorkProvider
 
         var version = table.TryGetValue(key, out var existing) ? existing.Version + 1 : 1;
         table[key] = new Row((JsonObject)root.DeepClone(), version);
+        _history[(entityType, key, version)] = (JsonObject)root.DeepClone();
         return version;
+    }
+
+    public Row? GetVersion(string entityType, Guid key, long version)
+        => _history.TryGetValue((entityType, key, version), out var root) ? new Row((JsonObject)root.DeepClone(), version) : null;
+
+    public void ForgetHistory()
+    {
+        _history.Clear();
     }
 
     public IUnitOfWork Begin() => new Transaction(this, Snapshot());

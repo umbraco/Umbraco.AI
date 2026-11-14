@@ -35,7 +35,7 @@ Each design layer and where it lives:
 | --- | --- |
 | 1. Abilities | `Abilities/Ability.cs`: `[Ability]` with `Kind` and `Reversible`, typed `AbilityBase`, failures with categories and paths, `EntityRef` |
 | 2. Entity definitions | `Entities/`: fields, slots of typed items, entity and item references, an item type registry, a path editor generalised from Umbraco.AI's block path engine, and the generic entity abilities |
-| 3. Change sets | `ChangeSets/`: a recorded unit of "any Write ability call", working state worked out in memory, apply product by product (each all or nothing) and resumable, live-change detection. Generalises the CMS Draft Sets PoC (`Umbraco.Cms.DraftSets`) |
+| 3. Change sets | `ChangeSets/`: a recorded unit of "any Write ability call", working state worked out in memory, apply product by product (each all or nothing) and resumable, rebasing onto changes saved elsewhere meanwhile. Generalises the CMS Draft Sets PoC (`Umbraco.Cms.DraftSets`) |
 
 ## What the tests show
 
@@ -49,7 +49,12 @@ Each design layer and where it lives:
 | One set holds a page with nested blocks, a discount referring to that new page and switched on, and an email to send afterwards; activating the discount is a change shown in its working state, the email runs after every change | `ChangeSetTests.A_campaign_spanning_content_commerce_and_a_side_effect_is_applied_together` |
 | A failed step leaves earlier products' changes applied; applying again resumes at the failed step and applies nothing twice | `A_failed_step_leaves_earlier_steps_applied_and_applying_again_resumes` |
 | A product whose save fails rolls back all of its changes in the set, which can then be fixed and resumed | `A_product_whose_save_fails_rolls_back_all_of_its_changes_and_can_be_fixed_and_resumed` |
-| Apply is refused if live data changed under the set | `Applying_is_refused_when_live_data_changed_underneath_the_set` |
+| Changes saved elsewhere meanwhile that don't overlap the set's are rebased onto automatically, and both kept | `Changes_saved_elsewhere_that_do_not_overlap_are_rebased_onto_automatically` |
+| A value both changed is a conflict, with both values shown, until one is kept | `A_value_both_changed_is_a_conflict_until_one_is_kept`, `Keeping_yours_overwrites_their_value` |
+| Editing an item someone else removed is a conflict that can only keep theirs; the set's other edits still apply | `Editing_an_item_someone_else_removed_is_a_conflict_that_can_only_keep_theirs` |
+| The same change made on both sides is not a conflict | `The_same_change_made_on_both_sides_is_not_a_conflict` |
+| An entity whose product keeps version history is rebased from that history, with no snapshot in the set | `An_entity_with_version_history_is_rebased_from_its_history_without_a_snapshot` |
+| If the starting version is gone from the history, the entity can't be rebased, and says why | `If_the_starting_version_is_gone_from_the_history_the_entity_cant_be_rebased` |
 | Reads inside a set show its edits; reads outside show live data | `Reads_inside_a_set_show_its_edits_and_reads_outside_show_live_data` |
 | Replay is deterministic, and keys handed to the model are the stored keys | `Replaying_a_set_gives_the_same_entity_every_time` |
 | Workflow step types are derived from abilities | `WorkflowTests.Step_types_are_derived_from_abilities` |
@@ -111,6 +116,26 @@ can't be edited in it any more, the rest can be fixed, and applying again resume
 applying anything twice. `changeSet.summarize` lists the changes, the side effects and the plan, so a person
 sees before approving which parts are all or nothing and what runs afterwards.
 
+## Rebasing
+
+A change set records edits by path, not copies of entities, so when someone else saves an entity the set is
+editing, the set's edits are replayed onto the newer version instead of the apply being refused.
+
+- The first time a set edits an existing entity, it remembers the version it started from. If the product keeps
+  version history (`IVersionedEntityDefinition`), it remembers only the version number and loads that version from
+  the history when needed. Otherwise it keeps its own snapshot.
+- What someone else changed is the difference between that starting version and the live one; what the set changed
+  is the difference between the starting version and the set's result (`EntityDiff`, the same for every product).
+- Where they don't overlap, the set rebases automatically and `changeSet.summarize` lists what changed meanwhile.
+- Where both changed the same value in the same variant, or one changed something inside an item the other removed,
+  it's a conflict. `changeSet.validate` reports it with both values, apply is refused until it's resolved, and
+  `changeSet.resolveConflict` keeps yours or theirs. Edits to an item someone else removed can only keep theirs.
+- If both made the same change, it isn't a conflict. If the starting version is gone from the product's history
+  (a version clean-up), the entity can't be rebased and validation says why.
+
+The CMS document definition uses the snapshot for now: whether every draft save gets a new version that stays in
+the history (version clean-up removes old ones) needs checking before it can rely on the history.
+
 ## Against a real Umbraco
 
 `CmsDocumentDefinition` is a real definition for documents. One entity type, `cms.document`, has a subtype per
@@ -128,7 +153,8 @@ inside one Umbraco scope.
 | Editing an existing page keeps what the edit didn't touch (other cultures, settings, the grid) | `Editing_an_existing_page_keeps_everything_the_edit_did_not_touch` |
 | A page refused on save (by a notification handler) rolls back the page saved before it in the same Umbraco scope | `A_failed_save_rolls_back_every_document_in_the_Umbraco_scope` |
 | A side effect failing after Content's step leaves the content applied, and resuming doesn't save it again | `A_failed_side_effect_after_the_content_leaves_the_content_applied_and_the_set_resumable` |
-| Apply is refused when the page was saved in Umbraco after being edited in the set | `Applying_is_refused_when_the_page_changed_in_Umbraco_after_it_was_edited_in_the_set` |
+| A backoffice change made meanwhile (Danish subtitle) is rebased onto; the set's block edit applies on top and both are kept | `Changes_saved_in_the_backoffice_meanwhile_are_rebased_onto_when_they_do_not_overlap` |
+| A value changed in both the set and the backoffice is a conflict, with its culture, until one is kept | `A_value_changed_in_both_the_set_and_the_backoffice_is_a_conflict_to_resolve` |
 
 What running against Umbraco taught us:
 
@@ -145,7 +171,8 @@ What running against Umbraco taught us:
    maps these to `blocks/{key}/heading` with culture `en-US`.
 4. **Umbraco saves invalid values and reports them afterwards.** The definition treats any reported error
    as a failed save, so the scope rolls back and nothing half-valid is applied.
-5. **`UpdateDate` works as a change check.** It is compared before saving, as Umbraco has no check of its own.
+5. **`UpdateDate` works to notice a change.** Umbraco has no check of its own on update; comparing `UpdateDate` tells a
+   change set when to rebase.
 
 Not covered yet: templates (an update would clear one), publishing, rich text with blocks, segments inside
 blocks, culture-variant block properties against real Umbraco, error paths inside blocks nested in blocks,
@@ -176,7 +203,7 @@ What still does not fit, and needs a decision rather than more code:
 | CMS | Blocks in rich text are placed by markup, not by slot order | Adding a block to rich text needs an anchor in the markup; editing existing ones fits |
 | CMS | Segments are not managed (no list to validate against); "expose" (which cultures a block exists in) is derived by the CMS on read | The CMS definition must produce expose entries and accept any segment |
 | CMS | Update replaces all properties, and saves invalid values while returning errors | The definition must send the full working copy and treat returned errors as a failed apply |
-| CMS | No concurrency token on update | Change detection has to compare `UpdateDate` or `VersionId` inside the apply scope |
+| CMS | No concurrency token on update | Change sets rebase instead (see "Rebasing"); a change saved between validating and saving is still not caught |
 | Commerce | A discount's rules are one recursive tree under a group rule (AND/OR is a setting); rule and reward nodes have no ids | Fits as a single-item slot with nested slots, but the definition must assign item keys on load and drop them on save |
 | Commerce | Validation is message-only and stops at the first error; rule and reward settings are not validated on write | Problems by path have to come from the definition, not from Commerce |
 | Commerce | Saves use Commerce's own unit of work and connection, and can't join an Umbraco scope | No longer a gap: change sets don't assume a transaction across products (see "Applying a set") |

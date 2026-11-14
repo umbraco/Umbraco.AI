@@ -149,6 +149,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
             .Add(new SummarizeChangeSetAbility(_changeSets))
             .Add(new ApplyChangeSetAbility(_changeSets))
             .Add(new DiscardChangeSetAbility(_changeSets))
+            .Add(new ResolveConflictAbility(_changeSets))
             .Add(new FailingOperationAbility());
 
         _agent = new Agent(abilities, new AbilityInvoker(abilities, _changeSets));
@@ -304,23 +305,62 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
     }
 
     [Test]
-    public async Task Applying_is_refused_when_the_page_changed_in_Umbraco_after_it_was_edited_in_the_set()
+    public async Task Changes_saved_in_the_backoffice_meanwhile_are_rebased_onto_when_they_do_not_overlap()
     {
         await _agent.StartChangeSetAsync("Create");
         var page = await BuildSummerPageAsync();
         await _agent.OkAsync("changeSet_apply", SetJson());
 
         await _agent.StartChangeSetAsync("Edit");
-        await SetAsync(page.Key, "", "subtitle", "\"Sun and sand\"", "en-US");
+        await SetAsync(page.Key, $"blocks/{page.Hero}", "heading", "\"Big summer sale\"", "en-US");
 
-        // Someone saves the page in the backoffice meanwhile.
+        // Someone changes the Danish subtitle in the backoffice meanwhile.
+        await Task.Delay(20);
+        var content = ContentService.GetById(page.Key)!;
+        content.SetValue("subtitle", "Sol, strand og hav", "da-DK");
+        ContentService.Save(content);
+
+        var summary = await _agent.OkAsync("changeSet_summarize", SetJson());
+        Assert.That(summary.GetProperty("rebased")[0].GetProperty("changedSince").EnumerateArray().Select(c => c.GetString()), Does.Contain("subtitle (da-DK)"));
+
+        await _agent.OkAsync("changeSet_apply", SetJson());
+        content = ContentService.GetById(page.Key)!;
+        var heroValues = JsonNode.Parse(content.GetValue<string>("blocks")!)!["contentData"]!.AsArray()
+            .Single(c => c!["key"]!.ToString() == page.Hero.ToString())!["values"]!.AsArray();
+        Assert.Multiple(() =>
+        {
+            Assert.That(content.GetValue<string>("subtitle", "da-DK"), Is.EqualTo("Sol, strand og hav"), "the backoffice change is kept");
+            Assert.That(heroValues.Select(v => $"{v!["culture"]}:{v["value"]}"), Does.Contain("en-US:Big summer sale"), "the set's change is applied on top");
+        });
+    }
+
+    [Test]
+    public async Task A_value_changed_in_both_the_set_and_the_backoffice_is_a_conflict_to_resolve()
+    {
+        await _agent.StartChangeSetAsync("Create");
+        var page = await BuildSummerPageAsync();
+        await _agent.OkAsync("changeSet_apply", SetJson());
+
+        await _agent.StartChangeSetAsync("Edit");
+        await SetAsync(page.Key, "", "subtitle", "\"Sun, sand and sea\"", "en-US");
+
         await Task.Delay(20);
         var content = ContentService.GetById(page.Key)!;
         content.SetValue("subtitle", "Changed in the backoffice", "en-US");
         ContentService.Save(content);
 
-        var failure = await _agent.FailAsync("changeSet_apply", SetJson());
-        Assert.That(failure.GetProperty("message").GetString(), Does.Contain("changed underneath"));
+        var refused = await _agent.FailAsync("changeSet_apply", SetJson());
+        var problem = refused.GetProperty("problems")[0];
+        Assert.Multiple(() =>
+        {
+            Assert.That(problem.GetProperty("path").GetString(), Does.EndWith("/subtitle"));
+            Assert.That(problem.GetProperty("culture").GetString(), Is.EqualTo("en-US"));
+        });
+
+        await _agent.OkAsync("changeSet_resolveConflict", $$"""
+            { "changeSetId": "{{_agent.ChangeSetId}}", "entityType": "cms.document", "key": "{{page.Key}}", "path": "subtitle", "culture": "en-US", "keep": "theirs" }
+            """);
+        await _agent.OkAsync("changeSet_apply", SetJson());
         Assert.That(ContentService.GetById(page.Key)!.GetValue<string>("subtitle", "en-US"), Is.EqualTo("Changed in the backoffice"));
     }
 

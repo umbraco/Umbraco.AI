@@ -37,7 +37,49 @@ public sealed class ChangeSet
 
     /// <summary>The apply steps already done, so a failed apply resumes where it stopped and nothing applies twice.</summary>
     public HashSet<string> AppliedSteps { get; } = [];
+
+    /// <summary>
+    /// The version of each existing entity the set started editing from. Comparing it with the live version shows what
+    /// someone else changed since, so the set can rebase onto the live version instead of being refused.
+    /// </summary>
+    public Dictionary<string, EntityDocument> Bases { get; } = [];
+
+    /// <summary>
+    /// For entities whose product keeps version history, only the version the set started from: the version itself
+    /// is loaded from the history when needed, so the set keeps no copy.
+    /// </summary>
+    public Dictionary<string, long> BaseVersions { get; } = [];
+
+    /// <summary>How each conflict was resolved, keyed by <see cref="ResolutionKey"/>.</summary>
+    public Dictionary<string, ConflictSide> Resolutions { get; } = [];
+
+    public static string EntityKey(string entityType, Guid key) => $"{entityType}:{key}";
+
+    public static string ResolutionKey(string entityType, Guid key, ChangedPath change) => $"{entityType}:{key}|{change.Path}|{change.VariantKey}";
 }
+
+public enum ConflictSide
+{
+    /// <summary>Keep the change set's value.</summary>
+    Yours,
+
+    /// <summary>Keep the value someone else saved since.</summary>
+    Theirs,
+}
+
+/// <summary>A path both the set and someone else changed, differently, since the set started editing the entity.</summary>
+public sealed record ChangeSetConflict(
+    EntityRef Entity,
+    string Path,
+    string? Culture,
+    string? Segment,
+    JsonNode? Base,
+    JsonNode? Yours,
+    JsonNode? Theirs,
+    ConflictSide? Resolution);
+
+/// <summary>An entity someone else changed since the set started editing it: what they changed, and where that conflicts.</summary>
+public sealed record RebasedEntity(EntityRef Entity, IReadOnlyList<string> ChangedSince, IReadOnlyList<ChangeSetConflict> Conflicts);
 
 public interface IChangeSetStore
 {
@@ -111,4 +153,5 @@ public sealed record ChangeSetSummary(
     string Name,
     IReadOnlyList<ChangeSetChange> Entities,
     IReadOnlyList<string> AfterApply,
-    IReadOnlyList<ApplyStep> ApplyPlan);
+    IReadOnlyList<ApplyStep> ApplyPlan,
+    IReadOnlyList<RebasedEntity> Rebased);

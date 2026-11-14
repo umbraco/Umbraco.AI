@@ -18,8 +18,14 @@ namespace Umbraco.Abilities.Samples.Cms;
 /// ContentCreateModel / ContentUpdateModel and block envelopes on save.
 /// </summary>
 public sealed class CmsPageDefinition(InMemoryDatabase database)
-    : InMemoryEntityDefinition(database, "cms.page", "title", "/umbraco/section/content/workspace/document/edit")
+    : InMemoryEntityDefinition(database, "cms.page", "title", "/umbraco/section/content/workspace/document/edit"), IVersionedEntityDefinition
 {
+    /// <summary>Content keeps version history, so change sets don't need their own snapshot of a page.</summary>
+    public Task<EntityDocument?> LoadVersionAsync(Guid key, long version, CancellationToken cancellationToken = default)
+        => Task.FromResult(Database.GetVersion(EntityType, key, version) is { } row
+            ? new EntityDocument { EntityType = EntityType, Key = key, LiveVersion = row.Version, Root = row.Root }
+            : null);
+
     public static readonly IReadOnlyList<string> Cultures = ["en-US", "da-DK"];
 
     public const int GridColumns = 12;

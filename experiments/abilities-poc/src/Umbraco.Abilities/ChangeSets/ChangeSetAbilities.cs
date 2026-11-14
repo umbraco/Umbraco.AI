@@ -51,3 +51,31 @@ public sealed class DiscardChangeSetAbility(ChangeSetService changeSets) : Abili
         return Task.FromResult(Success(new { discarded = input.ChangeSetId }));
     }
 }
+
+public sealed record ResolveConflictInput(
+    [property: Description("The change set's id.")] Guid ChangeSetId,
+    [property: Description("Entity type of the conflicting entity.")] string EntityType,
+    [property: Description("Entity key.")] Guid Key,
+    [property: Description("The conflict's path, as listed by changeSet.validate or changeSet.summarize.")] string Path,
+    [property: Description("Which value to keep: 'yours' (the change set's) or 'theirs' (saved by someone else since).")] string Keep,
+    [property: Description("The conflict's culture, if it has one.")] string? Culture = null,
+    [property: Description("The conflict's segment, if it has one.")] string? Segment = null);
+
+[Ability("changeSet.resolveConflict", "Resolve change set conflict", Kind = AbilityKind.Write, Reversible = true,
+    Description = "When someone else changed something the change set also changed, keeps one of the two values. " +
+                  "Ask the person which to keep unless the instructions already say. Changes nothing live.")]
+public sealed class ResolveConflictAbility(ChangeSetService changeSets) : AbilityBase<ResolveConflictInput, object>, IChangeSetLifecycleAbility
+{
+    protected override async Task<AbilityResult> ExecuteAsync(ResolveConflictInput input, AbilityContext context, CancellationToken cancellationToken)
+    {
+        var keep = input.Keep?.ToLowerInvariant() switch
+        {
+            "yours" => ConflictSide.Yours,
+            "theirs" => ConflictSide.Theirs,
+            _ => throw new AbilityInputException("Keep must be 'yours' or 'theirs'.", [new Problem("keep", "Must be 'yours' or 'theirs'.")]),
+        };
+
+        await changeSets.ResolveConflictAsync(input.ChangeSetId, input.EntityType, input.Key, input.Path, new Entities.VariantId(input.Culture, input.Segment), keep, cancellationToken);
+        return Success(new { resolved = input.Path, kept = keep.ToString().ToLowerInvariant() });
+    }
+}

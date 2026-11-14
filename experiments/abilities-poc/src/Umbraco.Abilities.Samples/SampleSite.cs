@@ -33,7 +33,8 @@ public sealed class SampleSite
             .Add(new ValidateChangeSetAbility(ChangeSets))
             .Add(new SummarizeChangeSetAbility(ChangeSets))
             .Add(new ApplyChangeSetAbility(ChangeSets))
-            .Add(new DiscardChangeSetAbility(ChangeSets));
+            .Add(new DiscardChangeSetAbility(ChangeSets))
+            .Add(new ResolveConflictAbility(ChangeSets));
 
         // CMS content.
         Pages = new CmsPageDefinition(ContentDatabase);

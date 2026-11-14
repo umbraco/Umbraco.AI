@@ -37,6 +37,17 @@ public interface IEntityDefinition
     EntityRef ToRef(EntityDocument document);
 }
 
+/// <summary>
+/// A definition whose product keeps version history. A change set then only remembers which version it started
+/// editing from, and loads that version from the history when it needs to see what changed since, instead of
+/// keeping its own snapshot.
+/// </summary>
+public interface IVersionedEntityDefinition : IEntityDefinition
+{
+    /// <summary>A stored version, as <see cref="IEntityDefinition.LoadAsync"/> returned it then; null if the history no longer has it.</summary>
+    Task<EntityDocument?> LoadVersionAsync(Guid key, long version, CancellationToken cancellationToken = default);
+}
+
 public sealed record EntitySubtype(string Alias, string Name);
 
 public sealed class EntityDefinitionRegistry

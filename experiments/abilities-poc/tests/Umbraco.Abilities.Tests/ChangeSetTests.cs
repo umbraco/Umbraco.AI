@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 using Umbraco.Abilities.Entities;
@@ -140,24 +141,171 @@ public class ChangeSetTests
     }
 
     [Fact]
-    public async Task Applying_is_refused_when_live_data_changed_underneath_the_set()
+    public async Task Changes_saved_elsewhere_that_do_not_overlap_are_rebased_onto_automatically()
     {
         var discount = await CreateLiveDiscountAsync("Original");
 
         await _agent.StartChangeSetAsync("Rename");
-        await _agent.OkAsync("entity_setValue", $$"""
-            { "entityType": "commerce.discount", "key": "{{discount}}", "elementPath": "", "field": "name", "value": "Renamed in set" }
-            """);
+        await SetDiscountAsync(discount, "", "name", "\"Renamed in set\"");
 
-        // Someone saves the discount directly while the set is open.
-        var meanwhile = (await _site.Discounts.LoadAsync(discount))!;
-        Element.Fields(meanwhile.Root)["name"] = "Changed live";
-        await _site.Discounts.SaveAsync(meanwhile);
+        // Someone sets a code on the same discount while the set is open.
+        await SaveLiveAsync(discount, d => Element.Fields(d.Root)["code"] = "SAVE10");
 
-        var failure = await _agent.FailAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
-        Assert.Equal($"commerce.discount:{discount}", failure.GetProperty("problems")[0].GetProperty("path").GetString());
-        Assert.Equal("Changed live", _site.Discounts.ToRef((await _site.Discounts.LoadAsync(discount))!).Name);
+        var summary = await _agent.OkAsync("changeSet_summarize", SetJson());
+        var rebased = summary.GetProperty("rebased")[0];
+        Assert.Equal(["code"], rebased.GetProperty("changedSince").EnumerateArray().Select(c => c.GetString()));
+        Assert.Equal(0, rebased.GetProperty("conflicts").GetArrayLength());
+
+        await _agent.OkAsync("changeSet_apply", SetJson());
+        var live = Element.Fields((await _site.Discounts.LoadAsync(discount))!.Root);
+        Assert.Equal("Renamed in set", live["name"]!.GetValue<string>());
+        Assert.Equal("SAVE10", live["code"]!.GetValue<string>()); // theirs kept, not overwritten by the set
     }
+
+    [Fact]
+    public async Task A_value_both_changed_is_a_conflict_until_one_is_kept()
+    {
+        var discount = await CreateLiveDiscountAsync("Original");
+
+        await _agent.StartChangeSetAsync("Rename");
+        await SetDiscountAsync(discount, "", "name", "\"Renamed in set\"");
+        await SaveLiveAsync(discount, d => Element.Fields(d.Root)["name"] = "Changed live");
+
+        var refused = await _agent.FailAsync("changeSet_apply", SetJson());
+        var problem = refused.GetProperty("problems")[0];
+        Assert.Equal($"commerce.discount:{discount}/name", problem.GetProperty("path").GetString());
+        Assert.Contains("Renamed in set", problem.GetProperty("message").GetString());
+        Assert.Contains("Changed live", problem.GetProperty("message").GetString());
+        Assert.True(refused.GetProperty("correctable").GetBoolean());
+
+        await _agent.OkAsync("changeSet_resolveConflict", $$"""
+            { "changeSetId": "{{_agent.ChangeSetId}}", "entityType": "commerce.discount", "key": "{{discount}}", "path": "name", "keep": "theirs" }
+            """);
+        await _agent.OkAsync("changeSet_apply", SetJson());
+        Assert.Equal("Changed live", Element.Fields((await _site.Discounts.LoadAsync(discount))!.Root)["name"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public async Task Keeping_yours_overwrites_their_value()
+    {
+        var discount = await CreateLiveDiscountAsync("Original");
+
+        await _agent.StartChangeSetAsync("Rename");
+        await SetDiscountAsync(discount, "", "name", "\"Renamed in set\"");
+        await SaveLiveAsync(discount, d => Element.Fields(d.Root)["name"] = "Changed live");
+
+        await _agent.OkAsync("changeSet_resolveConflict", $$"""
+            { "changeSetId": "{{_agent.ChangeSetId}}", "entityType": "commerce.discount", "key": "{{discount}}", "path": "name", "keep": "yours" }
+            """);
+        await _agent.OkAsync("changeSet_apply", SetJson());
+        Assert.Equal("Renamed in set", Element.Fields((await _site.Discounts.LoadAsync(discount))!.Root)["name"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public async Task Editing_an_item_someone_else_removed_is_a_conflict_that_can_only_keep_theirs()
+    {
+        var discount = await CreateLiveDiscountAsync("Original");
+        var rule = Element.ItemKey(Element.Slot((await _site.Discounts.LoadAsync(discount))!.Root, "rules")[0]!);
+
+        await _agent.StartChangeSetAsync("Raise minimum");
+        await SetDiscountAsync(discount, $"rules/{rule}", "minTotal", "100");
+        await SetDiscountAsync(discount, "", "name", "\"Raised\"");
+
+        // Someone replaces the rule while the set is open.
+        await SaveLiveAsync(discount, d =>
+        {
+            var rules = Element.Slot(d.Root, "rules");
+            rules.Clear();
+            var replacement = Element.NewItem(Guid.NewGuid(), "customerGroup");
+            Element.Fields(replacement)["group"] = "VIP";
+            rules.Add(replacement);
+        });
+
+        var validation = await _agent.OkAsync("changeSet_validate", SetJson());
+        Assert.Contains($"rules/{rule}", JsonAssert.ProblemPaths(validation));
+
+        var keepYours = await _agent.FailAsync("changeSet_resolveConflict", $$"""
+            { "changeSetId": "{{_agent.ChangeSetId}}", "entityType": "commerce.discount", "key": "{{discount}}", "path": "rules/{{rule}}", "keep": "yours" }
+            """);
+        Assert.Contains("removed this item", keepYours.GetProperty("message").GetString());
+
+        await _agent.OkAsync("changeSet_resolveConflict", $$"""
+            { "changeSetId": "{{_agent.ChangeSetId}}", "entityType": "commerce.discount", "key": "{{discount}}", "path": "rules/{{rule}}", "keep": "theirs" }
+            """);
+        await _agent.OkAsync("changeSet_apply", SetJson());
+
+        var live = (await _site.Discounts.LoadAsync(discount))!.Root;
+        Assert.Equal("Raised", Element.Fields(live)["name"]!.GetValue<string>()); // the set's other edit still applies
+        Assert.Equal(["customerGroup"], Element.Slot(live, "rules").Select(r => Element.ItemType(r!)));
+    }
+
+    [Fact]
+    public async Task The_same_change_made_on_both_sides_is_not_a_conflict()
+    {
+        var discount = await CreateLiveDiscountAsync("Original");
+
+        await _agent.StartChangeSetAsync("Rename");
+        await SetDiscountAsync(discount, "", "name", "\"Summer sale\"");
+        await SaveLiveAsync(discount, d => Element.Fields(d.Root)["name"] = "Summer sale");
+
+        await _agent.OkAsync("changeSet_apply", SetJson());
+    }
+
+    [Fact]
+    public async Task An_entity_with_version_history_is_rebased_from_its_history_without_a_snapshot()
+    {
+        await _agent.StartChangeSetAsync("Create");
+        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "cms.page", "culture": "en-US", "fields": { "title": "Launch" } }""")).GetProperty("key").GetGuid();
+        await _agent.OkAsync("changeSet_apply", SetJson());
+
+        await _agent.StartChangeSetAsync("Edit");
+        await _agent.OkAsync("entity_setValue", $$"""{ "entityType": "cms.page", "key": "{{page}}", "elementPath": "", "field": "title", "value": "Big launch", "culture": "en-US" }""");
+
+        // Pages keep version history, so the set remembers only the version it started from.
+        var set = _site.ChangeSets.Get(_agent.ChangeSetId!.Value);
+        Assert.Empty(set.Bases);
+        Assert.Equal(1, set.BaseVersions[$"cms.page:{page}"]);
+
+        // Someone sets the URL segment meanwhile: rebased automatically, both kept.
+        var live = (await _site.Pages.LoadAsync(page))!;
+        Element.Fields(Element.VariantPart(live.Root, new VariantId("en-US", null)))["urlSegment"] = "launch";
+        await _site.Pages.SaveAsync(live);
+
+        await _agent.OkAsync("changeSet_apply", SetJson());
+        var applied = Element.Fields(Element.VariantPart((await _site.Pages.LoadAsync(page))!.Root, new VariantId("en-US", null)));
+        Assert.Equal("Big launch", applied["title"]!.GetValue<string>());
+        Assert.Equal("launch", applied["urlSegment"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public async Task If_the_starting_version_is_gone_from_the_history_the_entity_cant_be_rebased()
+    {
+        await _agent.StartChangeSetAsync("Create");
+        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "cms.page", "culture": "en-US", "fields": { "title": "Launch" } }""")).GetProperty("key").GetGuid();
+        await _agent.OkAsync("changeSet_apply", SetJson());
+
+        await _agent.StartChangeSetAsync("Edit");
+        await _agent.OkAsync("entity_setValue", $$"""{ "entityType": "cms.page", "key": "{{page}}", "elementPath": "", "field": "title", "value": "Big launch", "culture": "en-US" }""");
+
+        var live = (await _site.Pages.LoadAsync(page))!;
+        await _site.Pages.SaveAsync(live);
+        _site.ContentDatabase.ForgetHistory(); // e.g. a version clean-up
+
+        var refused = await _agent.FailAsync("changeSet_apply", SetJson());
+        Assert.Contains("version the set started from is gone", refused.GetProperty("problems")[0].GetProperty("message").GetString());
+    }
+
+    private Task<JsonElement> SetDiscountAsync(Guid discount, string elementPath, string field, string valueJson)
+        => _agent.OkAsync("entity_setValue", $$"""{ "entityType": "commerce.discount", "key": "{{discount}}", "elementPath": "{{elementPath}}", "field": "{{field}}", "value": {{valueJson}} }""");
+
+    private async Task SaveLiveAsync(Guid discount, Action<EntityDocument> change)
+    {
+        var live = (await _site.Discounts.LoadAsync(discount))!;
+        change(live);
+        await _site.Discounts.SaveAsync(live);
+    }
+
+    private string SetJson() => $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""";
 
     [Fact]
     public async Task Reads_inside_a_set_show_its_edits_and_reads_outside_show_live_data()

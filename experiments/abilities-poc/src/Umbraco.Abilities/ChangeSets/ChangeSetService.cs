@@ -92,6 +92,20 @@ public sealed class ChangeSetService(
                 throw new AbilityInputException($"No {target.EntityType} with key {target.EntityKey}.", [new Problem("key", "Not found.")]);
             }
 
+            // Remember the version the set starts editing from, to rebase onto newer live versions later.
+            // (Only for entities that exist live: one the set creates has nothing to rebase onto.)
+            if (!target.Creates && working.LiveVersion is { } version && !set.Bases.ContainsKey(ChangeSet.EntityKey(target.EntityType, target.EntityKey)))
+            {
+                if (definition is IVersionedEntityDefinition)
+                {
+                    set.BaseVersions.TryAdd(ChangeSet.EntityKey(target.EntityType, target.EntityKey), version);
+                }
+                else
+                {
+                    set.Bases.TryAdd(ChangeSet.EntityKey(target.EntityType, target.EntityKey), working.Clone());
+                }
+            }
+
             var structure = await definition.DescribeAsync(working.Subtype, cancellationToken);
             var output = edit.Apply(working, recorded, new EntityEditContext(definition, structure, itemTypes));
 
@@ -109,17 +123,168 @@ public sealed class ChangeSetService(
         }
     }
 
-    /// <summary>The entity as it would be if the set were applied now, or null if it exists neither live nor in the set.</summary>
+    /// <summary>
+    /// The entity as it would be if the set were applied now, or null if it exists neither live nor in the set. The set's
+    /// edits are replayed onto the current live version, which rebases them onto anything someone else saved since.
+    /// An edit to something they removed is skipped (it shows as a conflict), and conflicts resolved as "theirs" take
+    /// the live value.
+    /// </summary>
     public async Task<EntityDocument?> GetWorkingStateAsync(ChangeSet set, string entityType, Guid key, CancellationToken cancellationToken = default)
     {
         var definition = definitions.Get(entityType);
         var calls = set.Changes.Where(c => c.EntityType == entityType && c.EntityKey == key).ToList();
 
-        var document = calls.FirstOrDefault() is { Creates: true } create
-            ? definition.New(key, create.Subtype)
-            : (await definition.LoadAsync(key, cancellationToken))?.Clone();
+        if (calls.FirstOrDefault() is { Creates: true } create)
+        {
+            return await ReplayAsync(definition, definition.New(key, create.Subtype), calls, skipUnder: [], cancellationToken);
+        }
 
-        if (document is null || calls.Count == 0)
+        var live = await definition.LoadAsync(key, cancellationToken);
+        if (live is null || calls.Count == 0)
+        {
+            return live?.Clone();
+        }
+
+        var start = await GetStartAsync(set, definition, key, cancellationToken);
+        var theirs = start is not null && start.LiveVersion != live.LiveVersion
+            ? EntityDiff.Compare(start.Root, live.Root)
+            : [];
+
+        var document = await ReplayAsync(definition, live.Clone(), calls, theirs.Where(t => t.Structural).ToList(), cancellationToken);
+
+        // Conflicts resolved as "theirs" take the live value: a field, an item, or a slot's order.
+        var prefix = $"{ChangeSet.EntityKey(entityType, key)}|";
+        foreach (var (resolutionKey, side) in set.Resolutions)
+        {
+            if (side == ConflictSide.Theirs && resolutionKey.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                var parts = resolutionKey[prefix.Length..].Split('|');
+                EntityDiff.CopyPath(live.Root, document.Root, new ChangedPath(parts[0], parts[1], Structural: false));
+            }
+        }
+
+        return document;
+    }
+
+    /// <summary>
+    /// Paths both the set and someone else changed, differently, since the set started editing each entity, with how
+    /// they were resolved. Keyed by entity; an entity someone else deleted has one conflict at the empty path.
+    /// </summary>
+    public async Task<IReadOnlyList<RebasedEntity>> GetRebasedAsync(ChangeSet set, CancellationToken cancellationToken = default)
+    {
+        var result = new List<RebasedEntity>();
+        foreach (var (entityType, key) in PendingEntities(set))
+        {
+            var definition = definitions.Get(entityType);
+            var start = await GetStartAsync(set, definition, key, cancellationToken);
+            var live = await definition.LoadAsync(key, cancellationToken);
+            if (start is null)
+            {
+                // The product's history no longer has the version the set started from (e.g. after a version clean-up).
+                if (set.BaseVersions.TryGetValue(ChangeSet.EntityKey(entityType, key), out var lost) && live is not null && live.LiveVersion != lost)
+                {
+                    result.Add(new RebasedEntity(definition.ToRef(live), ["(unknown: the starting version is no longer in the history)"],
+                        [new ChangeSetConflict(definition.ToRef(live), string.Empty, null, null, null, null, null, null)]));
+                }
+
+                continue;
+            }
+
+            if (live is null)
+            {
+                result.Add(new RebasedEntity(definition.ToRef(start), ["(deleted)"],
+                    [new ChangeSetConflict(definition.ToRef(start), string.Empty, null, null, null, null, null, null)]));
+                continue;
+            }
+
+            if (live.LiveVersion == start.LiveVersion)
+            {
+                continue;
+            }
+
+            var calls = set.Changes.Where(c => c.EntityType == entityType && c.EntityKey == key).ToList();
+            var yoursDocument = await ReplayAsync(definition, start.Clone(), calls, skipUnder: [], cancellationToken);
+            var theirs = EntityDiff.Compare(start.Root, live.Root);
+            var yours = EntityDiff.Compare(start.Root, yoursDocument.Root);
+
+            var conflicts = new List<ChangeSetConflict>();
+            foreach (var (mine, other) in yours.SelectMany(y => theirs.Where(t => EntityDiff.Overlaps(y, t)).Select(t => (y, t))))
+            {
+                // Report at the item someone added or removed, else at the value itself.
+                var at = other.Structural ? other : mine.Structural ? mine : mine;
+                var yourValue = EntityDiff.ValueAt(yoursDocument.Root, at);
+                var theirValue = EntityDiff.ValueAt(live.Root, at);
+                if (JsonNode.DeepEquals(yourValue, theirValue) || conflicts.Any(c => c.Path == at.Path && c.Culture == at.Variant.Culture && c.Segment == at.Variant.Segment))
+                {
+                    continue; // Both made the same change, or it's already listed.
+                }
+
+                conflicts.Add(new ChangeSetConflict(
+                    definition.ToRef(live),
+                    at.Path,
+                    at.Variant.Culture,
+                    at.Variant.Segment,
+                    EntityDiff.ValueAt(start.Root, at),
+                    yourValue,
+                    theirValue,
+                    set.Resolutions.TryGetValue(ChangeSet.ResolutionKey(entityType, key, at), out var side) ? side : null));
+            }
+
+            result.Add(new RebasedEntity(definition.ToRef(live), theirs.Select(t => Describe(t)).Distinct().ToList(), conflicts));
+        }
+
+        return result;
+    }
+
+    /// <summary>Keeps the set's value or the live one for one conflict.</summary>
+    public async Task ResolveConflictAsync(Guid setId, string entityType, Guid key, string path, VariantId variant, ConflictSide keep, CancellationToken cancellationToken = default)
+    {
+        var set = Get(setId);
+        var conflict = (await GetRebasedAsync(set, cancellationToken))
+            .Where(r => r.Entity.EntityType == entityType && r.Entity.Key == key)
+            .SelectMany(r => r.Conflicts)
+            .FirstOrDefault(c => c.Path == path && c.Culture == variant.Culture && c.Segment == variant.Segment)
+            ?? throw new AbilityInputException($"No conflict at '{path}' on {entityType} {key}.", [new Problem("path", "No conflict here. List conflicts with changeSet.summarize.")]);
+
+        if (conflict.Path.Length == 0)
+        {
+            throw new AbilityInputException(
+                "This entity can't be rebased: someone else deleted it, or the version the set started from is gone. Discard the set's changes to it and make them again.",
+                [new Problem("path", "Can't be rebased.")]);
+        }
+
+        if (keep == ConflictSide.Yours && conflict.Theirs is null && conflict.Yours is not null && conflict.Path.Split('/')[^1] is var last && Guid.TryParse(last, out _))
+        {
+            throw new AbilityInputException("Someone else removed this item, so your edits to it can't be kept. Keep theirs, or add the item again.", [new Problem(path, "Removed by someone else.")]);
+        }
+
+        set.Resolutions[ChangeSet.ResolutionKey(entityType, key, new ChangedPath(path, variant.Key, Structural: false))] = keep;
+        store.Save(set);
+    }
+
+    /// <summary>
+    /// The version the set started editing an entity from: its own snapshot, or, when the product keeps version
+    /// history, that version loaded from the history.
+    /// </summary>
+    private static async Task<EntityDocument?> GetStartAsync(ChangeSet set, IEntityDefinition definition, Guid key, CancellationToken cancellationToken)
+    {
+        var entityKey = ChangeSet.EntityKey(definition.EntityType, key);
+        if (set.Bases.TryGetValue(entityKey, out var snapshot))
+        {
+            return snapshot;
+        }
+
+        if (set.BaseVersions.TryGetValue(entityKey, out var version) && definition is IVersionedEntityDefinition versioned)
+        {
+            return await versioned.LoadVersionAsync(key, version, cancellationToken);
+        }
+
+        return null;
+    }
+
+    private async Task<EntityDocument> ReplayAsync(IEntityDefinition definition, EntityDocument document, IReadOnlyList<RecordedCall> calls, IReadOnlyList<ChangedPath> skipUnder, CancellationToken cancellationToken)
+    {
+        if (calls.Count == 0)
         {
             return document;
         }
@@ -127,24 +292,50 @@ public sealed class ChangeSetService(
         var context = new EntityEditContext(definition, await definition.DescribeAsync(document.Subtype, cancellationToken), itemTypes);
         foreach (var call in calls)
         {
-            ((IEntityEditAbility)abilities.Find(call.AbilityId)!).Apply(document, call.Input, context);
+            try
+            {
+                ((IEntityEditAbility)abilities.Find(call.AbilityId)!).Apply(document, call.Input, context);
+            }
+            catch (AbilityInputException ex) when (ex.Problems.Any(p => skipUnder.Any(t => p.Path == t.Path || p.Path.StartsWith(t.Path + "/", StringComparison.Ordinal))))
+            {
+                // The edit was to something someone else removed since; it shows as a conflict instead.
+            }
         }
 
         return document;
     }
+
+    private static string Describe(ChangedPath change) => change.Variant.Culture is { } culture ? $"{change.Path} ({culture})" : change.Path;
 
     public async Task<IReadOnlyList<EntityProblems>> ValidateAsync(Guid setId, CancellationToken cancellationToken = default)
     {
         var set = Get(setId);
         var result = new List<EntityProblems>();
 
+        var rebased = await GetRebasedAsync(set, cancellationToken);
         foreach (var (entityType, key) in PendingEntities(set))
         {
             var definition = definitions.Get(entityType);
-            var document = (await GetWorkingStateAsync(set, entityType, key, cancellationToken))!;
+            var conflicts = rebased.Where(r => r.Entity.EntityType == entityType && r.Entity.Key == key).SelectMany(r => r.Conflicts).Where(c => c.Resolution is null).ToList();
+            var document = await GetWorkingStateAsync(set, entityType, key, cancellationToken);
+            if (document is null)
+            {
+                result.Add(new EntityProblems(rebased.First(r => r.Entity.Key == key).Entity, [new Problem(string.Empty, "Someone else deleted this since the set started editing it.")]));
+                continue;
+            }
+
             var structure = await definition.DescribeAsync(document.Subtype, cancellationToken);
 
             var problems = new List<Problem>();
+            problems.AddRange(conflicts.Select(c => new Problem(
+                c.Path,
+                c.Path.Length == 0
+                    ? "Someone else changed this since the set started editing it, and what they changed can't be worked out: the version the set started from is gone. Discard the set's changes to it and make them again."
+                    : $"Someone else changed this since the set started editing it. Yours: {c.Yours?.ToJsonString() ?? "(removed)"}; theirs: {c.Theirs?.ToJsonString() ?? "(removed)"}. Keep one with changeSet.resolveConflict.")
+            {
+                Culture = c.Culture,
+                Segment = c.Segment,
+            }));
             problems.AddRange(await StructureValidator.ValidateAsync(document, structure, itemTypes, (type, k) => ExistsAsync(set, type, k, cancellationToken)));
             problems.AddRange(await definition.ValidateAsync(document, cancellationToken));
 
@@ -165,18 +356,19 @@ public sealed class ChangeSetService(
         var changes = new List<ChangeSetChange>();
         foreach (var (entityType, key) in TouchedEntities(set))
         {
-            var document = (await GetWorkingStateAsync(set, entityType, key, cancellationToken))!;
+            var document = await GetWorkingStateAsync(set, entityType, key, cancellationToken)
+                ?? (await GetStartAsync(set, definitions.Get(entityType), key, cancellationToken))!;
             var calls = set.Changes.Where(c => c.EntityType == entityType && c.EntityKey == key).ToList();
             changes.Add(new ChangeSetChange(definitions.Get(entityType).ToRef(document), calls[0].Creates ? "created" : "updated", calls.Count));
         }
 
         var afterApply = set.AfterApply.Select(c => c.AbilityId).ToList();
         var plan = Plan(set).Select(s => new ApplyStep(s.Name, s.Description, set.AppliedSteps.Contains(s.Key))).ToList();
-        return new ChangeSetSummary(set.Id, set.Name, changes, afterApply, plan);
+        return new ChangeSetSummary(set.Id, set.Name, changes, afterApply, plan, await GetRebasedAsync(set, cancellationToken));
     }
 
     /// <summary>
-    /// Validates the set and checks nothing changed underneath it, then applies it one step at a time: each
+    /// Validates the set, including conflicts with anything saved since that are not resolved yet, then applies it one step at a time: each
     /// product's entities in that product's own transaction, then each recorded operation. A failed step rolls back
     /// only itself; earlier steps stay applied and are skipped when the set is applied again.
     /// </summary>
@@ -197,27 +389,6 @@ public sealed class ChangeSetService(
         {
             var problems = invalid.SelectMany(e => e.Problems.Select(p => p with { Path = $"{e.Entity.EntityType}:{e.Entity.Key}/{p.Path}" })).ToList();
             return AbilityResult.Fail(FailureCategory.Input, "The change set has problems. Fix them and apply again.", problems);
-        }
-
-        var conflicts = new List<Problem>();
-        foreach (var (entityType, key) in PendingEntities(set))
-        {
-            var first = set.Changes.First(c => c.EntityType == entityType && c.EntityKey == key);
-            if (first.Creates)
-            {
-                continue;
-            }
-
-            var live = await definitions.Get(entityType).LoadAsync(key, cancellationToken);
-            if (live?.LiveVersion != first.BaseVersion)
-            {
-                conflicts.Add(new Problem($"{entityType}:{key}", $"Changed since it was edited in this set (version {first.BaseVersion} then, {live?.LiveVersion} now)."));
-            }
-        }
-
-        if (conflicts.Count > 0)
-        {
-            return AbilityResult.Fail(FailureCategory.Runtime, "Live data changed underneath the change set.", conflicts);
         }
 
         var saved = new List<EntityRef>();

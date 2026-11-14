@@ -24,19 +24,19 @@ public class ChangeSetTests
         var page = Guid.NewGuid();
         var discount = Guid.NewGuid();
 
-        // A page with nested blocks: a card grid holding a card is a slot inside an item.
+        // A page with nested blocks: a card grid holding a card is an items field inside an item.
         await _agent.OkAsync("entity_create", $$"""{ "entityType": "document", "key": "{{page}}", "culture": "en-US", "fields": { "title": "Black Friday" } }""");
         var hero = await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "document", "key": "{{page}}", "slotPath": "blocks", "itemType": "hero", "culture": "en-US", "fields": { "heading": "Black Friday deals" } }
+            { "entityType": "document", "key": "{{page}}", "fieldPath": "blocks", "itemType": "hero", "culture": "en-US", "fields": { "heading": "Black Friday deals" } }
             """);
         await _agent.OkAsync("entity_setValue", $$"""
             { "entityType": "document", "key": "{{page}}", "elementPath": "{{hero.GetProperty("path").GetString()}}/@settings", "field": "theme", "value": "dark" }
             """);
         var grid = await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "document", "key": "{{page}}", "slotPath": "blocks", "itemType": "cardGrid" }
+            { "entityType": "document", "key": "{{page}}", "fieldPath": "blocks", "itemType": "cardGrid" }
             """);
         await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "document", "key": "{{page}}", "slotPath": "{{grid.GetProperty("path").GetString()}}/cards", "itemType": "card", "fields": { "title": "20% off everything" } }
+            { "entityType": "document", "key": "{{page}}", "fieldPath": "{{grid.GetProperty("path").GetString()}}/cards", "itemType": "card", "fields": { "title": "20% off everything" } }
             """);
 
         // A discount pointing at the page created in the same set, using the key the agent chose.
@@ -44,10 +44,10 @@ public class ChangeSetTests
             { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fields": { "name": "Black Friday", "landingPage": "{{page}}" } }
             """);
         await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 0 } }
+            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 0 } }
             """);
         await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rewards", "itemType": "percentageOff", "fields": { "percent": 20 } }
+            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rewards", "itemType": "percentageOff", "fields": { "percent": 20 } }
             """);
 
         // Activating the discount is a change to it, not a side effect: it shows in the discount's working state
@@ -137,8 +137,8 @@ public class ChangeSetTests
     private async Task<Guid> CreateDiscountAsync(string name, string code)
     {
         var discount = (await _agent.OkAsync("entity_create", $$"""{ "entityType": "umbraco-commerce-discount", "fields": { "name": "{{name}}", "code": "{{code}}" } }""")).GetProperty("key").GetGuid();
-        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 0 } }""");
-        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rewards", "itemType": "freeShipping" }""");
+        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 0 } }""");
+        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rewards", "itemType": "freeShipping" }""");
         return discount;
     }
 
@@ -331,13 +331,13 @@ public class ChangeSetTests
         await _agent.StartChangeSetAsync("Replay");
         var page = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "culture": "en-US", "fields": { "title": "Replay" } }""")).GetProperty("key").GetGuid();
         var hero = await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "document", "key": "{{page}}", "slotPath": "blocks", "itemType": "hero", "culture": "en-US", "fields": { "heading": "Hi" } }
+            { "entityType": "document", "key": "{{page}}", "fieldPath": "blocks", "itemType": "hero", "culture": "en-US", "fields": { "heading": "Hi" } }
             """);
         await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "document", "key": "{{page}}", "slotPath": "blocks", "itemType": "hero", "culture": "en-US", "fields": { "heading": "First" }, "position": 0 }
+            { "entityType": "document", "key": "{{page}}", "fieldPath": "blocks", "itemType": "hero", "culture": "en-US", "fields": { "heading": "First" }, "position": 0 }
             """);
         await _agent.OkAsync("entity_moveItem", $$"""
-            { "entityType": "document", "key": "{{page}}", "slotPath": "blocks", "itemKey": "{{hero.GetProperty("itemKey").GetGuid()}}", "position": 0 }
+            { "entityType": "document", "key": "{{page}}", "fieldPath": "blocks", "itemKey": "{{hero.GetProperty("itemKey").GetGuid()}}", "position": 0 }
             """);
 
         var set = _site.ChangeSets.Get(_agent.ChangeSetId!.Value);
@@ -346,7 +346,7 @@ public class ChangeSetTests
         Assert.Equal(first, second);
 
         // The key the agent was given is the key that is stored, so later calls can refer to it.
-        var blocks = (await _site.ChangeSets.GetWorkingStateAsync(set, "document", page))!.Root.Slot("blocks");
+        var blocks = (await _site.ChangeSets.GetWorkingStateAsync(set, "document", page))!.Root.ItemsOf("blocks");
         Assert.Equal(hero.GetProperty("itemKey").GetGuid(), blocks[0].Key);
     }
 
@@ -354,8 +354,8 @@ public class ChangeSetTests
     {
         var set = await _agent.StartChangeSetAsync("Seed");
         var discount = (await _agent.OkAsync("entity_create", $$"""{ "entityType": "umbraco-commerce-discount", "fields": { "name": "{{name}}" } }""")).GetProperty("key").GetGuid();
-        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 50 } }""");
-        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rewards", "itemType": "freeShipping" }""");
+        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 50 } }""");
+        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rewards", "itemType": "freeShipping" }""");
         await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{set}}" }""");
         _agent.ChangeSetId = null;
         return discount;

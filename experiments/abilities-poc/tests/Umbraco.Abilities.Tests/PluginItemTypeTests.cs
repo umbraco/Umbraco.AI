@@ -40,8 +40,8 @@ public class PluginItemTypeTests
 
         await _agent.StartChangeSetAsync("Welcome");
         var discount = (await _agent.OkAsync("entity_create", """{ "entityType": "umbraco-commerce-discount", "fields": { "name": "Welcome" } }""")).GetProperty("key").GetGuid();
-        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rules", "itemType": "firstOrder" }""");
-        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rewards", "itemType": "freeShipping" }""");
+        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rules", "itemType": "firstOrder" }""");
+        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rewards", "itemType": "freeShipping" }""");
         await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
 
         Assert.Equal("firstOrder", _site.DiscountService.GetDiscount(discount)!.Rules.Single().RuleProviderAlias);
@@ -52,15 +52,15 @@ public class PluginItemTypeTests
     {
         await _agent.StartChangeSetAsync("VIP or big orders");
         var discount = (await _agent.OkAsync("entity_create", """{ "entityType": "umbraco-commerce-discount", "fields": { "name": "VIP or big orders" } }""")).GetProperty("key").GetGuid();
-        var group = (await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rules", "itemType": "groupDiscountRule", "fields": { "match": "any" } }""")).GetProperty("path").GetString();
-        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rewards", "itemType": "percentageOff", "fields": { "percent": 15 } }""");
+        var group = (await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rules", "itemType": "groupDiscountRule", "fields": { "match": "any" } }""")).GetProperty("path").GetString();
+        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rewards", "itemType": "percentageOff", "fields": { "percent": 15 } }""");
 
         // A group needs at least one rule.
         var validation = await _agent.OkAsync("changeSet_validate", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
         Assert.Equal([$"{group}/children"], JsonAssert.ProblemPaths(validation));
 
-        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "{{group}}/children", "itemType": "customerGroup", "fields": { "group": "VIP" } }""");
-        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "{{group}}/children", "itemType": "orderTotal", "fields": { "minTotal": 500 } }""");
+        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "{{group}}/children", "itemType": "customerGroup", "fields": { "group": "VIP" } }""");
+        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "{{group}}/children", "itemType": "orderTotal", "fields": { "minTotal": 500 } }""");
         await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
 
         var stored = _site.DiscountService.GetDiscount(discount)!.Rules.Single();
@@ -85,9 +85,9 @@ public class PluginItemTypeTests
 
         await _agent.StartChangeSetAsync("Mark new orders");
         var workflow = (await _agent.OkAsync("entity_create", """{ "entityType": "umbraco-automate-workflow", "fields": { "name": "Mark new orders" } }""")).GetProperty("key").GetGuid();
-        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-automate-workflow", "key": "{{workflow}}", "slotPath": "trigger", "itemType": "umbracoCommerce.orderCreated" }""");
+        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-automate-workflow", "key": "{{workflow}}", "fieldPath": "trigger", "itemType": "umbracoCommerce.orderCreated" }""");
         await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "umbraco-automate-workflow", "key": "{{workflow}}", "slotPath": "steps", "itemType": "umbracoCommerce.changeOrderStatus",
+            { "entityType": "umbraco-automate-workflow", "key": "{{workflow}}", "fieldPath": "steps", "itemType": "umbracoCommerce.changeOrderStatus",
               "fields": { "orderId": "{{"{{"}}trigger.orderId{{"}}"}}", "orderStatusId": "{{Guid.NewGuid()}}" } }
             """);
 
@@ -106,15 +106,13 @@ public class PluginItemTypeTests
 
         await _agent.StartChangeSetAsync("Mark new orders");
         var workflow = (await _agent.OkAsync("entity_create", """{ "entityType": "umbraco-automate-workflow", "fields": { "name": "Mark new orders" } }""")).GetProperty("key").GetGuid();
-        var refused = await _agent.FailAsync("entity_addItem", $$"""{ "entityType": "umbraco-automate-workflow", "key": "{{workflow}}", "slotPath": "trigger", "itemType": "umbracoCommerce.orderCreated" }""");
+        var refused = await _agent.FailAsync("entity_addItem", $$"""{ "entityType": "umbraco-automate-workflow", "key": "{{workflow}}", "fieldPath": "trigger", "itemType": "umbracoCommerce.orderCreated" }""");
         Assert.Equal("AccessDenied", refused.GetProperty("status").GetString());
         Assert.Equal("You may not use umbracoCommerce.orderCreated.", refused.GetProperty("message").GetString());
     }
 
-    private static List<string?> AllowedIn(JsonElement schema, string slot)
-        => schema.GetProperty("slots").EnumerateArray()
-            .Single(s => s.GetProperty("alias").GetString() == slot)
-            .GetProperty("allowedItemTypes").EnumerateArray().Select(t => t.GetProperty("alias").GetString()).ToList();
+    private static List<string?> AllowedIn(JsonElement schema, string field)
+        => schema.GetProperty("fields").GetProperty("properties").GetProperty(field).GetProperty("x-item-types").EnumerateArray().Select(t => t.GetProperty("alias").GetString()).ToList();
 
     [DiscountRuleProvider("firstOrder", Label = "First order", Description = "The customer's first order.")]
     private sealed class FirstOrderRuleProvider : DiscountRuleProviderBase<NoSettings>;

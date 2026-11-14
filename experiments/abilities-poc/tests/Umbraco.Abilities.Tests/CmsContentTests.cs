@@ -92,7 +92,7 @@ public class CmsContentTests
         await SetAsync(page, $"{hero}/@settings", "theme", "\"dark\"");
         await AssertValidAsync();
 
-        var item = (await GetAsync(page)).GetProperty("slots").GetProperty("blocks")[0];
+        var item = (await GetAsync(page)).GetProperty("fields").GetProperty("blocks")[0];
         Assert.Equal("Summer sale", item.GetProperty("variants").GetProperty("en-US").GetProperty("fields").GetProperty("heading").GetString());
         Assert.Equal("Sommerudsalg", item.GetProperty("variants").GetProperty("da-DK").GetProperty("fields").GetProperty("heading").GetString());
         Assert.Equal("dark", item.GetProperty("settings").GetProperty("fields").GetProperty("theme").GetString());
@@ -103,7 +103,7 @@ public class CmsContentTests
     }
 
     [Fact]
-    public async Task Grid_blocks_have_placement_values_and_areas_that_are_slots()
+    public async Task Grid_blocks_have_placement_values_and_areas_that_are_items_fields()
     {
         await _agent.StartChangeSetAsync("Grid");
         var page = await CreatePageAsync("Grid page", "en-US");
@@ -117,7 +117,7 @@ public class CmsContentTests
         var full = await _agent.FailAsync("entity_addItem", AddJson(page, $"{row}/left", "richText", """{ "text": "Three" }""", "en-US"));
         Assert.Contains("at most 2", full.GetProperty("message").GetString());
         var notAllowed = await _agent.FailAsync("entity_addItem", AddJson(page, $"{row}/right", "twoColumn", null));
-        Assert.Contains("not allowed in this slot", notAllowed.GetProperty("message").GetString());
+        Assert.Contains("not allowed in this field", notAllowed.GetProperty("message").GetString());
 
         // richText is allowed at the root too, and every root block needs a column span.
         var text = (await AddItemAsync(page, "grid", "richText", """{ "text": "Root" }""", "en-US")).GetProperty("path").GetString()!;
@@ -143,8 +143,8 @@ public class CmsContentTests
         await AddItemAsync(page, "promos", "promo", """{ "text": "Ny kollektion" }""", "da-DK");
 
         var variants = (await GetAsync(page)).GetProperty("variants");
-        Assert.Equal(1, variants.GetProperty("en-US").GetProperty("slots").GetProperty("promos").GetArrayLength());
-        Assert.Equal(2, variants.GetProperty("da-DK").GetProperty("slots").GetProperty("promos").GetArrayLength());
+        Assert.Equal(1, variants.GetProperty("en-US").GetProperty("fields").GetProperty("promos").GetArrayLength());
+        Assert.Equal(2, variants.GetProperty("da-DK").GetProperty("fields").GetProperty("promos").GetArrayLength());
 
         var noCulture = await _agent.FailAsync("entity_addItem", AddJson(page, "promos", "promo", """{ "text": "?" }""", null));
         Assert.Equal("promos", noCulture.GetProperty("problems")[0].GetProperty("path").GetString());
@@ -185,8 +185,8 @@ public class CmsContentTests
     private Task<JsonElement> SetAsync(Guid page, string elementPath, string field, string valueJson, string? culture = null)
         => _agent.OkAsync("entity_setValue", SetJson(page, elementPath, field, valueJson, culture));
 
-    private Task<JsonElement> AddItemAsync(Guid page, string slotPath, string itemType, string? fieldsJson, string? culture = null)
-        => _agent.OkAsync("entity_addItem", AddJson(page, slotPath, itemType, fieldsJson, culture));
+    private Task<JsonElement> AddItemAsync(Guid page, string fieldPath, string itemType, string? fieldsJson, string? culture = null)
+        => _agent.OkAsync("entity_addItem", AddJson(page, fieldPath, itemType, fieldsJson, culture));
 
     private Task<JsonElement> GetAsync(Guid page) => _agent.OkAsync("entity_get", $$"""{ "entityType": "document", "key": "{{page}}" }""");
 
@@ -201,8 +201,8 @@ public class CmsContentTests
     private static string SetJson(Guid page, string elementPath, string field, string valueJson, string? culture = null)
         => $$"""{ "entityType": "document", "key": "{{page}}", "elementPath": "{{elementPath}}", "field": "{{field}}", "value": {{valueJson}}{{Culture(culture)}} }""";
 
-    private static string AddJson(Guid page, string slotPath, string itemType, string? fieldsJson, string? culture = null)
-        => $$"""{ "entityType": "document", "key": "{{page}}", "slotPath": "{{slotPath}}", "itemType": "{{itemType}}"{{(fieldsJson is null ? "" : $", \"fields\": {fieldsJson}")}}{{Culture(culture)}} }""";
+    private static string AddJson(Guid page, string fieldPath, string itemType, string? fieldsJson, string? culture = null)
+        => $$"""{ "entityType": "document", "key": "{{page}}", "fieldPath": "{{fieldPath}}", "itemType": "{{itemType}}"{{(fieldsJson is null ? "" : $", \"fields\": {fieldsJson}")}}{{Culture(culture)}} }""";
 
     private static string Culture(string? culture) => culture is null ? "" : $", \"culture\": \"{culture}\"";
 }

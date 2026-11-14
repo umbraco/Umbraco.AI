@@ -11,7 +11,7 @@ namespace Umbraco.Abilities.Entities.Models;
 internal enum PropertyRole
 {
     Field,
-    Slot,
+    Items,
     Key,
     Version,
     Settings,
@@ -36,11 +36,11 @@ internal sealed class PropertyConfig
 
     public IReadOnlyList<string>? References { get; set; }
 
-    public string? ItemReferenceSlot { get; set; }
+    public string? ItemReferenceIn { get; set; }
 
     public ContentVariation? Variations { get; set; }
 
-    public string? SlotGroup { get; set; }
+    public string? ItemTypeGroup { get; set; }
 
     public int? Min { get; set; }
 
@@ -125,7 +125,7 @@ public sealed class ModelBuilder<T>
     /// <summary>On an item: the property holding its settings element.</summary>
     public ModelBuilder<T> HasSettings<TValue>(Expression<Func<T, TValue>> property) => Role(property, PropertyRole.Settings);
 
-    /// <summary>On an item: the property holding its placement values in its slot.</summary>
+    /// <summary>On an item: the property holding its placement values in its items field.</summary>
     public ModelBuilder<T> HasLayout<TValue>(Expression<Func<T, TValue>> property) => Role(property, PropertyRole.Layout);
 
     /// <summary>Leaves a property out of the structure.</summary>
@@ -139,13 +139,13 @@ public sealed class ModelBuilder<T>
         return new FieldBuilder<T>(this, config);
     }
 
-    /// <summary>A list property holding items of the types registered for <paramref name="itemTypeGroup"/>.</summary>
-    public SlotBuilder<T> Slot<TValue>(Expression<Func<T, TValue>> property, string itemTypeGroup)
+    /// <summary>An items field: a list property holding items of the types registered for <paramref name="itemTypeGroup"/>.</summary>
+    public ItemsBuilder<T> Items<TValue>(Expression<Func<T, TValue>> property, string itemTypeGroup)
     {
         var config = _config.For(PropertyOf(property));
-        config.Role = PropertyRole.Slot;
-        config.SlotGroup = itemTypeGroup;
-        return new SlotBuilder<T>(this, config);
+        config.Role = PropertyRole.Items;
+        config.ItemTypeGroup = itemTypeGroup;
+        return new ItemsBuilder<T>(this, config);
     }
 
     private ModelBuilder<T> Role(LambdaExpression property, PropertyRole role)
@@ -182,8 +182,8 @@ public sealed class FieldBuilder<T>
     /// <summary>A Guid key, or an <see cref="EntityReference"/>, of an entity of one of these types.</summary>
     public FieldBuilder<T> References(params string[] entityTypes) => Set(() => _config.References = entityTypes);
 
-    /// <summary>A key of another item in the entity's root slot <paramref name="slot"/>.</summary>
-    public FieldBuilder<T> ReferencesItemIn(string slot) => Set(() => _config.ItemReferenceSlot = slot);
+    /// <summary>A key of another item in the entity's root items field <paramref name="field"/>.</summary>
+    public FieldBuilder<T> ReferencesItemIn(string field) => Set(() => _config.ItemReferenceIn = field);
 
     /// <summary>What a <see cref="Varying{T}"/> field varies by, when not by culture.</summary>
     public FieldBuilder<T> Varies(ContentVariation variations) => Set(() => _config.Variations = variations);
@@ -193,7 +193,7 @@ public sealed class FieldBuilder<T>
 
     public FieldBuilder<T> Field<TValue>(Expression<Func<T, TValue>> property) => _model.Field(property);
 
-    public SlotBuilder<T> Slot<TValue>(Expression<Func<T, TValue>> property, string itemTypeGroup) => _model.Slot(property, itemTypeGroup);
+    public ItemsBuilder<T> Items<TValue>(Expression<Func<T, TValue>> property, string itemTypeGroup) => _model.Items(property, itemTypeGroup);
 
     private FieldBuilder<T> Set(Action set)
     {
@@ -202,31 +202,31 @@ public sealed class FieldBuilder<T>
     }
 }
 
-/// <summary>Configures a slot.</summary>
-public sealed class SlotBuilder<T>
+/// <summary>Configures an items field.</summary>
+public sealed class ItemsBuilder<T>
     where T : class
 {
     private readonly ModelBuilder<T> _model;
     private readonly PropertyConfig _config;
 
-    internal SlotBuilder(ModelBuilder<T> model, PropertyConfig config) => (_model, _config) = (model, config);
+    internal ItemsBuilder(ModelBuilder<T> model, PropertyConfig config) => (_model, _config) = (model, config);
 
-    public SlotBuilder<T> Description(string description) => Set(() => _config.Description = description);
+    public ItemsBuilder<T> Description(string description) => Set(() => _config.Description = description);
 
-    public SlotBuilder<T> Min(int min) => Set(() => _config.Min = min);
+    public ItemsBuilder<T> Min(int min) => Set(() => _config.Min = min);
 
-    public SlotBuilder<T> Max(int max) => Set(() => _config.Max = max);
+    public ItemsBuilder<T> Max(int max) => Set(() => _config.Max = max);
 
-    /// <summary>The class describing an item's placement values in this slot.</summary>
-    public SlotBuilder<T> Layout<TLayout>() => Set(() => _config.Layout = typeof(TLayout));
+    /// <summary>The class describing an item's placement values in this field.</summary>
+    public ItemsBuilder<T> Layout<TLayout>() => Set(() => _config.Layout = typeof(TLayout));
 
-    public SlotBuilder<T> Varies(ContentVariation variations) => Set(() => _config.Variations = variations);
+    public ItemsBuilder<T> Varies(ContentVariation variations) => Set(() => _config.Variations = variations);
 
     public FieldBuilder<T> Field<TValue>(Expression<Func<T, TValue>> property) => _model.Field(property);
 
-    public SlotBuilder<T> Slot<TValue>(Expression<Func<T, TValue>> property, string itemTypeGroup) => _model.Slot(property, itemTypeGroup);
+    public ItemsBuilder<T> Items<TValue>(Expression<Func<T, TValue>> property, string itemTypeGroup) => _model.Items(property, itemTypeGroup);
 
-    private SlotBuilder<T> Set(Action set)
+    private ItemsBuilder<T> Set(Action set)
     {
         set();
         return this;

@@ -38,7 +38,7 @@ Each design layer and where it lives:
 | Layer | Code |
 | --- | --- |
 | 1. Abilities | `Abilities/Ability.cs`: `[Ability]` with `Kind` and `Reversible`, typed `AbilityBase`, failures with categories and paths, `EntityRef` |
-| 2. Entity definitions | `Entities/`: fields, slots of typed items, entity and item references, an item type registry, a typed entity document (`EntityDocument`, `EntityElement`, `EntityItem`), a path editor generalised from Umbraco.AI's block path engine, and the generic entity abilities. `Entities/Models/`: the typed layer package developers write against (`EntityDefinitionBase<TModel>`, model attributes, `ModelEditAbilityBase`) |
+| 2. Entity definitions | `Entities/`: fields (values, or items: typed elements each with its own key), entity and item references, an item type registry, a typed entity document (`EntityDocument`, `EntityElement`, `EntityItem`), a path editor generalised from Umbraco.AI's block path engine, and the generic entity abilities. `Entities/Models/`: the typed layer package developers write against (`EntityDefinitionBase<TModel>`, model attributes, `ModelEditAbilityBase`) |
 | 3. Change sets | `ChangeSets/`: a recorded unit of "any Write ability call", working state worked out in memory, apply product by product (each all or nothing) and resumable, rebasing onto changes saved elsewhere meanwhile. Generalises the CMS Draft Sets PoC (`Umbraco.Cms.DraftSets`) |
 
 ## Writing a definition
@@ -69,7 +69,7 @@ public sealed class DiscountEditModel
     [EntityName, Required] public string? Name { get; set; }
     public DateOnly? EndDate { get; set; }
     [EntityKey("document")] public Guid? LandingPage { get; set; }
-    [Slot(RuleGroup, Min = 1)] public List<DynamicItem> Rules { get; set; } = [];  // a plugin seam: see below
+    [Items(RuleGroup, Min = 1)] public List<DynamicItem> Rules { get; set; } = [];  // a plugin seam: see below
 }
 
 [ItemType("hero", "Hero")]          // an item type the package owns can be a class too (Samples/Cms/CmsPage.cs)
@@ -90,7 +90,7 @@ ModelConfiguration.Configure<MediaRequestModel>(media => media
     .HasVersion(x => x.Version)
     .Ignore(x => x.UpdateDate)
     .Field(x => x.Name).IsName().Required()
-    .Slot(x => x.Crops, CropGroup));
+    .Items(x => x.Crops, CropGroup));
 
 ModelConfiguration.Configure<MediaCropRequestModel>(crop => crop
     .IsItemType("crop", "Crop")
@@ -120,10 +120,10 @@ What the package no longer writes:
 
 | Was hand-written | Now comes from |
 | --- | --- |
-| The structure: fields, types, required, allowed values, references, slots and their limits | Property types, plus attributes or fluent configuration |
+| The structure: fields, types, required, allowed values, references, items fields and their limits | Property types, plus attributes or fluent configuration |
 | JSON Schema for structured values (a focal point) | `JsonSchemaExporter` over the property type |
-| Culture variation | `Varying<T>` (a value per culture), on fields and slots |
-| Block settings and grid placement shapes | `[ItemSettings]`/`HasSettings`, `[ItemLayout]`/`HasLayout`, a slot's layout type |
+| Culture variation | `Varying<T>` (a value per culture), on value and items fields |
+| Block settings and grid placement shapes | `[ItemSettings]`/`HasSettings`, `[ItemLayout]`/`HasLayout`, an items field's layout type |
 | Turning the contract into the working copy and back | Done both ways, keeping item keys and giving each item its path |
 | Range and format checks reported on entity paths (`rewards/{key}/percent`) | DataAnnotations, as attributes or fluent `Rule(...)`, per item, settings and placement |
 | A path for a domain problem | `ProblemAt(x => x.EndDate, ...)`, or `ProblemAt(item, r => r.Percent, ...)` for an item |
@@ -199,7 +199,7 @@ How the framework uses them:
   with `x-bindings`, and type and reference checks wait until it resolves.
 - **Availability.** An item type can say who may use it (`AvailableTo`, here from required sections). The schema offers
   a user only those, and adding one they may not use is refused when it's recorded.
-- **In a typed contract** the slot is `List<DynamicItem>`: items with a type, JSON fields and nested slots. One mapper
+- **In a typed contract** the field is `List<DynamicItem>`: items with a type, JSON fields and nested items. One mapper
   per seam turns them into the product's stored form (`ProviderItems`: provider alias plus string settings, children
   for groups), using each setting's CLR type.
 - **Abilities** can be item types too (`AbilityItemTypes`), so workflow steps are abilities and Automate's actions side by side.
@@ -414,7 +414,7 @@ drafted without a new API.
 | Replay is deterministic, and keys handed to the model are the stored keys (for products that store item ids; see Commerce's derived keys) | `Replaying_a_set_gives_the_same_entity_every_time` |
 | A class with no attributes and no base class is described fluently, and created from text like any other | `TypedModelTests.A_class_with_no_attributes_or_base_class_is_described_fluently`, `A_fluently_described_entity_is_created_from_text_like_any_other` |
 | Commerce keeps its own model; the definition maps to it, and rule keys are derived because Commerce rules have no ids | `Commerce_keeps_its_own_model_and_the_definition_maps_to_it` |
-| The structure (types, required, allowed values, references, slots, variation, settings, placement, JSON Schema) comes from model classes and attributes | `TypedModelTests.The_structure_comes_from_the_model_class_and_its_attributes`, `Varying_values_settings_layout_and_json_values_are_described_too` |
+| The structure (types, required, allowed values, references, items fields, variation, settings, placement, JSON Schema) comes from model classes and attributes | `TypedModelTests.The_structure_comes_from_the_model_class_and_its_attributes`, `Varying_values_settings_layout_and_json_values_are_described_too` |
 | A model round-trips through its working copy, keeping item keys and giving each item its path | `A_model_round_trips_through_its_document_with_item_keys_and_paths` |
 | Each problem is reported once, whether it comes from the structure, an attribute or a domain rule | `Each_problem_is_reported_once_whether_it_comes_from_the_structure_or_an_attribute` |
 | Content changes in a change set are a CMS draft set: the backoffice can read it, it records only what changed, and discarding the set discards it | `CmsDocumentDefinitionTests.Content_changes_in_a_change_set_are_a_CMS_draft_set_that_records_only_what_changed` |
@@ -432,7 +432,7 @@ drafted without a new API.
 | A value that varies by culture needs a known culture; an entity with no culture can't be applied | `A_value_that_varies_by_culture_needs_a_known_culture` |
 | Each culture is validated separately, and problems say which culture | `Each_culture_is_validated_separately_and_problems_say_which` |
 | Blocks in an invariant Block List hold per-culture values, and a block's settings element is edited and validated at `{item}/@settings` | `Block_values_vary_per_culture_inside_an_invariant_block_list_and_settings_are_their_own_element` |
-| Block Grid: column span is a placement value at `{item}/@layout`, areas are slots with limits, and a type can be allowed at the root and in areas | `Grid_blocks_have_placement_values_and_areas_that_are_slots` |
+| Block Grid: column span is a placement value at `{item}/@layout`, areas are items fields with limits, and a type can be allowed at the root and in areas | `Grid_blocks_have_placement_values_and_areas_that_are_items_fields` |
 | A culture-variant block property holds a separate list per culture | `A_culture_variant_block_property_holds_a_list_per_culture` |
 | A media picker and a multi-type picker refer to media and pages created in the same set | `Pickers_refer_to_media_and_pages_created_in_the_same_set` |
 
@@ -466,6 +466,16 @@ These feed back into the design doc.
    is what the CMS definition puts in once it reads Umbraco's typed `BlockGridLayoutItem.ColumnSpan`. Every
    grid page then failed validation. The check now reads the JSON text. A typed document must not assume its
    values came from parsing.
+8. **Slots were fields all along.** The structure first had fields and, separately, slots: lists of typed items. But
+   every existing model treats "a list of typed things" as a field with that value type: Umbraco's Block List is a
+   property like any other, JSON Schema has an array of a `oneOf`, GraphQL a list of a union. So there is now one concept,
+   a field, with value type `Items` (its item type group, min, max and placement values; a single block is `Max = 1`).
+   What items add are properties of that value type: each item has a key, so paths (`rules/{key}/minTotal`), problems
+   and rebasing work per item; the set of item types is open; and items are edited by adding, removing and moving.
+   Paths didn't change. The schema has one `fields` object, where an items field lists its `x-item-types`; tools take
+   a `fieldPath`; the typed layer has `[Items]` and fluent `.Items(...)`. It also removes a question that only existed
+   because of the split: whether a property editor is a field or a slot. An editor declares its value type, and
+   items are one value type.
 
 ## Applying a set
 
@@ -523,7 +533,7 @@ inside one Umbraco scope.
 
 | Shown against Umbraco 18 (SQLite) | Test |
 | --- | --- |
-| The schema comes from the document type: cultures, varying fields, block types per slot, settings, grid areas and placement | `The_schema_comes_from_the_document_type_and_its_block_editors` |
+| The schema comes from the document type: cultures, varying fields, block types per items field, settings, grid areas and placement | `The_schema_comes_from_the_document_type_and_its_block_editors` |
 | A culture-variant page with a Block List (per-culture block values and a settings element) and a Block Grid (column span, areas) built through the AI tools is stored by Umbraco as expected, and loads back to the same shape | `A_page_built_from_text_is_saved_by_Umbraco_with_its_blocks_settings_grid_and_cultures` |
 | Umbraco's validation errors come back on the entity paths and cultures, and the generic check agrees with Umbraco | `Umbraco_validation_problems_come_back_on_the_entity_paths_and_cultures` |
 | Editing an existing page keeps what the edit didn't touch (other cultures, settings, the grid) | `Editing_an_existing_page_keeps_everything_the_edit_did_not_touch` |
@@ -563,12 +573,12 @@ model's shapes. What the contract gained from that:
 
 | Added to the structure language | Why (real model) |
 | --- | --- |
-| `Variations` (typed `Variation`, named after the CMS's `Variations` / `ContentVariation`) on the entity, fields and slots, with `VariantId` narrowed per value | CMS property values carry a culture or segment only if their property varies that way, and Umbraco rejects values that don't match |
+| `Variations` (the CMS's `ContentVariation`) on the entity and its fields, with `VariantId` narrowed per value | CMS property values carry a culture or segment only if their property varies that way, and Umbraco rejects values that don't match |
 | Variant values stored per variant (`variants["en-US"].fields`), names as a culture-variant field | CMS names vary by culture; block values inside an invariant block property vary per culture |
-| Culture-variant slots (a list per culture) | A culture-variant block property holds one whole envelope per culture |
+| Culture-variant items fields (a list per culture) | A culture-variant block property holds one whole envelope per culture |
 | `culture` / `segment` on `Problem` | The CMS's `PropertyValidationError` reports alias, culture and segment |
 | `ItemTypeDefinition.SettingsShape`, edited at `{item}/@settings` | Blocks have a settings element type next to their content type |
-| `SlotDefinition.ItemLayout`, edited at `{item}/@layout` | A Block Grid's column and row span belong to the block's place, not its values |
+| `FieldDefinition.ItemLayout` on an items field, edited at `{item}/@layout` | A Block Grid's column and row span belong to the block's place, not its values |
 | `ItemTypeDefinition.AlsoIn` | Grid blocks can be allowed at the root and in areas |
 | `Many`, `ReferencesAnyOf`, `FieldType.Json` | Tags and dropdowns are string arrays; a tree picker points at documents or media; focal points, crops and date-times are objects |
 
@@ -576,11 +586,11 @@ What still does not fit, and needs a decision rather than more code:
 
 | Product | Gap | Consequence |
 | --- | --- | --- |
-| CMS | Blocks in rich text are placed by markup, not by slot order | Adding a block to rich text needs an anchor in the markup; editing existing ones fits |
+| CMS | Blocks in rich text are placed by markup, not by item order | Adding a block to rich text needs an anchor in the markup; editing existing ones fits |
 | CMS | Segments are not managed (no list to validate against); "expose" (which cultures a block exists in) is derived by the CMS on read | The CMS definition must produce expose entries and accept any segment |
 | CMS | Update replaces all properties, and saves invalid values while returning errors | The definition must send the full working copy and treat returned errors as a failed apply |
 | CMS | No concurrency token on update | Change sets rebase instead (see "Rebasing"); a change saved between validating and saving is still not caught |
-| Commerce | A discount's rules are one recursive tree under a group rule (AND/OR is a setting); rule and reward nodes have no ids | Fits as a single-item slot with nested slots, but the definition must assign item keys on load and drop them on save |
+| Commerce | A discount's rules are one recursive tree under a group rule (AND/OR is a setting); rule and reward nodes have no ids | Fits as an items field of one group rule with nested items fields, but the definition must assign item keys on load and drop them on save |
 | Commerce | Validation is message-only and stops at the first error; rule and reward settings are not validated on write | Problems by path have to come from the definition, not from Commerce |
 | Commerce | Saves use Commerce's own unit of work and connection, and can't join an Umbraco scope | No longer a gap: change sets don't assume a transaction across products (see "Applying a set") |
 | Commerce | `Version` exists but isn't exposed, and conflicts are retried (last writer wins) | No change detection for discounts without a Commerce change |

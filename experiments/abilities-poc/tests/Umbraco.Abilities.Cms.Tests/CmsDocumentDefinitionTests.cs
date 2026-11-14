@@ -191,14 +191,15 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         Assert.That(schema.GetProperty("cultures").EnumerateArray().Select(c => c.GetString()), Is.EquivalentTo(new[] { "en-US", "da-DK" }));
         Assert.That(schema.GetProperty("fields").GetProperty("properties").GetProperty("subtitle").GetProperty("x-variations").GetString(), Is.EqualTo("Culture"));
 
-        var slots = schema.GetProperty("slots").EnumerateArray().ToDictionary(s => s.GetProperty("alias").GetString()!);
-        Assert.That(TypesIn(slots["blocks"]), Is.EquivalentTo(new[] { "hero", "textBlock" }));
-        Assert.That(TypesIn(slots["grid"]), Is.EquivalentTo(new[] { "twoColumns", "textBlock" }));
-        Assert.That(slots["grid"].GetProperty("itemLayout").GetProperty("required")[0].GetString(), Is.EqualTo("columnSpan"));
+        var fields = schema.GetProperty("fields").GetProperty("properties");
+        Assert.That(TypesIn(fields.GetProperty("blocks")), Is.EquivalentTo(new[] { "hero", "textBlock" }));
+        Assert.That(TypesIn(fields.GetProperty("grid")), Is.EquivalentTo(new[] { "twoColumns", "textBlock" }));
+        Assert.That(fields.GetProperty("grid").GetProperty("x-item-layout").GetProperty("required")[0].GetString(), Is.EqualTo("columnSpan"));
 
         var hero = await _agent.OkAsync("entity_getSchema", """{ "entityType": "document", "subtype": "landingPage", "itemTypes": ["hero", "twoColumns"] }""");
         Assert.That(hero.GetProperty("itemTypes").GetProperty("hero").GetProperty("settings").GetProperty("properties").TryGetProperty("theme", out _), Is.True);
-        var areas = hero.GetProperty("itemTypes").GetProperty("twoColumns").GetProperty("slots").EnumerateArray().Select(s => s.GetProperty("alias").GetString());
+        var areas = hero.GetProperty("itemTypes").GetProperty("twoColumns").GetProperty("fields").GetProperty("properties").EnumerateObject()
+            .Where(p => p.Value.TryGetProperty("x-item-types", out _)).Select(p => p.Name);
         Assert.That(areas, Is.EquivalentTo(new[] { "left", "right" }));
     }
 
@@ -235,14 +236,14 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
 
         // And loading it back through the definition gives the same working copy shape.
         var loaded = (await _documents.LoadAsync(page.Key))!;
-        var hero = loaded.Root.Slot("blocks").Single(b => b.Key == page.Hero);
+        var hero = loaded.Root.ItemsOf("blocks").Single(b => b.Key == page.Hero);
         Assert.Multiple(() =>
         {
             Assert.That(hero.VariantOrNull(new VariantId("da-DK", null))!.Fields["heading"]!.ToString(), Is.EqualTo("Sommerudsalg"));
             Assert.That(hero.Settings!.Fields["theme"]!.ToString(), Is.EqualTo("dark"));
-            var row = loaded.Root.Slot("grid")[0];
+            var row = loaded.Root.ItemsOf("grid")[0];
             Assert.That(row.Layout!.Fields["columnSpan"]!.GetValue<int>(), Is.EqualTo(12));
-            Assert.That(row.Slot("left")[0].Key, Is.EqualTo(page.AreaText));
+            Assert.That(row.ItemsOf("left")[0].Key, Is.EqualTo(page.AreaText));
         });
     }
 
@@ -650,15 +651,15 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
     private Task<JsonElement> SetAsync(Guid page, string elementPath, string field, string valueJson, string? culture = null)
         => _agent.OkAsync("entity_setValue", $$"""{ "entityType": "document", "key": "{{page}}", "elementPath": "{{elementPath}}", "field": "{{field}}", "value": {{valueJson}}{{Culture(culture)}} }""");
 
-    private async Task<string> AddItemAsync(Guid page, string slotPath, string itemType, string fieldsJson, string? culture = null)
-        => (await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "document", "key": "{{page}}", "slotPath": "{{slotPath}}", "itemType": "{{itemType}}", "fields": {{fieldsJson}}{{Culture(culture)}} }"""))
+    private async Task<string> AddItemAsync(Guid page, string fieldPath, string itemType, string fieldsJson, string? culture = null)
+        => (await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "document", "key": "{{page}}", "fieldPath": "{{fieldPath}}", "itemType": "{{itemType}}", "fields": {{fieldsJson}}{{Culture(culture)}} }"""))
             .GetProperty("path").GetString()!;
 
     private string SetJson() => $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""";
 
     private static string Culture(string? culture) => culture is null ? string.Empty : $", \"culture\": \"{culture}\"";
 
-    private static IEnumerable<string?> TypesIn(JsonElement slot) => slot.GetProperty("allowedItemTypes").EnumerateArray().Select(t => t.GetProperty("alias").GetString());
+    private static IEnumerable<string?> TypesIn(JsonElement field) => field.GetProperty("x-item-types").EnumerateArray().Select(t => t.GetProperty("alias").GetString());
 
     private async Task<IContentType> CreateElementTypeAsync(string alias, ContentVariation variation, params (string Alias, ContentVariation ContentVariation, bool Mandatory)[] properties)
     {

@@ -4,7 +4,7 @@ namespace Umbraco.Abilities.Entities;
 
 /// <summary>
 /// A difference between two versions of an entity, at a path in the entity edit abilities' form. A field change has
-/// the variant it is in; <see cref="Structural"/> marks an item added or removed (<c>"blocks/{key}"</c>) or a slot
+/// the variant it is in; <see cref="Structural"/> marks an item added or removed (<c>"blocks/{key}"</c>) or a list
 /// reordered (<c>"blocks/@order"</c>).
 /// </summary>
 public sealed record ChangedPath(string Path, string VariantKey, bool Structural)
@@ -40,13 +40,13 @@ public static class EntityDiff
         return (a.Structural && Inside(b.Path, a.Path)) || (b.Structural && Inside(a.Path, b.Path));
     }
 
-    /// <summary>The value at a path, for showing a conflict: a field's value, an item, a slot's item keys in order, or null when absent.</summary>
+    /// <summary>The value at a path, for showing a conflict: a field's value, an item, a list's item keys in order, or null when absent.</summary>
     public static JsonNode? ValueAt(EntityElement root, ChangedPath change)
         => Locate(root, change, create: false) switch
         {
             null => null,
-            { Order: true } at => new JsonArray(at.Slot!.Select(i => (JsonNode?)i.Key.ToString()).ToArray()),
-            { ItemKey: { } key } at => at.Slot!.FirstOrDefault(i => i.Key == key) is { } item ? EntityJson.ToJson(item) : null,
+            { Order: true } at => new JsonArray(at.Items!.Select(i => (JsonNode?)i.Key.ToString()).ToArray()),
+            { ItemKey: { } key } at => at.Items!.FirstOrDefault(i => i.Key == key) is { } item ? EntityJson.ToJson(item) : null,
             var at => at.Values?.Fields.GetValueOrDefault(at.Field!)?.DeepClone(),
         };
 
@@ -62,20 +62,20 @@ public static class EntityDiff
 
         if (to.Order)
         {
-            var order = (from?.Slot ?? []).Select(i => i.Key).ToList();
-            var sorted = to.Slot!.OrderBy(i => order.IndexOf(i.Key) is var index and >= 0 ? index : int.MaxValue).ToList();
-            to.Slot!.Clear();
-            to.Slot.AddRange(sorted);
+            var order = (from?.Items ?? []).Select(i => i.Key).ToList();
+            var sorted = to.Items!.OrderBy(i => order.IndexOf(i.Key) is var index and >= 0 ? index : int.MaxValue).ToList();
+            to.Items!.Clear();
+            to.Items.AddRange(sorted);
             return;
         }
 
         if (to.ItemKey is { } key)
         {
-            to.Slot!.RemoveAll(i => i.Key == key);
-            var position = from?.Slot?.FindIndex(i => i.Key == key) ?? -1;
+            to.Items!.RemoveAll(i => i.Key == key);
+            var position = from?.Items?.FindIndex(i => i.Key == key) ?? -1;
             if (position >= 0)
             {
-                to.Slot.Insert(Math.Min(position, to.Slot.Count), EntityJson.Clone(from!.Slot![position]));
+                to.Items.Insert(Math.Min(position, to.Items.Count), EntityJson.Clone(from!.Items![position]));
             }
 
             return;
@@ -122,15 +122,15 @@ public static class EntityDiff
             }
         }
 
-        foreach (var alias in Keys(a?.Slots).Union(Keys(b?.Slots)))
+        foreach (var alias in Keys(a?.Items).Union(Keys(b?.Items)))
         {
-            var slotPath = EntityEditor.Join(path, alias);
-            var itemsA = (a?.Slots.GetValueOrDefault(alias) ?? []).ToDictionary(i => i.Key);
-            var itemsB = (b?.Slots.GetValueOrDefault(alias) ?? []).ToDictionary(i => i.Key);
+            var fieldPath = EntityEditor.Join(path, alias);
+            var itemsA = (a?.Items.GetValueOrDefault(alias) ?? []).ToDictionary(i => i.Key);
+            var itemsB = (b?.Items.GetValueOrDefault(alias) ?? []).ToDictionary(i => i.Key);
 
             foreach (var key in itemsA.Keys.Union(itemsB.Keys))
             {
-                var itemPath = EntityEditor.Join(slotPath, key.ToString());
+                var itemPath = EntityEditor.Join(fieldPath, key.ToString());
                 if (itemsA.TryGetValue(key, out var itemA) && itemsB.TryGetValue(key, out var itemB))
                 {
                     CompareElement(itemA, itemB, itemPath, changes);
@@ -143,16 +143,16 @@ public static class EntityDiff
 
             if (!itemsA.Keys.Where(itemsB.ContainsKey).SequenceEqual(itemsB.Keys.Where(itemsA.ContainsKey)))
             {
-                changes.Add(new ChangedPath(EntityEditor.Join(slotPath, Order), variantKey, Structural: true));
+                changes.Add(new ChangedPath(EntityEditor.Join(fieldPath, Order), variantKey, Structural: true));
             }
         }
     }
 
     private static IEnumerable<string> Keys<T>(Dictionary<string, T>? dictionary) => dictionary?.Keys ?? Enumerable.Empty<string>();
 
-    private sealed record Location(ElementValues? Values, string? Field, List<EntityItem>? Slot, Guid? ItemKey, bool Order);
+    private sealed record Location(ElementValues? Values, string? Field, List<EntityItem>? Items, Guid? ItemKey, bool Order);
 
-    /// <summary>Finds where a path points: the values and field, or the slot and item key, or a slot's order.</summary>
+    /// <summary>Finds where a path points: the values and field, or the list and item key, or a list's order.</summary>
     private static Location? Locate(EntityElement root, ChangedPath change, bool create)
     {
         var segments = change.Path.Split('/', StringSplitOptions.RemoveEmptyEntries);
@@ -171,17 +171,17 @@ public static class EntityDiff
                 continue;
             }
 
-            var slot = SlotOf(element, segment, change.Variant, create);
+            var list = ItemListOf(element, segment, change.Variant, create);
             if (i + 1 == segments.Length - 1)
             {
                 var last = segments[^1];
-                return slot is null ? null
-                    : last == Order ? new Location(null, null, slot, null, Order: true)
-                    : Guid.TryParse(last, out var key) ? new Location(null, null, slot, key, Order: false)
+                return list is null ? null
+                    : last == Order ? new Location(null, null, list, null, Order: true)
+                    : Guid.TryParse(last, out var key) ? new Location(null, null, list, key, Order: false)
                     : null;
             }
 
-            element = Guid.TryParse(segments[i + 1], out var itemKey) ? slot?.FirstOrDefault(n => n.Key == itemKey) : null;
+            element = Guid.TryParse(segments[i + 1], out var itemKey) ? list?.FirstOrDefault(n => n.Key == itemKey) : null;
             i += 2;
         }
 
@@ -194,15 +194,15 @@ public static class EntityDiff
         return new Location(values, segments[^1], null, null, Order: false);
     }
 
-    /// <summary>A slot, invariant if the element has it so, else in the change's variant.</summary>
-    private static List<EntityItem>? SlotOf(EntityElement element, string alias, VariantId variant, bool create)
+    /// <summary>An items field's items, invariant if the element has them so, else in the change's variant.</summary>
+    private static List<EntityItem>? ItemListOf(EntityElement element, string alias, VariantId variant, bool create)
     {
-        if (element.Slots.TryGetValue(alias, out var invariant))
+        if (element.Items.TryGetValue(alias, out var invariant))
         {
             return invariant;
         }
 
         var values = create ? element.Variant(variant) : element.VariantOrNull(variant);
-        return create ? values!.Slot(alias) : values?.Slots.GetValueOrDefault(alias);
+        return create ? values!.ItemsOf(alias) : values?.Items.GetValueOrDefault(alias);
     }
 }

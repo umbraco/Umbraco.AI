@@ -5,7 +5,7 @@ using Umbraco.Extensions;
 namespace Umbraco.Abilities.Entities;
 
 /// <summary>
-/// Checks a whole document against its structure: required fields, value types, slot counts, allowed item
+/// Checks a whole document against its structure: required fields, value types, item counts, allowed item
 /// types and references. Values that vary are checked for every variant the entity has, and problems say
 /// which culture and segment they are in. Domain rules stay in <see cref="IEntityDefinition.ValidateAsync"/>.
 /// </summary>
@@ -44,46 +44,43 @@ public static class StructureValidator
         return problems;
     }
 
-    /// <param name="variants">The variants the element exists in. Below a slot that varies, only that slot's culture.</param>
+    /// <param name="variants">The variants the element exists in. Below an items field that varies, only that field's culture.</param>
     private static async Task ValidateElementAsync(Context context, EntityElement element, ElementShape shape, string path, IReadOnlyList<VariantId> variants)
     {
         foreach (var field in shape.Fields)
         {
             foreach (var variant in Targets(field.Variations, variants))
             {
-                var value = element.Get(field, variant);
-                await ValidateFieldAsync(context, field, value, EntityEditor.Join(path, field.Alias), variant);
-            }
-        }
+                if (!field.IsItems)
+                {
+                    await ValidateFieldAsync(context, field, element.Get(field, variant), EntityEditor.Join(path, field.Alias), variant);
+                    continue;
+                }
 
-        foreach (var slot in shape.Slots)
-        {
-            foreach (var variant in Targets(slot.Variations, variants))
-            {
-                var items = element.VariantOrNull(variant.Narrow(slot.Variations))?.Slots.GetValueOrDefault(slot.Alias) ?? [];
-                var below = slot.Variations == ContentVariation.Nothing ? variants : variants.Where(v => v.Culture == variant.Culture).ToList();
-                await ValidateSlotAsync(context, slot, items, EntityEditor.Join(path, slot.Alias), slot.Variations == ContentVariation.Nothing ? null : variant, below);
+                var items = element.VariantOrNull(variant.Narrow(field.Variations))?.Items.GetValueOrDefault(field.Alias) ?? [];
+                var below = field.Variations == ContentVariation.Nothing ? variants : variants.Where(v => v.Culture == variant.Culture).ToList();
+                await ValidateItemsAsync(context, field, items, EntityEditor.Join(path, field.Alias), field.Variations == ContentVariation.Nothing ? null : variant, below);
             }
         }
     }
 
-    private static async Task ValidateSlotAsync(Context context, SlotDefinition slot, List<EntityItem> items, string slotPath, VariantId? scope, IReadOnlyList<VariantId> variants)
+    private static async Task ValidateItemsAsync(Context context, FieldDefinition field, List<EntityItem> items, string fieldPath, VariantId? scope, IReadOnlyList<VariantId> variants)
     {
-        var located = new Problem(slotPath, string.Empty) { Culture = scope?.Culture, Segment = scope?.Segment };
-        if (slot.Min is { } min && items.Count < min)
+        var located = new Problem(fieldPath, string.Empty) { Culture = scope?.Culture, Segment = scope?.Segment };
+        if (field.Min is { } min && items.Count < min)
         {
             context.Problems.Add(located with { ErrorMessages = [$"Needs at least {min} item(s)."] });
         }
 
-        if (slot.Max is { } max && items.Count > max)
+        if (field.Max is { } max && items.Count > max)
         {
             context.Problems.Add(located with { ErrorMessages = [$"Holds at most {max} item(s)."] });
         }
 
-        var allowed = context.ItemTypes.InGroup(slot.ItemTypeGroup).ToDictionary(t => t.Alias);
+        var allowed = context.ItemTypes.InGroup(field.ItemTypeGroup!).ToDictionary(t => t.Alias);
         foreach (var item in items)
         {
-            var itemPath = EntityEditor.Join(slotPath, item.Key.ToString());
+            var itemPath = EntityEditor.Join(fieldPath, item.Key.ToString());
             if (!allowed.TryGetValue(item.Type, out var itemType))
             {
                 context.Problems.Add(located with { Path = itemPath, ErrorMessages = [$"Item type '{item.Type}' is not allowed here."] });
@@ -102,7 +99,7 @@ public static class StructureValidator
                 await ValidateElementAsync(context, item.Settings ?? new EntityElement(), settings, $"{itemPath}/@settings", itemVariants);
             }
 
-            if (slot.ItemLayout is { } layout)
+            if (field.ItemLayout is { } layout)
             {
                 await ValidateElementAsync(context, item.Layout ?? new EntityElement(), layout, $"{itemPath}/@layout", itemVariants);
             }
@@ -145,12 +142,12 @@ public static class StructureValidator
             }
         }
 
-        if (field.Type == FieldType.ItemReference && field.ReferencesItemInSlot is { } slotAlias)
+        if (field.Type == FieldType.ItemReference && field.ReferencesItemIn is { } itemsAlias)
         {
             var key = Guid.Parse(value.GetValue<string>());
-            if (!context.Document.Root.Slot(slotAlias).Any(item => item.Key == key))
+            if (!context.Document.Root.ItemsOf(itemsAlias).Any(item => item.Key == key))
             {
-                context.Problems.Add(At($"No item with key {key} in '{slotAlias}'."));
+                context.Problems.Add(At($"No item with key {key} in '{itemsAlias}'."));
             }
         }
     }
@@ -170,14 +167,24 @@ public static class StructureValidator
     }
 }
 
-/// <summary>Writes a shape as JSON Schema plus a slot list, for models and editors.</summary>
+/// <summary>Writes a shape as JSON Schema, for models and editors. Items fields list their item types.</summary>
 public static class SchemaWriter
 {
-    public static JsonObject Fields(ElementShape shape)
+    /// <summary>
+    /// The JSON Schema of a shape's fields. An items field lists the item types it holds, offering only those
+    /// <paramref name="userKey"/> may use, when given; an item type's own fields are fetched in a second step.
+    /// </summary>
+    public static JsonObject Fields(ElementShape shape, ItemTypeRegistry? itemTypes = null, Guid? userKey = null)
     {
         var properties = new JsonObject();
         foreach (var field in shape.Fields)
         {
+            if (field.IsItems)
+            {
+                properties[field.Alias] = Items(field, itemTypes, userKey);
+                continue;
+            }
+
             var schema = Single(field);
             if (field.Many)
             {
@@ -202,24 +209,45 @@ public static class SchemaWriter
         {
             ["type"] = "object",
             ["properties"] = properties,
-            ["required"] = new JsonArray(shape.Fields.Where(f => f.Required).Select(f => (JsonNode?)f.Alias).ToArray()),
+            ["required"] = new JsonArray(shape.ValueFields.Where(f => f.Required).Select(f => (JsonNode?)f.Alias).ToArray()),
         };
     }
 
-    /// <summary>The slots of a shape, offering only the item types <paramref name="userKey"/> may use, when given.</summary>
-    public static JsonArray Slots(ElementShape shape, ItemTypeRegistry itemTypes, Guid? userKey = null)
-        => new(shape.Slots.Select(slot => (JsonNode?)new JsonObject
+    private static JsonObject Items(FieldDefinition field, ItemTypeRegistry? itemTypes, Guid? userKey)
+    {
+        var schema = new JsonObject
         {
-            ["alias"] = slot.Alias,
-            ["description"] = slot.Description,
-            ["variations"] = slot.Variations == ContentVariation.Nothing ? null : slot.Variations.ToString(),
-            ["min"] = slot.Min,
-            ["max"] = slot.Max,
-            ["itemLayout"] = slot.ItemLayout is { } layout ? Fields(layout) : null,
-            ["allowedItemTypes"] = new JsonArray(itemTypes.InGroup(slot.ItemTypeGroup).Where(t => userKey is null || t.IsAvailableTo(userKey.Value))
+            ["type"] = "array",
+            ["description"] = field.Description,
+            ["x-edit"] = "Items: edit with entity.addItem, removeItem and moveItem, using this field's path.",
+            ["x-item-types"] = new JsonArray((itemTypes?.InGroup(field.ItemTypeGroup!) ?? [])
+                .Where(t => userKey is null || t.IsAvailableTo(userKey.Value))
                 .Select(t => (JsonNode?)new JsonObject { ["alias"] = t.Alias, ["group"] = t.Group, ["name"] = t.Name, ["description"] = t.Description })
                 .ToArray()),
-        }).ToArray());
+        };
+
+        if (field.Min is { } min)
+        {
+            schema["minItems"] = min;
+        }
+
+        if (field.Max is { } max)
+        {
+            schema["maxItems"] = max;
+        }
+
+        if (field.Variations != ContentVariation.Nothing)
+        {
+            schema["x-variations"] = field.Variations.ToString();
+        }
+
+        if (field.ItemLayout is { } layout)
+        {
+            schema["x-item-layout"] = Fields(layout);
+        }
+
+        return schema;
+    }
 
     private static JsonObject Single(FieldDefinition field)
     {
@@ -264,7 +292,7 @@ public static class SchemaWriter
                 break;
             case FieldType.ItemReference:
                 schema["format"] = "uuid";
-                schema["x-references-item-in-slot"] = field.ReferencesItemInSlot;
+                schema["x-references-item-in"] = field.ReferencesItemIn;
                 break;
         }
 

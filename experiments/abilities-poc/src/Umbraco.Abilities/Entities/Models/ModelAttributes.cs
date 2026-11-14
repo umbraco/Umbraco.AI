@@ -38,9 +38,9 @@ public sealed class ItemTypeAttribute(string alias, string name) : Attribute
     public string Description { get; set; } = string.Empty;
 }
 
-/// <summary>A list property that holds items of the types registered for <paramref name="itemTypeGroup"/>.</summary>
+/// <summary>An items field: a list property holding items of the types registered for <paramref name="itemTypeGroup"/>.</summary>
 [AttributeUsage(AttributeTargets.Property)]
-public sealed class SlotAttribute(string itemTypeGroup) : Attribute
+public sealed class ItemsAttribute(string itemTypeGroup) : Attribute
 {
     public string ItemTypeGroup { get; } = itemTypeGroup;
 
@@ -50,7 +50,7 @@ public sealed class SlotAttribute(string itemTypeGroup) : Attribute
     /// <summary>Maximum number of items; -1 for none.</summary>
     public int Max { get; set; } = -1;
 
-    /// <summary>A class describing the values an item has because of its place in this slot, e.g. a grid's column span.</summary>
+    /// <summary>A class describing the values an item has because of its place in this field, e.g. a grid's column span.</summary>
     public Type? Layout { get; set; }
 }
 
@@ -60,17 +60,17 @@ public sealed class ItemSettingsAttribute : Attribute
 {
 }
 
-/// <summary>On an item class: the property that holds the item's placement values, of the slot's layout type.</summary>
+/// <summary>On an item class: the property that holds the item's placement values, of the field's layout type.</summary>
 [AttributeUsage(AttributeTargets.Property)]
 public sealed class ItemLayoutAttribute : Attribute
 {
 }
 
-/// <summary>A key of another item in the entity's root slot <paramref name="slot"/>: how graph edges are modelled.</summary>
+/// <summary>A key of another item in the entity's root items field <paramref name="field"/>: how graph edges are modelled.</summary>
 [AttributeUsage(AttributeTargets.Property)]
-public sealed class ItemReferenceAttribute(string slot) : Attribute
+public sealed class ItemReferenceAttribute(string field) : Attribute
 {
-    public string Slot { get; } = slot;
+    public string Field { get; } = field;
 }
 
 /// <summary>What a <see cref="Varying{T}"/> property varies by, when not by culture.</summary>
@@ -80,7 +80,7 @@ public sealed class VariationsAttribute(ContentVariation variations) : Attribute
     public ContentVariation Variations { get; } = variations;
 }
 
-/// <summary>The base class for item models. The key identifies the item within its slot; leave it empty for a new item.</summary>
+/// <summary>The base class for item models. The key identifies the item within its field; leave it empty for a new item.</summary>
 public abstract class EntityItemModel
 {
     public Guid Key { get; set; }
@@ -92,8 +92,8 @@ public abstract class EntityItemModel
 
 /// <summary>
 /// An item whose type has no model class: a plugin's item type, such as a Commerce discount rule provider or an Automate
-/// action, described by its product's registry at run time. A model class declares a slot of these
-/// (<c>List&lt;DynamicItem&gt;</c>) when the slot's item types are a plugin seam. Values are the item's JSON fields.
+/// action, described by its product's registry at run time. A model class declares an items field of these
+/// (<c>List&lt;DynamicItem&gt;</c>) when its item types are a plugin seam. Values are the item's JSON fields.
 /// </summary>
 public class DynamicItem : EntityItemModel
 {
@@ -101,8 +101,8 @@ public class DynamicItem : EntityItemModel
 
     public Dictionary<string, System.Text.Json.Nodes.JsonNode?> Fields { get; init; } = new(StringComparer.Ordinal);
 
-    /// <summary>Nested slots, e.g. a rule group's child rules.</summary>
-    public Dictionary<string, List<DynamicItem>> Slots { get; init; } = new(StringComparer.Ordinal);
+    /// <summary>Nested items fields, e.g. a rule group's child rules.</summary>
+    public Dictionary<string, List<DynamicItem>> Items { get; init; } = new(StringComparer.Ordinal);
 }
 
 /// <summary>

@@ -109,11 +109,11 @@ This is the core idea: a product-neutral way to describe and edit any entity. Re
 
 | File | What it is |
 | --- | --- |
-| `Entities/Structure.cs` | The structure language. `ElementShape` holds fields and slots. A **field** has a type, required, allowed values, references and `ContentVariation`. A **slot** holds typed **items** (rules, blocks, workflow steps), with min and max, optional per-item settings, and placement values (`ItemLayout`). `ItemTypeRegistry` maps a group to item types, registered once or read from an `IItemTypeSource`: a product's plugin registry, read whenever needed |
+| `Entities/Structure.cs` | The structure language. `ElementShape` holds fields. A **field** has a value type, required, allowed values, references and `ContentVariation`. One value type is `Items`: typed elements each with its own key (rules, blocks, workflow steps), with min and max, optional per-item settings, and placement values (`ItemLayout`). `ItemTypeRegistry` maps a group to item types, registered once or read from an `IItemTypeSource`: a product's plugin registry, read whenever needed |
 | `Entities/IEntityDefinition.cs` | What a product implements: describe, new, load, validate, save, find, and optional subtypes (document types). `IVersionedEntityDefinition` is for products with version history |
-| `Entities/EntityDocument.cs` | The working copy: a typed tree (`EntityDocument` → `EntityElement` → `EntityItem`) of fields, slots, and values per culture and segment. Its JSON form is what tools return |
-| `Entities/EntityEditor.cs` | Path editing, generalised from Umbraco.AI's block path engine: `slot/{key}/slot`, `{item}/@settings`, `{item}/@layout`. `FieldChecker` checks and normalizes values. A UDI given for a reference is turned into the field's own form |
-| `Entities/StructureValidator.cs` | Generic validation from the structure: required (per culture), allowed values, references that exist (including in the same set), slot limits. It also renders the JSON Schema the model sees |
+| `Entities/EntityDocument.cs` | The working copy: a typed tree (`EntityDocument` → `EntityElement` → `EntityItem`) of fields (values, or lists of items) per culture and segment. Its JSON form is what tools return |
+| `Entities/EntityEditor.cs` | Path editing, generalised from Umbraco.AI's block path engine: `field/{key}/field`, `{item}/@settings`, `{item}/@layout`. `FieldChecker` checks and normalizes values. A UDI given for a reference is turned into the field's own form |
+| `Entities/StructureValidator.cs` | Generic validation from the structure: required (per culture), allowed values, references that exist (including in the same set), item counts. It also renders the JSON Schema the model sees |
 | `Entities/EntityAbilities.cs` | The generic tools every entity gets: `entity.getSchema`, `find`, `get`, `create`, `setValue`, `addItem`, `removeItem`, `moveItem` |
 | `Entities/EntityUdis.cs` | Identity is a UDI. Entity types are UDI entity types, registered with `UdiParser` |
 | `Entities/EntityAuthorization.cs` | `IAuthorizingEntityDefinition`: the product answers "may this user read, create or update this entity, in these cultures?" |
@@ -124,7 +124,7 @@ Then the typed layer, which is what a package developer actually writes against:
 
 | File | What it is |
 | --- | --- |
-| `Entities/Models/ModelAttributes.cs` | `[Entity]`, `[ItemType]`, `[Slot]`, `[EntityName]`, `[EntityVersion]`, `[ItemSettings]`, `[ItemLayout]`, `Varying<T>`, `EntityItemModel` |
+| `Entities/Models/ModelAttributes.cs` | `[Entity]`, `[ItemType]`, `[Items]`, `[EntityName]`, `[EntityVersion]`, `[ItemSettings]`, `[ItemLayout]`, `Varying<T>`, `EntityItemModel` |
 | `Entities/Models/ModelConfiguration.cs` | The same, fluently, for classes a package can't annotate, such as Management API request models |
 | `Entities/Models/ModelShapes.cs` | Works out the structure from a class, maps the class to and from an `EntityDocument`, and runs DataAnnotations on entity paths |
 | `Entities/Models/EntityDefinitionBase.cs` | `EntityDefinitionBase<TModel>`: a package implements load and save of its model, and the framework does the rest. `ModelEditAbilityBase` turns `Edit(model, input)` into an ability that works directly and inside a change set |
@@ -187,7 +187,7 @@ In `ChangeSetService.cs`, read the public methods in this order:
 
 | File | What it is |
 | --- | --- |
-| `Umbraco.Abilities.Cms/CmsStructureMapper.cs` | Builds the structure from document types and data type configuration: Block List, Block Grid (areas become slots, column span becomes placement), pickers, variation |
+| `Umbraco.Abilities.Cms/CmsStructureMapper.cs` | Builds the structure from document types and data type configuration: Block List, Block Grid (areas become items fields, column span becomes placement), pickers, variation |
 | `Umbraco.Abilities.Cms/CmsDocumentDefinition.cs` | The real definition. Reads go through Umbraco's own block value classes in editor format. Validation uses Umbraco's, with its JSON paths translated back to entity paths (`ErrorIndex`). Saves go through `IContentEditingService`. It is also the **draft set adapter** (stage, read, rebase, resolve, apply), and **authorization** goes through `IContentPermissionService` |
 | `Umbraco.Cms.DraftSets/DraftSetService.cs` | The stand-in for CMS core's Draft Sets. It records per-property changes over live content and reads through them, reports what others changed and the conflicts, and applies in one scope. It writes audit entries and raises notifications through the scope. It references Umbraco only |
 | `tests/Umbraco.Abilities.Cms.Tests/CmsDocumentDefinitionTests.cs` | Everything above against Umbraco 18 on SQLite: blocks, settings, grids and cultures saved by Umbraco; validation paths; rollback; resume; rebasing; draft sets; vetoes; real user permissions; the background queue |
@@ -230,7 +230,7 @@ The interfaces a product implements are the extension points. Everything else is
 
 These are the judgments the PoC makes that a reviewer is best placed to challenge:
 
-1. **The structure language.** Fields, slots, item types, settings and placement cover discounts, workflows and CMS
+1. **The structure language.** Fields (values or items), item types, settings and placement cover discounts, workflows and CMS
    blocks here. Will they cover your entity?
 2. **Paths as the contract with a model.** They make the fix loop simple (a problem path is an edit path). Are they
    natural for a model to produce?
@@ -239,7 +239,7 @@ These are the judgments the PoC makes that a reviewer is best placed to challeng
 4. **Atomicity per product.** Is "each product all or nothing, and resumable" acceptable, given products can't share a
    transaction?
 5. **Item types from registries.** One source and one mapper per plugin seam, plus an editor table. Is the metadata
-   your registry already has enough, and is a slot of `DynamicItem`s acceptable in a typed contract?
+   your registry already has enough, and is a field of `DynamicItem`s acceptable in a typed contract?
 6. **Who owns the coordinator.** Abilities owns it here. The README's "If core owned the change set" covers the
    alternative, and what core's Draft Sets must do to make it possible.
 7. **What it doesn't prove.** No LLM is in the loop. Change sets and draft sets aren't stored. Retried side effects aren't

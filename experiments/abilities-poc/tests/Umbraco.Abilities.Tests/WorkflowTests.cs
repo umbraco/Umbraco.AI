@@ -15,9 +15,7 @@ public class WorkflowTests
     public async Task Step_types_are_derived_from_abilities()
     {
         var schema = await _agent.OkAsync("entity_getSchema", """{ "entityType": "umbraco-automate-workflow", "itemTypes": ["email.send"] }""");
-        var stepTypes = schema.GetProperty("slots").EnumerateArray()
-            .Single(s => s.GetProperty("alias").GetString() == "steps")
-            .GetProperty("allowedItemTypes").EnumerateArray().Select(t => t.GetProperty("alias").GetString()).ToList();
+        var stepTypes = schema.GetProperty("fields").GetProperty("properties").GetProperty("steps").GetProperty("x-item-types").EnumerateArray().Select(t => t.GetProperty("alias").GetString()).ToList();
         Assert.Equal(["email.send", "commerce.activateDiscount", "umbracoCommerce.changeOrderStatus"], stepTypes); // abilities, then Automate's actions
 
         var email = schema.GetProperty("itemTypes").GetProperty("email.send").GetProperty("fields");
@@ -32,18 +30,18 @@ public class WorkflowTests
         await _agent.StartChangeSetAsync("Welcome flow");
 
         var discount = (await _agent.OkAsync("entity_create", """{ "entityType": "umbraco-commerce-discount", "fields": { "name": "Welcome 10%" } }""")).GetProperty("key").GetGuid();
-        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 0 } }""");
-        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rewards", "itemType": "percentageOff", "fields": { "percent": 10 } }""");
+        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 0 } }""");
+        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rewards", "itemType": "percentageOff", "fields": { "percent": 10 } }""");
 
         var workflow = (await _agent.OkAsync("entity_create", """{ "entityType": "umbraco-automate-workflow", "fields": { "name": "Welcome flow", "enabled": true } }""")).GetProperty("key").GetGuid();
         await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "umbraco-automate-workflow", "key": "{{workflow}}", "slotPath": "trigger", "itemType": "formSubmitted", "fields": { "form": "Newsletter" } }
+            { "entityType": "umbraco-automate-workflow", "key": "{{workflow}}", "fieldPath": "trigger", "itemType": "formSubmitted", "fields": { "form": "Newsletter" } }
             """);
 
         var emailStep = Guid.NewGuid();
         var activateStep = Guid.NewGuid();
         await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "umbraco-automate-workflow", "key": "{{workflow}}", "slotPath": "steps", "itemType": "email.send", "itemKey": "{{emailStep}}",
+            { "entityType": "umbraco-automate-workflow", "key": "{{workflow}}", "fieldPath": "steps", "itemType": "email.send", "itemKey": "{{emailStep}}",
               "fields": { "to": "{{"{{"}}email{{"}}"}}", "subject": "Welcome", "next": "{{activateStep}}" } }
             """);
 
@@ -52,7 +50,7 @@ public class WorkflowTests
         Assert.Equal([$"steps/{emailStep}/next"], JsonAssert.ProblemPaths(validation));
 
         await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "umbraco-automate-workflow", "key": "{{workflow}}", "slotPath": "steps", "itemType": "commerce.activateDiscount", "itemKey": "{{activateStep}}",
+            { "entityType": "umbraco-automate-workflow", "key": "{{workflow}}", "fieldPath": "steps", "itemType": "commerce.activateDiscount", "itemKey": "{{activateStep}}",
               "fields": { "discount": "{{discount}}" } }
             """);
 
@@ -61,7 +59,7 @@ public class WorkflowTests
 
         await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
         var live = (await _site.Workflows.LoadAsync(workflow))!;
-        Assert.Equal(["email.send", "commerce.activateDiscount"], live.Root.Slot("steps").Select(s => s.Type));
+        Assert.Equal(["email.send", "commerce.activateDiscount"], live.Root.ItemsOf("steps").Select(s => s.Type));
     }
 
     [Fact]
@@ -69,9 +67,9 @@ public class WorkflowTests
     {
         await _agent.StartChangeSetAsync("Broken flow");
         var workflow = (await _agent.OkAsync("entity_create", """{ "entityType": "umbraco-automate-workflow", "fields": { "name": "Broken" } }""")).GetProperty("key").GetGuid();
-        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-automate-workflow", "key": "{{workflow}}", "slotPath": "trigger", "itemType": "schedule", "fields": { "cron": "0 9 * * 1" } }""");
+        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-automate-workflow", "key": "{{workflow}}", "fieldPath": "trigger", "itemType": "schedule", "fields": { "cron": "0 9 * * 1" } }""");
         var step = await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "umbraco-automate-workflow", "key": "{{workflow}}", "slotPath": "steps", "itemType": "commerce.activateDiscount", "fields": { "discount": "{{Guid.NewGuid()}}" } }
+            { "entityType": "umbraco-automate-workflow", "key": "{{workflow}}", "fieldPath": "steps", "itemType": "commerce.activateDiscount", "fields": { "discount": "{{Guid.NewGuid()}}" } }
             """);
 
         var validation = await _agent.OkAsync("changeSet_validate", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");

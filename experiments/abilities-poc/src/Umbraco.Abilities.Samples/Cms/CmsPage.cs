@@ -11,7 +11,7 @@ namespace Umbraco.Abilities.Samples.Cms;
 /// <list type="bullet">
 /// <item>the name and some properties vary by culture (<see cref="Varying{T}"/>), others are invariant;</item>
 /// <item><c>blocks</c> is an invariant Block List whose blocks hold culture-variant values and have a settings element;</item>
-/// <item><c>grid</c> is a Block Grid: column and row span are placement values, and areas are slots inside a block;</item>
+/// <item><c>grid</c> is a Block Grid: column and row span are placement values, and areas are items fields inside a block;</item>
 /// <item><c>promos</c> is a culture-variant block property: a separate list per culture;</item>
 /// <item><c>image</c> is a Media Picker: entries with their own key, a media reference and crop data;</item>
 /// <item><c>tags</c> is a string array, and <c>related</c> a multi-node tree picker pointing at documents or media.</item>
@@ -38,16 +38,16 @@ public sealed class Page
     [EntityKey("document", "media"), Description("Related pages or media.")]
     public List<EntityReference>? Related { get; set; }
 
-    [Slot(CmsPageDefinition.BlockGroup), Description("The page's content blocks.")]
+    [Items(CmsPageDefinition.BlockGroup), Description("The page's content blocks.")]
     public List<PageBlock> Blocks { get; set; } = [];
 
-    [Slot(CmsPageDefinition.GridRootGroup, Layout = typeof(GridPlacement)), Description("A layout grid.")]
+    [Items(CmsPageDefinition.GridRootGroup, Layout = typeof(GridPlacement)), Description("A layout grid.")]
     public List<GridBlock> Grid { get; set; } = [];
 
-    [Slot(CmsPageDefinition.PromoGroup), Description("Promotions, chosen per language.")]
+    [Items(CmsPageDefinition.PromoGroup), Description("Promotions, chosen per language.")]
     public Varying<List<Promo>> Promos { get; set; } = [];
 
-    [Slot(CmsPageDefinition.MediaEntryGroup, Max = 1), Description("The page image.")]
+    [Items(CmsPageDefinition.MediaEntryGroup, Max = 1), Description("The page image.")]
     public List<MediaEntry> Image { get; set; } = [];
 }
 
@@ -78,14 +78,14 @@ public sealed class HeroSettings
     public bool? FullWidth { get; set; }
 }
 
-/// <summary>A block with a block property of its own: a nested slot inside an item.</summary>
+/// <summary>A block with a block property of its own: an items field inside an item.</summary>
 [ItemType("cardGrid", "Card grid", Description = "A grid of cards.")]
 public sealed class CardGrid : PageBlock
 {
     [Description("Heading above the grid.")]
     public Varying<string> Heading { get; set; } = [];
 
-    [Slot(CmsPageDefinition.CardGroup, Min = 1), Description("The cards in the grid.")]
+    [Items(CmsPageDefinition.CardGroup, Min = 1), Description("The cards in the grid.")]
     public List<Card> Cards { get; set; } = [];
 }
 
@@ -117,14 +117,14 @@ public sealed class GridPlacement
     public int? RowSpan { get; set; }
 }
 
-/// <summary>A layout block whose areas are slots; area limits are slot Min and Max.</summary>
+/// <summary>A layout block whose areas are items fields; area limits are their Min and Max.</summary>
 [ItemType("twoColumn", "Two columns", Description = "A row with a left and a right area.")]
 public sealed class TwoColumn : GridBlock
 {
-    [Slot(CmsPageDefinition.GridAreaGroup, Min = 1, Max = 2), Description("Left area.")]
+    [Items(CmsPageDefinition.GridAreaGroup, Min = 1, Max = 2), Description("Left area.")]
     public List<GridBlock> Left { get; set; } = [];
 
-    [Slot(CmsPageDefinition.GridAreaGroup, Max = 2), Description("Right area.")]
+    [Items(CmsPageDefinition.GridAreaGroup, Max = 2), Description("Right area.")]
     public List<GridBlock> Right { get; set; } = [];
 }
 
@@ -237,7 +237,7 @@ public sealed class CmsMediaDefinition(InMemoryDatabase database, ItemTypeRegist
             .Ignore(x => x.UpdateDate)
             .Field(x => x.Name).IsName().Required().Description("Media name.")
             .Field(x => x.AltText).Description("Alternative text.")
-            .Slot(x => x.Crops, CropGroup).Description("Named crops of the image."));
+            .Items(x => x.Crops, CropGroup).Description("Named crops of the image."));
 
         ModelConfiguration.Configure<MediaCropRequestModel>(crop => crop
             .IsItemType("crop", "Crop", "A named crop.")

@@ -15,12 +15,12 @@ namespace Umbraco.Abilities.Entities.Models;
 
 internal sealed record FieldMember(PropertyInfo Property, FieldDefinition Field, bool Varying, Type ValueType, IReadOnlyList<ValidationAttribute> Rules);
 
-internal sealed record SlotMember(PropertyInfo Property, SlotDefinition Slot, bool Varying, Type ListType);
+internal sealed record ItemsMember(PropertyInfo Property, FieldDefinition Field, bool Varying, Type ListType);
 
 internal sealed record ModelInfo(
     ElementShape Shape,
     IReadOnlyList<FieldMember> Fields,
-    IReadOnlyList<SlotMember> Slots,
+    IReadOnlyList<ItemsMember> ItemFields,
     PropertyInfo? Key,
     PropertyInfo? Name,
     PropertyInfo? Version,
@@ -32,7 +32,7 @@ internal sealed record ModelInfo(
 
 /// <summary>
 /// Everything the framework works out from a model class, so package developers don't write it: the structure
-/// (fields, slots, references, variations, schemas) from the properties and their attributes, the mapping between
+/// (fields, items fields, references, variations, schemas) from the properties and their attributes, the mapping between
 /// the class and an entity document, and DataAnnotations validation reported on entity paths.
 /// </summary>
 public static class ModelShapes
@@ -62,7 +62,8 @@ public static class ModelShapes
     {
         var typeConfig = ModelConfiguration.Find(type);
         var fields = new List<FieldMember>();
-        var slots = new List<SlotMember>();
+        var itemFields = new List<ItemsMember>();
+        var ordered = new List<FieldDefinition>();
         PropertyInfo? key = null, name = null, version = null, settings = null, layout = null;
 
         foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
@@ -96,32 +97,35 @@ public static class ModelShapes
             var (varying, valueType) = Unwrap(property.PropertyType);
             var variations = varying ? config.Variations ?? ContentVariation.Culture : ContentVariation.Nothing;
 
-            if (config.Role == PropertyRole.Slot)
+            if (config.Role == PropertyRole.Items)
             {
-                slots.Add(new SlotMember(property, new SlotDefinition(alias, description, config.SlotGroup!)
+                var items = FieldDefinition.ItemsOf(alias, description, config.ItemTypeGroup!) with
                 {
                     Min = config.Min,
                     Max = config.Max,
                     Variations = variations,
                     ItemLayout = config.Layout is { } layoutType ? ShapeOf(layoutType) : null,
-                }, varying, valueType));
+                };
+                itemFields.Add(new ItemsMember(property, items, varying, valueType));
+                ordered.Add(items);
                 continue;
             }
 
             fields.Add(new FieldMember(property, FieldFor(config, alias, description, valueType) with { Variations = variations }, varying, valueType, config.Rules));
+            ordered.Add(fields[^1].Field);
             if (config.IsName)
             {
                 name = property;
             }
         }
 
-        var all = fields.Select(f => f.Field.Variations).Concat(slots.Select(s => s.Slot.Variations));
+        var all = ordered.Select(f => f.Variations);
         var entityVariations = all.Any(v => v.VariesByCulture()) ? ContentVariation.Culture : ContentVariation.Nothing;
         var entity = typeConfig?.Entity ?? (type.GetCustomAttribute<EntityAttribute>() is { } e ? (e.EntityType, e.Name, e.Description) : null);
         var itemType = typeConfig?.ItemType ?? (type.GetCustomAttribute<ItemTypeAttribute>() is { } i ? (i.Alias, i.Name, i.Description) : null);
         return new ModelInfo(
-            new ElementShape(fields.Select(f => f.Field).ToList(), slots.Select(s => s.Slot).ToList()),
-            fields, slots, key, name, version, settings, layout, entityVariations, entity, itemType);
+            new ElementShape(ordered),
+            fields, itemFields, key, name, version, settings, layout, entityVariations, entity, itemType);
     }
 
     /// <summary>What a property's attributes say, as configuration.</summary>
@@ -136,23 +140,23 @@ public static class ModelShapes
                 : property.IsDefined(typeof(EntityVersionAttribute)) ? PropertyRole.Version
                 : property.IsDefined(typeof(ItemSettingsAttribute)) ? PropertyRole.Settings
                 : property.IsDefined(typeof(ItemLayoutAttribute)) ? PropertyRole.Layout
-                : property.IsDefined(typeof(SlotAttribute)) ? PropertyRole.Slot
+                : property.IsDefined(typeof(ItemsAttribute)) ? PropertyRole.Items
                 : null,
             Description = property.GetCustomAttribute<DescriptionAttribute>()?.Description,
             Required = property.IsDefined(typeof(RequiredAttribute)) ? true : null,
             IsName = property.IsDefined(typeof(EntityNameAttribute)),
             Allowed = property.GetCustomAttribute<AllowedValuesAttribute>()?.Values.Select(v => v?.ToString() ?? string.Empty).ToList(),
             References = property.GetCustomAttribute<EntityKeyAttribute>()?.EntityTypes,
-            ItemReferenceSlot = property.GetCustomAttribute<ItemReferenceAttribute>()?.Slot,
+            ItemReferenceIn = property.GetCustomAttribute<ItemReferenceAttribute>()?.Field,
             Variations = property.GetCustomAttribute<VariationsAttribute>()?.Variations,
         };
 
-        if (property.GetCustomAttribute<SlotAttribute>() is { } slot)
+        if (property.GetCustomAttribute<ItemsAttribute>() is { } items)
         {
-            config.SlotGroup = slot.ItemTypeGroup;
-            config.Min = slot.Min >= 0 ? slot.Min : null;
-            config.Max = slot.Max >= 0 ? slot.Max : null;
-            config.Layout = slot.Layout;
+            config.ItemTypeGroup = items.ItemTypeGroup;
+            config.Min = items.Min >= 0 ? items.Min : null;
+            config.Max = items.Max >= 0 ? items.Max : null;
+            config.Layout = items.Layout;
         }
 
         // [Required] and [AllowedValues] are part of the structure, which the generic validator checks per variant.
@@ -177,9 +181,9 @@ public static class ModelShapes
             IsName = fluent.IsName || attributes.IsName,
             Allowed = fluent.Allowed ?? attributes.Allowed,
             References = fluent.References ?? attributes.References,
-            ItemReferenceSlot = fluent.ItemReferenceSlot ?? attributes.ItemReferenceSlot,
+            ItemReferenceIn = fluent.ItemReferenceIn ?? attributes.ItemReferenceIn,
             Variations = fluent.Variations ?? attributes.Variations,
-            SlotGroup = fluent.SlotGroup ?? attributes.SlotGroup,
+            ItemTypeGroup = fluent.ItemTypeGroup ?? attributes.ItemTypeGroup,
             Min = fluent.Min ?? attributes.Min,
             Max = fluent.Max ?? attributes.Max,
             Layout = fluent.Layout ?? attributes.Layout,
@@ -197,7 +201,7 @@ public static class ModelShapes
         var required = config.Required ?? false;
         var references = config.References;
         var allowed = config.Allowed;
-        var itemReference = config.ItemReferenceSlot;
+        var itemReference = config.ItemReferenceIn;
 
         var many = valueType != typeof(string) && ElementTypeOf(valueType) is not null;
         var single = many ? ElementTypeOf(valueType)! : valueType;
@@ -236,7 +240,7 @@ public static class ModelShapes
             Allowed = allowed,
             ReferencesEntityType = single == typeof(Guid) ? references?.FirstOrDefault() : null,
             ReferencesAnyOf = single == typeof(EntityReference) ? references : null,
-            ReferencesItemInSlot = itemReference,
+            ReferencesItemIn = itemReference,
         };
     }
 
@@ -265,19 +269,19 @@ public static class ModelShapes
             }
         }
 
-        foreach (var slot in info.Slots)
+        foreach (var member in info.ItemFields)
         {
-            var value = slot.Property.GetValue(model);
-            if (slot.Varying)
+            var value = member.Property.GetValue(model);
+            if (member.Varying)
             {
                 foreach (DictionaryEntry entry in (IDictionary?)value ?? new Hashtable())
                 {
-                    WriteItems((IEnumerable?)entry.Value, element.Variant(VariantId.Parse((string)entry.Key)).Slot(slot.Slot.Alias));
+                    WriteItems((IEnumerable?)entry.Value, element.Variant(VariantId.Parse((string)entry.Key)).ItemsOf(member.Field.Alias));
                 }
             }
             else
             {
-                WriteItems((IEnumerable?)value, element.Slot(slot.Slot.Alias));
+                WriteItems((IEnumerable?)value, element.ItemsOf(member.Field.Alias));
             }
         }
     }
@@ -306,22 +310,22 @@ public static class ModelShapes
             }
         }
 
-        foreach (var slot in info.Slots)
+        foreach (var member in info.ItemFields)
         {
-            var slotPath = EntityEditor.Join(path, slot.Slot.Alias);
-            if (slot.Varying)
+            var fieldPath = EntityEditor.Join(path, member.Field.Alias);
+            if (member.Varying)
             {
-                var varying = (IDictionary)Activator.CreateInstance(slot.Property.PropertyType)!;
-                foreach (var (variant, items) in element.SlotItems(slot.Slot.Alias).Where(v => !v.Variant.IsInvariant))
+                var varying = (IDictionary)Activator.CreateInstance(member.Property.PropertyType)!;
+                foreach (var (variant, items) in element.ItemValues(member.Field.Alias).Where(v => !v.Variant.IsInvariant))
                 {
-                    varying[variant.Key] = ReadItems(items, slot, slot.ListType, itemTypes, slotPath);
+                    varying[variant.Key] = ReadItems(items, member, member.ListType, itemTypes, fieldPath);
                 }
 
-                slot.Property.SetValue(model, varying);
+                member.Property.SetValue(model, varying);
             }
             else
             {
-                slot.Property.SetValue(model, ReadItems(element.Slots.GetValueOrDefault(slot.Slot.Alias) ?? [], slot, slot.Property.PropertyType, itemTypes, slotPath));
+                member.Property.SetValue(model, ReadItems(element.Items.GetValueOrDefault(member.Field.Alias) ?? [], member, member.Property.PropertyType, itemTypes, fieldPath));
             }
         }
 
@@ -365,20 +369,20 @@ public static class ModelShapes
         }
     }
 
-    private static IList ReadItems(IEnumerable<EntityItem> items, SlotMember slot, Type listType, ItemTypeRegistry itemTypes, string slotPath)
+    private static IList ReadItems(IEnumerable<EntityItem> items, ItemsMember member, Type listType, ItemTypeRegistry itemTypes, string fieldPath)
     {
         var list = (IList)Activator.CreateInstance(listType)!;
         var dynamic = ElementTypeOf(listType) is { } elementType && typeof(DynamicItem).IsAssignableFrom(elementType);
         foreach (var item in items)
         {
-            var itemPath = EntityEditor.Join(slotPath, item.Key.ToString());
+            var itemPath = EntityEditor.Join(fieldPath, item.Key.ToString());
             if (dynamic)
             {
                 list.Add(ReadDynamic(item, itemPath));
                 continue;
             }
 
-            var itemClass = itemTypes.Find(slot.Slot.ItemTypeGroup, item.Type)?.ClrType
+            var itemClass = itemTypes.Find(member.Field.ItemTypeGroup, item.Type)?.ClrType
                 ?? throw new AbilityInputException($"Item type '{item.Type}' has no model class.", [new Problem(itemPath, "No model class for this item type.")]);
 
             var model = Read(itemClass, item, itemTypes, itemPath);
@@ -436,14 +440,14 @@ public static class ModelShapes
             }
         }
 
-        foreach (var slot in info.Slots)
+        foreach (var member in info.ItemFields)
         {
-            var value = slot.Property.GetValue(model);
-            var lists = slot.Varying ? ((IDictionary?)value)?.Values.Cast<IEnumerable>() ?? [] : [(IEnumerable?)value ?? Array.Empty<object>()];
+            var value = member.Property.GetValue(model);
+            var lists = member.Varying ? ((IDictionary?)value)?.Values.Cast<IEnumerable>() ?? [] : [(IEnumerable?)value ?? Array.Empty<object>()];
             // Dynamic items have no class to carry rules: their fields' rules are checked from the structure.
             foreach (var item in lists.SelectMany(l => l.Cast<object>()).Where(i => i is not DynamicItem))
             {
-                var itemPath = EntityEditor.Join(EntityEditor.Join(path, slot.Slot.Alias), KeyOf(item).ToString());
+                var itemPath = EntityEditor.Join(EntityEditor.Join(path, member.Field.Alias), KeyOf(item).ToString());
                 ValidateObject(item, itemPath, problems);
 
                 var itemInfo = Info(item.GetType());
@@ -475,9 +479,9 @@ public static class ModelShapes
             item.Fields[alias] = value?.DeepClone();
         }
 
-        foreach (var (alias, children) in model.Slots)
+        foreach (var (alias, children) in model.Items)
         {
-            item.Slot(alias).AddRange(children.Select(WriteDynamic));
+            item.ItemsOf(alias).AddRange(children.Select(WriteDynamic));
         }
 
         return item;
@@ -491,10 +495,10 @@ public static class ModelShapes
             model.Fields[alias] = value?.DeepClone();
         }
 
-        foreach (var (alias, children) in item.Slots)
+        foreach (var (alias, children) in item.Items)
         {
-            var slotPath = EntityEditor.Join(path, alias);
-            model.Slots[alias] = children.Select(c => ReadDynamic(c, EntityEditor.Join(slotPath, c.Key.ToString()))).ToList();
+            var fieldPath = EntityEditor.Join(path, alias);
+            model.Items[alias] = children.Select(c => ReadDynamic(c, EntityEditor.Join(fieldPath, c.Key.ToString()))).ToList();
         }
 
         Paths.AddOrUpdate(model, path);

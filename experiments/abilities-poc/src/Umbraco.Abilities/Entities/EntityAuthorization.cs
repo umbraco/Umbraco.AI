@@ -54,7 +54,7 @@ public static class EntityAccess
     private static IEnumerable<EntityItem> Items(EntityElement element)
     {
         var parts = new ElementValues[] { element }.Concat(element.Variants.Values);
-        foreach (var item in parts.SelectMany(p => p.Slots.Values).SelectMany(items => items))
+        foreach (var item in parts.SelectMany(p => p.Items.Values).SelectMany(items => items))
         {
             yield return item;
             foreach (var nested in Items(item))

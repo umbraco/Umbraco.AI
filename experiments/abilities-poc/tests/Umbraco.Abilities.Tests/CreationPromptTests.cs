@@ -25,9 +25,7 @@ public class CreationPromptTests
 
         // 1. Discover the structure, in two steps.
         var schema = await _agent.OkAsync("entity_getSchema", """{ "entityType": "umbraco-commerce-discount" }""");
-        var ruleTypes = schema.GetProperty("slots").EnumerateArray()
-            .Single(s => s.GetProperty("alias").GetString() == "rules")
-            .GetProperty("allowedItemTypes").EnumerateArray().Select(t => t.GetProperty("alias").GetString()).ToList();
+        var ruleTypes = schema.GetProperty("fields").GetProperty("properties").GetProperty("rules").GetProperty("x-item-types").EnumerateArray().Select(t => t.GetProperty("alias").GetString()).ToList();
         Assert.Contains("productCollection", ruleTypes);
         Assert.Contains("acmeDayOfWeek", ruleTypes); // a third party's rule type shows up with no change to Commerce
 
@@ -47,13 +45,13 @@ public class CreationPromptTests
         var discount = created.GetProperty("key").GetGuid();
 
         await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rules", "itemType": "productCollection", "fields": { "collection": "{{collection}}" } }
+            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rules", "itemType": "productCollection", "fields": { "collection": "{{collection}}" } }
             """);
         await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rules", "itemType": "customerGroup", "fields": { "group": "VIP" } }
+            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rules", "itemType": "customerGroup", "fields": { "group": "VIP" } }
             """);
         await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rewards", "itemType": "percentageOff", "fields": { "percent": 10 } }
+            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rewards", "itemType": "percentageOff", "fields": { "percent": 10 } }
             """);
 
         // 4. Check, review, apply.
@@ -83,7 +81,7 @@ public class CreationPromptTests
         await _agent.StartChangeSetAsync("Draft with problems");
         var discount = (await _agent.OkAsync("entity_create", """{ "entityType": "umbraco-commerce-discount" }""")).GetProperty("key").GetGuid();
         var reward = await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rewards", "itemType": "percentageOff", "fields": { "percent": 150 } }
+            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rewards", "itemType": "percentageOff", "fields": { "percent": 150 } }
             """);
         var rewardPath = reward.GetProperty("path").GetString();
 
@@ -104,7 +102,7 @@ public class CreationPromptTests
             { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "elementPath": "{{rewardPath}}", "field": "percent", "value": 15 }
             """);
         await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 100 } }
+            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 100 } }
             """);
 
         validation = await _agent.OkAsync("changeSet_validate", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
@@ -118,14 +116,14 @@ public class CreationPromptTests
         var discount = (await _agent.OkAsync("entity_create", """{ "entityType": "umbraco-commerce-discount", "fields": { "name": "x" } }""")).GetProperty("key").GetGuid();
 
         var wrongType = await _agent.FailAsync("entity_addItem", $$"""
-            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rules", "itemType": "freeShipping" }
+            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rules", "itemType": "freeShipping" }
             """);
         Assert.True(wrongType.GetProperty("correctable").GetBoolean());
         Assert.Equal("rules", wrongType.GetProperty("problems")[0].GetProperty("path").GetString());
         Assert.Contains("customerGroup", wrongType.GetProperty("message").GetString());
 
         var reward = await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rewards", "itemType": "percentageOff" }
+            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rewards", "itemType": "percentageOff" }
             """);
         var wrongValue = await _agent.FailAsync("entity_setValue", $$"""
             { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "elementPath": "{{reward.GetProperty("path").GetString()}}", "field": "percent", "value": "ten" }
@@ -144,10 +142,10 @@ public class CreationPromptTests
         await _agent.StartChangeSetAsync("Weekend deal");
         var discount = (await _agent.OkAsync("entity_create", """{ "entityType": "umbraco-commerce-discount", "fields": { "name": "Weekend deal" } }""")).GetProperty("key").GetGuid();
         await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rules", "itemType": "acmeDayOfWeek", "fields": { "days": "weekends" } }
+            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rules", "itemType": "acmeDayOfWeek", "fields": { "days": "weekends" } }
             """);
         await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rewards", "itemType": "freeShipping" }
+            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rewards", "itemType": "freeShipping" }
             """);
 
         await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
@@ -168,7 +166,7 @@ public class CreationPromptTests
 
         var addItem = _agent.Tools["entity_addItem"].JsonSchema;
         var properties = addItem.GetProperty("properties").EnumerateObject().Select(p => p.Name).ToList();
-        Assert.Contains("slotPath", properties);
+        Assert.Contains("fieldPath", properties);
         Assert.Contains("itemType", properties);
         Assert.Contains("change set", _agent.Tools["entity_addItem"].Description);
     }

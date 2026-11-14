@@ -4,15 +4,15 @@ using System.Reflection;
 namespace Umbraco.Abilities.Entities;
 
 /// <summary>
-/// Turns abilities into item types, so an entity can hold a slot of ability calls. An Automate workflow is
-/// then just an entity whose steps slot holds abilities, and any package's new ability becomes a step type.
+/// Turns abilities into item types, so an entity can hold an items field of ability calls. An Automate workflow is
+/// then just an entity whose steps field holds abilities, and any package's new ability becomes a step type.
 /// </summary>
 public static class AbilityItemTypes
 {
     public static ItemTypeDefinition FromAbility(IAbility ability, string group, params FieldDefinition[] extraFields)
     {
         var fields = InputFields(ability.Descriptor.InputType).Concat(extraFields).ToList();
-        return new ItemTypeDefinition(group, ability.Descriptor.Id, ability.Descriptor.Name, ability.Descriptor.Description, new ElementShape(fields, []));
+        return new ItemTypeDefinition(group, ability.Descriptor.Id, ability.Descriptor.Name, ability.Descriptor.Description, new ElementShape(fields));
     }
 
     private static IEnumerable<FieldDefinition> InputFields(Type inputType)

@@ -16,7 +16,7 @@
 To create and edit complex entities from text, such as a Commerce discount or an Automate workflow, Abilities needs to describe entities, not only operations. We propose three layers, each owned by a contract that never names a product:
 
 1. **Abilities**: what a package can do (operations) and what happens in it (events). This is the existing Abilities proposal.
-2. **Entity definitions**: what a package's entities look like (fields, slots of typed items, references) and how to start, load, check and save one. From this the framework provides generic create, edit, check and find operations.
+2. **Entity definitions**: what a package's entities look like (fields, including lists of typed items, and references) and how to start, load, check and save one. From this the framework provides generic create, edit, check and find operations.
 3. **Change sets**: a record of ability calls held back from the live site, then applied product by product. This generalises the CMS Draft Sets proof of concept from content only to any Write ability.
 
 "Create from text" then needs no per-product code: an agent works on a change set using the generic entity operations, the definition checks the result, and a person reviews and applies it. The same pieces serve copilot editing, content validators, extraction and bulk changes.
@@ -32,7 +32,7 @@ flowchart TB
     end
     prompts["<b>Creation prompts (Umbraco.AI)</b><br/>Agent loop: build in steps, check, fix, show for review"]
     abilities["<b>1 · Abilities</b><br/>Operations and events, plus the generic entity abilities"]
-    entities["<b>2 · Entity definitions (new)</b><br/>Fields, slots of typed items, references · item type registry"]
+    entities["<b>2 · Entity definitions (new)</b><br/>Fields (values or typed items), references · item type registry"]
     changesets["<b>3 · Change sets (generalised)</b><br/>Recorded Write ability calls, applied product by product"]
     packages["<b>Packages</b><br/>CMS content · Commerce · Automate · Third parties<br/><i>Declare abilities, entity definitions and item types</i>"]
 
@@ -79,17 +79,21 @@ A package declares each entity type once. The framework derives the generic oper
 
 ### The structure language
 
-Three building blocks, kept deliberately small:
+One building block: the **field**, with a value type. That's how Umbraco, JSON Schema and GraphQL all model it: a Block List is a property like any other, whose value happens to contain elements.
 
-| Building block | Meaning | Examples |
+| Value type | Meaning | Examples |
 | --- | --- | --- |
-| Field | A simple value with a schema | Name, start date, percentage |
-| Slot | A collection of typed items; each item's type comes from a registry and has its own settings schema | Discount rules and rewards, blocks in a Block List, Automate steps |
-| Reference | A key pointing at another entity, or at another item in the same entity | A product collection; a workflow edge from one step to another |
+| A value | A string, number, date or boolean, an array of those, or a JSON value with a schema | Name, start date, percentage, tags, a focal point |
+| A reference | A key pointing at another entity, or at another item in the same entity | A product collection; a workflow edge from one step to another |
+| Items | Typed elements, each with its own key; each item's type comes from a registry and has its own fields and settings | Discount rules and rewards, blocks in a Block List, Automate steps |
 
-References between items in the same entity are what let graphs fit: a workflow is a slot of steps whose edges are item references.
+Items are where the work is. Because each item has a key, it is addressed by path (`rules/{key}/minTotal`), so it can be edited, reported on and rebased on its own. The set of item types is open, so plugins add to it. Items are edited by adding, removing and moving them. A single item, such as a single block, is an items field with a maximum of one.
 
-**Item types register separately from the entity.** A third-party discount rule provider registers a rule item type, and discounts using it become creatable from text with no more work. Automate step types are abilities, so a workflow is an entity whose slot items are abilities.
+References between items in the same entity are what let graphs fit: a workflow's steps are items whose edges are item references.
+
+**Item types register separately from the entity.** A third-party discount rule provider registers a rule item type, and discounts using it become creatable from text with no more work. Automate step types are abilities, so a workflow is an entity whose steps are abilities.
+
+An earlier draft kept "slots" (lists of items) apart from fields. The proof of concept folded them together: what a slot added are properties of the items value type, and the split raised a question that shouldn't exist, whether a property editor is a field or a slot. An editor declares its value type, and items are one value type.
 
 ### What a package implements
 
@@ -113,7 +117,7 @@ public class DiscountEditModel
     [Key] public Guid Key { get; set; }
     [EntityName, Required] public string? Name { get; set; }
     [EntityKey("cms.page")] public Guid? LandingPage { get; set; }
-    [Slot("commerce.discount.rule", Min = 1)] public List<DynamicItem> Rules { get; set; } = [];  // a plugin seam
+    [Items("commerce.discount.rule", Min = 1)] public List<DynamicItem> Rules { get; set; } = [];  // a plugin seam
 }
 
 // Fluent, over a class the package doesn't own
@@ -122,7 +126,7 @@ ModelConfiguration.Configure<MediaRequestModel>(media => media
     .HasKey(x => x.Id)
     .Ignore(x => x.UpdateDate)
     .Field(x => x.Name).IsName().Required()
-    .Slot(x => x.Crops, "cms.media.crop"));
+    .Items(x => x.Crops, "cms.media.crop"));
 
 // The definition: map to the domain, plus the rules a contract can't express
 public class DiscountDefinition : EntityDefinitionBase<DiscountEditModel>
@@ -144,10 +148,10 @@ The framework works out the rest from the contract:
 
 | A package would otherwise write | Now comes from |
 | --- | --- |
-| Fields, types, required, allowed values, references, slots and limits | Property types, plus attributes or fluent configuration |
+| Fields, value types (items included), required, allowed values, references and limits | Property types, plus attributes or fluent configuration |
 | JSON Schema for structured values | `JsonSchemaExporter` over the property type |
-| Culture variation | `Varying<T>`, a value per culture, on fields and slots |
-| Block settings and grid placement | `[ItemSettings]`/`HasSettings`, `[ItemLayout]`/`HasLayout`, a slot's layout type |
+| Culture variation | `Varying<T>`, a value per culture, on any field |
+| Block settings and grid placement | `[ItemSettings]`/`HasSettings`, `[ItemLayout]`/`HasLayout`, an items field's layout type |
 | Turning the contract into the working copy and back | Done both ways, keeping item keys and giving each item its path |
 | Range and format checks on entity paths | DataAnnotations, as attributes or fluent `Rule(...)`. Each problem is reported once |
 | An edit ability that works inside a change set | One `Edit(model, input)` method |
@@ -190,7 +194,7 @@ How the framework uses them:
 - **Localization-key labels** (Commerce's default `#uc…Label`) are treated as missing: the type is named by its alias, and its description tells the model so.
 - **Bindings** (`{{trigger.orderId}}`) are accepted where a setting supports them, marked in the schema, and checked when they resolve.
 - **Availability:** a user is only offered item types they may use, and adding one they may not is refused when it's recorded.
-- **In a typed contract** the slot is a list of dynamic items (a type, JSON fields, nested slots). One mapper per seam turns them into the product's stored form.
+- **In a typed contract** the field is a list of dynamic items (a type, JSON fields, nested items). One mapper per seam turns them into the product's stored form.
 
 The proof of concept builds both from stand-ins shaped like Umbraco.Commerce.Core's providers and Umbraco.Commerce.Automate's triggers and actions. A third party's rule is a plain Commerce provider with no Abilities code, and a provider added after start-up appears with no change anywhere else. It found that the registries already have enough metadata. Two things cost the model guidance and need upkeep: labels left as localization keys, and each product's editor table.
 
@@ -419,7 +423,7 @@ Each idea below uses the same three layers with no new contract.
 | New items referring to each other | A discount refers to a page created in the same set | Keys chosen by the caller (CMS create models already accept a key), or key remapping during apply |
 | Products outside Umbraco's transaction | All-or-nothing apply across products breaks | Settled: apply per product, each all or nothing, resumable across products (see "Applying across products") |
 | Live data changing under an open set | Applying a stale set overwrites newer work | Settled: rebase onto the live version; only overlapping changes are conflicts to resolve (see "Rebasing onto changes saved elsewhere") |
-| Scope creep | Abilities turns into an entity framework, or the structure language turns into a CMS data model | Keep the structure language to fields, slots and references |
+| Scope creep | Abilities turns into an entity framework, or the structure language turns into a CMS data model | Keep the structure language to fields, with value, reference and items types |
 | Cost for products | Teams will not describe their models if it is laborious | Typed models with attributes; the structure derived from C# types where possible |
 | CMS content duplicated | Documents already have drafts and the path engine | CMS content becomes the first entity definition, not a parallel system |
 | Ownership | Draft Sets is pitched as a CMS core feature; a generic recorded unit makes core depend on the Abilities contract | Match the PoC's operation shape to an ability call now, so moving into core later is a rename |
@@ -447,14 +451,14 @@ The structure language holds up against the real CMS, Commerce and Automate code
 
 | Addition | Needed by |
 | --- | --- |
-| Variations on the entity, fields and slots (named after the CMS's Variations and ContentVariation): values stored per culture and segment, edits take a culture, problems say which culture | CMS: names and properties vary by culture or segment; blocks in an invariant block property hold per-culture values |
-| Culture-variant slots: a separate item list per culture | CMS: a culture-variant block property holds one whole value per culture |
+| Variations on the entity and its fields (the CMS's ContentVariation): values stored per culture and segment, edits take a culture, problems say which culture | CMS: names and properties vary by culture or segment; blocks in an invariant block property hold per-culture values |
+| Culture-variant items fields: a separate item list per culture | CMS: a culture-variant block property holds one whole value per culture |
 | A settings element per item, edited at `{item}/@settings` | CMS: blocks have a settings element type beside their content type |
 | Placement values per item, edited at `{item}/@layout` | CMS: a Block Grid block's column and row span belong to its place, not its values |
 | Arrays, references to several entity types, and JSON values | CMS: tags, tree pickers pointing at documents or media, focal points and crops |
 | Edges as a first-class part of an entity, carrying their own data | Automate: steps are a flat list and edges are a separate list with an outcome, handle and filter; loops and parallel paths come from edges, not nesting |
 
-Commerce discounts need no additions. Their rules are one recursive tree under a group rule (AND/OR is a setting), which fits as a single-item slot with nested slots. The definition must give rule and reward nodes keys when it loads them, since Commerce stores none.
+Commerce discounts need no additions. Their rules are one recursive tree under a group rule (AND/OR is a setting), which fits as an items field holding one group rule, whose children are an items field too. The definition must give rule and reward nodes keys when it loads them, since Commerce stores none.
 
 ### Gaps the contract cannot close
 
@@ -521,7 +525,7 @@ The cheapest proof is in the Draft Sets PoC, before the Abilities contract exist
 
 1. **Generalise the PoC's recorded unit.** Change `DraftSetOperation` to `{ AbilityId, InputJson, TargetKey, BaseVersion? }` with the existing content operations as the first implementations. If content loses nothing, the layering holds.
 2. **Write CMS documents as an entity definition (done in the proof of concept).** Move the block path engine's three CMS lookups (top-level editor, nested item type, load and save) behind the definition. Today's content tools should keep working on top of it.
-3. **Pilot one non-CMS entity.** A Commerce discount tests slots with registered item types; an Automate workflow tests references between items. Both need a look at the real models first.
+3. **Pilot one non-CMS entity.** A Commerce discount tests items with registered item types; an Automate workflow tests references between items. Both need a look at the real models first.
 4. **Build creation prompts on the pilot.** Backoffice action and copilot first, Automate once change sets are stored in the database.
 
 Decisions:

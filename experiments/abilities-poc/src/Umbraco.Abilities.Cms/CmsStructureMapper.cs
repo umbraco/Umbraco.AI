@@ -19,8 +19,8 @@ internal sealed record BlockMap(Guid ContentElementTypeKey, string ContentAlias,
 
 internal sealed record AreaMap(Guid Key, string Alias);
 
-/// <summary>How one property maps: to a field, or to a slot of blocks.</summary>
-internal sealed record PropertyMap(string Alias, string EditorAlias, PropertyKind Kind, FieldDefinition? Field, SlotDefinition? Slot, IReadOnlyList<BlockMap> Blocks)
+/// <summary>How one property maps: to a field, which for a block editor is an items field of blocks.</summary>
+internal sealed record PropertyMap(string Alias, string EditorAlias, PropertyKind Kind, FieldDefinition Field, IReadOnlyList<BlockMap> Blocks)
 {
     public BlockMap? BlockFor(string elementAlias) => Blocks.FirstOrDefault(b => b.ContentAlias == elementAlias);
 }
@@ -30,7 +30,7 @@ internal sealed record ShapeMap(ElementShape Shape, ContentVariation Variations,
 
 /// <summary>
 /// Builds the structure language from Umbraco document types, element types and data types. Block editors
-/// become slots whose item types are registered per data type, because the same element type can be used by
+/// become items fields whose item types are registered per data type, because the same element type can be used by
 /// several block editors with different settings types and areas.
 /// </summary>
 internal sealed class CmsStructureMapper(IContentTypeService contentTypes, IDataTypeService dataTypes, ItemTypeRegistry itemTypes)
@@ -46,7 +46,6 @@ internal sealed class CmsStructureMapper(IContentTypeService contentTypes, IData
     public async Task<ShapeMap> MapAsync(IContentTypeComposition type, bool isDocument)
     {
         var fields = new List<FieldDefinition>();
-        var slots = new List<SlotDefinition>();
         var properties = new Dictionary<string, PropertyMap>(StringComparer.Ordinal);
 
         if (isDocument)
@@ -65,17 +64,10 @@ internal sealed class CmsStructureMapper(IContentTypeService contentTypes, IData
         {
             var map = await MapPropertyAsync(propertyType);
             properties[propertyType.Alias] = map;
-            if (map.Field is { } field)
-            {
-                fields.Add(field);
-            }
-            else
-            {
-                slots.Add(map.Slot!);
-            }
+            fields.Add(map.Field);
         }
 
-        return new ShapeMap(new ElementShape(fields, slots), type.Variations, properties);
+        return new ShapeMap(new ElementShape(fields), type.Variations, properties);
     }
 
     private async Task<PropertyMap> MapPropertyAsync(IPropertyType propertyType)
@@ -91,7 +83,7 @@ internal sealed class CmsStructureMapper(IContentTypeService contentTypes, IData
                 Variations = varies,
                 Many = many,
                 ReferencesEntityType = references,
-            }, null, []);
+            }, []);
 
         switch (editor)
         {
@@ -126,7 +118,7 @@ internal sealed class CmsStructureMapper(IContentTypeService contentTypes, IData
         var isGrid = propertyType.PropertyEditorAlias == Constants.PropertyEditors.Aliases.BlockGrid;
 
         var blocks = new List<BlockMap>();
-        SlotDefinition slot;
+        FieldDefinition field;
         if (isGrid)
         {
             var config = dataType.ConfigurationObject as BlockGridConfiguration ?? new BlockGridConfiguration();
@@ -140,19 +132,19 @@ internal sealed class CmsStructureMapper(IContentTypeService contentTypes, IData
                 var areas = block.Areas
                     .Select(a => new AreaMap(a.Key, a.Alias ?? a.Key.ToString()))
                     .ToList();
-                var areaSlots = block.Areas.Select(a => new SlotDefinition(a.Alias ?? a.Key.ToString(), $"Area '{a.Alias}'.", areaGroup)
+                var areaFields = block.Areas.Select(a => FieldDefinition.ItemsOf(a.Alias ?? a.Key.ToString(), $"Area '{a.Alias}'.", areaGroup) with
                 {
                     Min = a.MinAllowed,
                     Max = a.MaxAllowed,
                     ItemLayout = layout,
                 }).ToArray();
 
-                blocks.Add(await RegisterBlockAsync(dataType.Key, block.ContentElementTypeKey, block.SettingsElementTypeKey, areas, areaSlots,
+                blocks.Add(await RegisterBlockAsync(dataType.Key, block.ContentElementTypeKey, block.SettingsElementTypeKey, areas, areaFields,
                     group: block.AllowAtRoot || !block.AllowInAreas ? rootGroup : areaGroup,
                     alsoIn: block.AllowAtRoot && block.AllowInAreas ? [areaGroup] : []));
             }
 
-            slot = new SlotDefinition(propertyType.Alias, description, rootGroup)
+            field = FieldDefinition.ItemsOf(propertyType.Alias, description, rootGroup) with
             {
                 Variations = varies,
                 Min = config.ValidationLimit.Min ?? (propertyType.Mandatory ? 1 : null),
@@ -168,7 +160,7 @@ internal sealed class CmsStructureMapper(IContentTypeService contentTypes, IData
                 blocks.Add(await RegisterBlockAsync(dataType.Key, block.ContentElementTypeKey, block.SettingsElementTypeKey, [], [], rootGroup, []));
             }
 
-            slot = new SlotDefinition(propertyType.Alias, description, rootGroup)
+            field = FieldDefinition.ItemsOf(propertyType.Alias, description, rootGroup) with
             {
                 Variations = varies,
                 Min = config.ValidationLimit.Min ?? (propertyType.Mandatory ? 1 : null),
@@ -177,7 +169,7 @@ internal sealed class CmsStructureMapper(IContentTypeService contentTypes, IData
         }
 
         var kind = isGrid ? PropertyKind.BlockGrid : PropertyKind.BlockList;
-        return new PropertyMap(propertyType.Alias, propertyType.PropertyEditorAlias, kind, null, slot, blocks);
+        return new PropertyMap(propertyType.Alias, propertyType.PropertyEditorAlias, kind, field, blocks);
     }
 
     private async Task<BlockMap> RegisterBlockAsync(
@@ -185,7 +177,7 @@ internal sealed class CmsStructureMapper(IContentTypeService contentTypes, IData
         Guid contentKey,
         Guid? settingsKey,
         IReadOnlyList<AreaMap> areas,
-        SlotDefinition[] areaSlots,
+        FieldDefinition[] areaFields,
         string group,
         IReadOnlyList<string> alsoIn)
     {
@@ -205,7 +197,7 @@ internal sealed class CmsStructureMapper(IContentTypeService contentTypes, IData
             var settings = settingsKey is { } key ? (await MapAsync(RequireType(key), isDocument: false)).Shape : null;
 
             itemTypes.AddIfMissing(new ItemTypeDefinition(group, content.Alias, content.Name ?? content.Alias, content.Description ?? string.Empty,
-                shape with { Slots = [.. shape.Slots, .. areaSlots] })
+                shape with { Fields = [.. shape.Fields, .. areaFields] })
             {
                 SettingsShape = settings,
                 AlsoIn = alsoIn,

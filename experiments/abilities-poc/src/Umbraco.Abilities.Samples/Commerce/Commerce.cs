@@ -55,10 +55,10 @@ public sealed class DiscountEditModel
     [Description("Whether the discount is live. Use commerce.activateDiscount to switch it on.")]
     public bool? Active { get; set; }
 
-    [Slot(DiscountDefinition.RuleGroup, Min = 1), Description("All rules must match for the discount to apply.")]
+    [Items(DiscountDefinition.RuleGroup, Min = 1), Description("All rules must match for the discount to apply.")]
     public List<DynamicItem> Rules { get; set; } = [];
 
-    [Slot(DiscountDefinition.RewardGroup, Min = 1, Max = 3), Description("What the customer gets.")]
+    [Items(DiscountDefinition.RewardGroup, Min = 1, Max = 3), Description("What the customer gets.")]
     public List<DynamicItem> Rewards { get; set; } = [];
 }
 
@@ -194,7 +194,10 @@ public sealed class DiscountProviderItemTypes(string group, DiscountProviderColl
         var fields = provider.SettingDefinitions
             .Select(s => ItemTypeFields.For(new SettingDescriptor(s.Key, s.Label, s.Description, s.PropertyType, s.ValidationRules, s.EditorUiAlias, s.SortOrder), Editors))
             .ToList();
-        var children = provider.HasChildren ? new[] { new SlotDefinition("children", "The rules in this group.", group) { Min = 1 } } : [];
+        if (provider.HasChildren)
+        {
+            fields.Add(FieldDefinition.ItemsOf("children", "The rules in this group.", group) with { Min = 1 });
+        }
 
         return new ItemTypeDefinition(
             group,
@@ -202,7 +205,7 @@ public sealed class DiscountProviderItemTypes(string group, DiscountProviderColl
             ItemTypeFields.Text(provider.Label) ?? provider.Alias,
             ItemTypeFields.Text(provider.Description)
                 ?? $"Commerce gives this provider no description, only a localization key. Describe it in plain words from its alias, '{provider.Alias}'.",
-            new ElementShape(fields, children))
+            new ElementShape(fields))
         {
             AvailableTo = availableTo,
         };
@@ -220,7 +223,7 @@ internal static class ProviderItems
         var item = ToItem(providers, rule.RuleProviderAlias, rule.Settings, key);
         if (rule.Children is { Count: > 0 } children)
         {
-            item.Slots["children"] = children.Select((c, i) => ToItem(providers, c, DiscountDefinition.DerivedKey(key, i, c.RuleProviderAlias))).ToList();
+            item.Items["children"] = children.Select((c, i) => ToItem(providers, c, DiscountDefinition.DerivedKey(key, i, c.RuleProviderAlias))).ToList();
         }
 
         return item;
@@ -241,7 +244,7 @@ internal static class ProviderItems
     }
 
     public static DiscountRuleConfig ToRuleConfig(DynamicItem item)
-        => new(item.Type, Settings(item), item.Slots.GetValueOrDefault("children")?.Select(ToRuleConfig).ToList());
+        => new(item.Type, Settings(item), item.Items.GetValueOrDefault("children")?.Select(ToRuleConfig).ToList());
 
     public static Dictionary<string, string> Settings(DynamicItem item)
         => item.Fields

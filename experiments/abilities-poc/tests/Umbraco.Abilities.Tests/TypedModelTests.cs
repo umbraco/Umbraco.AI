@@ -26,8 +26,8 @@ public class TypedModelTests
         Assert.True(fields["name"].Required);
         Assert.Equal(FieldType.Date, fields["startDate"].Type);
         Assert.Equal("document", fields["landingPage"].ReferencesEntityType);
-        Assert.Equal(1, discount.Shape.Slots.Single(s => s.Alias == "rules").Min);
-        Assert.Equal(3, discount.Shape.Slots.Single(s => s.Alias == "rewards").Max);
+        Assert.Equal(1, discount.Shape.Fields.Single(f => f.Alias == "rules").Min);
+        Assert.Equal(3, discount.Shape.Fields.Single(f => f.Alias == "rewards").Max);
         Assert.DoesNotContain("key", fields.Keys);
         Assert.DoesNotContain("version", fields.Keys);
 
@@ -47,8 +47,8 @@ public class TypedModelTests
         Assert.Equal(ContentVariation.Culture, fields["title"].Variations);
         Assert.True(fields["tags"].Many);
         Assert.Equal(["document", "media"], fields["related"].ReferencesAnyOf);
-        Assert.Equal(ContentVariation.Culture, page.Shape.Slots.Single(s => s.Alias == "promos").Variations);
-        Assert.Equal("columnSpan", page.Shape.Slots.Single(s => s.Alias == "grid").ItemLayout!.Fields[0].Alias);
+        Assert.Equal(ContentVariation.Culture, page.Shape.Fields.Single(f => f.Alias == "promos").Variations);
+        Assert.Equal("columnSpan", page.Shape.Fields.Single(f => f.Alias == "grid").ItemLayout!.Fields[0].Alias);
 
         var hero = _site.ItemTypes.Find(CmsPageDefinition.BlockGroup, "hero")!;
         Assert.Equal(["light", "dark"], hero.SettingsShape!.Fields.Single(f => f.Alias == "theme").Allowed);
@@ -117,8 +117,8 @@ public class TypedModelTests
 
         Assert.Equal("media", media.EntityType);
         Assert.True(fields["name"].Required);
-        Assert.Equal(["name", "altText"], fields.Keys); // the key, version and server-side UpdateDate are not fields
-        Assert.Equal(CmsMediaDefinition.CropGroup, Assert.Single(media.Shape.Slots).ItemTypeGroup);
+        Assert.Equal(["name", "altText", "crops"], fields.Keys); // the key, version and server-side UpdateDate are not fields
+        Assert.Equal(CmsMediaDefinition.CropGroup, Assert.Single(media.Shape.ItemFields).ItemTypeGroup);
 
         var crop = _site.ItemTypes.Find(CmsMediaDefinition.CropGroup, "crop")!;
         Assert.Equal(typeof(MediaCropRequestModel), crop.ClrType);
@@ -143,7 +143,7 @@ public class TypedModelTests
         await _agent.StartChangeSetAsync("Media");
         var media = (await _agent.OkAsync("entity_create", """{ "entityType": "media", "fields": { "name": "Hero image" } }""")).GetProperty("key").GetGuid();
         await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "media", "key": "{{media}}", "slotPath": "crops", "itemType": "crop", "fields": { "alias": "wide", "width": 1600, "height": 600 } }
+            { "entityType": "media", "key": "{{media}}", "fieldPath": "crops", "itemType": "crop", "fields": { "alias": "wide", "width": 1600, "height": 600 } }
             """);
         await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
 
@@ -157,8 +157,8 @@ public class TypedModelTests
     {
         await _agent.StartChangeSetAsync("Sale");
         var discount = (await _agent.OkAsync("entity_create", """{ "entityType": "umbraco-commerce-discount", "fields": { "name": "Sale", "endDate": "2026-12-31" } }""")).GetProperty("key").GetGuid();
-        var rule = (await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 50 } }""")).GetProperty("itemKey").GetGuid();
-        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "slotPath": "rewards", "itemType": "freeShipping" }""");
+        var rule = (await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 50 } }""")).GetProperty("itemKey").GetGuid();
+        await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rewards", "itemType": "freeShipping" }""");
         await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
 
         // Stored in Commerce's own shape: a provider alias and string settings, UTC dates.

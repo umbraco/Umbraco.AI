@@ -10,17 +10,17 @@ public sealed record EditTarget(EntityDocument Document, EntityStructure Structu
 
 /// <summary>
 /// Edits an entity document by path. Generalised from Umbraco.AI's block path engine: a path alternates
-/// slot aliases and item keys, so <c>"blocks"</c> is a slot on the root, <c>"blocks/{key}"</c> is an item and
-/// <c>"blocks/{key}/cards"</c> is a slot inside that item. <c>"{itemPath}/@settings"</c> and
+/// items field aliases and item keys, so <c>"blocks"</c> is an items field on the root, <c>"blocks/{key}"</c> is an
+/// item and <c>"blocks/{key}/cards"</c> is an items field inside that item. <c>"{itemPath}/@settings"</c> and
 /// <c>"{itemPath}/@layout"</c> are an item's settings element and its placement values. Fields are addressed
 /// as an element path plus a field alias, and problems use the same paths (<c>"blocks/{key}/@settings/theme"</c>).
 /// Values that vary are read and written for the edit's variant, narrowed to what each value varies by.
 /// </summary>
 public static class EntityEditor
 {
-    public sealed record ResolvedElement(EntityElement Element, ElementShape Shape, string Path, ItemTypeDefinition? ItemType, SlotDefinition? InSlot);
+    public sealed record ResolvedElement(EntityElement Element, ElementShape Shape, string Path, ItemTypeDefinition? ItemType, FieldDefinition? InField);
 
-    public sealed record ResolvedSlot(List<EntityItem> Items, SlotDefinition Slot, string Path, VariantId Variant);
+    public sealed record ResolvedItems(List<EntityItem> Items, FieldDefinition Field, string Path, VariantId Variant);
 
     public static string Join(string path, string segment) => string.IsNullOrEmpty(path) ? segment : $"{path}/{segment}";
 
@@ -44,35 +44,35 @@ public static class EntityEditor
                 throw Invalid(path ?? string.Empty, "An element path ends with an item key, @settings or @layout. Use \"\" for the entity itself.");
             }
 
-            var slot = ResolveSlotOn(target, current, segment);
+            var items = ResolveItemsOn(target, current, segment);
             if (!Guid.TryParse(segments[i + 1], out var key))
             {
-                throw Invalid(Join(slot.Path, segments[i + 1]), "Expected an item key (a GUID).");
+                throw Invalid(Join(items.Path, segments[i + 1]), "Expected an item key (a GUID).");
             }
 
-            var item = slot.Items.FirstOrDefault(i => i.Key == key)
-                ?? throw Invalid(Join(slot.Path, key.ToString()), "No item with this key in the slot.");
+            var item = items.Items.FirstOrDefault(i => i.Key == key)
+                ?? throw Invalid(Join(items.Path, key.ToString()), "No item with this key in the field.");
 
-            var itemType = target.ItemTypes.Find(slot.Slot.ItemTypeGroup, item.Type)
-                ?? throw Invalid(Join(slot.Path, key.ToString()), $"Item type '{item.Type}' is not registered.");
+            var itemType = target.ItemTypes.Find(items.Field.ItemTypeGroup!, item.Type)
+                ?? throw Invalid(Join(items.Path, key.ToString()), $"Item type '{item.Type}' is not registered.");
 
-            current = new ResolvedElement(item, itemType.Shape, Join(slot.Path, key.ToString()), itemType, slot.Slot);
+            current = new ResolvedElement(item, itemType.Shape, Join(items.Path, key.ToString()), itemType, items.Field);
             i += 2;
         }
 
         return current;
     }
 
-    public static ResolvedSlot ResolveSlot(EditTarget target, string slotPath)
+    public static ResolvedItems ResolveItems(EditTarget target, string fieldPath)
     {
-        var segments = Split(slotPath);
+        var segments = Split(fieldPath);
         if (segments.Length == 0 || segments[^1].StartsWith('@'))
         {
-            throw Invalid(slotPath, "A slot path ends with a slot alias, e.g. \"rules\" or \"blocks/{key}/cards\".");
+            throw Invalid(fieldPath, "A field path ends with an items field's alias, e.g. \"rules\" or \"blocks/{key}/cards\".");
         }
 
         var owner = ResolveElement(target, string.Join('/', segments[..^1]));
-        return ResolveSlotOn(target, owner, segments[^1]);
+        return ResolveItemsOn(target, owner, segments[^1]);
     }
 
     public static void SetField(EditTarget target, ResolvedElement element, string alias, JsonNode? value)
@@ -80,6 +80,11 @@ public static class EntityEditor
         var path = Join(element.Path, alias);
         var field = element.Shape.Fields.FirstOrDefault(f => f.Alias == alias)
             ?? throw Invalid(path, $"No field '{alias}' here. Fields: {Names(element.Shape.Fields.Select(f => f.Alias))}.");
+
+        if (field.IsItems)
+        {
+            throw Invalid(path, $"'{alias}' holds items. Use entity.addItem, removeItem or moveItem with fieldPath \"{path}\".");
+        }
 
         var variant = RequireVariant(target, field.Variations, path);
         value = FieldChecker.Normalize(field, value);
@@ -117,39 +122,39 @@ public static class EntityEditor
         }
     }
 
-    public static ResolvedElement AddItem(EditTarget target, string slotPath, string itemTypeAlias, Guid itemKey, int? position)
+    public static ResolvedElement AddItem(EditTarget target, string fieldPath, string itemTypeAlias, Guid itemKey, int? position)
     {
-        var slot = ResolveSlot(target, slotPath);
-        var allowed = target.ItemTypes.InGroup(slot.Slot.ItemTypeGroup);
+        var items = ResolveItems(target, fieldPath);
+        var allowed = target.ItemTypes.InGroup(items.Field.ItemTypeGroup!);
         var itemType = allowed.FirstOrDefault(t => t.Alias == itemTypeAlias)
-            ?? throw Invalid(slot.Path, $"Item type '{itemTypeAlias}' is not allowed in this slot. Allowed: {Names(allowed.Select(t => t.Alias))}.");
+            ?? throw Invalid(items.Path, $"Item type '{itemTypeAlias}' is not allowed in this field. Allowed: {Names(allowed.Select(t => t.Alias))}.");
 
-        if (slot.Slot.Max is { } max && slot.Items.Count >= max)
+        if (items.Field.Max is { } max && items.Items.Count >= max)
         {
-            throw Invalid(slot.Path, $"This slot holds at most {max} item(s).");
+            throw Invalid(items.Path, $"This field holds at most {max} item(s).");
         }
 
         var item = new EntityItem { Key = itemKey, Type = itemType.Alias };
-        var index = position is { } p ? Math.Clamp(p, 0, slot.Items.Count) : slot.Items.Count;
-        slot.Items.Insert(index, item);
-        return new ResolvedElement(item, itemType.Shape, Join(slot.Path, itemKey.ToString()), itemType, slot.Slot);
+        var index = position is { } p ? Math.Clamp(p, 0, items.Items.Count) : items.Items.Count;
+        items.Items.Insert(index, item);
+        return new ResolvedElement(item, itemType.Shape, Join(items.Path, itemKey.ToString()), itemType, items.Field);
     }
 
-    public static void RemoveItem(EditTarget target, string slotPath, Guid itemKey)
+    public static void RemoveItem(EditTarget target, string fieldPath, Guid itemKey)
     {
-        var slot = ResolveSlot(target, slotPath);
-        var item = slot.Items.FirstOrDefault(i => i.Key == itemKey)
-            ?? throw Invalid(Join(slot.Path, itemKey.ToString()), "No item with this key in the slot.");
-        slot.Items.Remove(item);
+        var items = ResolveItems(target, fieldPath);
+        var item = items.Items.FirstOrDefault(i => i.Key == itemKey)
+            ?? throw Invalid(Join(items.Path, itemKey.ToString()), "No item with this key in the field.");
+        items.Items.Remove(item);
     }
 
-    public static void MoveItem(EditTarget target, string slotPath, Guid itemKey, int position)
+    public static void MoveItem(EditTarget target, string fieldPath, Guid itemKey, int position)
     {
-        var slot = ResolveSlot(target, slotPath);
-        var item = slot.Items.FirstOrDefault(i => i.Key == itemKey)
-            ?? throw Invalid(Join(slot.Path, itemKey.ToString()), "No item with this key in the slot.");
-        slot.Items.Remove(item);
-        slot.Items.Insert(Math.Clamp(position, 0, slot.Items.Count), item);
+        var items = ResolveItems(target, fieldPath);
+        var item = items.Items.FirstOrDefault(i => i.Key == itemKey)
+            ?? throw Invalid(Join(items.Path, itemKey.ToString()), "No item with this key in the field.");
+        items.Items.Remove(item);
+        items.Items.Insert(Math.Clamp(position, 0, items.Items.Count), item);
     }
 
     /// <summary>
@@ -186,7 +191,7 @@ public static class EntityEditor
     private static ResolvedElement ResolveSubElement(ResolvedElement current, string segment, bool isLast)
     {
         var path = Join(current.Path, segment);
-        if (current.ItemType is null || current.InSlot is null)
+        if (current.ItemType is null || current.InField is null)
         {
             throw Invalid(path, "@settings and @layout follow an item key.");
         }
@@ -201,21 +206,21 @@ public static class EntityEditor
             "@settings" when current.ItemType.SettingsShape is { } settings
                 => new ResolvedElement(((EntityItem)current.Element).EnsureSettings(), settings, path, null, null),
             "@settings" => throw Invalid(path, $"Item type '{current.ItemType.Alias}' has no settings."),
-            "@layout" when current.InSlot.ItemLayout is { } layout
+            "@layout" when current.InField.ItemLayout is { } layout
                 => new ResolvedElement(((EntityItem)current.Element).EnsureLayout(), layout, path, null, null),
-            "@layout" => throw Invalid(path, $"Slot '{current.InSlot.Alias}' has no layout values."),
+            "@layout" => throw Invalid(path, $"Field '{current.InField.Alias}' has no layout values."),
             _ => throw Invalid(path, "Use @settings or @layout."),
         };
     }
 
-    private static ResolvedSlot ResolveSlotOn(EditTarget target, ResolvedElement owner, string alias)
+    private static ResolvedItems ResolveItemsOn(EditTarget target, ResolvedElement owner, string alias)
     {
         var path = Join(owner.Path, alias);
-        var slot = owner.Shape.Slots.FirstOrDefault(s => s.Alias == alias)
-            ?? throw Invalid(path, $"No slot '{alias}' here. Slots: {Names(owner.Shape.Slots.Select(s => s.Alias))}.");
+        var field = owner.Shape.ItemFields.FirstOrDefault(f => f.Alias == alias)
+            ?? throw Invalid(path, $"No items field '{alias}' here. Items fields: {Names(owner.Shape.ItemFields.Select(f => f.Alias))}.");
 
-        var variant = RequireVariant(target, slot.Variations, path);
-        return new ResolvedSlot(owner.Element.Items(slot, variant), slot, path, variant);
+        var variant = RequireVariant(target, field.Variations, path);
+        return new ResolvedItems(owner.Element.ItemsFor(field, variant), field, path, variant);
     }
 
     private static string[] Split(string? path) => (path ?? string.Empty).Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);

@@ -21,11 +21,18 @@ public enum FieldType
     /// </summary>
     EntityReference,
 
-    /// <summary>The key of an item in a slot of the same entity (<see cref="FieldDefinition.ReferencesItemInSlot"/>).</summary>
+    /// <summary>The key of an item in an items field of the same entity (<see cref="FieldDefinition.ReferencesItemIn"/>).</summary>
     ItemReference,
 
     /// <summary>Any JSON value matching <see cref="FieldDefinition.Schema"/>: the escape hatch for editor values that are not scalars.</summary>
     Json,
+
+    /// <summary>
+    /// Items: typed elements, each with its own key, of the types registered for <see cref="FieldDefinition.ItemTypeGroup"/>.
+    /// A Block List, discount rules, workflow steps. Each item is addressed by key (<c>rules/{key}/minTotal</c>), so it can
+    /// be edited, reported on and rebased on its own. A single item (a single block) is <see cref="FieldDefinition.Max"/> 1.
+    /// </summary>
+    Items,
 }
 
 /// <summary>A culture and segment. Either may be null: null culture is invariant, null segment is the default segment.</summary>
@@ -62,8 +69,8 @@ public sealed record FieldDefinition(string Alias, string Description, FieldType
     /// <summary>For a reference that can point at several entity types.</summary>
     public IReadOnlyList<string>? ReferencesAnyOf { get; init; }
 
-    /// <summary>A slot on the entity root whose items this field can point at.</summary>
-    public string? ReferencesItemInSlot { get; init; }
+    /// <summary>An items field on the entity root whose items this field can point at.</summary>
+    public string? ReferencesItemIn { get; init; }
 
     /// <summary>The JSON Schema of a <see cref="FieldType.Json"/> value, e.g. a property editor's value schema.</summary>
     public JsonObject? Schema { get; init; }
@@ -76,31 +83,41 @@ public sealed record FieldDefinition(string Alias, string Description, FieldType
 
     /// <summary>The value can be a binding to an earlier step's output, e.g. <c>{{trigger.orderId}}</c>, instead of a literal.</summary>
     public bool AcceptsBindings { get; init; }
-}
 
-/// <summary>A collection of typed items. Item types come from a registry, so other packages can add them.</summary>
-public sealed record SlotDefinition(string Alias, string Description, string ItemTypeGroup)
-{
+    // ── For FieldType.Items ──────────────────────────────────────────────────────────────────────
+
+    /// <summary>The group whose registered item types the field holds. Item types come from a registry, so other packages add them.</summary>
+    public string? ItemTypeGroup { get; init; }
+
+    /// <summary>The fewest items.</summary>
     public int? Min { get; init; }
 
+    /// <summary>The most items. 1 for a single item.</summary>
     public int? Max { get; init; }
 
-    /// <summary>A culture-variant slot holds a separate list per culture, like a culture-variant block property.</summary>
-    public ContentVariation Variations { get; init; } = ContentVariation.Nothing;
-
     /// <summary>
-    /// Values that belong to an item's place in this slot rather than to the item, such as a block grid's
-    /// column and row span. Edited at <c>{itemPath}/@layout</c>.
+    /// Values that belong to an item's place in this field rather than to the item, such as a block grid's column and row
+    /// span. Edited at <c>{itemPath}/@layout</c>.
     /// </summary>
     public ElementShape? ItemLayout { get; init; }
+
+    public bool IsItems => Type == FieldType.Items;
+
+    /// <summary>An items field holding items of a group.</summary>
+    public static FieldDefinition ItemsOf(string alias, string description, string itemTypeGroup)
+        => new(alias, description, FieldType.Items) { ItemTypeGroup = itemTypeGroup };
 }
 
-/// <summary>The shape of the entity root or of an item: fields plus slots. Items can have slots, so shapes nest.</summary>
-public sealed record ElementShape(IReadOnlyList<FieldDefinition> Fields, IReadOnlyList<SlotDefinition> Slots)
+/// <summary>The shape of the entity root or of an item: its fields. An items field holds items with shapes of their own, so shapes nest.</summary>
+public sealed record ElementShape(IReadOnlyList<FieldDefinition> Fields)
 {
-    public static ElementShape Of(params FieldDefinition[] fields) => new(fields, []);
+    public static ElementShape Of(params FieldDefinition[] fields) => new(fields);
 
-    public ElementShape WithSlots(params SlotDefinition[] slots) => this with { Slots = slots };
+    /// <summary>The fields holding values (not items).</summary>
+    public IEnumerable<FieldDefinition> ValueFields => Fields.Where(f => !f.IsItems);
+
+    /// <summary>The fields holding items.</summary>
+    public IEnumerable<FieldDefinition> ItemFields => Fields.Where(f => f.IsItems);
 }
 
 public sealed record EntityStructure(string EntityType, string Name, string Description, ElementShape Shape)
@@ -167,7 +184,7 @@ public sealed class ItemTypeRegistry
 
     /// <summary>
     /// Adds an item type from its model class: the alias, name and description from <c>[ItemType]</c>, the fields and
-    /// nested slots from its properties, and the settings from its <c>[ItemSettings]</c> property.
+    /// items fields from its properties, and the settings from its <c>[ItemSettings]</c> property.
     /// </summary>
     public ItemTypeRegistry Add<T>(string group, params string[] alsoIn)
         where T : class

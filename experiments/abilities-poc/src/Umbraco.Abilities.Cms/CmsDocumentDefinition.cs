@@ -31,7 +31,7 @@ namespace Umbraco.Abilities.Cms;
 /// <para>
 /// The real entity definition for CMS documents. One entity type, <c>document</c> (the UDI entity type), whose subtypes are the
 /// document types. It reads through <see cref="IContentEditingService"/> in the editor (Management API) format,
-/// maps block editor values to slots and back, validates with Umbraco's own validation, and saves with
+/// maps block editor values to items fields and back, validates with Umbraco's own validation, and saves with
 /// <see cref="ContentCreateModel"/> / <see cref="ContentUpdateModel"/>.
 /// </para>
 /// </summary>
@@ -148,13 +148,13 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
             }
 
             var variant = new VariantId(value.Culture, value.Segment);
-            if (propertyMap.Field is { } field)
+            if (!propertyMap.Field.IsItems)
             {
-                root.Set(field, variant, node);
+                root.Set(propertyMap.Field, variant, node);
             }
             else
             {
-                root.Items(propertyMap.Slot!, variant).AddRange(await ReadBlocksAsync(node, propertyMap));
+                root.ItemsFor(propertyMap.Field, variant).AddRange(await ReadBlocksAsync(node, propertyMap));
             }
         }
 
@@ -312,7 +312,7 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
             }
             else if (map.Properties.TryGetValue(alias, out var property))
             {
-                var variant = change.Variant.Narrow(property.Field?.Variations ?? property.Slot!.Variations);
+                var variant = change.Variant.Narrow(property.Field.Variations);
                 touched.Add((alias, variant.Culture, variant.Segment));
             }
         }
@@ -378,9 +378,9 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
         _ => JsonNode.Parse(_json.Serialize(value)),
     };
 
-    // ── Reading block values into slot items ────────────────────────────────────────────────────
+    // ── Reading block values into items ────────────────────────────────────────────────────
 
-    /// <summary>A block editor value, read with Umbraco's own block value classes, as slot items.</summary>
+    /// <summary>A block editor value, read with Umbraco's own block value classes, as items.</summary>
     private async Task<List<EntityItem>> ReadBlocksAsync(JsonNode node, PropertyMap property)
     {
         var json = node is JsonValue text && text.GetValueKind() == JsonValueKind.String ? text.GetValue<string>() : node.ToJsonString();
@@ -428,10 +428,10 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
 
             foreach (var area in gridItem.Areas ?? [])
             {
-                var slot = item.Slot(block.Areas.FirstOrDefault(a => a.Key == area.Key)?.Alias ?? area.Key.ToString());
+                var areaItems = item.ItemsOf(block.Areas.FirstOrDefault(a => a.Key == area.Key)?.Alias ?? area.Key.ToString());
                 foreach (var areaItem in area.Items ?? [])
                 {
-                    slot.Add(await ReadItemAsync(areaItem, property, contentData, settingsData));
+                    areaItems.Add(await ReadItemAsync(areaItem, property, contentData, settingsData));
                 }
             }
         }
@@ -449,13 +449,13 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
             }
 
             var variant = new VariantId(value.Culture, value.Segment);
-            if (property.Field is { } field)
+            if (!property.Field.IsItems)
             {
-                element.Set(field, variant, node);
+                element.Set(property.Field, variant, node);
             }
             else
             {
-                element.Items(property.Slot!, variant).AddRange(await ReadBlocksAsync(node, property));
+                element.ItemsFor(property.Field, variant).AddRange(await ReadBlocksAsync(node, property));
             }
         }
     }
@@ -503,25 +503,25 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
 
     /// <summary>
     /// A property's values in the working copy: once if invariant, else once per variant that has one. A field's value
-    /// is its JSON; a block property's is its slot items.
+    /// is its JSON; a block property's is its items.
     /// </summary>
     private static IEnumerable<(VariantId Variant, object Value)> Values(EntityElement element, PropertyMap property)
     {
-        var invariant = (property.Field?.Variations ?? property.Slot!.Variations) == ContentVariation.Nothing;
-        var values = property.Field is not null
+        var invariant = property.Field.Variations == ContentVariation.Nothing;
+        var values = !property.Field.IsItems
             ? element.Values(property.Alias).Where(v => v.Value is not JsonArray { Count: 0 }).Select(v => (v.Variant, (object)v.Value))
-            : element.SlotItems(property.Alias).Select(v => (v.Variant, (object)v.Items));
+            : element.ItemValues(property.Alias).Select(v => (v.Variant, (object)v.Items));
         return values.Where(v => v.Variant.IsInvariant == invariant);
     }
 
     /// <summary>A value in editor format: a field's JSON, or a block property's items as a block value.</summary>
-    private async Task<JsonNode?> ToNodeAsync(object value, PropertyMap property, IReadOnlyList<string> documentCultures, string? envelopeCulture, string slotPath, EnvelopeIndex index)
+    private async Task<JsonNode?> ToNodeAsync(object value, PropertyMap property, IReadOnlyList<string> documentCultures, string? envelopeCulture, string fieldPath, EnvelopeIndex index)
         => value is JsonNode node
             ? node.DeepClone()
-            : JsonNode.Parse(_json.Serialize(await WriteBlocksAsync((List<EntityItem>)value, property, documentCultures, envelopeCulture, slotPath, index)));
+            : JsonNode.Parse(_json.Serialize(await WriteBlocksAsync((List<EntityItem>)value, property, documentCultures, envelopeCulture, fieldPath, index)));
 
-    /// <summary>Slot items as Umbraco's own block value: layout, content and settings data, and which cultures expose each block.</summary>
-    private async Task<BlockValue> WriteBlocksAsync(List<EntityItem> items, PropertyMap property, IReadOnlyList<string> documentCultures, string? envelopeCulture, string slotPath, EnvelopeIndex index)
+    /// <summary>Items as Umbraco's own block value: layout, content and settings data, and which cultures expose each block.</summary>
+    private async Task<BlockValue> WriteBlocksAsync(List<EntityItem> items, PropertyMap property, IReadOnlyList<string> documentCultures, string? envelopeCulture, string fieldPath, EnvelopeIndex index)
     {
         var contentData = new List<BlockItemData>();
         var settingsData = new List<BlockItemData>();
@@ -571,7 +571,7 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
             foreach (var area in block.Areas)
             {
                 var areaItems = new List<BlockGridLayoutItem>();
-                foreach (var areaItem in item.Slots.GetValueOrDefault(area.Alias) ?? [])
+                foreach (var areaItem in item.Items.GetValueOrDefault(area.Alias) ?? [])
                 {
                     areaItems.Add((BlockGridLayoutItem)await WriteItemAsync(areaItem, $"{path}/{area.Alias}/{areaItem.Key}"));
                 }
@@ -592,7 +592,7 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
         var layout = new List<IBlockLayoutItem>();
         foreach (var item in items)
         {
-            layout.Add(await WriteItemAsync(item, $"{slotPath}/{item.Key}"));
+            layout.Add(await WriteItemAsync(item, $"{fieldPath}/{item.Key}"));
         }
 
         var blocks = new Dictionary<string, IEnumerable<IBlockLayoutItem>> { [property.EditorAlias] = layout };

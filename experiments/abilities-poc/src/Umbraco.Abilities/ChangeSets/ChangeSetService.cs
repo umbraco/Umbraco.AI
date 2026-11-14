@@ -200,7 +200,7 @@ public sealed class ChangeSetService(
 
         var document = await ReplayAsync(definition, live.Clone(), calls, theirs.Where(t => t.Structural).ToList(), cancellationToken);
 
-        // Conflicts resolved as "theirs" take the live value: a field, an item, or a slot's order.
+        // Conflicts resolved as "theirs" take the live value: a field, an item, or the order of an items field.
         var prefix = $"{ChangeSet.EntityKey(entityType, key)}|";
         foreach (var (resolutionKey, side) in set.Resolutions)
         {

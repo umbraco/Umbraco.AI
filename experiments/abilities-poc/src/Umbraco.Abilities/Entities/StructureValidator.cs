@@ -27,7 +27,7 @@ public static class StructureValidator
         var problems = new List<Problem>();
         var variants = document.Variants();
 
-        if (structure.Varies.ByCulture() && !variants.Any(v => v.Culture is not null))
+        if (structure.Variations.VariesByCulture() && !variants.Any(v => v.Culture is not null))
         {
             problems.Add(new Problem(string.Empty, "The entity has no culture yet. Set a value, such as its name, in at least one culture."));
         }
@@ -47,9 +47,9 @@ public static class StructureValidator
     {
         foreach (var field in shape.Fields)
         {
-            foreach (var variant in Targets(field.Varies, variants))
+            foreach (var variant in Targets(field.Variations, variants))
             {
-                var value = field.Varies == Variance.Invariant
+                var value = field.Variations == Variation.Invariant
                     ? Element.Fields(element)[field.Alias]
                     : Element.VariantPartOrNull(element, variant)?["fields"]?[field.Alias];
                 await ValidateFieldAsync(context, field, value, EntityEditor.Join(path, field.Alias), variant);
@@ -58,13 +58,13 @@ public static class StructureValidator
 
         foreach (var slot in shape.Slots)
         {
-            foreach (var variant in Targets(slot.Varies, variants))
+            foreach (var variant in Targets(slot.Variations, variants))
             {
-                var items = slot.Varies == Variance.Invariant
+                var items = slot.Variations == Variation.Invariant
                     ? Element.Slot(element, slot.Alias)
                     : Element.VariantPartOrNull(element, variant)?["slots"]?[slot.Alias] as JsonArray ?? [];
-                var below = slot.Varies == Variance.Invariant ? variants : variants.Where(v => v.Culture == variant.Culture).ToList();
-                await ValidateSlotAsync(context, slot, items, EntityEditor.Join(path, slot.Alias), slot.Varies == Variance.Invariant ? null : variant, below);
+                var below = slot.Variations == Variation.Invariant ? variants : variants.Where(v => v.Culture == variant.Culture).ToList();
+                await ValidateSlotAsync(context, slot, items, EntityEditor.Join(path, slot.Alias), slot.Variations == Variation.Invariant ? null : variant, below);
             }
         }
     }
@@ -153,16 +153,16 @@ public static class StructureValidator
     }
 
     /// <summary>The variants a value is checked in: once if invariant, else each variant the element exists in, narrowed to what it varies by.</summary>
-    private static IEnumerable<VariantId> Targets(Variance varies, IReadOnlyList<VariantId> variants)
+    private static IEnumerable<VariantId> Targets(Variation varies, IReadOnlyList<VariantId> variants)
     {
-        if (varies == Variance.Invariant)
+        if (varies == Variation.Invariant)
         {
             return [VariantId.Invariant];
         }
 
         return variants
             .Select(v => v.Narrow(varies))
-            .Where(v => !varies.ByCulture() || v.Culture is not null)
+            .Where(v => !varies.VariesByCulture() || v.Culture is not null)
             .Distinct();
     }
 }
@@ -182,9 +182,9 @@ public static class SchemaWriter
             }
 
             schema["description"] = field.Description;
-            if (field.Varies != Variance.Invariant)
+            if (field.Variations != Variation.Invariant)
             {
-                schema["x-varies"] = field.Varies.ToString();
+                schema["x-variations"] = field.Variations.ToString();
             }
 
             properties[field.Alias] = schema;
@@ -203,7 +203,7 @@ public static class SchemaWriter
         {
             ["alias"] = slot.Alias,
             ["description"] = slot.Description,
-            ["varies"] = slot.Varies == Variance.Invariant ? null : slot.Varies.ToString(),
+            ["variations"] = slot.Variations == Variation.Invariant ? null : slot.Variations.ToString(),
             ["min"] = slot.Min,
             ["max"] = slot.Max,
             ["itemLayout"] = slot.ItemLayout is { } layout ? Fields(layout) : null,

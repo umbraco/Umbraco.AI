@@ -90,7 +90,7 @@ public sealed class CmsDocumentDefinition : IEntityDefinition
         var cultures = (await _languages.GetAllAsync()).Select(l => l.IsoCode).ToList();
         return new EntityStructure(Type, type.Name ?? type.Alias, type.Description ?? string.Empty, map.Shape)
         {
-            Varies = map.Varies,
+            Variations = map.Variations,
             Cultures = cultures,
         };
     }
@@ -382,8 +382,8 @@ public sealed class CmsDocumentDefinition : IEntityDefinition
     /// <summary>A property's values in the working copy: once if invariant, else once per variant that has one.</summary>
     private static IEnumerable<(VariantId Variant, JsonNode Value)> Values(JsonObject element, PropertyMap property)
     {
-        var varies = property.Field?.Varies ?? property.Slot!.Varies;
-        if (varies == Variance.Invariant)
+        var varies = property.Field?.Variations ?? property.Slot!.Variations;
+        if (varies == Variation.Invariant)
         {
             var node = property.Field is not null ? Element.Fields(element)[property.Alias] : Element.Slot(element, property.Alias);
             if (node is not null && node is not JsonArray { Count: 0 })
@@ -425,7 +425,7 @@ public sealed class CmsDocumentDefinition : IEntityDefinition
             // An element that varies by culture is exposed in each culture it has values for (or every culture
             // of the document when it has none yet); an invariant element is exposed once.
             List<string?> exposedIn = [envelopeCulture];
-            if (elementMap.Varies.ByCulture())
+            if (elementMap.Variations.VariesByCulture())
             {
                 var own = (item["variants"] as JsonObject ?? []).Select(v => VariantId.Parse(v.Key).Culture).OfType<string>().Distinct().Cast<string?>().ToList();
                 exposedIn = own.Count > 0 ? own : envelopeCulture is not null ? [envelopeCulture] : documentCultures.Cast<string?>().ToList();

@@ -27,7 +27,7 @@ public enum FieldType
 }
 
 /// <summary>What a value varies by. Mirrors the CMS's ContentVariation.</summary>
-public enum Variance
+public enum Variation
 {
     Invariant,
     Culture,
@@ -35,11 +35,11 @@ public enum Variance
     CultureAndSegment,
 }
 
-public static class VarianceExtensions
+public static class VariationExtensions
 {
-    public static bool ByCulture(this Variance variance) => variance is Variance.Culture or Variance.CultureAndSegment;
+    public static bool VariesByCulture(this Variation variation) => variation is Variation.Culture or Variation.CultureAndSegment;
 
-    public static bool BySegment(this Variance variance) => variance is Variance.Segment or Variance.CultureAndSegment;
+    public static bool VariesBySegment(this Variation variation) => variation is Variation.Segment or Variation.CultureAndSegment;
 }
 
 /// <summary>A culture and segment. Either may be null: null culture is invariant, null segment is the default segment.</summary>
@@ -53,7 +53,7 @@ public sealed record VariantId(string? Culture, string? Segment)
     public string Key => Segment is null ? Culture ?? string.Empty : $"{Culture}|{Segment}";
 
     /// <summary>Keeps only the parts a value varies by, as the CMS does for each property.</summary>
-    public VariantId Narrow(Variance variance) => new(variance.ByCulture() ? Culture : null, variance.BySegment() ? Segment : null);
+    public VariantId Narrow(Variation variation) => new(variation.VariesByCulture() ? Culture : null, variation.VariesBySegment() ? Segment : null);
 
     public static VariantId Parse(string key)
     {
@@ -64,7 +64,7 @@ public sealed record VariantId(string? Culture, string? Segment)
 
 public sealed record FieldDefinition(string Alias, string Description, FieldType Type, bool Required = false)
 {
-    public Variance Varies { get; init; } = Variance.Invariant;
+    public Variation Variations { get; init; } = Variation.Invariant;
 
     /// <summary>The value is an array of values of <see cref="Type"/> (tags, a multi-node tree picker).</summary>
     public bool Many { get; init; }
@@ -91,7 +91,7 @@ public sealed record SlotDefinition(string Alias, string Description, string Ite
     public int? Max { get; init; }
 
     /// <summary>A culture-variant slot holds a separate list per culture, like a culture-variant block property.</summary>
-    public Variance Varies { get; init; } = Variance.Invariant;
+    public Variation Variations { get; init; } = Variation.Invariant;
 
     /// <summary>
     /// Values that belong to an item's place in this slot rather than to the item, such as a block grid's
@@ -111,7 +111,7 @@ public sealed record ElementShape(IReadOnlyList<FieldDefinition> Fields, IReadOn
 public sealed record EntityStructure(string EntityType, string Name, string Description, ElementShape Shape)
 {
     /// <summary>Whether the entity has variants at all (a culture-variant document type).</summary>
-    public Variance Varies { get; init; } = Variance.Invariant;
+    public Variation Variations { get; init; } = Variation.Invariant;
 
     /// <summary>The cultures the entity can have, e.g. the site's languages. Segments are not listed: the CMS doesn't manage them.</summary>
     public IReadOnlyList<string> Cultures { get; init; } = [];
@@ -260,10 +260,10 @@ public static class Element
 
     /// <summary>Where a field's value lives for a variant: the invariant fields, or the variant's part.</summary>
     public static JsonObject FieldsFor(JsonObject element, FieldDefinition field, VariantId variant)
-        => field.Varies == Variance.Invariant ? Fields(element) : Fields(VariantPart(element, variant.Narrow(field.Varies)));
+        => field.Variations == Variation.Invariant ? Fields(element) : Fields(VariantPart(element, variant.Narrow(field.Variations)));
 
     public static JsonArray SlotFor(JsonObject element, SlotDefinition slot, VariantId variant)
-        => slot.Varies == Variance.Invariant ? Slot(element, slot.Alias) : Slot(VariantPart(element, variant.Narrow(slot.Varies)), slot.Alias);
+        => slot.Variations == Variation.Invariant ? Slot(element, slot.Alias) : Slot(VariantPart(element, variant.Narrow(slot.Variations)), slot.Alias);
 
     /// <summary>An item's settings or layout element, created if missing.</summary>
     public static JsonObject SubElement(JsonObject item, string name) => Child(item, name, New);

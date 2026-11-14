@@ -163,7 +163,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
 
         var schema = await _agent.OkAsync("entity_getSchema", """{ "entityType": "cms.document", "subtype": "landingPage" }""");
         Assert.That(schema.GetProperty("cultures").EnumerateArray().Select(c => c.GetString()), Is.EquivalentTo(new[] { "en-US", "da-DK" }));
-        Assert.That(schema.GetProperty("fields").GetProperty("properties").GetProperty("subtitle").GetProperty("x-varies").GetString(), Is.EqualTo("Culture"));
+        Assert.That(schema.GetProperty("fields").GetProperty("properties").GetProperty("subtitle").GetProperty("x-variations").GetString(), Is.EqualTo("Culture"));
 
         var slots = schema.GetProperty("slots").EnumerateArray().ToDictionary(s => s.GetProperty("alias").GetString()!);
         Assert.That(TypesIn(slots["blocks"]), Is.EquivalentTo(new[] { "hero", "textBlock" }));

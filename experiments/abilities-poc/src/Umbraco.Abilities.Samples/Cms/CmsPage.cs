@@ -42,8 +42,8 @@ public sealed class CmsPageDefinition(InMemoryDatabase database)
         // Block List blocks. The hero's heading varies by culture inside an invariant property, and it has a
         // settings element type, as blocks configured with SettingsElementTypeKey do.
         itemTypes.Add(new ItemTypeDefinition(BlockGroup, "hero", "Hero", "A large heading at the top of a page.", ElementShape.Of(
-            new FieldDefinition("heading", "Main heading.", FieldType.String, Required: true) { Varies = Variance.Culture },
-            new FieldDefinition("subheading", "Line under the heading.", FieldType.String) { Varies = Variance.Culture }))
+            new FieldDefinition("heading", "Main heading.", FieldType.String, Required: true) { Variations = Variation.Culture },
+            new FieldDefinition("subheading", "Line under the heading.", FieldType.String) { Variations = Variation.Culture }))
         {
             SettingsShape = ElementShape.Of(
                 new FieldDefinition("theme", "Colour theme.", FieldType.String, Required: true) { Allowed = ["light", "dark"] },
@@ -52,7 +52,7 @@ public sealed class CmsPageDefinition(InMemoryDatabase database)
 
         // A block with a block property of its own: a nested slot inside an item.
         itemTypes.Add(new ItemTypeDefinition(BlockGroup, "cardGrid", "Card grid", "A grid of cards.", ElementShape
-            .Of(new FieldDefinition("heading", "Heading above the grid.", FieldType.String) { Varies = Variance.Culture })
+            .Of(new FieldDefinition("heading", "Heading above the grid.", FieldType.String) { Variations = Variation.Culture })
             .WithSlots(new SlotDefinition("cards", "The cards in the grid.", CardGroup) { Min = 1 })));
 
         itemTypes.Add(new ItemTypeDefinition(CardGroup, "card", "Card", "A card with a title and text.", ElementShape.Of(
@@ -68,7 +68,7 @@ public sealed class CmsPageDefinition(InMemoryDatabase database)
 
         // Allowed both at the grid root and in areas (AllowAtRoot and AllowInAreas).
         itemTypes.Add(new ItemTypeDefinition(GridRootGroup, "richText", "Rich text", "A block of text.", ElementShape.Of(
-            new FieldDefinition("text", "The text.", FieldType.String, Required: true) { Varies = Variance.Culture }))
+            new FieldDefinition("text", "The text.", FieldType.String, Required: true) { Variations = Variation.Culture }))
         {
             AlsoIn = [GridAreaGroup],
         });
@@ -91,8 +91,8 @@ public sealed class CmsPageDefinition(InMemoryDatabase database)
     public override Task<EntityStructure> DescribeAsync(string? subtype, CancellationToken cancellationToken = default)
         => Task.FromResult(new EntityStructure(EntityType, "Page", "A content page.", ElementShape
             .Of(
-                new FieldDefinition("title", "Page name.", FieldType.String, Required: true) { Varies = Variance.Culture },
-                new FieldDefinition("urlSegment", "URL segment, lower case with hyphens.", FieldType.String) { Varies = Variance.Culture },
+                new FieldDefinition("title", "Page name.", FieldType.String, Required: true) { Variations = Variation.Culture },
+                new FieldDefinition("urlSegment", "URL segment, lower case with hyphens.", FieldType.String) { Variations = Variation.Culture },
                 new FieldDefinition("tags", "Tags.", FieldType.String) { Many = true },
                 new FieldDefinition("related", "Related pages or media.", FieldType.EntityReference) { Many = true, ReferencesAnyOf = ["cms.page", "cms.media"] })
             .WithSlots(
@@ -103,10 +103,10 @@ public sealed class CmsPageDefinition(InMemoryDatabase database)
                         new FieldDefinition("columnSpan", $"Columns the block spans, 1 to {GridColumns}.", FieldType.Integer, Required: true),
                         new FieldDefinition("rowSpan", "Rows the block spans.", FieldType.Integer)),
                 },
-                new SlotDefinition("promos", "Promotions, chosen per language.", PromoGroup) { Varies = Variance.Culture },
+                new SlotDefinition("promos", "Promotions, chosen per language.", PromoGroup) { Variations = Variation.Culture },
                 new SlotDefinition("image", "The page image.", MediaEntryGroup) { Max = 1 }))
         {
-            Varies = Variance.Culture,
+            Variations = Variation.Culture,
             Cultures = Cultures,
         });
 

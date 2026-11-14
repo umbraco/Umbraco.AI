@@ -26,7 +26,7 @@ internal sealed record PropertyMap(string Alias, string EditorAlias, PropertyKin
 }
 
 /// <summary>The shape of a document or element type, plus how each of its properties maps.</summary>
-internal sealed record ShapeMap(ElementShape Shape, Variance Varies, IReadOnlyDictionary<string, PropertyMap> Properties);
+internal sealed record ShapeMap(ElementShape Shape, Variation Variations, IReadOnlyDictionary<string, PropertyMap> Properties);
 
 /// <summary>
 /// Builds the structure language from Umbraco document types, element types and data types. Block editors
@@ -40,12 +40,12 @@ internal sealed class CmsStructureMapper(IContentTypeService contentTypes, IData
 
     private readonly HashSet<Guid> _dataTypesInProgress = [];
 
-    public static Variance ToVariance(ContentVariation variation) => variation switch
+    public static Variation ToVariation(ContentVariation variation) => variation switch
     {
-        ContentVariation.Culture => Variance.Culture,
-        ContentVariation.Segment => Variance.Segment,
-        ContentVariation.CultureAndSegment => Variance.CultureAndSegment,
-        _ => Variance.Invariant,
+        ContentVariation.Culture => Variation.Culture,
+        ContentVariation.Segment => Variation.Segment,
+        ContentVariation.CultureAndSegment => Variation.CultureAndSegment,
+        _ => Variation.Invariant,
     };
 
     public IContentType RequireType(Guid key)
@@ -61,7 +61,7 @@ internal sealed class CmsStructureMapper(IContentTypeService contentTypes, IData
         {
             fields.Add(new FieldDefinition(NameField, "The document's name.", FieldType.String, Required: true)
             {
-                Varies = type.VariesByCulture() ? Variance.Culture : Variance.Invariant,
+                Variations = type.VariesByCulture() ? Variation.Culture : Variation.Invariant,
             });
             fields.Add(new FieldDefinition(ParentField, "The parent document. Only used when creating; moving is a separate operation.", FieldType.EntityReference)
             {
@@ -83,7 +83,7 @@ internal sealed class CmsStructureMapper(IContentTypeService contentTypes, IData
             }
         }
 
-        return new ShapeMap(new ElementShape(fields, slots), ToVariance(type.Variations), properties);
+        return new ShapeMap(new ElementShape(fields, slots), ToVariation(type.Variations), properties);
     }
 
     private async Task<PropertyMap> MapPropertyAsync(IPropertyType propertyType)
@@ -91,12 +91,12 @@ internal sealed class CmsStructureMapper(IContentTypeService contentTypes, IData
         var alias = propertyType.Alias;
         var editor = propertyType.PropertyEditorAlias;
         var description = string.IsNullOrWhiteSpace(propertyType.Description) ? propertyType.Name : propertyType.Description;
-        var varies = ToVariance(propertyType.Variations);
+        var varies = ToVariation(propertyType.Variations);
 
         PropertyMap AsField(FieldType type, bool many = false, string? references = null)
             => new(alias, editor, PropertyKind.Field, new FieldDefinition(alias, description, type, propertyType.Mandatory)
             {
-                Varies = varies,
+                Variations = varies,
                 Many = many,
                 ReferencesEntityType = references,
             }, null, []);
@@ -125,7 +125,7 @@ internal sealed class CmsStructureMapper(IContentTypeService contentTypes, IData
         }
     }
 
-    private async Task<PropertyMap> MapBlockEditorAsync(IPropertyType propertyType, string description, Variance varies)
+    private async Task<PropertyMap> MapBlockEditorAsync(IPropertyType propertyType, string description, Variation varies)
     {
         var dataType = await dataTypes.GetAsync(propertyType.DataTypeKey)
             ?? throw new InvalidOperationException($"No data type {propertyType.DataTypeKey} for property '{propertyType.Alias}'.");
@@ -162,7 +162,7 @@ internal sealed class CmsStructureMapper(IContentTypeService contentTypes, IData
 
             slot = new SlotDefinition(propertyType.Alias, description, rootGroup)
             {
-                Varies = varies,
+                Variations = varies,
                 Min = config.ValidationLimit.Min ?? (propertyType.Mandatory ? 1 : null),
                 Max = config.ValidationLimit.Max,
                 ItemLayout = layout,
@@ -178,7 +178,7 @@ internal sealed class CmsStructureMapper(IContentTypeService contentTypes, IData
 
             slot = new SlotDefinition(propertyType.Alias, description, rootGroup)
             {
-                Varies = varies,
+                Variations = varies,
                 Min = config.ValidationLimit.Min ?? (propertyType.Mandatory ? 1 : null),
                 Max = config.ValidationLimit.Max,
             };

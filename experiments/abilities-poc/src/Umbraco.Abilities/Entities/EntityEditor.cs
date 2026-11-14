@@ -79,7 +79,7 @@ public static class EntityEditor
         var field = element.Shape.Fields.FirstOrDefault(f => f.Alias == alias)
             ?? throw Invalid(path, $"No field '{alias}' here. Fields: {Names(element.Shape.Fields.Select(f => f.Alias))}.");
 
-        var variant = RequireVariant(target, field.Varies, path);
+        var variant = RequireVariant(target, field.Variations, path);
         if (FieldChecker.Check(field, value, path) is { } problem)
         {
             throw new AbilityInputException(problem.Message, [problem with { Culture = variant.Culture, Segment = variant.Segment }]);
@@ -153,10 +153,10 @@ public static class EntityEditor
     /// The variant to use for a value that varies as given. Invariant values ignore the edit's variant; a value that
     /// varies by culture needs a known culture, or the entity's only culture when it has just one.
     /// </summary>
-    public static VariantId RequireVariant(EditTarget target, Variance varies, string path)
+    public static VariantId RequireVariant(EditTarget target, Variation varies, string path)
     {
         var variant = target.Variant.Narrow(varies);
-        if (!varies.ByCulture())
+        if (!varies.VariesByCulture())
         {
             return variant;
         }
@@ -211,7 +211,7 @@ public static class EntityEditor
         var slot = owner.Shape.Slots.FirstOrDefault(s => s.Alias == alias)
             ?? throw Invalid(path, $"No slot '{alias}' here. Slots: {Names(owner.Shape.Slots.Select(s => s.Alias))}.");
 
-        var variant = RequireVariant(target, slot.Varies, path);
+        var variant = RequireVariant(target, slot.Variations, path);
         return new ResolvedSlot(Element.SlotFor(owner.Element, slot, variant), slot, path, variant);
     }
 

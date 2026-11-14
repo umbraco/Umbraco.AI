@@ -187,7 +187,7 @@ model's shapes. What the contract gained from that:
 
 | Added to the structure language | Why (real model) |
 | --- | --- |
-| `Variance` on the entity, fields and slots, with `VariantId` narrowed per value | CMS property values carry a culture or segment only if their property varies that way, and Umbraco rejects values that don't match |
+| `Variations` (typed `Variation`, named after the CMS's `Variations` / `ContentVariation`) on the entity, fields and slots, with `VariantId` narrowed per value | CMS property values carry a culture or segment only if their property varies that way, and Umbraco rejects values that don't match |
 | Variant values stored per variant (`variants["en-US"].fields`), names as a culture-variant field | CMS names vary by culture; block values inside an invariant block property vary per culture |
 | Culture-variant slots (a list per culture) | A culture-variant block property holds one whole envelope per culture |
 | `culture` / `segment` on `Problem` | The CMS's `PropertyValidationError` reports alias, culture and segment |

@@ -1,21 +1,20 @@
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-using Umbraco.Abilities.Entities;
-using Umbraco.Abilities.Entities.Models;
-using Umbraco.Abilities.Samples.Commerce;
+using Umbraco.Abilities.Samples.Commerce.Domain;
 
 namespace Umbraco.Abilities.Samples.Acme;
 
-/// <summary>
-/// A third-party package's discount rule. It subclasses Commerce's rule and registers the class; discounts using it can
-/// then be created from text with no change to Commerce or Umbraco.AI.
-/// </summary>
-[ItemType("acmeDayOfWeek", "Day of week (Acme)", Description = "The order is placed on certain days.")]
-public sealed class AcmeDayOfWeekRule : DiscountRule
-{
-    [Required, AllowedValues("weekdays", "weekends"), Description("Which days.")]
-    public string? Days { get; set; }
+// A third party's discount rule, written as a plain Commerce rule provider: a settings class and a provider class, added
+// to Commerce's provider collection. There is no Abilities code here at all, yet discounts using it can be created from
+// text, because Commerce's item type source reads the collection.
 
-    public static void Register(ItemTypeRegistry itemTypes) => itemTypes.Add<AcmeDayOfWeekRule>(DiscountDefinition.RuleGroup);
+public sealed class AcmeDayOfWeekSettings
+{
+    [ProviderSetting(Label = "Days", Description = "Which days the order must be placed on.")]
+    [Required]
+    [AllowedValues("weekdays", "weekends")]
+    public string? Days { get; set; }
 }
+
+[DiscountRuleProvider("acmeDayOfWeek", Label = "Day of week (Acme)", Description = "The order is placed on certain days.")]
+public sealed class AcmeDayOfWeekRuleProvider : DiscountRuleProviderBase<AcmeDayOfWeekSettings>;

@@ -2,6 +2,7 @@ using Umbraco.Abilities.ChangeSets;
 using Umbraco.Abilities.Entities;
 using Umbraco.Abilities.Samples.Acme;
 using Umbraco.Abilities.Samples.Automate;
+using Umbraco.Abilities.Samples.Automate.Plugins;
 using Umbraco.Abilities.Samples.Cms;
 using Umbraco.Abilities.Samples.Commerce;
 using Umbraco.Abilities.Samples.Commerce.Domain;
@@ -49,16 +50,18 @@ public sealed class SampleSite
         // Commerce.
         Collections = new CollectionDefinition(CommerceDatabase, ItemTypes);
         DiscountService = new DiscountService(CommerceDatabase);
-        Discounts = new DiscountDefinition(DiscountService, CommerceDatabase, ItemTypes);
+        Discounts = new DiscountDefinition(DiscountService, RuleProviders, RewardProviders, CommerceDatabase, ItemTypes);
         Definitions.Add(Collections).Add(Discounts);
-        DiscountDefinition.RegisterItemTypes(ItemTypes);
+        RuleProviders.AddRange([new OrderTotalRuleProvider(), new CustomerGroupRuleProvider(), new ProductCollectionRuleProvider(), new GroupRuleProvider()]);
+        RewardProviders.AddRange([new PercentageOffRewardProvider(), new FreeShippingRewardProvider()]);
+        DiscountDefinition.RegisterItemTypes(ItemTypes, RuleProviders, RewardProviders, user => Access.HasSection(user, "commerce"));
         var activateDiscount = new ActivateDiscountAbility(Discounts);
         Abilities.Add(activateDiscount);
         SummerCollection = Collections.Seed("Summer collection");
         Collections.Seed("Winter coats");
 
-        // A third-party discount rule.
-        AcmeDayOfWeekRule.Register(ItemTypes);
+        // A third-party discount rule: added to Commerce's provider collection, as its composer would. No Abilities code.
+        RuleProviders.Add(new AcmeDayOfWeekRuleProvider());
 
         // An email package.
         var sendEmail = new SendEmailAbility(Outbox);
@@ -67,7 +70,12 @@ public sealed class SampleSite
         // Automate: its step types are other packages' abilities.
         Workflows = new WorkflowDefinition(AutomateDatabase);
         Definitions.Add(Workflows);
-        WorkflowDefinition.RegisterItemTypes(ItemTypes, [sendEmail, activateDiscount]);
+        Triggers.AddRange([typeof(FormSubmittedTrigger), typeof(ScheduleTrigger)]);
+        WorkflowDefinition.RegisterItemTypes(ItemTypes, [sendEmail, activateDiscount], Triggers, Actions, Access.HasSection);
+
+        // Commerce's Automate package adds its trigger and action, as its composer would. No Abilities code.
+        Triggers.Add(typeof(OrderCreatedTrigger));
+        Actions.Add(typeof(ChangeOrderStatusAction));
 
         // Each product checks access with its own permission model.
         Pages.Access = Media.Access = Access;
@@ -76,6 +84,16 @@ public sealed class SampleSite
     }
 
     public SampleAccess Access { get; } = new();
+
+    /// <summary>Commerce's discount rule and reward provider collections, which packages add to.</summary>
+    public DiscountProviderCollection RuleProviders { get; } = [];
+
+    public DiscountProviderCollection RewardProviders { get; } = [];
+
+    /// <summary>Automate's trigger and action collections, which packages add to.</summary>
+    public AutomatePluginCollection Triggers { get; } = [];
+
+    public AutomatePluginCollection Actions { get; } = [];
 
     // Separate databases, as the products can each have their own connection string.
     public InMemoryDatabase ContentDatabase { get; } = new("Content");

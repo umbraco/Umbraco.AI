@@ -56,47 +56,14 @@ public sealed class DiscountEditModel
     public bool? Active { get; set; }
 
     [Slot(DiscountDefinition.RuleGroup, Min = 1), Description("All rules must match for the discount to apply.")]
-    public List<DiscountRule> Rules { get; set; } = [];
+    public List<DynamicItem> Rules { get; set; } = [];
 
     [Slot(DiscountDefinition.RewardGroup, Min = 1, Max = 3), Description("What the customer gets.")]
-    public List<DiscountReward> Rewards { get; set; } = [];
+    public List<DynamicItem> Rewards { get; set; } = [];
 }
 
-/// <summary>A discount rule. Other packages add rule types by subclassing this and registering the class.</summary>
-public abstract class DiscountRule : EntityItemModel;
-
-[ItemType("orderTotal", "Order total", Description = "The order total is at least an amount.")]
-public sealed class OrderTotalRule : DiscountRule
-{
-    [Required, Description("Minimum order total, in the store's currency.")]
-    public decimal? MinTotal { get; set; }
-}
-
-[ItemType("customerGroup", "Customer group", Description = "The customer belongs to a group.")]
-public sealed class CustomerGroupRule : DiscountRule
-{
-    [Required, AllowedValues("VIP", "Wholesale", "Retail"), Description("Customer group.")]
-    public string? Group { get; set; }
-}
-
-[ItemType("productCollection", "Product collection", Description = "The order contains a product from a collection.")]
-public sealed class ProductCollectionRule : DiscountRule
-{
-    [Required, EntityKey("umbraco-commerce-collection"), Description("The collection.")]
-    public Guid? Collection { get; set; }
-}
-
-public abstract class DiscountReward : EntityItemModel;
-
-[ItemType("percentageOff", "Percentage off", Description = "A percentage off the order.")]
-public sealed class PercentageOffReward : DiscountReward
-{
-    [Required, Range(1, 100), Description("Percentage, 1 to 100.")]
-    public decimal? Percent { get; set; }
-}
-
-[ItemType("freeShipping", "Free shipping", Description = "Shipping is free.")]
-public sealed class FreeShippingReward : DiscountReward;
+// Rules and rewards are a plugin seam: Commerce and other packages register providers (Providers.cs), so their item
+// types come from the provider collections at run time (DiscountProviderItemTypes below), not from classes here.
 
 // ── The definitions: load, save, and the rules attributes can't express. ─────────────────────────────────
 
@@ -117,7 +84,12 @@ public sealed class CollectionDefinition(InMemoryDatabase database, ItemTypeRegi
 /// Maps Commerce's own discount model to and from its editing contract. This mapping is the part a package writes by
 /// hand; the structure, schemas, paths, validation and change sets come from <see cref="DiscountEditModel"/>.
 /// </summary>
-public sealed class DiscountDefinition(DiscountService discounts, InMemoryDatabase unitOfWork, ItemTypeRegistry itemTypes)
+public sealed class DiscountDefinition(
+    DiscountService discounts,
+    DiscountProviderCollection ruleProviders,
+    DiscountProviderCollection rewardProviders,
+    InMemoryDatabase unitOfWork,
+    ItemTypeRegistry itemTypes)
     : EntityDefinitionBase<DiscountEditModel>(itemTypes, unitOfWork), IAuthorizingEntityDefinition
 {
     /// <summary>Real Commerce would check the Commerce section and the user's access to the discount's store.</summary>
@@ -129,12 +101,10 @@ public sealed class DiscountDefinition(DiscountService discounts, InMemoryDataba
     public const string RuleGroup = "commerce.discount.rule";
     public const string RewardGroup = "commerce.discount.reward";
 
-    public static void RegisterItemTypes(ItemTypeRegistry itemTypes) => itemTypes
-        .Add<OrderTotalRule>(RuleGroup)
-        .Add<CustomerGroupRule>(RuleGroup)
-        .Add<ProductCollectionRule>(RuleGroup)
-        .Add<PercentageOffReward>(RewardGroup)
-        .Add<FreeShippingReward>(RewardGroup);
+    /// <summary>One source per seam. Providers registered later, by any package, show up with no change here.</summary>
+    public static void RegisterItemTypes(ItemTypeRegistry itemTypes, DiscountProviderCollection rules, DiscountProviderCollection rewards, Func<Guid, bool> availableTo) => itemTypes
+        .AddSource(new DiscountProviderItemTypes(RuleGroup, rules, availableTo))
+        .AddSource(new DiscountProviderItemTypes(RewardGroup, rewards, availableTo));
 
     public override Task<DiscountEditModel?> LoadModelAsync(Guid key, CancellationToken cancellationToken = default)
         => Task.FromResult(discounts.GetDiscount(key) is { } discount ? ToEditModel(discount) : null);
@@ -148,8 +118,8 @@ public sealed class DiscountDefinition(DiscountService discounts, InMemoryDataba
             .SetDates(ToUtc(model.StartDate), ToUtc(model.EndDate))
             .SetActive(model.Active ?? false)
             .SetLandingPage(model.LandingPage)
-            .SetRules(model.Rules.Select(r => new DiscountRuleConfig(ProviderSettings.AliasOf(r), ProviderSettings.From(r))))
-            .SetRewards(model.Rewards.Select(r => new DiscountRewardConfig(ProviderSettings.AliasOf(r), ProviderSettings.From(r))));
+            .SetRules(model.Rules.Select(ProviderItems.ToRuleConfig))
+            .SetRewards(model.Rewards.Select(r => new DiscountRewardConfig(r.Type, ProviderItems.Settings(r))));
         discounts.SaveDiscount(discount);
         return Task.CompletedTask;
     }
@@ -188,8 +158,8 @@ public sealed class DiscountDefinition(DiscountService discounts, InMemoryDataba
         EndDate = ToDate(discount.ExpiryDate),
         LandingPage = discount.LandingPageId,
         Active = discount.IsActive,
-        Rules = discount.Rules.Select((r, i) => ProviderSettings.To<DiscountRule>(ItemTypes, RuleGroup, r.RuleProviderAlias, r.Settings, DerivedKey(discount.Id, i, r.RuleProviderAlias))).ToList(),
-        Rewards = discount.Rewards.Select((r, i) => ProviderSettings.To<DiscountReward>(ItemTypes, RewardGroup, r.RewardProviderAlias, r.Settings, DerivedKey(discount.Id, i, r.RewardProviderAlias))).ToList(),
+        Rules = discount.Rules.Select((r, i) => ProviderItems.ToItem(ruleProviders, r, DerivedKey(discount.Id, i, r.RuleProviderAlias))).ToList(),
+        Rewards = discount.Rewards.Select((r, i) => ProviderItems.ToItem(rewardProviders, r.RewardProviderAlias, r.Settings, DerivedKey(discount.Id, i, r.RewardProviderAlias))).ToList(),
     };
 
     private static DateOnly? ToDate(DateTime? utc) => utc is { } value ? DateOnly.FromDateTime(value) : null;
@@ -201,54 +171,82 @@ public sealed class DiscountDefinition(DiscountService discounts, InMemoryDataba
     /// The same rule gets the same key on every load, but a new item's key changes when it is saved, and moving an item
     /// changes its key. Stable ids on rule nodes in Commerce would fix both.
     /// </summary>
-    private static Guid DerivedKey(Guid discount, int index, string alias)
-        => new(MD5.HashData(Encoding.UTF8.GetBytes($"{discount:N}/{index}/{alias}")));
+    internal static Guid DerivedKey(Guid parent, int index, string alias)
+        => new(MD5.HashData(Encoding.UTF8.GetBytes($"{parent:N}/{index}/{alias}")));
 }
 
 /// <summary>
-/// Maps a rule or reward edit model to and from Commerce's provider alias plus string settings. Written once for all
-/// of Commerce's provider-based items, including third parties'.
+/// The item types of one provider seam (rules or rewards), read from Commerce's provider collection whenever they're
+/// needed. This is all Commerce writes per seam: providers, including third parties', need no Abilities code.
 /// </summary>
-internal static class ProviderSettings
+public sealed class DiscountProviderItemTypes(string group, DiscountProviderCollection providers, Func<Guid, bool> availableTo) : IItemTypeSource
 {
-    public static string AliasOf(object item) => item.GetType().GetCustomAttribute<ItemTypeAttribute>()!.Alias;
-
-    public static Dictionary<string, string> From(object item)
+    /// <summary>Commerce's table from an editor UI alias to what it picks. Editors not listed stay plain values.</summary>
+    public static readonly IReadOnlyDictionary<string, string[]> Editors = new Dictionary<string, string[]>
     {
-        var settings = new Dictionary<string, string>(StringComparer.Ordinal);
-        foreach (var property in Properties(item.GetType()))
-        {
-            if (property.GetValue(item) is { } value)
-            {
-                var node = JsonSerializer.SerializeToNode(value, property.PropertyType, AbilityJson.Options)!;
-                settings[property.Name] = node is JsonValue scalar && scalar.TryGetValue<string>(out var text) ? text : node.ToJsonString();
-            }
-        }
+        ["Uc.PropertyEditorUi.CollectionPicker"] = ["umbraco-commerce-collection"],
+    };
 
-        return settings;
-    }
+    public string Group => group;
 
-    public static T To<T>(ItemTypeRegistry itemTypes, string group, string alias, IReadOnlyDictionary<string, string> settings, Guid key)
-        where T : EntityItemModel
+    public IEnumerable<ItemTypeDefinition> GetItemTypes() => providers.Select(provider =>
     {
-        var type = itemTypes.Find(group, alias)?.ClrType ?? throw new InvalidOperationException($"No item type '{alias}' in '{group}'.");
-        var item = (T)Activator.CreateInstance(type)!;
-        item.Key = key;
-        foreach (var property in Properties(type))
+        var fields = provider.SettingDefinitions
+            .Select(s => ItemTypeFields.For(new SettingDescriptor(s.Key, s.Label, s.Description, s.PropertyType, s.ValidationRules, s.EditorUiAlias, s.SortOrder), Editors))
+            .ToList();
+        var children = provider.HasChildren ? new[] { new SlotDefinition("children", "The rules in this group.", group) { Min = 1 } } : [];
+
+        return new ItemTypeDefinition(
+            group,
+            provider.Alias,
+            ItemTypeFields.Text(provider.Label) ?? provider.Alias,
+            ItemTypeFields.Text(provider.Description)
+                ?? $"Commerce gives this provider no description, only a localization key. Describe it in plain words from its alias, '{provider.Alias}'.",
+            new ElementShape(fields, children))
         {
-            if (settings.TryGetValue(property.Name, out var text))
-            {
-                var target = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
-                var node = target.IsPrimitive || target == typeof(decimal) ? JsonNode.Parse(text) : JsonValue.Create(text);
-                property.SetValue(item, node.Deserialize(property.PropertyType, AbilityJson.Options));
-            }
+            AvailableTo = availableTo,
+        };
+    });
+}
+
+/// <summary>
+/// Maps rules and rewards between their items and Commerce's provider alias plus string settings, using each provider's
+/// setting types. Written once for every provider-based item, including third parties'.
+/// </summary>
+internal static class ProviderItems
+{
+    public static DynamicItem ToItem(DiscountProviderCollection providers, DiscountRuleConfig rule, Guid key)
+    {
+        var item = ToItem(providers, rule.RuleProviderAlias, rule.Settings, key);
+        if (rule.Children is { Count: > 0 } children)
+        {
+            item.Slots["children"] = children.Select((c, i) => ToItem(providers, c, DiscountDefinition.DerivedKey(key, i, c.RuleProviderAlias))).ToList();
         }
 
         return item;
     }
 
-    private static IEnumerable<PropertyInfo> Properties(Type type)
-        => type.GetProperties().Where(p => p.CanWrite && p.DeclaringType != typeof(EntityItemModel));
+    public static DynamicItem ToItem(DiscountProviderCollection providers, string alias, IReadOnlyDictionary<string, string> settings, Guid key)
+    {
+        var definitions = providers.Find(alias)?.SettingDefinitions ?? [];
+        var item = new DynamicItem { Key = key, Type = alias };
+        foreach (var (settingKey, text) in settings)
+        {
+            var type = definitions.FirstOrDefault(d => d.Key == settingKey)?.PropertyType ?? typeof(string);
+            var target = Nullable.GetUnderlyingType(type) ?? type;
+            item.Fields[settingKey] = target.IsPrimitive || target == typeof(decimal) ? JsonNode.Parse(text) : JsonValue.Create(text);
+        }
+
+        return item;
+    }
+
+    public static DiscountRuleConfig ToRuleConfig(DynamicItem item)
+        => new(item.Type, Settings(item), item.Slots.GetValueOrDefault("children")?.Select(ToRuleConfig).ToList());
+
+    public static Dictionary<string, string> Settings(DynamicItem item)
+        => item.Fields
+            .Where(f => f.Value is not null)
+            .ToDictionary(f => f.Key, f => f.Value is JsonValue scalar && scalar.TryGetValue<string>(out var text) ? text : f.Value!.ToJsonString(), StringComparer.Ordinal);
 }
 
 // ── A product ability that changes a discount, written against the model. ───────────────────────────────

@@ -7,7 +7,8 @@ namespace Umbraco.Abilities.Samples.Commerce.Domain;
 // constructors, a writable copy from AsWritable, UTC dates, and rules and rewards stored as a provider alias plus
 // string settings, with no ids of their own. Nothing here knows about abilities; the definition maps to it.
 
-public sealed record DiscountRuleConfig(string RuleProviderAlias, IReadOnlyDictionary<string, string> Settings);
+/// <summary>A rule: its provider, its settings as strings, and for a group rule, its child rules.</summary>
+public sealed record DiscountRuleConfig(string RuleProviderAlias, IReadOnlyDictionary<string, string> Settings, IReadOnlyList<DiscountRuleConfig>? Children = null);
 
 public sealed record DiscountRewardConfig(string RewardProviderAlias, IReadOnlyDictionary<string, string> Settings);
 

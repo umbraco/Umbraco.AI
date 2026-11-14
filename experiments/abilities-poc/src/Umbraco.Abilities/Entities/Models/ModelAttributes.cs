@@ -91,6 +91,21 @@ public abstract class EntityItemModel
 }
 
 /// <summary>
+/// An item whose type has no model class: a plugin's item type, such as a Commerce discount rule provider or an Automate
+/// action, described by its product's registry at run time. A model class declares a slot of these
+/// (<c>List&lt;DynamicItem&gt;</c>) when the slot's item types are a plugin seam. Values are the item's JSON fields.
+/// </summary>
+public class DynamicItem : EntityItemModel
+{
+    public string Type { get; set; } = string.Empty;
+
+    public Dictionary<string, System.Text.Json.Nodes.JsonNode?> Fields { get; init; } = new(StringComparer.Ordinal);
+
+    /// <summary>Nested slots, e.g. a rule group's child rules.</summary>
+    public Dictionary<string, List<DynamicItem>> Slots { get; init; } = new(StringComparer.Ordinal);
+}
+
+/// <summary>
 /// A value per variant, keyed by culture (<c>"en-US"</c>), or <c>"culture|segment"</c> when it also varies by segment.
 /// A property of this type varies by culture unless <see cref="VariationsAttribute"/> says otherwise.
 /// </summary>

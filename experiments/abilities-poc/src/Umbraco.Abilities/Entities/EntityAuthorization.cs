@@ -36,6 +36,34 @@ public static class EntityAccess
             .OfType<string>()
             .ToHashSet();
 
+    /// <summary>
+    /// Item types the change adds that the user may not use, such as an Automate action that needs a section they don't
+    /// have. Items the entity already had are left alone.
+    /// </summary>
+    public static IReadOnlyList<string> NewItemTypesNotAvailable(EntityDocument? before, EntityDocument after, ItemTypeRegistry itemTypes, Guid userKey)
+    {
+        var existing = before is null ? [] : Items(before.Root).Select(i => i.Key).ToHashSet();
+        return Items(after.Root)
+            .Where(i => !existing.Contains(i.Key))
+            .Select(i => i.Type)
+            .Distinct()
+            .Where(type => itemTypes.Find(type) is { } itemType && !itemType.IsAvailableTo(userKey))
+            .ToList();
+    }
+
+    private static IEnumerable<EntityItem> Items(EntityElement element)
+    {
+        var parts = new ElementValues[] { element }.Concat(element.Variants.Values);
+        foreach (var item in parts.SelectMany(p => p.Slots.Values).SelectMany(items => items))
+        {
+            yield return item;
+            foreach (var nested in Items(item))
+            {
+                yield return nested;
+            }
+        }
+    }
+
     public static AbilityResult Denied(string reason, string path = "")
         => AbilityResult.Fail(AbilityOperationStatus.AccessDenied, reason, [new Problem(path, reason)]);
 }

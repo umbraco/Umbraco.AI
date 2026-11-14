@@ -129,7 +129,12 @@ public static class StructureValidator
             return;
         }
 
-        if (field.Type == FieldType.EntityReference)
+        foreach (var message in FieldChecker.CheckRules(field, value))
+        {
+            context.Problems.Add(At(message));
+        }
+
+        if (field.Type == FieldType.EntityReference && !FieldChecker.IsBinding(field, value))
         {
             foreach (var (entityType, key) in FieldChecker.EntityReferences(field, value))
             {
@@ -180,6 +185,11 @@ public static class SchemaWriter
             }
 
             schema["description"] = field.Description;
+            if (field.AcceptsBindings)
+            {
+                schema["x-bindings"] = true;
+            }
+
             if (field.Variations != ContentVariation.Nothing)
             {
                 schema["x-variations"] = field.Variations.ToString();
@@ -196,7 +206,8 @@ public static class SchemaWriter
         };
     }
 
-    public static JsonArray Slots(ElementShape shape, ItemTypeRegistry itemTypes)
+    /// <summary>The slots of a shape, offering only the item types <paramref name="userKey"/> may use, when given.</summary>
+    public static JsonArray Slots(ElementShape shape, ItemTypeRegistry itemTypes, Guid? userKey = null)
         => new(shape.Slots.Select(slot => (JsonNode?)new JsonObject
         {
             ["alias"] = slot.Alias,
@@ -205,7 +216,7 @@ public static class SchemaWriter
             ["min"] = slot.Min,
             ["max"] = slot.Max,
             ["itemLayout"] = slot.ItemLayout is { } layout ? Fields(layout) : null,
-            ["allowedItemTypes"] = new JsonArray(itemTypes.InGroup(slot.ItemTypeGroup)
+            ["allowedItemTypes"] = new JsonArray(itemTypes.InGroup(slot.ItemTypeGroup).Where(t => userKey is null || t.IsAvailableTo(userKey.Value))
                 .Select(t => (JsonNode?)new JsonObject { ["alias"] = t.Alias, ["group"] = t.Group, ["name"] = t.Name, ["description"] = t.Description })
                 .ToArray()),
         }).ToArray());

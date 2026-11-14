@@ -214,7 +214,7 @@ public class ChangeSetTests
         await SetDiscountAsync(discount, "", "name", "\"Raised\"");
 
         // Someone replaces the rule while the set is open.
-        await SaveLiveAsync(discount, d => d.SetRules([new DiscountRuleConfig("customerGroup", new Dictionary<string, string> { ["Group"] = "VIP" })]));
+        await SaveLiveAsync(discount, d => d.SetRules([new DiscountRuleConfig("customerGroup", new Dictionary<string, string> { ["group"] = "VIP" })]));
 
         var validation = await _agent.OkAsync("changeSet_validate", SetJson());
         Assert.Contains($"rules/{rule}", JsonAssert.ProblemPaths(validation));
@@ -231,7 +231,7 @@ public class ChangeSetTests
 
         var live = (await _site.Discounts.LoadModelAsync(discount))!;
         Assert.Equal("Raised", live.Name); // the set's other edit still applies
-        Assert.IsType<CustomerGroupRule>(Assert.Single(live.Rules));
+        Assert.Equal("customerGroup", Assert.Single(live.Rules).Type);
     }
 
     [Fact]

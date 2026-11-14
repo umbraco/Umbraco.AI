@@ -33,7 +33,7 @@ public class TypedModelTests
 
         var customerGroup = _site.ItemTypes.Find(DiscountDefinition.RuleGroup, "customerGroup")!;
         Assert.Equal(["VIP", "Wholesale", "Retail"], customerGroup.Shape.Fields.Single().Allowed);
-        Assert.Equal(typeof(CustomerGroupRule), customerGroup.ClrType);
+        Assert.Null(customerGroup.ClrType); // from Commerce's provider collection, not a class
     }
 
     [Fact]
@@ -90,8 +90,8 @@ public class TypedModelTests
         var discount = new DiscountEditModel
         {
             Key = Guid.NewGuid(),
-            Rules = [new OrderTotalRule()],
-            Rewards = [new PercentageOffReward { Percent = 150 }],
+            Rules = [new DynamicItem { Type = "orderTotal" }],
+            Rewards = [new DynamicItem { Type = "percentageOff", Fields = { ["percent"] = 150 } }],
             StartDate = new DateOnly(2026, 12, 31),
             EndDate = new DateOnly(2026, 12, 1),
         };
@@ -165,7 +165,7 @@ public class TypedModelTests
         var stored = _site.DiscountService.GetDiscount(discount)!;
         Assert.Equal(new DateTime(2026, 12, 31, 0, 0, 0, DateTimeKind.Utc), stored.ExpiryDate);
         Assert.Equal("orderTotal", stored.Rules[0].RuleProviderAlias);
-        Assert.Equal("50", stored.Rules[0].Settings["MinTotal"]);
+        Assert.Equal("50", stored.Rules[0].Settings["minTotal"]);
 
         // Commerce's rules have no ids, so keys are derived: stable across loads, but not the key the agent was given.
         var first = (await _site.Discounts.LoadModelAsync(discount))!.Rules[0].Key;

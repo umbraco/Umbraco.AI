@@ -72,9 +72,9 @@ public class CreationPromptTests
         Assert.Equal(1, live.Version);
         Assert.Collection(
             live.Rules,
-            rule => Assert.Equal(_site.SummerCollection, Assert.IsType<ProductCollectionRule>(rule).Collection),
-            rule => Assert.Equal("VIP", Assert.IsType<CustomerGroupRule>(rule).Group));
-        Assert.Equal(10, Assert.IsType<PercentageOffReward>(Assert.Single(live.Rewards)).Percent);
+            rule => Assert.Equal(("productCollection", _site.SummerCollection.ToString()), (rule.Type, rule.Fields["collection"]!.ToString())),
+            rule => Assert.Equal(("customerGroup", "VIP"), (rule.Type, rule.Fields["group"]!.ToString())));
+        Assert.Equal(10, Assert.Single(live.Rewards).Fields["percent"]!.GetValue<decimal>());
     }
 
     [Fact]
@@ -153,7 +153,7 @@ public class CreationPromptTests
         await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
 
         var live = (await _site.Discounts.LoadModelAsync(discount))!;
-        Assert.Equal("weekends", Assert.IsType<AcmeDayOfWeekRule>(live.Rules[0]).Days);
+        Assert.Equal(("acmeDayOfWeek", "weekends"), (live.Rules[0].Type, live.Rules[0].Fields["days"]!.ToString()));
     }
 
     [Fact]

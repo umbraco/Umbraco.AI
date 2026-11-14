@@ -69,13 +69,13 @@ public sealed class DiscountEditModel
     [EntityName, Required] public string? Name { get; set; }
     public DateOnly? EndDate { get; set; }
     [EntityKey("document")] public Guid? LandingPage { get; set; }
-    [Slot(RuleGroup, Min = 1)] public List<DiscountRule> Rules { get; set; } = [];
+    [Slot(RuleGroup, Min = 1)] public List<DynamicItem> Rules { get; set; } = [];  // a plugin seam: see below
 }
 
-[ItemType("percentageOff", "Percentage off")]
-public sealed class PercentageOffReward : DiscountReward
+[ItemType("hero", "Hero")]          // an item type the package owns can be a class too (Samples/Cms/CmsPage.cs)
+public sealed class Hero : PageBlock
 {
-    [Required, Range(1, 100)] public decimal? Percent { get; set; }
+    [Required] public Varying<string> Heading { get; set; } = [];
 }
 ```
 
@@ -141,10 +141,11 @@ are a provider alias plus string settings, with no ids.
 
 | Part | Statement lines |
 | --- | --- |
-| Editing contract and its five item classes | 27 |
+| Editing contract | 11 |
 | Mapping for the discount: load, save, dates, keys | about 35 |
 | Domain rules (dates in order, unique code) and item registration | about 18 |
-| Provider settings helper: item class ↔ alias plus string settings. Written once for every Commerce rule and reward type, third parties' included | 22 |
+| Item type source: Commerce's providers as item types. Once per seam, for every provider, third parties' included | 17 |
+| Provider mapper: an item ↔ provider alias plus string settings, with children for groups. Once for every provider | 20 |
 
 The mapping is ordinary typed C#, roughly the size of a Management API mapper. It is the only per-entity code the
 package writes besides the contract.
@@ -163,6 +164,59 @@ a class to describe, so `CmsDocumentDefinition` and `WorkflowDefinition` impleme
 `item["settings"]["fields"]`. The CMS definition builds Umbraco's own `BlockListValue`, `BlockGridValue`,
 `BlockItemData`, `BlockPropertyValue`, `BlockGridLayoutItem` and `BlockItemVariation` instead of hand-built
 envelopes, and Umbraco's serializer reads and writes them. Moving to the typed document took it from 621 lines to 599.
+
+## Item types for plugin seams
+
+Discount rules and rewards, and Automate triggers and actions, are plugin seams. Products and third parties register
+them, and no one controls them all. So nobody writes an item type per plugin. Each product describes its **registry**
+once, with an `IItemTypeSource` per seam, and the item types follow from whatever is registered when they're needed. A
+plugin installed later just shows up, and plugins write no Abilities code.
+
+Both registries already carry what an item type needs. The PoC's stand-ins are shaped like the real ones
+(Umbraco.Commerce.Core's providers, Umbraco.Commerce.Automate's triggers and actions):
+
+| Item type needs | Commerce rule and reward providers (`Samples/Commerce/Providers.cs`) | Automate triggers and actions (`Samples/Automate/Plugins.cs`) |
+| --- | --- | --- |
+| Alias, name, description | `[DiscountRuleProvider(alias)]`, with Label and Description | `[Trigger]` / `[Action]`, with name and Description |
+| Fields and their types | Setting definitions discovered from the provider's settings class, keeping each CLR type | The settings class's `[Field]` properties |
+| Required and other rules | The setting's DataAnnotations (`ValidationRules`) | The setting's DataAnnotations |
+| What a field picks | The setting's editor UI alias | The field's editor UI alias |
+| Bindings | — | `[Field(SupportsBindings = true)]` |
+| Who may use it | The Commerce section | `RequiredSections` |
+| Nesting | A group rule holds child rules | — |
+
+How the framework uses them:
+
+- **Fields** come from `ItemTypeFields.For`, with the same type mapping as model classes. `[Required]` and
+  `[AllowedValues]` become part of the structure. Other rules (`[Range]`) go on the field (`FieldDefinition.Rules`) and
+  are checked on its path, since there's no class to carry them.
+- **Editor UI aliases** map to references through a small table per product, for example Commerce's collection picker
+  becomes a reference to `umbraco-commerce-collection`. An editor no table maps stays a plain value, and its
+  description names the editor, so it still works with less guidance.
+- **Labels** that are localization keys (`#ucDiscountRuleProviders_…Label`, Commerce's default) are treated as
+  missing. The type is named by its alias, and its description tells the model so.
+- **Bindings.** A setting that supports bindings accepts `{{trigger.orderId}}` in place of a value. The schema marks it
+  with `x-bindings`, and type and reference checks wait until it resolves.
+- **Availability.** An item type can say who may use it (`AvailableTo`, here from required sections). The schema offers
+  a user only those, and adding one they may not use is refused when it's recorded.
+- **In a typed contract** the slot is `List<DynamicItem>`: items with a type, JSON fields and nested slots. One mapper
+  per seam turns them into the product's stored form (`ProviderItems`: provider alias plus string settings, children
+  for groups), using each setting's CLR type.
+- **Abilities** can be item types too (`AbilityItemTypes`), so workflow steps are abilities and Automate's actions side by side.
+
+Classes per item type are still an option for types a package owns and wants to describe richly (the CMS page's
+blocks), but they are no longer the way to do plugin seams.
+
+What it found:
+
+- **The registries already have enough.** Commerce keeps the CLR type, validation rules, editor alias and sort order
+  per setting, and Automate keeps the same on its fields. Nothing had to be added to either model.
+- **Localization-key labels cost the model guidance.** Commerce's provider labels and descriptions default to keys only
+  the backoffice resolves. Real text on the attributes, or server-side text for those keys, would help.
+- **Editor tables are upkeep.** Each product keeps one, and an editor it misses loses its meaning (a store picker
+  becomes a plain string).
+- **Rule keys still need stable ids** (above). The store picker is left unmapped on purpose, to show the fallback: the
+  PoC has no store definition for it to point at.
 
 ## Identity: UDIs
 
@@ -345,7 +399,7 @@ drafted without a new API.
 | A discount is built from text step by step, nothing is live until apply, and the result is stored | `CreationPromptTests.Discount_from_text_is_built_in_a_draft_set_and_only_goes_live_when_applied` |
 | Problem paths are the same paths the edit abilities take, so a model can fix its own work | `Validation_reports_problems_by_path_and_the_agent_fixes_them_with_the_same_paths` |
 | Bad edits are correctable Input failures with a path; edits never run outside a set | `Bad_edits_are_correctable_input_failures_with_paths` |
-| A third party's item type is creatable with no change to Commerce or the AI adapter | `A_third_party_rule_type_is_creatable_with_no_change_to_commerce` |
+| A third party's rule type, written as a plain Commerce provider with no Abilities code, is creatable from text | `A_third_party_rule_type_is_creatable_with_no_change_to_commerce` |
 | Every ability becomes an AI tool; only irreversible Writes are wrapped for approval | `Every_ability_is_an_AI_tool_and_only_irreversible_writes_need_approval` |
 | One set holds a page with nested blocks, a discount referring to that new page and switched on, and an email to send afterwards; activating the discount is a change shown in its working state, the email runs after every change | `ChangeSetTests.A_campaign_spanning_content_commerce_and_a_side_effect_is_applied_together` |
 | A failed step leaves earlier products' changes applied; applying again resumes at the failed step and applies nothing twice | `A_failed_step_leaves_earlier_steps_applied_and_applying_again_resumes` |
@@ -370,6 +424,8 @@ drafted without a new API.
 | An agent gets the permissions of the user it acts for: recording, applying (checked for the applying user, nothing applied if any change is refused), finding, reading and direct runs; with the CMS's real document permissions | `AuthorizationTests`, `CmsDocumentDefinitionTests.An_agent_gets_the_CMS_permissions_of_the_user_it_acts_for` |
 | A draft set applied in a scope that then rolls back isn't applied and raises no applied notification | `A_draft_set_applied_inside_a_scope_that_rolls_back_is_not_applied_and_raises_nothing` |
 | A side effect with retries is queued after apply and retried with backoff; it gives up after its limit; correctable input isn't retried; on real Umbraco it runs on the background queue | `SideEffectRetryTests`, `A_side_effect_with_retries_runs_on_Umbracos_background_queue_after_the_content_commits` |
+| Rule and reward types come from Commerce's provider collections, with the label fallback and editor references; a provider registered later shows up; a group rule nests children and is stored as Commerce's rule tree | `PluginItemTypeTests` |
+| Automate's triggers and actions come from its collections, settings can be bindings, and users are only offered the types they may use | `PluginItemTypeTests.Automates_triggers_and_actions_come_from_its_collections_and_settings_can_be_bindings`, `A_user_is_only_offered_plugin_types_they_may_use` |
 | Workflow step types are derived from abilities | `WorkflowTests.Step_types_are_derived_from_abilities` |
 | A workflow graph (edges as item references) is validated, and can refer to a discount created in the same set | `A_workflow_from_text_links_its_steps_and_can_refer_to_a_discount_in_the_same_set` |
 | Names and values vary by culture; invariant values are shared across cultures | `CmsContentTests.Names_and_values_vary_by_culture_while_invariant_values_are_shared` |

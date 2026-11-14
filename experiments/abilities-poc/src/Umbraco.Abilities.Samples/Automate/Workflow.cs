@@ -1,4 +1,5 @@
 using Umbraco.Abilities.Entities;
+using Umbraco.Abilities.Samples.Automate.Plugins;
 
 namespace Umbraco.Abilities.Samples.Automate;
 
@@ -12,19 +13,24 @@ public sealed class WorkflowDefinition(InMemoryDatabase database)
     public const string TriggerGroup = "automate.trigger";
     public const string StepGroup = "automate.step";
 
-    /// <summary>Which abilities can be steps. In a real build Automate would pick these from every installed package.</summary>
-    public static void RegisterItemTypes(ItemTypeRegistry itemTypes, IEnumerable<IAbility> stepAbilities)
+    /// <summary>
+    /// Triggers and actions come from Automate's plugin collections, through one source each. Steps can also be any
+    /// package's abilities. Neither needs anything written per trigger or action.
+    /// </summary>
+    public static void RegisterItemTypes(
+        ItemTypeRegistry itemTypes,
+        IEnumerable<IAbility> stepAbilities,
+        AutomatePluginCollection triggers,
+        AutomatePluginCollection actions,
+        Func<Guid, string, bool> hasSection)
     {
-        itemTypes.Add(new ItemTypeDefinition(TriggerGroup, "formSubmitted", "Form submitted", "Runs when a form is submitted.", ElementShape.Of(
-            new FieldDefinition("form", "Form name.", FieldType.String, Required: true))));
-
-        itemTypes.Add(new ItemTypeDefinition(TriggerGroup, "schedule", "Schedule", "Runs on a schedule.", ElementShape.Of(
-            new FieldDefinition("cron", "Cron expression.", FieldType.String, Required: true))));
-
         var next = new FieldDefinition("next", "The step to run after this one. Omit for the last step.", FieldType.ItemReference)
         {
             ReferencesItemInSlot = "steps",
         };
+
+        itemTypes.AddSource(new AutomatePluginItemTypes(TriggerGroup, triggers, hasSection));
+        itemTypes.AddSource(new AutomatePluginItemTypes(StepGroup, actions, hasSection, next));
 
         foreach (var ability in stepAbilities)
         {
@@ -40,4 +46,28 @@ public sealed class WorkflowDefinition(InMemoryDatabase database)
             .WithSlots(
                 new SlotDefinition("trigger", "What starts the workflow.", TriggerGroup) { Min = 1, Max = 1 },
                 new SlotDefinition("steps", "The steps. Each step names the next one.", StepGroup) { Min = 1 })));
+}
+
+/// <summary>
+/// The item types of one of Automate's plugin seams (triggers or actions), read from its collection whenever they're
+/// needed. A plugin's required sections decide who is offered it. Settings that support bindings accept one.
+/// </summary>
+public sealed class AutomatePluginItemTypes(string group, AutomatePluginCollection plugins, Func<Guid, string, bool> hasSection, params FieldDefinition[] extraFields) : IItemTypeSource
+{
+    /// <summary>Automate's table from an editor UI alias to what it picks. None yet, so pickers stay plain values.</summary>
+    private static readonly IReadOnlyDictionary<string, string[]> Editors = new Dictionary<string, string[]>();
+
+    public string Group => group;
+
+    public IEnumerable<ItemTypeDefinition> GetItemTypes() => plugins.Plugins.Select(plugin =>
+    {
+        var fields = plugin.Fields
+            .Select(f => ItemTypeFields.For(new SettingDescriptor(f.Key, f.Field.Label, f.Field.Description, f.PropertyType, f.Rules, f.Field.EditorUiAlias, f.Field.SortOrder, f.Field.SupportsBindings), Editors))
+            .Concat(extraFields)
+            .ToList();
+        return new ItemTypeDefinition(group, plugin.Alias, plugin.Name, plugin.Description ?? plugin.Name, new ElementShape(fields, []))
+        {
+            AvailableTo = user => plugin.RequiredSections.All(section => hasSection(user, section)),
+        };
+    });
 }

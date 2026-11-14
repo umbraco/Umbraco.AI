@@ -113,7 +113,7 @@ public class DiscountEditModel
     [Key] public Guid Key { get; set; }
     [EntityName, Required] public string? Name { get; set; }
     [EntityKey("cms.page")] public Guid? LandingPage { get; set; }
-    [Slot("commerce.discount.rule", Min = 1)] public List<DiscountRule> Rules { get; set; } = [];
+    [Slot("commerce.discount.rule", Min = 1)] public List<DynamicItem> Rules { get; set; } = [];  // a plugin seam
 }
 
 // Fluent, over a class the package doesn't own
@@ -156,15 +156,43 @@ What the package does write, measured in the proof of concept against a Commerce
 
 | Part | Statement lines |
 | --- | --- |
-| Editing contract and five rule and reward classes | 27 |
+| Editing contract | 11 |
 | Mapping for the discount: load, save, dates, keys | about 35 |
 | Domain rules and item type registration | about 18 |
-| Provider settings helper, shared by every Commerce rule and reward type | 22 |
+| Item type source: Commerce's providers as item types, once per seam | 17 |
+| Provider mapper: an item to and from provider alias plus string settings, once for every provider | 20 |
 
 There are two limits:
 
 - **The mapping can't invent ids the domain lacks.** Commerce's rules have none, so keys are derived from the discount, position and provider. They are stable across loads, but a new rule's key changes once saved, and a moved rule reads as removed and added when rebasing. Stable ids on Commerce's rule nodes would fix this.
 - **Structure that is data, not code, has no contract class.** A CMS document type is defined in the backoffice, and a workflow's step types are other packages' abilities. These implement `IEntityDefinition` over a typed `EntityDocument`. There is still no JSON digging, and the CMS definition builds Umbraco's own `BlockListValue` and `BlockGridValue`.
+
+### Item types for plugin seams
+
+Discount rules and rewards, and Automate triggers and actions, are plugin seams: products and third parties register them, and no one controls them all. Nobody writes an item type per plugin. Each product describes its **registry** once, with an item type source per seam, and the item types follow from whatever is registered when they're needed. A plugin installed later just shows up, and plugins write no Abilities code.
+
+Both registries already carry what an item type needs:
+
+| Item type needs | Commerce rule and reward providers | Automate triggers and actions |
+| --- | --- | --- |
+| Alias, name, description | The provider attribute's alias, label and description | The trigger or action attribute's alias, name and description |
+| Fields and their types | Setting definitions from the provider's settings class, keeping each CLR type | The settings class's `[Field]` properties |
+| Required and other rules | Each setting's DataAnnotations | Each setting's DataAnnotations |
+| What a field picks | The setting's editor UI alias | The field's editor UI alias |
+| Bindings | — | `SupportsBindings` on the field |
+| Who may use it | The Commerce section | Required sections |
+| Nesting | A group rule holds child rules | — |
+
+How the framework uses them:
+
+- **Fields** use the same type mapping as model classes. Required and allowed values become structure, and other rules (a range) are checked on the field's path.
+- **Editor UI aliases** map to references through a small table per product (Commerce's collection picker → a collection). An unmapped editor stays a plain value whose description names it.
+- **Localization-key labels** (Commerce's default `#uc…Label`) are treated as missing: the type is named by its alias, and its description tells the model so.
+- **Bindings** (`{{trigger.orderId}}`) are accepted where a setting supports them, marked in the schema, and checked when they resolve.
+- **Availability:** a user is only offered item types they may use, and adding one they may not is refused when it's recorded.
+- **In a typed contract** the slot is a list of dynamic items (a type, JSON fields, nested slots). One mapper per seam turns them into the product's stored form.
+
+The proof of concept builds both from stand-ins shaped like Umbraco.Commerce.Core's providers and Umbraco.Commerce.Automate's triggers and actions. A third party's rule is a plain Commerce provider with no Abilities code, and a provider added after start-up appears with no change anywhere else. It found that the registries already have enough metadata. Two things cost the model guidance and need upkeep: labels left as localization keys, and each product's editor table.
 
 **Identity is a UDI**, as in Deploy and the CMS: `umb://document/{key}`. Entity types are UDI entity types (`document`, `media`, `umbraco-commerce-discount`), named after each product's Deploy types, and adding a definition registers its type with `UdiParser`. Change sets and draft sets key what they hold by UDI. Tools still take and return `{ entityType, key }` with a dashed key, because a UDI writes its key without dashes and the same key in two forms invites copy errors. They also accept a UDI wherever they take a reference, store it in the field's own form, and refuse a UDI of the wrong type ("Expected a document, not a media").
 

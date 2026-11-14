@@ -18,7 +18,7 @@ public class WorkflowTests
         var stepTypes = schema.GetProperty("slots").EnumerateArray()
             .Single(s => s.GetProperty("alias").GetString() == "steps")
             .GetProperty("allowedItemTypes").EnumerateArray().Select(t => t.GetProperty("alias").GetString()).ToList();
-        Assert.Equal(["email.send", "commerce.activateDiscount"], stepTypes);
+        Assert.Equal(["email.send", "commerce.activateDiscount", "umbracoCommerce.changeOrderStatus"], stepTypes); // abilities, then Automate's actions
 
         var email = schema.GetProperty("itemTypes").GetProperty("email.send").GetProperty("fields");
         Assert.Equal(["to", "subject", "body", "next"], email.GetProperty("properties").EnumerateObject().Select(p => p.Name));

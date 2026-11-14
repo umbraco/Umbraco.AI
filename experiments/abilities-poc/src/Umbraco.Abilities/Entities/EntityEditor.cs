@@ -232,6 +232,36 @@ public static class EntityEditor
 /// <summary>Checks one field value against its definition.</summary>
 public static class FieldChecker
 {
+    /// <summary>A binding to an earlier step's output (<c>{{trigger.orderId}}</c>), where the field accepts one. Resolved when the workflow runs.</summary>
+    public static bool IsBinding(FieldDefinition field, JsonNode? value)
+        => field.AcceptsBindings && value is JsonValue scalar && scalar.TryGetValue<string>(out var text) && text.Contains("{{", StringComparison.Ordinal);
+
+    /// <summary>The field's own rules (a range, a pattern), on a scalar value. Bindings are checked when they resolve.</summary>
+    public static IEnumerable<string> CheckRules(FieldDefinition field, JsonNode? value)
+    {
+        if (field.Rules is not { Count: > 0 } rules || value is not JsonValue scalar || IsBinding(field, value))
+        {
+            yield break;
+        }
+
+        object? clr = scalar.GetValueKind() switch
+        {
+            JsonValueKind.Number => scalar.ToJsonString().Contains('.') ? double.Parse(scalar.ToJsonString(), System.Globalization.CultureInfo.InvariantCulture) : long.Parse(scalar.ToJsonString(), System.Globalization.CultureInfo.InvariantCulture),
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            _ => scalar.ToString(),
+        };
+
+        foreach (var rule in rules)
+        {
+            if (rule.GetValidationResult(clr, new System.ComponentModel.DataAnnotations.ValidationContext(clr ?? new object()) { DisplayName = field.Alias }) is { } result
+                && result != System.ComponentModel.DataAnnotations.ValidationResult.Success)
+            {
+                yield return result.ErrorMessage ?? "Invalid.";
+            }
+        }
+    }
+
     /// <summary>A reference given as a UDI (<c>umb://document/…</c>) becomes the field's own form: a key, or <c>{ entityType, key }</c>.</summary>
     public static JsonNode? Normalize(FieldDefinition field, JsonNode? value)
     {
@@ -261,7 +291,7 @@ public static class FieldChecker
 
     public static Problem? Check(FieldDefinition field, JsonNode? value, string path)
     {
-        if (value is null)
+        if (value is null || IsBinding(field, value))
         {
             return null;
         }

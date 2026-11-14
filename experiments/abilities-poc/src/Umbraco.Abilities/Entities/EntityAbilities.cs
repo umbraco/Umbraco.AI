@@ -104,7 +104,7 @@ public sealed class GetEntitySchemaAbility(EntityDefinitionRegistry definitions,
             ["variations"] = structure.Variations == ContentVariation.Nothing ? null : structure.Variations.ToString(),
             ["cultures"] = new JsonArray(structure.Cultures.Select(c => (JsonNode?)c).ToArray()),
             ["fields"] = SchemaWriter.Fields(structure.Shape),
-            ["slots"] = SchemaWriter.Slots(structure.Shape, itemTypes),
+            ["slots"] = SchemaWriter.Slots(structure.Shape, itemTypes, context.UserKey),
         };
 
         if (input.ItemTypes is { Length: > 0 })
@@ -112,13 +112,13 @@ public sealed class GetEntitySchemaAbility(EntityDefinitionRegistry definitions,
             var details = new JsonObject();
             foreach (var alias in input.ItemTypes)
             {
-                var itemType = itemTypes.Find(alias)
-                    ?? throw new AbilityInputException($"Unknown item type '{alias}'.", [new Problem("itemTypes", $"Unknown: {alias}.")]);
+                var itemType = itemTypes.Find(alias) is { } found && found.IsAvailableTo(context.UserKey) ? found
+                    : throw new AbilityInputException($"Unknown item type '{alias}'.", [new Problem("itemTypes", $"Unknown: {alias}.")]);
                 details[alias] = new JsonObject
                 {
                     ["name"] = itemType.Name,
                     ["fields"] = SchemaWriter.Fields(itemType.Shape),
-                    ["slots"] = SchemaWriter.Slots(itemType.Shape, itemTypes),
+                    ["slots"] = SchemaWriter.Slots(itemType.Shape, itemTypes, context.UserKey),
                     ["settings"] = itemType.SettingsShape is { } settings ? SchemaWriter.Fields(settings) : null,
                 };
             }

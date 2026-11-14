@@ -109,7 +109,7 @@ This is the core idea: a product-neutral way to describe and edit any entity. Re
 
 | File | What it is |
 | --- | --- |
-| `Entities/Structure.cs` | The structure language. `ElementShape` holds fields and slots. A **field** has a type, required, allowed values, references and `ContentVariation`. A **slot** holds typed **items** (rules, blocks, workflow steps), with min and max, optional per-item settings, and placement values (`ItemLayout`). `ItemTypeRegistry` maps a group to item types, so third parties add types (`Acme`) |
+| `Entities/Structure.cs` | The structure language. `ElementShape` holds fields and slots. A **field** has a type, required, allowed values, references and `ContentVariation`. A **slot** holds typed **items** (rules, blocks, workflow steps), with min and max, optional per-item settings, and placement values (`ItemLayout`). `ItemTypeRegistry` maps a group to item types, registered once or read from an `IItemTypeSource`: a product's plugin registry, read whenever needed |
 | `Entities/IEntityDefinition.cs` | What a product implements: describe, new, load, validate, save, find, and optional subtypes (document types). `IVersionedEntityDefinition` is for products with version history |
 | `Entities/EntityDocument.cs` | The working copy: a typed tree (`EntityDocument` → `EntityElement` → `EntityItem`) of fields, slots, and values per culture and segment. Its JSON form is what tools return |
 | `Entities/EntityEditor.cs` | Path editing, generalised from Umbraco.AI's block path engine: `slot/{key}/slot`, `{item}/@settings`, `{item}/@layout`. `FieldChecker` checks and normalizes values. A UDI given for a reference is turned into the field's own form |
@@ -117,7 +117,8 @@ This is the core idea: a product-neutral way to describe and edit any entity. Re
 | `Entities/EntityAbilities.cs` | The generic tools every entity gets: `entity.getSchema`, `find`, `get`, `create`, `setValue`, `addItem`, `removeItem`, `moveItem` |
 | `Entities/EntityUdis.cs` | Identity is a UDI. Entity types are UDI entity types, registered with `UdiParser` |
 | `Entities/EntityAuthorization.cs` | `IAuthorizingEntityDefinition`: the product answers "may this user read, create or update this entity, in these cultures?" |
-| `Entities/AbilityItemTypes.cs` | Abilities become item types: how Automate's step types come for free |
+| `Entities/ItemTypeFields.cs` | Turns a product's setting metadata (CLR type, rules, editor alias, bindings) into fields: how plugin seams become item types with nothing written per plugin |
+| `Entities/AbilityItemTypes.cs` | Abilities become item types: workflow steps can be any package's abilities |
 
 Then the typed layer, which is what a package developer actually writes against:
 
@@ -140,15 +141,18 @@ These are what a package would write. Judge them as such: how short, how obvious
 
 | File | What it shows |
 | --- | --- |
-| `Samples/Commerce/Domain.cs` then `Commerce.cs` | A domain shaped like Commerce's: immutable, `AsWritable()`, UTC dates, rules as provider alias plus string settings, no rule ids. Then the attributed editing contract (`DiscountEditModel`) and the definition that maps to the domain. Also `ActivateDiscountAbility`, a product ability that edits an entity |
-| `Samples/Acme/AcmeWeekdayRule.cs` | A third party adds a rule type with one class and one registration |
+| `Samples/Commerce/Domain.cs` and `Providers.cs` | Commerce's own model, with no Abilities code: a discount shaped like Commerce's (immutable, `AsWritable()`, UTC dates, rules as provider alias plus string settings with children for groups, no rule ids), and rule and reward providers shaped like Umbraco.Commerce.Core's |
+| `Samples/Commerce/Commerce.cs` | Commerce's integration: the editing contract (`DiscountEditModel`, whose rules and rewards are `DynamicItem`s), the definition that maps to the domain, one item type source per provider seam, and the provider mapper. Also `ActivateDiscountAbility`, a product ability that edits an entity |
+| `Samples/Acme/AcmeWeekdayRule.cs` | A third party's rule, written as a plain Commerce provider with no Abilities code |
+| `Samples/Automate/Plugins.cs`, `Workflow.cs` | Automate's plugin model (triggers and actions with `[Field]` settings and required sections), and its item type sources |
+| `Samples/Commerce/CommerceAutomate.cs` | Commerce's Automate package: a trigger and an action, one with settings that take bindings |
 | `Samples/Cms/CmsPage.cs` | CMS-shaped content: culture variation, blocks with settings, a grid with placement and areas, per-culture block lists, pickers. Media is described **fluently** over plain request models |
 | `Samples/Automate/Workflow.cs` | A document-level definition, the escape hatch for structure that is data, not code. Step types are abilities |
 | `Samples/Email/SendEmail.cs` | A side effect with retries |
 | `Samples/SampleSite.cs` | How it's wired, as composers would wire it. Each block is one package |
 | `Samples/InMemoryDatabase.cs`, `SampleAccess.cs` | Stand-ins for each product's storage, transaction and permission model |
 
-**Look for:** the derived keys in `DiscountDefinition`, which exist because Commerce rules have no ids. That's a known
+**Look for:** how much each product writes per plugin seam (one source, one mapper, one editor table), and the derived keys in `DiscountDefinition`, which exist because Commerce rules have no ids. That's a known
 limit to raise with Commerce.
 
 ### Pass 5: layer 3, change sets (40 minutes)
@@ -220,6 +224,7 @@ The interfaces a product implements are the extension points. Everything else is
 | `IVersionedEntityDefinition` | Rebase from your version history instead of a snapshot |
 | `IDraftingEntityDefinition` | Keep your own drafts (CMS Draft Sets) instead of the set replaying edits |
 | `IAuthorizingEntityDefinition` | Apply your own permission model |
+| `IItemTypeSource` | Turn a plugin registry (providers, triggers, actions) into item types |
 
 ## What to question most
 
@@ -233,9 +238,11 @@ These are the judgments the PoC makes that a reviewer is best placed to challeng
    enough for package developers?
 4. **Atomicity per product.** Is "each product all or nothing, and resumable" acceptable, given products can't share a
    transaction?
-5. **Who owns the coordinator.** Abilities owns it here. The README's "If core owned the change set" covers the
+5. **Item types from registries.** One source and one mapper per plugin seam, plus an editor table. Is the metadata
+   your registry already has enough, and is a slot of `DynamicItem`s acceptable in a typed contract?
+6. **Who owns the coordinator.** Abilities owns it here. The README's "If core owned the change set" covers the
    alternative, and what core's Draft Sets must do to make it possible.
-6. **What it doesn't prove.** No LLM is in the loop. Change sets and draft sets aren't stored. Retried side effects aren't
+7. **What it doesn't prove.** No LLM is in the loop. Change sets and draft sets aren't stored. Retried side effects aren't
    durable. See "What it does not prove" in the README.
 
 ## Where the decisions are written down

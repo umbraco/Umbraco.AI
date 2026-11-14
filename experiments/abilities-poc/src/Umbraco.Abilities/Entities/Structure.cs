@@ -67,6 +67,15 @@ public sealed record FieldDefinition(string Alias, string Description, FieldType
 
     /// <summary>The JSON Schema of a <see cref="FieldType.Json"/> value, e.g. a property editor's value schema.</summary>
     public JsonObject? Schema { get; init; }
+
+    /// <summary>
+    /// DataAnnotations rules beyond required and allowed values (a range, a pattern), checked on the field's path. For
+    /// item types built from a product's own setting metadata, which has no model class to carry them.
+    /// </summary>
+    public IReadOnlyList<System.ComponentModel.DataAnnotations.ValidationAttribute>? Rules { get; init; }
+
+    /// <summary>The value can be a binding to an earlier step's output, e.g. <c>{{trigger.orderId}}</c>, instead of a literal.</summary>
+    public bool AcceptsBindings { get; init; }
 }
 
 /// <summary>A collection of typed items. Item types come from a registry, so other packages can add them.</summary>
@@ -113,6 +122,23 @@ public sealed record ItemTypeDefinition(string Group, string Alias, string Name,
 
     /// <summary>The model class for items of this type, when it was registered from one.</summary>
     public Type? ClrType { get; init; }
+
+    /// <summary>Whether a user may use this type, e.g. an Automate action that needs the Commerce section. Null: everyone.</summary>
+    public Func<Guid, bool>? AvailableTo { get; init; }
+
+    public bool IsAvailableTo(Guid userKey) => AvailableTo?.Invoke(userKey) ?? true;
+}
+
+/// <summary>
+/// The item types of a plugin seam, read from the product's own registry each time they're needed: Commerce's discount
+/// rule providers, Automate's triggers and actions. A product writes one source per seam; plugins write nothing, and one
+/// installed later just shows up.
+/// </summary>
+public interface IItemTypeSource
+{
+    string Group { get; }
+
+    IEnumerable<ItemTypeDefinition> GetItemTypes();
 }
 
 /// <summary>
@@ -122,6 +148,16 @@ public sealed record ItemTypeDefinition(string Group, string Alias, string Name,
 public sealed class ItemTypeRegistry
 {
     private readonly Dictionary<(string Group, string Alias), ItemTypeDefinition> _types = [];
+    private readonly List<IItemTypeSource> _sources = [];
+
+    /// <summary>Adds a plugin seam's item types, read from the product's registry whenever they're needed.</summary>
+    public ItemTypeRegistry AddSource(IItemTypeSource source)
+    {
+        _sources.Add(source);
+        return this;
+    }
+
+    private IEnumerable<ItemTypeDefinition> All => _types.Values.Concat(_sources.SelectMany(s => s.GetItemTypes()));
 
     public ItemTypeRegistry Add(ItemTypeDefinition itemType)
     {
@@ -165,13 +201,15 @@ public sealed class ItemTypeRegistry
         var separator = alias.LastIndexOf(':');
         return separator > 0
             ? Find(alias[..separator], alias[(separator + 1)..])
-            : _types.Values.FirstOrDefault(t => t.Alias == alias);
+            : All.FirstOrDefault(t => t.Alias == alias);
     }
 
     public ItemTypeDefinition? Find(string group, string alias)
         => InGroup(group).FirstOrDefault(t => t.Alias == alias);
 
     public IReadOnlyList<ItemTypeDefinition> InGroup(string group)
-        => _types.Values.Where(t => t.Group == group || t.AlsoIn.Contains(group)).ToList();
+        => _types.Values.Where(t => t.Group == group || t.AlsoIn.Contains(group))
+            .Concat(_sources.Where(s => s.Group == group).SelectMany(s => s.GetItemTypes()))
+            .ToList();
 }
 

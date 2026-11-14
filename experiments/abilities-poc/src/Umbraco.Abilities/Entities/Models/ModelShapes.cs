@@ -188,6 +188,10 @@ public static class ModelShapes
         return merged;
     }
 
+    /// <summary>A field for a value of a CLR type, with the same mapping as a model class's properties.</summary>
+    public static FieldDefinition FieldFor(string alias, string description, Type valueType, bool required, IReadOnlyList<string>? references = null, IReadOnlyList<string>? allowed = null)
+        => FieldFor(new PropertyConfig { Required = required, References = references, Allowed = allowed }, alias, description, valueType);
+
     private static FieldDefinition FieldFor(PropertyConfig config, string alias, string description, Type valueType)
     {
         var required = config.Required ?? false;
@@ -328,6 +332,12 @@ public static class ModelShapes
     {
         foreach (var model in models ?? Array.Empty<object>())
         {
+            if (model is DynamicItem dynamic)
+            {
+                items.Add(WriteDynamic(dynamic));
+                continue;
+            }
+
             var info = Info(model.GetType());
             var itemType = info.ItemType
                 ?? throw new InvalidOperationException($"{model.GetType().Name} is not an item type: add [ItemType] or configure it with IsItemType.");
@@ -358,9 +368,16 @@ public static class ModelShapes
     private static IList ReadItems(IEnumerable<EntityItem> items, SlotMember slot, Type listType, ItemTypeRegistry itemTypes, string slotPath)
     {
         var list = (IList)Activator.CreateInstance(listType)!;
+        var dynamic = ElementTypeOf(listType) is { } elementType && typeof(DynamicItem).IsAssignableFrom(elementType);
         foreach (var item in items)
         {
             var itemPath = EntityEditor.Join(slotPath, item.Key.ToString());
+            if (dynamic)
+            {
+                list.Add(ReadDynamic(item, itemPath));
+                continue;
+            }
+
             var itemClass = itemTypes.Find(slot.Slot.ItemTypeGroup, item.Type)?.ClrType
                 ?? throw new AbilityInputException($"Item type '{item.Type}' has no model class.", [new Problem(itemPath, "No model class for this item type.")]);
 
@@ -423,7 +440,8 @@ public static class ModelShapes
         {
             var value = slot.Property.GetValue(model);
             var lists = slot.Varying ? ((IDictionary?)value)?.Values.Cast<IEnumerable>() ?? [] : [(IEnumerable?)value ?? Array.Empty<object>()];
-            foreach (var item in lists.SelectMany(l => l.Cast<object>()))
+            // Dynamic items have no class to carry rules: their fields' rules are checked from the structure.
+            foreach (var item in lists.SelectMany(l => l.Cast<object>()).Where(i => i is not DynamicItem))
             {
                 var itemPath = EntityEditor.Join(EntityEditor.Join(path, slot.Slot.Alias), KeyOf(item).ToString());
                 ValidateObject(item, itemPath, problems);
@@ -440,6 +458,47 @@ public static class ModelShapes
                 }
             }
         }
+    }
+
+    // ── Dynamic items ───────────────────────────────────────────────────────────────────────────────
+
+    private static EntityItem WriteDynamic(DynamicItem model)
+    {
+        if (model.Key == Guid.Empty)
+        {
+            model.Key = Guid.NewGuid();
+        }
+
+        var item = new EntityItem { Key = model.Key, Type = model.Type };
+        foreach (var (alias, value) in model.Fields)
+        {
+            item.Fields[alias] = value?.DeepClone();
+        }
+
+        foreach (var (alias, children) in model.Slots)
+        {
+            item.Slot(alias).AddRange(children.Select(WriteDynamic));
+        }
+
+        return item;
+    }
+
+    private static DynamicItem ReadDynamic(EntityItem item, string path)
+    {
+        var model = new DynamicItem { Key = item.Key, Type = item.Type, Path = path };
+        foreach (var (alias, value) in item.Fields)
+        {
+            model.Fields[alias] = value?.DeepClone();
+        }
+
+        foreach (var (alias, children) in item.Slots)
+        {
+            var slotPath = EntityEditor.Join(path, alias);
+            model.Slots[alias] = children.Select(c => ReadDynamic(c, EntityEditor.Join(slotPath, c.Key.ToString()))).ToList();
+        }
+
+        Paths.AddOrUpdate(model, path);
+        return model;
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────────────────────────────────

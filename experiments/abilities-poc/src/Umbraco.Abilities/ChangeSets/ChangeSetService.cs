@@ -138,6 +138,12 @@ public sealed class ChangeSetService(
             {
                 return EntityAccess.Denied(denied);
             }
+
+            // And to use every item type it adds: a plugin's type can need access the entity doesn't.
+            if (EntityAccess.NewItemTypesNotAvailable(before, working, itemTypes, context.UserKey) is { Count: > 0 } unavailable)
+            {
+                return EntityAccess.Denied($"You may not use {string.Join(", ", unavailable)}.");
+            }
             if (definition is IDraftingEntityDefinition drafting)
             {
                 // The product's draft records the change; the set only remembers that it touched the entity.

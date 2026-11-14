@@ -24,7 +24,6 @@ using Umbraco.Cms.Tests.Common.Builders.Extensions;
 using Umbraco.Cms.Tests.Common.Testing;
 using Umbraco.Cms.Tests.Integration.Testing;
 
-using Element = Umbraco.Abilities.Entities.Element;
 
 namespace Umbraco.Abilities.Cms.Tests;
 
@@ -209,14 +208,14 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
 
         // And loading it back through the definition gives the same working copy shape.
         var loaded = (await _documents.LoadAsync(page.Key))!;
-        var hero = (JsonObject)Element.Slot(loaded.Root, "blocks").Single(b => Element.ItemKey(b!) == page.Hero)!;
+        var hero = loaded.Root.Slot("blocks").Single(b => b.Key == page.Hero);
         Assert.Multiple(() =>
         {
-            Assert.That(Element.VariantPartOrNull(hero, new VariantId("da-DK", null))!["fields"]!["heading"]!.ToString(), Is.EqualTo("Sommerudsalg"));
-            Assert.That(hero["settings"]!["fields"]!["theme"]!.ToString(), Is.EqualTo("dark"));
-            var row = (JsonObject)Element.Slot(loaded.Root, "grid")[0]!;
-            Assert.That(row["layout"]!["fields"]!["columnSpan"]!.GetValue<int>(), Is.EqualTo(12));
-            Assert.That(Element.ItemKey(Element.Slot(row, "left")[0]!), Is.EqualTo(page.AreaText));
+            Assert.That(hero.VariantOrNull(new VariantId("da-DK", null))!.Fields["heading"]!.ToString(), Is.EqualTo("Sommerudsalg"));
+            Assert.That(hero.Settings!.Fields["theme"]!.ToString(), Is.EqualTo("dark"));
+            var row = loaded.Root.Slot("grid")[0];
+            Assert.That(row.Layout!.Fields["columnSpan"]!.GetValue<int>(), Is.EqualTo(12));
+            Assert.That(row.Slot("left")[0].Key, Is.EqualTo(page.AreaText));
         });
     }
 

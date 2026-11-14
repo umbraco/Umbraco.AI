@@ -3,6 +3,8 @@ using System.Text.Json.Nodes;
 
 using Umbraco.Abilities.Entities;
 using Umbraco.Abilities.Samples;
+using Umbraco.Abilities.Samples.Cms;
+using Umbraco.Abilities.Samples.Commerce;
 
 namespace Umbraco.Abilities.Tests;
 
@@ -68,13 +70,12 @@ public class ChangeSetTests
 
         await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
 
-        var livePage = (await _site.Pages.LoadAsync(page))!;
-        var liveGrid = (JsonObject)Element.Slot(livePage.Root, "blocks")[1]!;
-        Assert.Equal("20% off everything", Element.Fields((JsonObject)Element.Slot(liveGrid, "cards")[0]!)["title"]!.GetValue<string>());
+        var livePage = (await _site.Pages.LoadModelAsync(page))!;
+        Assert.Equal("20% off everything", livePage.Blocks.OfType<CardGrid>().Single().Cards[0].Title);
 
-        var liveDiscount = (await _site.Discounts.LoadAsync(discount))!;
-        Assert.Equal(page.ToString(), Element.Fields(liveDiscount.Root)["landingPage"]!.GetValue<string>());
-        Assert.True(Element.Fields(liveDiscount.Root)["active"]!.GetValue<bool>()); // saved as part of the discount
+        var liveDiscount = (await _site.Discounts.LoadModelAsync(discount))!;
+        Assert.Equal(page, liveDiscount.LandingPage);
+        Assert.True(liveDiscount.Active); // saved as part of the discount
         Assert.Single(_site.Outbox.Sent); // the side effect ran after the changes
     }
 
@@ -149,7 +150,7 @@ public class ChangeSetTests
         await SetDiscountAsync(discount, "", "name", "\"Renamed in set\"");
 
         // Someone sets a code on the same discount while the set is open.
-        await SaveLiveAsync(discount, d => Element.Fields(d.Root)["code"] = "SAVE10");
+        await SaveLiveAsync(discount, d => d.Code = "SAVE10");
 
         var summary = await _agent.OkAsync("changeSet_summarize", SetJson());
         var rebased = summary.GetProperty("rebased")[0];
@@ -157,9 +158,9 @@ public class ChangeSetTests
         Assert.Equal(0, rebased.GetProperty("conflicts").GetArrayLength());
 
         await _agent.OkAsync("changeSet_apply", SetJson());
-        var live = Element.Fields((await _site.Discounts.LoadAsync(discount))!.Root);
-        Assert.Equal("Renamed in set", live["name"]!.GetValue<string>());
-        Assert.Equal("SAVE10", live["code"]!.GetValue<string>()); // theirs kept, not overwritten by the set
+        var live = (await _site.Discounts.LoadModelAsync(discount))!;
+        Assert.Equal("Renamed in set", live.Name);
+        Assert.Equal("SAVE10", live.Code); // theirs kept, not overwritten by the set
     }
 
     [Fact]
@@ -169,7 +170,7 @@ public class ChangeSetTests
 
         await _agent.StartChangeSetAsync("Rename");
         await SetDiscountAsync(discount, "", "name", "\"Renamed in set\"");
-        await SaveLiveAsync(discount, d => Element.Fields(d.Root)["name"] = "Changed live");
+        await SaveLiveAsync(discount, d => d.Name = "Changed live");
 
         var refused = await _agent.FailAsync("changeSet_apply", SetJson());
         var problem = refused.GetProperty("problems")[0];
@@ -182,7 +183,7 @@ public class ChangeSetTests
             { "changeSetId": "{{_agent.ChangeSetId}}", "entityType": "commerce.discount", "key": "{{discount}}", "path": "name", "keep": "theirs" }
             """);
         await _agent.OkAsync("changeSet_apply", SetJson());
-        Assert.Equal("Changed live", Element.Fields((await _site.Discounts.LoadAsync(discount))!.Root)["name"]!.GetValue<string>());
+        Assert.Equal("Changed live", (await _site.Discounts.LoadModelAsync(discount))!.Name);
     }
 
     [Fact]
@@ -192,34 +193,27 @@ public class ChangeSetTests
 
         await _agent.StartChangeSetAsync("Rename");
         await SetDiscountAsync(discount, "", "name", "\"Renamed in set\"");
-        await SaveLiveAsync(discount, d => Element.Fields(d.Root)["name"] = "Changed live");
+        await SaveLiveAsync(discount, d => d.Name = "Changed live");
 
         await _agent.OkAsync("changeSet_resolveConflict", $$"""
             { "changeSetId": "{{_agent.ChangeSetId}}", "entityType": "commerce.discount", "key": "{{discount}}", "path": "name", "keep": "yours" }
             """);
         await _agent.OkAsync("changeSet_apply", SetJson());
-        Assert.Equal("Renamed in set", Element.Fields((await _site.Discounts.LoadAsync(discount))!.Root)["name"]!.GetValue<string>());
+        Assert.Equal("Renamed in set", (await _site.Discounts.LoadModelAsync(discount))!.Name);
     }
 
     [Fact]
     public async Task Editing_an_item_someone_else_removed_is_a_conflict_that_can_only_keep_theirs()
     {
         var discount = await CreateLiveDiscountAsync("Original");
-        var rule = Element.ItemKey(Element.Slot((await _site.Discounts.LoadAsync(discount))!.Root, "rules")[0]!);
+        var rule = (await _site.Discounts.LoadModelAsync(discount))!.Rules[0].Key;
 
         await _agent.StartChangeSetAsync("Raise minimum");
         await SetDiscountAsync(discount, $"rules/{rule}", "minTotal", "100");
         await SetDiscountAsync(discount, "", "name", "\"Raised\"");
 
         // Someone replaces the rule while the set is open.
-        await SaveLiveAsync(discount, d =>
-        {
-            var rules = Element.Slot(d.Root, "rules");
-            rules.Clear();
-            var replacement = Element.NewItem(Guid.NewGuid(), "customerGroup");
-            Element.Fields(replacement)["group"] = "VIP";
-            rules.Add(replacement);
-        });
+        await SaveLiveAsync(discount, d => d.Rules = [new CustomerGroupRule { Group = "VIP" }]);
 
         var validation = await _agent.OkAsync("changeSet_validate", SetJson());
         Assert.Contains($"rules/{rule}", JsonAssert.ProblemPaths(validation));
@@ -234,9 +228,9 @@ public class ChangeSetTests
             """);
         await _agent.OkAsync("changeSet_apply", SetJson());
 
-        var live = (await _site.Discounts.LoadAsync(discount))!.Root;
-        Assert.Equal("Raised", Element.Fields(live)["name"]!.GetValue<string>()); // the set's other edit still applies
-        Assert.Equal(["customerGroup"], Element.Slot(live, "rules").Select(r => Element.ItemType(r!)));
+        var live = (await _site.Discounts.LoadModelAsync(discount))!;
+        Assert.Equal("Raised", live.Name); // the set's other edit still applies
+        Assert.IsType<CustomerGroupRule>(Assert.Single(live.Rules));
     }
 
     [Fact]
@@ -246,7 +240,7 @@ public class ChangeSetTests
 
         await _agent.StartChangeSetAsync("Rename");
         await SetDiscountAsync(discount, "", "name", "\"Summer sale\"");
-        await SaveLiveAsync(discount, d => Element.Fields(d.Root)["name"] = "Summer sale");
+        await SaveLiveAsync(discount, d => d.Name = "Summer sale");
 
         await _agent.OkAsync("changeSet_apply", SetJson());
     }
@@ -267,14 +261,14 @@ public class ChangeSetTests
         Assert.Equal(1, set.BaseVersions[$"cms.page:{page}"]);
 
         // Someone sets the URL segment meanwhile: rebased automatically, both kept.
-        var live = (await _site.Pages.LoadAsync(page))!;
-        Element.Fields(Element.VariantPart(live.Root, new VariantId("en-US", null)))["urlSegment"] = "launch";
-        await _site.Pages.SaveAsync(live);
+        var live = (await _site.Pages.LoadModelAsync(page))!;
+        live.UrlSegment["en-US"] = "launch";
+        await _site.Pages.SaveModelAsync(live);
 
         await _agent.OkAsync("changeSet_apply", SetJson());
-        var applied = Element.Fields(Element.VariantPart((await _site.Pages.LoadAsync(page))!.Root, new VariantId("en-US", null)));
-        Assert.Equal("Big launch", applied["title"]!.GetValue<string>());
-        Assert.Equal("launch", applied["urlSegment"]!.GetValue<string>());
+        var applied = (await _site.Pages.LoadModelAsync(page))!;
+        Assert.Equal("Big launch", applied.Title["en-US"]);
+        Assert.Equal("launch", applied.UrlSegment["en-US"]);
     }
 
     [Fact]
@@ -298,11 +292,11 @@ public class ChangeSetTests
     private Task<JsonElement> SetDiscountAsync(Guid discount, string elementPath, string field, string valueJson)
         => _agent.OkAsync("entity_setValue", $$"""{ "entityType": "commerce.discount", "key": "{{discount}}", "elementPath": "{{elementPath}}", "field": "{{field}}", "value": {{valueJson}} }""");
 
-    private async Task SaveLiveAsync(Guid discount, Action<EntityDocument> change)
+    private async Task SaveLiveAsync(Guid discount, Action<Discount> change)
     {
-        var live = (await _site.Discounts.LoadAsync(discount))!;
+        var live = (await _site.Discounts.LoadModelAsync(discount))!;
         change(live);
-        await _site.Discounts.SaveAsync(live);
+        await _site.Discounts.SaveModelAsync(live);
     }
 
     private string SetJson() => $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""";
@@ -349,8 +343,8 @@ public class ChangeSetTests
         Assert.Equal(first, second);
 
         // The key the agent was given is the key that is stored, so later calls can refer to it.
-        var blocks = Element.Slot((await _site.ChangeSets.GetWorkingStateAsync(set, "cms.page", page))!.Root, "blocks");
-        Assert.Equal(hero.GetProperty("itemKey").GetGuid(), Element.ItemKey(blocks[0]!));
+        var blocks = (await _site.ChangeSets.GetWorkingStateAsync(set, "cms.page", page))!.Root.Slot("blocks");
+        Assert.Equal(hero.GetProperty("itemKey").GetGuid(), blocks[0].Key);
     }
 
     private async Task<Guid> CreateLiveDiscountAsync(string name)

@@ -43,15 +43,13 @@ public static class StructureValidator
     }
 
     /// <param name="variants">The variants the element exists in. Below a slot that varies, only that slot's culture.</param>
-    private static async Task ValidateElementAsync(Context context, JsonObject element, ElementShape shape, string path, IReadOnlyList<VariantId> variants)
+    private static async Task ValidateElementAsync(Context context, EntityElement element, ElementShape shape, string path, IReadOnlyList<VariantId> variants)
     {
         foreach (var field in shape.Fields)
         {
             foreach (var variant in Targets(field.Variations, variants))
             {
-                var value = field.Variations == Variation.Invariant
-                    ? Element.Fields(element)[field.Alias]
-                    : Element.VariantPartOrNull(element, variant)?["fields"]?[field.Alias];
+                var value = element.Get(field, variant);
                 await ValidateFieldAsync(context, field, value, EntityEditor.Join(path, field.Alias), variant);
             }
         }
@@ -60,16 +58,14 @@ public static class StructureValidator
         {
             foreach (var variant in Targets(slot.Variations, variants))
             {
-                var items = slot.Variations == Variation.Invariant
-                    ? Element.Slot(element, slot.Alias)
-                    : Element.VariantPartOrNull(element, variant)?["slots"]?[slot.Alias] as JsonArray ?? [];
+                var items = element.VariantOrNull(variant.Narrow(slot.Variations))?.Slots.GetValueOrDefault(slot.Alias) ?? [];
                 var below = slot.Variations == Variation.Invariant ? variants : variants.Where(v => v.Culture == variant.Culture).ToList();
                 await ValidateSlotAsync(context, slot, items, EntityEditor.Join(path, slot.Alias), slot.Variations == Variation.Invariant ? null : variant, below);
             }
         }
     }
 
-    private static async Task ValidateSlotAsync(Context context, SlotDefinition slot, JsonArray items, string slotPath, VariantId? scope, IReadOnlyList<VariantId> variants)
+    private static async Task ValidateSlotAsync(Context context, SlotDefinition slot, List<EntityItem> items, string slotPath, VariantId? scope, IReadOnlyList<VariantId> variants)
     {
         var located = new Problem(slotPath, string.Empty) { Culture = scope?.Culture, Segment = scope?.Segment };
         if (slot.Min is { } min && items.Count < min)
@@ -83,30 +79,30 @@ public static class StructureValidator
         }
 
         var allowed = context.ItemTypes.InGroup(slot.ItemTypeGroup).ToDictionary(t => t.Alias);
-        foreach (var item in items.OfType<JsonObject>())
+        foreach (var item in items)
         {
-            var itemPath = EntityEditor.Join(slotPath, Element.ItemKey(item).ToString());
-            if (!allowed.TryGetValue(Element.ItemType(item), out var itemType))
+            var itemPath = EntityEditor.Join(slotPath, item.Key.ToString());
+            if (!allowed.TryGetValue(item.Type, out var itemType))
             {
-                context.Problems.Add(located with { Path = itemPath, Message = $"Item type '{Element.ItemType(item)}' is not allowed here." });
+                context.Problems.Add(located with { Path = itemPath, Message = $"Item type '{item.Type}' is not allowed here." });
                 continue;
             }
 
             // An item exists in the cultures it has values for, or in every culture when it has none yet.
             // This is the CMS's "expose": a block with only English values is not in the Danish page.
-            var own = (item["variants"] as JsonObject ?? []).Select(v => VariantId.Parse(v.Key).Culture).OfType<string>().ToHashSet();
+            var own = item.VariantIds.Select(v => v.Culture).OfType<string>().ToHashSet();
             var itemVariants = own.Count == 0 ? variants : variants.Where(v => v.Culture is null || own.Contains(v.Culture)).ToList();
 
             await ValidateElementAsync(context, item, itemType.Shape, itemPath, itemVariants);
 
             if (itemType.SettingsShape is { } settings)
             {
-                await ValidateElementAsync(context, item["settings"] as JsonObject ?? Element.New(), settings, $"{itemPath}/@settings", itemVariants);
+                await ValidateElementAsync(context, item.Settings ?? new EntityElement(), settings, $"{itemPath}/@settings", itemVariants);
             }
 
             if (slot.ItemLayout is { } layout)
             {
-                await ValidateElementAsync(context, item["layout"] as JsonObject ?? Element.New(), layout, $"{itemPath}/@layout", itemVariants);
+                await ValidateElementAsync(context, item.Layout ?? new EntityElement(), layout, $"{itemPath}/@layout", itemVariants);
             }
         }
     }
@@ -145,7 +141,7 @@ public static class StructureValidator
         if (field.Type == FieldType.ItemReference && field.ReferencesItemInSlot is { } slotAlias)
         {
             var key = Guid.Parse(value.GetValue<string>());
-            if (!Element.Slot(context.Document.Root, slotAlias).Any(item => Element.ItemKey(item!) == key))
+            if (!context.Document.Root.Slot(slotAlias).Any(item => item.Key == key))
             {
                 context.Problems.Add(At($"No item with key {key} in '{slotAlias}'."));
             }

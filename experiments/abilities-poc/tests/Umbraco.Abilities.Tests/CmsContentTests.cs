@@ -3,6 +3,7 @@ using System.Text.Json.Nodes;
 
 using Umbraco.Abilities.Entities;
 using Umbraco.Abilities.Samples;
+using Umbraco.Abilities.Samples.Commerce;
 
 namespace Umbraco.Abilities.Tests;
 
@@ -173,8 +174,8 @@ public class CmsContentTests
         await AssertValidAsync();
         await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
 
-        var live = (await _site.Pages.LoadAsync(page))!;
-        Assert.Equal(media.ToString(), Element.Fields((JsonObject)Element.Slot(live.Root, "image")[0]!)["media"]!.GetValue<string>());
+        var live = (await _site.Pages.LoadModelAsync(page))!;
+        Assert.Equal(media, Assert.Single(live.Image).Media);
         Assert.NotNull(await _site.Media.LoadAsync(media));
     }
 

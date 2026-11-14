@@ -22,7 +22,7 @@ public static class EntityDiff
 {
     public const string Order = "@order";
 
-    public static IReadOnlyCollection<ChangedPath> Compare(JsonObject before, JsonObject after)
+    public static IReadOnlyCollection<ChangedPath> Compare(EntityElement before, EntityElement after)
     {
         var changes = new HashSet<ChangedPath>();
         CompareElement(before, after, string.Empty, changes);
@@ -41,101 +41,92 @@ public static class EntityDiff
     }
 
     /// <summary>The value at a path, for showing a conflict: a field's value, an item, a slot's item keys in order, or null when absent.</summary>
-    public static JsonNode? ValueAt(JsonObject root, ChangedPath change)
-    {
-        var target = Locate(root, change);
-        return target switch
+    public static JsonNode? ValueAt(EntityElement root, ChangedPath change)
+        => Locate(root, change, create: false) switch
         {
             null => null,
-            { Order: true } => new JsonArray(target.Slot!.Select(i => (JsonNode?)Element.ItemKey(i!).ToString()).ToArray()),
-            { ItemKey: { } key } => target.Slot!.FirstOrDefault(i => Element.ItemKey(i!) == key)?.DeepClone(),
-            _ => target.Fields?[target.Field!]?.DeepClone(),
+            { Order: true } at => new JsonArray(at.Slot!.Select(i => (JsonNode?)i.Key.ToString()).ToArray()),
+            { ItemKey: { } key } at => at.Slot!.FirstOrDefault(i => i.Key == key) is { } item ? EntityJson.ToJson(item) : null,
+            var at => at.Values?.Fields.GetValueOrDefault(at.Field!)?.DeepClone(),
         };
-    }
 
-    /// <summary>Makes <paramref name="path"/> in <paramref name="target"/> the same as in <paramref name="source"/>: keeping theirs.</summary>
-    public static void CopyPath(JsonObject source, JsonObject target, ChangedPath change)
+    /// <summary>Makes <paramref name="change"/>'s path in <paramref name="target"/> the same as in <paramref name="source"/>: keeping theirs.</summary>
+    public static void CopyPath(EntityElement source, EntityElement target, ChangedPath change)
     {
-        var from = Locate(source, change);
+        var from = Locate(source, change, create: false);
         var to = Locate(target, change, create: true);
         if (to is null)
         {
             return;
         }
 
-        if (change.Path.EndsWith($"/{Order}", StringComparison.Ordinal) || change.Path == Order)
+        if (to.Order)
         {
-            var order = (from?.Slot ?? []).Select(i => Element.ItemKey(i!)).ToList();
-            var items = to.Slot!.OfType<JsonObject>().ToList();
-            var sorted = items.OrderBy(i => order.IndexOf(Element.ItemKey(i)) is var index and >= 0 ? index : int.MaxValue).ToList();
+            var order = (from?.Slot ?? []).Select(i => i.Key).ToList();
+            var sorted = to.Slot!.OrderBy(i => order.IndexOf(i.Key) is var index and >= 0 ? index : int.MaxValue).ToList();
             to.Slot!.Clear();
-            sorted.ForEach(to.Slot.Add);
+            to.Slot.AddRange(sorted);
             return;
         }
 
         if (to.ItemKey is { } key)
         {
-            var existing = to.Slot!.FirstOrDefault(i => Element.ItemKey(i!) == key);
-            var theirs = from?.Slot?.Select((item, index) => (item, index)).FirstOrDefault(x => Element.ItemKey(x.item!) == key);
-            if (existing is not null)
+            to.Slot!.RemoveAll(i => i.Key == key);
+            var position = from?.Slot?.FindIndex(i => i.Key == key) ?? -1;
+            if (position >= 0)
             {
-                to.Slot.Remove(existing);
-            }
-
-            if (theirs is { item: { } item, index: var position })
-            {
-                to.Slot.Insert(Math.Min(position, to.Slot.Count), item.DeepClone());
+                to.Slot.Insert(Math.Min(position, to.Slot.Count), EntityJson.Clone(from!.Slot![position]));
             }
 
             return;
         }
 
-        to.Fields![to.Field!] = from?.Fields?[to.Field!]?.DeepClone();
+        to.Values!.Fields[to.Field!] = from?.Values?.Fields.GetValueOrDefault(to.Field!)?.DeepClone();
     }
 
     private static bool Inside(string path, string container) => path.StartsWith(container + "/", StringComparison.Ordinal);
 
-    private static void CompareElement(JsonObject? a, JsonObject? b, string path, HashSet<ChangedPath> changes)
+    private static void CompareElement(EntityElement? a, EntityElement? b, string path, HashSet<ChangedPath> changes)
     {
-        CompareFields(a?["fields"] as JsonObject, b?["fields"] as JsonObject, path, string.Empty, changes);
-        CompareSlots(a?["slots"] as JsonObject, b?["slots"] as JsonObject, path, string.Empty, changes);
+        CompareValues(a, b, path, string.Empty, changes);
 
-        var variantKeys = Keys(a?["variants"] as JsonObject).Union(Keys(b?["variants"] as JsonObject));
+        var variantKeys = Keys(a?.Variants).Union(Keys(b?.Variants));
         foreach (var key in variantKeys)
         {
-            var va = a?["variants"]?[key] as JsonObject;
-            var vb = b?["variants"]?[key] as JsonObject;
-            CompareFields(va?["fields"] as JsonObject, vb?["fields"] as JsonObject, path, key, changes);
-            CompareSlots(va?["slots"] as JsonObject, vb?["slots"] as JsonObject, path, key, changes);
+            CompareValues(a?.Variants.GetValueOrDefault(key), b?.Variants.GetValueOrDefault(key), path, key, changes);
         }
 
-        foreach (var sub in new[] { "settings", "layout" })
+        if (a is EntityItem || b is EntityItem)
         {
-            if (a?[sub] is not null || b?[sub] is not null)
+            var itemA = a as EntityItem;
+            var itemB = b as EntityItem;
+            if (itemA?.Settings is not null || itemB?.Settings is not null)
             {
-                CompareElement(a?[sub] as JsonObject, b?[sub] as JsonObject, EntityEditor.Join(path, $"@{sub}"), changes);
+                CompareElement(itemA?.Settings, itemB?.Settings, EntityEditor.Join(path, "@settings"), changes);
+            }
+
+            if (itemA?.Layout is not null || itemB?.Layout is not null)
+            {
+                CompareElement(itemA?.Layout, itemB?.Layout, EntityEditor.Join(path, "@layout"), changes);
             }
         }
     }
 
-    private static void CompareFields(JsonObject? a, JsonObject? b, string path, string variantKey, HashSet<ChangedPath> changes)
+    private static void CompareValues(ElementValues? a, ElementValues? b, string path, string variantKey, HashSet<ChangedPath> changes)
     {
-        foreach (var alias in Keys(a).Union(Keys(b)))
+        foreach (var alias in Keys(a?.Fields).Union(Keys(b?.Fields)))
         {
-            if (!JsonNode.DeepEquals(a?[alias], b?[alias]))
+            if (!JsonNode.DeepEquals(a?.Fields.GetValueOrDefault(alias), b?.Fields.GetValueOrDefault(alias)))
             {
                 changes.Add(new ChangedPath(EntityEditor.Join(path, alias), variantKey, Structural: false));
             }
         }
-    }
 
-    private static void CompareSlots(JsonObject? a, JsonObject? b, string path, string variantKey, HashSet<ChangedPath> changes)
-    {
-        foreach (var alias in Keys(a).Union(Keys(b)))
+        foreach (var alias in Keys(a?.Slots).Union(Keys(b?.Slots)))
         {
             var slotPath = EntityEditor.Join(path, alias);
-            var itemsA = (a?[alias] as JsonArray ?? []).OfType<JsonObject>().ToDictionary(Element.ItemKey);
-            var itemsB = (b?[alias] as JsonArray ?? []).OfType<JsonObject>().ToDictionary(Element.ItemKey);
+            var itemsA = (a?.Slots.GetValueOrDefault(alias) ?? []).ToDictionary(i => i.Key);
+            var itemsB = (b?.Slots.GetValueOrDefault(alias) ?? []).ToDictionary(i => i.Key);
 
             foreach (var key in itemsA.Keys.Union(itemsB.Keys))
             {
@@ -150,41 +141,39 @@ public static class EntityDiff
                 }
             }
 
-            var commonA = itemsA.Keys.Where(itemsB.ContainsKey).ToList();
-            var commonB = itemsB.Keys.Where(itemsA.ContainsKey).ToList();
-            if (!commonA.SequenceEqual(commonB))
+            if (!itemsA.Keys.Where(itemsB.ContainsKey).SequenceEqual(itemsB.Keys.Where(itemsA.ContainsKey)))
             {
                 changes.Add(new ChangedPath(EntityEditor.Join(slotPath, Order), variantKey, Structural: true));
             }
         }
     }
 
-    private static IEnumerable<string> Keys(JsonObject? node) => node?.Select(kv => kv.Key) ?? [];
+    private static IEnumerable<string> Keys<T>(Dictionary<string, T>? dictionary) => dictionary?.Keys ?? Enumerable.Empty<string>();
 
-    private sealed record Location(JsonObject? Fields, string? Field, JsonArray? Slot, Guid? ItemKey, bool Order);
+    private sealed record Location(ElementValues? Values, string? Field, List<EntityItem>? Slot, Guid? ItemKey, bool Order);
 
-    /// <summary>Finds where a path points, without the structure: the fields and field, or the slot and item key.</summary>
-    private static Location? Locate(JsonObject root, ChangedPath change, bool create = false)
+    /// <summary>Finds where a path points: the values and field, or the slot and item key, or a slot's order.</summary>
+    private static Location? Locate(EntityElement root, ChangedPath change, bool create)
     {
         var segments = change.Path.Split('/', StringSplitOptions.RemoveEmptyEntries);
-        JsonObject? element = root;
+        EntityElement? element = root;
         var i = 0;
 
-        // Walk down through items and @settings / @layout until only the last part is left.
         while (element is not null && i < segments.Length - 1)
         {
             var segment = segments[i];
-            if (segment is "@settings" or "@layout")
+            if (segment is "@settings" or "@layout" && element is EntityItem item)
             {
-                element = create ? Element.SubElement(element, segment[1..]) : element[segment[1..]] as JsonObject;
+                element = segment == "@settings"
+                    ? create ? item.EnsureSettings() : item.Settings
+                    : create ? item.EnsureLayout() : item.Layout;
                 i++;
                 continue;
             }
 
-            var slot = SlotOf(element, segment, change.VariantKey, create);
+            var slot = SlotOf(element, segment, change.Variant, create);
             if (i + 1 == segments.Length - 1)
             {
-                // "slot/{key}" or "slot/@order": the last part is about the slot itself.
                 var last = segments[^1];
                 return slot is null ? null
                     : last == Order ? new Location(null, null, slot, null, Order: true)
@@ -192,9 +181,7 @@ public static class EntityDiff
                     : null;
             }
 
-            element = Guid.TryParse(segments[i + 1], out var itemKey)
-                ? slot?.FirstOrDefault(n => Element.ItemKey(n!) == itemKey) as JsonObject
-                : null;
+            element = Guid.TryParse(segments[i + 1], out var itemKey) ? slot?.FirstOrDefault(n => n.Key == itemKey) : null;
             i += 2;
         }
 
@@ -203,25 +190,19 @@ public static class EntityDiff
             return null;
         }
 
-        var fields = change.VariantKey.Length == 0
-            ? element["fields"] as JsonObject ?? (create ? Element.Fields(element) : null)
-            : create ? Element.Fields(Element.VariantPart(element, change.Variant)) : Element.VariantPartOrNull(element, change.Variant)?["fields"] as JsonObject;
-        return new Location(fields, segments[^1], null, null, Order: false);
+        var values = create ? element.Variant(change.Variant) : element.VariantOrNull(change.Variant);
+        return new Location(values, segments[^1], null, null, Order: false);
     }
 
-    private static JsonArray? SlotOf(JsonObject element, string alias, string variantKey, bool create)
+    /// <summary>A slot, invariant if the element has it so, else in the change's variant.</summary>
+    private static List<EntityItem>? SlotOf(EntityElement element, string alias, VariantId variant, bool create)
     {
-        if (element["slots"]?[alias] is JsonArray invariant)
+        if (element.Slots.TryGetValue(alias, out var invariant))
         {
             return invariant;
         }
 
-        if (variantKey.Length > 0)
-        {
-            var part = create ? Element.VariantPart(element, VariantId.Parse(variantKey)) : Element.VariantPartOrNull(element, VariantId.Parse(variantKey));
-            return part is null ? null : create ? Element.Slot(part, alias) : part["slots"]?[alias] as JsonArray;
-        }
-
-        return create ? Element.Slot(element, alias) : null;
+        var values = create ? element.Variant(variant) : element.VariantOrNull(variant);
+        return create ? values!.Slot(alias) : values?.Slots.GetValueOrDefault(alias);
     }
 }

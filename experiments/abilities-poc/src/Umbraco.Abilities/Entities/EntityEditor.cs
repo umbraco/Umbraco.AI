@@ -16,9 +16,9 @@ public sealed record EditTarget(EntityDocument Document, EntityStructure Structu
 /// </summary>
 public static class EntityEditor
 {
-    public sealed record ResolvedElement(JsonObject Element, ElementShape Shape, string Path, ItemTypeDefinition? ItemType, SlotDefinition? InSlot);
+    public sealed record ResolvedElement(EntityElement Element, ElementShape Shape, string Path, ItemTypeDefinition? ItemType, SlotDefinition? InSlot);
 
-    public sealed record ResolvedSlot(JsonArray Items, SlotDefinition Slot, string Path, VariantId Variant);
+    public sealed record ResolvedSlot(List<EntityItem> Items, SlotDefinition Slot, string Path, VariantId Variant);
 
     public static string Join(string path, string segment) => string.IsNullOrEmpty(path) ? segment : $"{path}/{segment}";
 
@@ -48,11 +48,11 @@ public static class EntityEditor
                 throw Invalid(Join(slot.Path, segments[i + 1]), "Expected an item key (a GUID).");
             }
 
-            var item = slot.Items.FirstOrDefault(n => Element.ItemKey(n!) == key) as JsonObject
+            var item = slot.Items.FirstOrDefault(i => i.Key == key)
                 ?? throw Invalid(Join(slot.Path, key.ToString()), "No item with this key in the slot.");
 
-            var itemType = target.ItemTypes.Find(slot.Slot.ItemTypeGroup, Element.ItemType(item))
-                ?? throw Invalid(Join(slot.Path, key.ToString()), $"Item type '{Element.ItemType(item)}' is not registered.");
+            var itemType = target.ItemTypes.Find(slot.Slot.ItemTypeGroup, item.Type)
+                ?? throw Invalid(Join(slot.Path, key.ToString()), $"Item type '{item.Type}' is not registered.");
 
             current = new ResolvedElement(item, itemType.Shape, Join(slot.Path, key.ToString()), itemType, slot.Slot);
             i += 2;
@@ -85,7 +85,7 @@ public static class EntityEditor
             throw new AbilityInputException(problem.Message, [problem with { Culture = variant.Culture, Segment = variant.Segment }]);
         }
 
-        Element.FieldsFor(element.Element, field, variant)[alias] = value?.DeepClone();
+        element.Element.Set(field, variant, value);
     }
 
     public static void SetFields(EditTarget target, ResolvedElement element, JsonObject? values)
@@ -126,7 +126,7 @@ public static class EntityEditor
             throw Invalid(slot.Path, $"This slot holds at most {max} item(s).");
         }
 
-        var item = Element.NewItem(itemKey, itemType.Alias);
+        var item = new EntityItem { Key = itemKey, Type = itemType.Alias };
         var index = position is { } p ? Math.Clamp(p, 0, slot.Items.Count) : slot.Items.Count;
         slot.Items.Insert(index, item);
         return new ResolvedElement(item, itemType.Shape, Join(slot.Path, itemKey.ToString()), itemType, slot.Slot);
@@ -135,7 +135,7 @@ public static class EntityEditor
     public static void RemoveItem(EditTarget target, string slotPath, Guid itemKey)
     {
         var slot = ResolveSlot(target, slotPath);
-        var item = slot.Items.FirstOrDefault(n => Element.ItemKey(n!) == itemKey)
+        var item = slot.Items.FirstOrDefault(i => i.Key == itemKey)
             ?? throw Invalid(Join(slot.Path, itemKey.ToString()), "No item with this key in the slot.");
         slot.Items.Remove(item);
     }
@@ -143,7 +143,7 @@ public static class EntityEditor
     public static void MoveItem(EditTarget target, string slotPath, Guid itemKey, int position)
     {
         var slot = ResolveSlot(target, slotPath);
-        var item = slot.Items.FirstOrDefault(n => Element.ItemKey(n!) == itemKey)
+        var item = slot.Items.FirstOrDefault(i => i.Key == itemKey)
             ?? throw Invalid(Join(slot.Path, itemKey.ToString()), "No item with this key in the slot.");
         slot.Items.Remove(item);
         slot.Items.Insert(Math.Clamp(position, 0, slot.Items.Count), item);
@@ -196,10 +196,10 @@ public static class EntityEditor
         return segment switch
         {
             "@settings" when current.ItemType.SettingsShape is { } settings
-                => new ResolvedElement(Element.SubElement(current.Element, "settings"), settings, path, null, null),
+                => new ResolvedElement(((EntityItem)current.Element).EnsureSettings(), settings, path, null, null),
             "@settings" => throw Invalid(path, $"Item type '{current.ItemType.Alias}' has no settings."),
             "@layout" when current.InSlot.ItemLayout is { } layout
-                => new ResolvedElement(Element.SubElement(current.Element, "layout"), layout, path, null, null),
+                => new ResolvedElement(((EntityItem)current.Element).EnsureLayout(), layout, path, null, null),
             "@layout" => throw Invalid(path, $"Slot '{current.InSlot.Alias}' has no layout values."),
             _ => throw Invalid(path, "Use @settings or @layout."),
         };
@@ -212,7 +212,7 @@ public static class EntityEditor
             ?? throw Invalid(path, $"No slot '{alias}' here. Slots: {Names(owner.Shape.Slots.Select(s => s.Alias))}.");
 
         var variant = RequireVariant(target, slot.Variations, path);
-        return new ResolvedSlot(Element.SlotFor(owner.Element, slot, variant), slot, path, variant);
+        return new ResolvedSlot(owner.Element.Items(slot, variant), slot, path, variant);
     }
 
     private static string[] Split(string? path) => (path ?? string.Empty).Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
@@ -272,7 +272,8 @@ public static class FieldChecker
         {
             FieldType.String when kind != JsonValueKind.String => "Expected a string.",
             FieldType.Number when kind != JsonValueKind.Number => "Expected a number.",
-            FieldType.Integer when kind != JsonValueKind.Number || !scalar.TryGetValue<long>(out _) => "Expected a whole number.",
+            // Read from the JSON text: a value holding a CLR int, rather than parsed JSON, has no TryGetValue<long>.
+            FieldType.Integer when kind != JsonValueKind.Number || !long.TryParse(scalar.ToJsonString(), out _) => "Expected a whole number.",
             FieldType.Boolean when kind is not (JsonValueKind.True or JsonValueKind.False) => "Expected true or false.",
             FieldType.Date when kind != JsonValueKind.String || !DateOnly.TryParseExact(scalar.GetValue<string>(), "yyyy-MM-dd", out _) => "Expected a date as yyyy-MM-dd.",
             FieldType.EntityReference or FieldType.ItemReference when kind != JsonValueKind.String || !Guid.TryParse(scalar.GetValue<string>(), out _) => "Expected a key (a GUID).",

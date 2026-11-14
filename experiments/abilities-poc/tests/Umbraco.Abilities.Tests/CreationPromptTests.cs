@@ -5,6 +5,8 @@ using Microsoft.Extensions.AI;
 
 using Umbraco.Abilities.Entities;
 using Umbraco.Abilities.Samples;
+using Umbraco.Abilities.Samples.Acme;
+using Umbraco.Abilities.Samples.Commerce;
 
 namespace Umbraco.Abilities.Tests;
 
@@ -66,10 +68,13 @@ public class CreationPromptTests
 
         await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
 
-        var live = (await _site.Discounts.LoadAsync(discount))!;
-        Assert.Equal(1, live.LiveVersion);
-        Assert.Equal(["productCollection", "customerGroup"], Element.Slot(live.Root, "rules").Select(r => Element.ItemType(r!)));
-        Assert.Equal(10, Element.Fields((JsonObject)Element.Slot(live.Root, "rewards")[0]!)["percent"]!.GetValue<double>());
+        var live = (await _site.Discounts.LoadModelAsync(discount))!;
+        Assert.Equal(1, live.Version);
+        Assert.Collection(
+            live.Rules,
+            rule => Assert.Equal(_site.SummerCollection, Assert.IsType<ProductCollectionRule>(rule).Collection),
+            rule => Assert.Equal("VIP", Assert.IsType<CustomerGroupRule>(rule).Group));
+        Assert.Equal(10, Assert.IsType<PercentageOffReward>(Assert.Single(live.Rewards)).Percent);
     }
 
     [Fact]
@@ -147,8 +152,8 @@ public class CreationPromptTests
 
         await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
 
-        var live = (await _site.Discounts.LoadAsync(discount))!;
-        Assert.Equal("acmeDayOfWeek", Element.ItemType(Element.Slot(live.Root, "rules")[0]!));
+        var live = (await _site.Discounts.LoadModelAsync(discount))!;
+        Assert.Equal("weekends", Assert.IsType<AcmeDayOfWeekRule>(live.Rules[0]).Days);
     }
 
     [Fact]

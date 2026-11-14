@@ -37,14 +37,14 @@ public sealed class SampleSite
             .Add(new ResolveConflictAbility(ChangeSets));
 
         // CMS content.
-        Pages = new CmsPageDefinition(ContentDatabase);
-        Media = new CmsMediaDefinition(ContentDatabase);
+        Pages = new CmsPageDefinition(ContentDatabase, ItemTypes);
+        Media = new CmsMediaDefinition(ContentDatabase, ItemTypes);
         Definitions.Add(Pages).Add(Media);
         CmsPageDefinition.RegisterItemTypes(ItemTypes);
 
         // Commerce.
-        Collections = new CollectionDefinition(CommerceDatabase);
-        Discounts = new DiscountDefinition(CommerceDatabase);
+        Collections = new CollectionDefinition(CommerceDatabase, ItemTypes);
+        Discounts = new DiscountDefinition(CommerceDatabase, ItemTypes);
         Definitions.Add(Collections).Add(Discounts);
         DiscountDefinition.RegisterItemTypes(ItemTypes);
         var activateDiscount = new ActivateDiscountAbility(Discounts);
@@ -53,7 +53,7 @@ public sealed class SampleSite
         Collections.Seed("Winter coats");
 
         // A third-party discount rule.
-        AcmeWeekdayRule.Register(ItemTypes);
+        AcmeDayOfWeekRule.Register(ItemTypes);
 
         // An email package.
         var sendEmail = new SendEmailAbility(Outbox);

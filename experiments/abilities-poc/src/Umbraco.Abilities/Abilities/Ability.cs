@@ -33,11 +33,16 @@ public sealed class AbilityAttribute(string id, string name) : Attribute
     public bool Reversible { get; set; }
 }
 
-/// <summary>Marks a Guid input as the key of an entity of the given type.</summary>
+/// <summary>
+/// Marks a Guid as the key of an entity of the given type, or an <c>EntityReference</c> as pointing at one of several
+/// entity types.
+/// </summary>
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Parameter)]
-public sealed class EntityKeyAttribute(string entityType) : Attribute
+public sealed class EntityKeyAttribute(params string[] entityTypes) : Attribute
 {
-    public string EntityType { get; } = entityType;
+    public IReadOnlyList<string> EntityTypes { get; } = entityTypes;
+
+    public string EntityType => EntityTypes[0];
 }
 
 public sealed record AbilityDescriptor(
@@ -119,6 +124,7 @@ public static class AbilityJson
         var options = new JsonSerializerOptions(JsonSerializerDefaults.Web)
         {
             TypeInfoResolver = new System.Text.Json.Serialization.Metadata.DefaultJsonTypeInfoResolver(),
+            Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
         };
         options.MakeReadOnly();
         return options;

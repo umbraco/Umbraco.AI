@@ -124,6 +124,9 @@ public sealed record ItemTypeDefinition(string Group, string Alias, string Name,
 
     /// <summary>Further groups the type belongs to, e.g. a grid block allowed both at the root and in areas.</summary>
     public IReadOnlyList<string> AlsoIn { get; init; } = [];
+
+    /// <summary>The model class for items of this type, when it was registered from one.</summary>
+    public Type? ClrType { get; init; }
 }
 
 /// <summary>
@@ -138,6 +141,24 @@ public sealed class ItemTypeRegistry
     {
         _types.Add((itemType.Group, itemType.Alias), itemType);
         return this;
+    }
+
+    /// <summary>
+    /// Adds an item type from its model class: the alias, name and description from <c>[ItemType]</c>, the fields and
+    /// nested slots from its properties, and the settings from its <c>[ItemSettings]</c> property.
+    /// </summary>
+    public ItemTypeRegistry Add<T>(string group, params string[] alsoIn)
+        where T : Models.EntityItemModel
+    {
+        var attribute = typeof(T).GetCustomAttributes(typeof(Models.ItemTypeAttribute), false).OfType<Models.ItemTypeAttribute>().FirstOrDefault()
+            ?? throw new InvalidOperationException($"{typeof(T).Name} has no [ItemType] attribute.");
+        var info = Models.ModelShapes.Info(typeof(T));
+        return Add(new ItemTypeDefinition(group, attribute.Alias, attribute.Name, attribute.Description, info.Shape)
+        {
+            SettingsShape = info.Settings is { } settings ? Models.ModelShapes.ShapeOf(settings.PropertyType) : null,
+            AlsoIn = alsoIn,
+            ClrType = typeof(T),
+        });
     }
 
     /// <summary>Adds the type unless one is already registered for its group and alias.</summary>
@@ -163,129 +184,3 @@ public sealed class ItemTypeRegistry
         => _types.Values.Where(t => t.Group == group || t.AlsoIn.Contains(group)).ToList();
 }
 
-/// <summary>
-/// A working copy of an entity. The root and every item are elements:
-/// <c>{ "fields": {}, "slots": {}, "variants": { "en-US": { "fields": {}, "slots": {} } } }</c>.
-/// Invariant values sit in <c>fields</c>/<c>slots</c>; values that vary sit under their variant's key.
-/// An item also has <c>key</c> and <c>type</c>, and optionally <c>settings</c> and <c>layout</c> elements.
-/// </summary>
-public sealed class EntityDocument
-{
-    public required string EntityType { get; init; }
-
-    public required Guid Key { get; init; }
-
-    /// <summary>The subtype, e.g. a document's content type alias. Null for entity types without subtypes.</summary>
-    public string? Subtype { get; init; }
-
-    /// <summary>The stored version this copy was loaded from; null when the entity is new.</summary>
-    public long? LiveVersion { get; init; }
-
-    public JsonObject Root { get; init; } = Element.New();
-
-    public EntityDocument Clone() => new()
-    {
-        EntityType = EntityType,
-        Key = Key,
-        Subtype = Subtype,
-        LiveVersion = LiveVersion,
-        Root = (JsonObject)Root.DeepClone(),
-    };
-
-    public JsonObject ToJson()
-    {
-        var json = (JsonObject)Root.DeepClone();
-        json["entityType"] = EntityType;
-        json["key"] = Key.ToString();
-        json["subtype"] = Subtype;
-        json["version"] = LiveVersion;
-        return json;
-    }
-
-    /// <summary>The variants the entity has, taken from the root's <c>variants</c>.</summary>
-    public IReadOnlyList<VariantId> Variants()
-        => Root["variants"] is JsonObject variants ? variants.Select(v => VariantId.Parse(v.Key)).ToList() : [];
-}
-
-public static class Element
-{
-    public static JsonObject New() => new()
-    {
-        ["fields"] = new JsonObject(),
-        ["slots"] = new JsonObject(),
-        ["variants"] = new JsonObject(),
-    };
-
-    public static JsonObject NewItem(Guid key, string type)
-    {
-        var item = New();
-        item["key"] = key.ToString();
-        item["type"] = type;
-        return item;
-    }
-
-    /// <summary>The element's invariant fields.</summary>
-    public static JsonObject Fields(JsonObject element) => Child(element, "fields");
-
-    /// <summary>The invariant list of a slot, created if missing.</summary>
-    public static JsonArray Slot(JsonObject element, string alias)
-    {
-        var slots = Child(element, "slots");
-        if (slots[alias] is JsonArray existing)
-        {
-            return existing;
-        }
-
-        var created = new JsonArray();
-        slots[alias] = created;
-        return created;
-    }
-
-    /// <summary>The part of an element that holds one variant's values, created if missing.</summary>
-    public static JsonObject VariantPart(JsonObject element, VariantId variant)
-    {
-        var variants = Child(element, "variants");
-        if (variants[variant.Key] is JsonObject existing)
-        {
-            return existing;
-        }
-
-        var part = new JsonObject { ["fields"] = new JsonObject(), ["slots"] = new JsonObject() };
-        variants[variant.Key] = part;
-        return part;
-    }
-
-    public static JsonObject? VariantPartOrNull(JsonObject element, VariantId variant)
-        => element["variants"]?[variant.Key] as JsonObject;
-
-    /// <summary>Where a field's value lives for a variant: the invariant fields, or the variant's part.</summary>
-    public static JsonObject FieldsFor(JsonObject element, FieldDefinition field, VariantId variant)
-        => field.Variations == Variation.Invariant ? Fields(element) : Fields(VariantPart(element, variant.Narrow(field.Variations)));
-
-    public static JsonArray SlotFor(JsonObject element, SlotDefinition slot, VariantId variant)
-        => slot.Variations == Variation.Invariant ? Slot(element, slot.Alias) : Slot(VariantPart(element, variant.Narrow(slot.Variations)), slot.Alias);
-
-    /// <summary>An item's settings or layout element, created if missing.</summary>
-    public static JsonObject SubElement(JsonObject item, string name) => Child(item, name, New);
-
-    /// <summary>Reads a field whether it is invariant or varies: the invariant value, else the first variant's.</summary>
-    public static JsonNode? ReadAny(JsonObject element, string alias)
-        => element["fields"]?[alias]
-            ?? (element["variants"] as JsonObject)?.Select(v => v.Value?["fields"]?[alias]).FirstOrDefault(v => v is not null);
-
-    public static Guid ItemKey(JsonNode item) => Guid.Parse(item["key"]!.GetValue<string>());
-
-    public static string ItemType(JsonNode item) => item["type"]!.GetValue<string>();
-
-    private static JsonObject Child(JsonObject element, string name, Func<JsonObject>? create = null)
-    {
-        if (element[name] is JsonObject existing)
-        {
-            return existing;
-        }
-
-        var created = create?.Invoke() ?? new JsonObject();
-        element[name] = created;
-        return created;
-    }
-}

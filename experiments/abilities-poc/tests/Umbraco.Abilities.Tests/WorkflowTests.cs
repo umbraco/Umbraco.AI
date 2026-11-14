@@ -61,7 +61,7 @@ public class WorkflowTests
 
         await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
         var live = (await _site.Workflows.LoadAsync(workflow))!;
-        Assert.Equal(["email.send", "commerce.activateDiscount"], Element.Slot(live.Root, "steps").Select(s => Element.ItemType(s!)));
+        Assert.Equal(["email.send", "commerce.activateDiscount"], live.Root.Slot("steps").Select(s => s.Type));
     }
 
     [Fact]

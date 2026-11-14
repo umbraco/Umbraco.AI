@@ -34,8 +34,86 @@ Each design layer and where it lives:
 | Layer | Code |
 | --- | --- |
 | 1. Abilities | `Abilities/Ability.cs`: `[Ability]` with `Kind` and `Reversible`, typed `AbilityBase`, failures with categories and paths, `EntityRef` |
-| 2. Entity definitions | `Entities/`: fields, slots of typed items, entity and item references, an item type registry, a path editor generalised from Umbraco.AI's block path engine, and the generic entity abilities |
+| 2. Entity definitions | `Entities/`: fields, slots of typed items, entity and item references, an item type registry, a typed entity document (`EntityDocument`, `EntityElement`, `EntityItem`), a path editor generalised from Umbraco.AI's block path engine, and the generic entity abilities. `Entities/Models/`: the typed layer package developers write against (`EntityDefinitionBase<TModel>`, model attributes, `ModelEditAbilityBase`) |
 | 3. Change sets | `ChangeSets/`: a recorded unit of "any Write ability call", working state worked out in memory, apply product by product (each all or nothing) and resumable, rebasing onto changes saved elsewhere meanwhile. Generalises the CMS Draft Sets PoC (`Umbraco.Cms.DraftSets`) |
+
+## Writing a definition
+
+A package describes an entity with C# classes, and implements load and save. The framework does the rest.
+
+```csharp
+[Entity("commerce.discount", "Discount", Description = "A discount applied when all its rules match.")]
+public sealed class Discount
+{
+    [Key] public Guid Key { get; set; }
+    [EntityVersion] public long? Version { get; set; }
+    [EntityName, Required] public string? Name { get; set; }
+    public DateOnly? StartDate { get; set; }
+    [EntityKey("cms.page")] public Guid? LandingPage { get; set; }
+    [Slot(RuleGroup, Min = 1)] public List<DiscountRule> Rules { get; set; } = [];
+}
+
+[ItemType("percentageOff", "Percentage off")]
+public sealed class PercentageOffReward : DiscountReward
+{
+    [Required, Range(1, 100)] public decimal? Percent { get; set; }
+}
+
+public sealed class DiscountDefinition(...) : EntityDefinitionBase<Discount>(itemTypes, unitOfWork)
+{
+    public override Task<Discount?> LoadModelAsync(Guid key, CancellationToken ct) => ...;   // the product's own load
+    public override Task SaveModelAsync(Discount discount, CancellationToken ct) => ...;     // the product's own save
+    protected override Task<IReadOnlyList<Problem>> ValidateModelAsync(Discount d, CancellationToken ct)
+        => ... ProblemAt(x => x.EndDate, "Must be on or after startDate.") ...;              // only rules attributes can't say
+}
+
+itemTypes.Add<PercentageOffReward>(DiscountDefinition.RewardGroup);   // another package adds a type the same way
+```
+
+What the package no longer writes, because the framework works it out from the classes:
+
+| Was hand-written | Now comes from |
+| --- | --- |
+| The structure: fields, types, required, allowed values, references, slots and their limits | Property types and attributes (`[Required]`, `[AllowedValues]`, `[EntityKey]`, `[Slot]`, `[Description]`) |
+| JSON Schema for structured values (a focal point) | `JsonSchemaExporter` over the property type |
+| Culture variation | `Varying<T>` (a value per culture), on fields and slots |
+| Block settings and grid placement shapes | `[ItemSettings]` and `[ItemLayout]` properties, `[Slot(Layout = typeof(...))]` |
+| Mapping between the product model and the working copy | `ModelShapes`, both ways, keeping item keys |
+| Range and format checks reported on entity paths (`rewards/{key}/percent`) | The model's DataAnnotations, run per item, settings and placement |
+| A path for a domain problem | `ProblemAt(x => x.EndDate, ...)`, or `ProblemAt(item, r => r.Percent, ...)` for an item |
+| An ability that edits an entity, and works both directly and inside a change set | `ModelEditAbilityBase<TInput, TModel>`: one `Edit(model, input)` method |
+| Reading values out of JSON in tests | `LoadModelAsync`, then plain C# (`Assert.IsType<CustomerGroupRule>(live.Rules[0])`) |
+
+The rules and code are typed end to end. A renamed property is a compile error, not a wrong string key at run time.
+
+`[Required]` and `[AllowedValues]` become part of the structure, so the generic validator checks them per
+culture. Every other DataAnnotation runs on the model. Each problem is reported once.
+
+**Line counts don't fall much. What the lines are does change.**
+
+| | Before (statement lines) | After |
+| --- | --- | --- |
+| Commerce sample | 74 | 62 |
+| CMS page sample | 72 | 71 |
+| Real CMS definition | 621 lines | 599 lines |
+
+Before, a discount's structure was written twice: once as `FieldDefinition`s, and again as string-keyed
+JSON reads in validation and in the activate ability. Now it is written once, as the class, and validation
+and the ability are a few lines of C# against it.
+
+There are two caveats:
+
+- **This is best when the product's model is a plain class.** Commerce's `DiscountReadOnly` has internal
+  constructors and a builder, so a real Commerce definition would write a small projection class and map
+  it in `LoadModelAsync`/`SaveModelAsync`. That is still less code than describing the structure by hand,
+  and the mapping is typed.
+- **Entities whose structure is data, not code, stay document-level.** A CMS document type is defined in
+  the backoffice, and a workflow's step types are other packages' abilities. `IEntityDefinition` over
+  `EntityDocument` remains the escape hatch, and is what `CmsDocumentDefinition` and `WorkflowDefinition` use. They
+  still get the typed document: no `JsonObject` digging, and `item.Settings` or `item.Layout`, not
+  `item["settings"]["fields"]`. The CMS definition now builds Umbraco's own `BlockListValue`,
+  `BlockGridValue`, `BlockItemData`, `BlockPropertyValue`, `BlockGridLayoutItem` and `BlockItemVariation`
+  instead of hand-built envelopes. Umbraco's serializer reads and writes them.
 
 ## What the tests show
 
@@ -57,6 +135,9 @@ Each design layer and where it lives:
 | If the starting version is gone from the history, the entity can't be rebased, and says why | `If_the_starting_version_is_gone_from_the_history_the_entity_cant_be_rebased` |
 | Reads inside a set show its edits; reads outside show live data | `Reads_inside_a_set_show_its_edits_and_reads_outside_show_live_data` |
 | Replay is deterministic, and keys handed to the model are the stored keys | `Replaying_a_set_gives_the_same_entity_every_time` |
+| The structure (types, required, allowed values, references, slots, variation, settings, placement, JSON Schema) comes from model classes and attributes | `TypedModelTests.The_structure_comes_from_the_model_class_and_its_attributes`, `Varying_values_settings_layout_and_json_values_are_described_too` |
+| A model round-trips through its working copy, keeping item keys and giving each item its path | `A_model_round_trips_through_its_document_with_item_keys_and_paths` |
+| Each problem is reported once, whether it comes from the structure, an attribute or a domain rule | `Each_problem_is_reported_once_whether_it_comes_from_the_structure_or_an_attribute` |
 | Workflow step types are derived from abilities | `WorkflowTests.Step_types_are_derived_from_abilities` |
 | A workflow graph (edges as item references) is validated, and can refer to a discount created in the same set | `A_workflow_from_text_links_its_steps_and_can_refer_to_a_discount_in_the_same_set` |
 | Names and values vary by culture; invariant values are shared across cultures | `CmsContentTests.Names_and_values_vary_by_culture_while_invariant_values_are_shared` |
@@ -90,6 +171,11 @@ These feed back into the design doc.
    translation.
 6. **Abilities as item types works.** Reflecting an ability's input type into fields made Automate's step
    types come for free, including an entity reference from `[EntityKey]`.
+7. **Typed values found an untyped bug.** The validator checked whole numbers with
+   `JsonValue.TryGetValue<long>`. That works on parsed JSON but fails on a value holding a CLR `int`, which
+   is what the CMS definition puts in once it reads Umbraco's typed `BlockGridLayoutItem.ColumnSpan`. Every
+   grid page then failed validation. The check now reads the JSON text. A typed document must not assume its
+   values came from parsing.
 
 ## Applying a set
 

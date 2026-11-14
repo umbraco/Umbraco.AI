@@ -1,147 +1,161 @@
 using System.ComponentModel;
-using System.Text.Json;
-using System.Text.Json.Nodes;
+using System.ComponentModel.DataAnnotations;
 
-using Umbraco.Abilities.ChangeSets;
 using Umbraco.Abilities.Entities;
-using Umbraco.Abilities.Samples.Cms;
+using Umbraco.Abilities.Entities.Models;
 
 namespace Umbraco.Abilities.Samples.Commerce;
 
-/// <summary>Product collections: found and referenced, not created here.</summary>
-public sealed class CollectionDefinition(InMemoryDatabase database)
-    : InMemoryEntityDefinition(database, "commerce.collection", "name", "/umbraco/section/commerce/collection")
+// ── The models: plain C# classes. Everything the AI and change sets need is derived from them. ─────────────
+
+[Entity("commerce.collection", "Collection", Description = "A product collection.")]
+public sealed class Collection
+{
+    [Key]
+    public Guid Key { get; set; }
+
+    [EntityVersion]
+    public long? Version { get; set; }
+
+    [EntityName, Required, Description("Collection name.")]
+    public string? Name { get; set; }
+}
+
+[Entity("commerce.discount", "Discount", Description = "A discount applied when all its rules match.")]
+public sealed class Discount
+{
+    [Key]
+    public Guid Key { get; set; }
+
+    [EntityVersion]
+    public long? Version { get; set; }
+
+    [EntityName, Required, Description("Name shown to editors.")]
+    public string? Name { get; set; }
+
+    [Description("Optional coupon code. Unique.")]
+    public string? Code { get; set; }
+
+    [Description("First day the discount applies.")]
+    public DateOnly? StartDate { get; set; }
+
+    [Description("Last day the discount applies.")]
+    public DateOnly? EndDate { get; set; }
+
+    [EntityKey("cms.page"), Description("Optional page that promotes the discount.")]
+    public Guid? LandingPage { get; set; }
+
+    [Description("Whether the discount is live. Use commerce.activateDiscount to switch it on.")]
+    public bool? Active { get; set; }
+
+    [Slot(DiscountDefinition.RuleGroup, Min = 1), Description("All rules must match for the discount to apply.")]
+    public List<DiscountRule> Rules { get; set; } = [];
+
+    [Slot(DiscountDefinition.RewardGroup, Min = 1, Max = 3), Description("What the customer gets.")]
+    public List<DiscountReward> Rewards { get; set; } = [];
+}
+
+/// <summary>A discount rule. Other packages add rule types by subclassing this and registering the class.</summary>
+public abstract class DiscountRule : EntityItemModel;
+
+[ItemType("orderTotal", "Order total", Description = "The order total is at least an amount.")]
+public sealed class OrderTotalRule : DiscountRule
+{
+    [Required, Description("Minimum order total, in the store's currency.")]
+    public decimal? MinTotal { get; set; }
+}
+
+[ItemType("customerGroup", "Customer group", Description = "The customer belongs to a group.")]
+public sealed class CustomerGroupRule : DiscountRule
+{
+    [Required, AllowedValues("VIP", "Wholesale", "Retail"), Description("Customer group.")]
+    public string? Group { get; set; }
+}
+
+[ItemType("productCollection", "Product collection", Description = "The order contains a product from a collection.")]
+public sealed class ProductCollectionRule : DiscountRule
+{
+    [Required, EntityKey("commerce.collection"), Description("The collection.")]
+    public Guid? Collection { get; set; }
+}
+
+public abstract class DiscountReward : EntityItemModel;
+
+[ItemType("percentageOff", "Percentage off", Description = "A percentage off the order.")]
+public sealed class PercentageOffReward : DiscountReward
+{
+    [Required, Range(1, 100), Description("Percentage, 1 to 100.")]
+    public decimal? Percent { get; set; }
+}
+
+[ItemType("freeShipping", "Free shipping", Description = "Shipping is free.")]
+public sealed class FreeShippingReward : DiscountReward;
+
+// ── The definitions: load, save, and the rules attributes can't express. ─────────────────────────────────
+
+public sealed class CollectionDefinition(InMemoryDatabase database, ItemTypeRegistry itemTypes)
+    : InMemoryModelDefinition<Collection>(database, itemTypes, "/umbraco/section/commerce/collection")
 {
     public override bool CanCreate => false;
 
     public Guid Seed(string name)
     {
-        var key = Guid.NewGuid();
-        var root = Element.New();
-        Element.Fields(root)["name"] = name;
-        Database.Put(EntityType, key, root);
-        return key;
+        var collection = new Collection { Key = Guid.NewGuid(), Name = name };
+        SaveModelAsync(collection).GetAwaiter().GetResult();
+        return collection.Key;
     }
-
-    public override Task<EntityStructure> DescribeAsync(string? subtype, CancellationToken cancellationToken = default)
-        => Task.FromResult(new EntityStructure(EntityType, "Collection", "A product collection.", ElementShape.Of(
-            new FieldDefinition("name", "Collection name.", FieldType.String, Required: true))));
 }
 
-/// <summary>
-/// A discount: a few fields plus two slots of typed items. Rule and reward types come from the registry,
-/// so other packages can add their own (see Acme).
-/// </summary>
-public sealed class DiscountDefinition(InMemoryDatabase database)
-    : InMemoryEntityDefinition(database, "commerce.discount", "name", "/umbraco/section/commerce/discount")
+public sealed class DiscountDefinition(InMemoryDatabase database, ItemTypeRegistry itemTypes)
+    : InMemoryModelDefinition<Discount>(database, itemTypes, "/umbraco/section/commerce/discount")
 {
     public const string RuleGroup = "commerce.discount.rule";
     public const string RewardGroup = "commerce.discount.reward";
 
-    public static void RegisterItemTypes(ItemTypeRegistry itemTypes)
-    {
-        itemTypes.Add(new ItemTypeDefinition(RuleGroup, "orderTotal", "Order total", "The order total is at least an amount.", ElementShape.Of(
-            new FieldDefinition("minTotal", "Minimum order total, in the store's currency.", FieldType.Number, Required: true))));
+    public static void RegisterItemTypes(ItemTypeRegistry itemTypes) => itemTypes
+        .Add<OrderTotalRule>(RuleGroup)
+        .Add<CustomerGroupRule>(RuleGroup)
+        .Add<ProductCollectionRule>(RuleGroup)
+        .Add<PercentageOffReward>(RewardGroup)
+        .Add<FreeShippingReward>(RewardGroup);
 
-        itemTypes.Add(new ItemTypeDefinition(RuleGroup, "customerGroup", "Customer group", "The customer belongs to a group.", ElementShape.Of(
-            new FieldDefinition("group", "Customer group.", FieldType.String, Required: true) { Allowed = ["VIP", "Wholesale", "Retail"] })));
-
-        itemTypes.Add(new ItemTypeDefinition(RuleGroup, "productCollection", "Product collection", "The order contains a product from a collection.", ElementShape.Of(
-            new FieldDefinition("collection", "The collection.", FieldType.EntityReference, Required: true) { ReferencesEntityType = "commerce.collection" })));
-
-        itemTypes.Add(new ItemTypeDefinition(RewardGroup, "percentageOff", "Percentage off", "A percentage off the order.", ElementShape.Of(
-            new FieldDefinition("percent", "Percentage, 1 to 100.", FieldType.Number, Required: true))));
-
-        itemTypes.Add(new ItemTypeDefinition(RewardGroup, "freeShipping", "Free shipping", "Shipping is free.", ElementShape.Of()));
-    }
-
-    public override Task<EntityStructure> DescribeAsync(string? subtype, CancellationToken cancellationToken = default)
-        => Task.FromResult(new EntityStructure(EntityType, "Discount", "A discount applied when all its rules match.", ElementShape
-            .Of(
-                new FieldDefinition("name", "Name shown to editors.", FieldType.String, Required: true),
-                new FieldDefinition("code", "Optional coupon code. Unique.", FieldType.String),
-                new FieldDefinition("startDate", "First day the discount applies.", FieldType.Date),
-                new FieldDefinition("endDate", "Last day the discount applies.", FieldType.Date),
-                new FieldDefinition("landingPage", "Optional page that promotes the discount.", FieldType.EntityReference) { ReferencesEntityType = "cms.page" },
-                new FieldDefinition("active", "Whether the discount is live. Use commerce.activateDiscount to switch it on.", FieldType.Boolean))
-            .WithSlots(
-                new SlotDefinition("rules", "All rules must match for the discount to apply.", RuleGroup) { Min = 1 },
-                new SlotDefinition("rewards", "What the customer gets.", RewardGroup) { Min = 1, Max = 3 })));
-
-    public override Task<IReadOnlyList<Problem>> ValidateAsync(EntityDocument document, CancellationToken cancellationToken = default)
+    protected override Task<IReadOnlyList<Problem>> ValidateModelAsync(Discount discount, CancellationToken cancellationToken)
     {
         var problems = new List<Problem>();
-
-        if (DateOnly.TryParse(Text(document.Root, "startDate"), out var start)
-            && DateOnly.TryParse(Text(document.Root, "endDate"), out var end)
-            && end < start)
+        if (discount.StartDate is { } start && discount.EndDate is { } end && end < start)
         {
-            problems.Add(new Problem("endDate", "Must be on or after startDate."));
+            problems.Add(ProblemAt(d => d.EndDate, "Must be on or after startDate."));
         }
 
-        foreach (var reward in Element.Slot(document.Root, "rewards").OfType<JsonObject>().Where(r => Element.ItemType(r) == "percentageOff"))
+        if (CodeInUse(discount))
         {
-            if (Element.Fields(reward)["percent"] is JsonValue value
-                && value.TryGetValue<double>(out var percent)
-                && percent is < 1 or > 100)
-            {
-                problems.Add(new Problem($"rewards/{Element.ItemKey(reward)}/percent", "Must be between 1 and 100."));
-            }
-        }
-
-        if (Text(document.Root, "code") is { Length: > 0 } code
-            && Database.All(EntityType).Any(r => r.Key != document.Key && Element.Fields(r.Row.Root)["code"]?.GetValue<string>() == code))
-        {
-            problems.Add(new Problem("code", $"Another discount already uses '{code}'."));
+            problems.Add(ProblemAt(d => d.Code, $"Another discount already uses '{discount.Code}'."));
         }
 
         return Task.FromResult<IReadOnlyList<Problem>>(problems);
     }
 
     /// <summary>Codes are unique, as a database constraint would enforce on save.</summary>
-    public override Task<EntityRef> SaveAsync(EntityDocument document, CancellationToken cancellationToken = default)
-    {
-        if (Text(document.Root, "code") is { Length: > 0 } code
-            && Database.All(EntityType).Any(r => r.Key != document.Key && Element.Fields(r.Row.Root)["code"]?.GetValue<string>() == code))
-        {
-            throw new InvalidOperationException($"The discount code '{code}' is already in use.");
-        }
+    public override Task SaveModelAsync(Discount discount, CancellationToken cancellationToken = default)
+        => CodeInUse(discount)
+            ? throw new InvalidOperationException($"The discount code '{discount.Code}' is already in use.")
+            : base.SaveModelAsync(discount, cancellationToken);
 
-        return base.SaveAsync(document, cancellationToken);
-    }
+    private bool CodeInUse(Discount discount)
+        => discount.Code is { Length: > 0 } code && All().Any(d => d.Key != discount.Key && d.Code == code);
 }
+
+// ── A product ability that changes a discount, written against the model. ───────────────────────────────
 
 public sealed record ActivateDiscountInput(
     [property: Description("The discount to switch on."), EntityKey("commerce.discount")] Guid Discount);
 
-/// <summary>
-/// A product ability that changes an entity. Run directly, it saves the discount. Inside a change set it says which
-/// entity it edits and how, so it is recorded as a change to the discount: shown in its working state, validated,
-/// and saved in Commerce's step, rather than run as a side effect afterwards.
-/// </summary>
+/// <summary>Run directly it saves the discount; inside a change set it is recorded as a change to the discount.</summary>
 [Ability("commerce.activateDiscount", "Activate discount", Kind = AbilityKind.Write,
     Description = "Switches a discount on so customers get it.")]
-public sealed class ActivateDiscountAbility(DiscountDefinition discounts) : AbilityBase<ActivateDiscountInput, EntityRef>, IEntityEditAbility
+public sealed class ActivateDiscountAbility(DiscountDefinition discounts) : ModelEditAbilityBase<ActivateDiscountInput, Discount>(discounts)
 {
-    public EntityEditTarget Prepare(JsonObject input)
-    {
-        var typed = input.Deserialize<ActivateDiscountInput>(AbilityJson.Options)
-            ?? throw new AbilityInputException("Input is required.");
-        return new EntityEditTarget(discounts.EntityType, typed.Discount, Creates: false);
-    }
+    protected override Guid KeyOf(ActivateDiscountInput input) => input.Discount;
 
-    public object? Apply(EntityDocument document, JsonObject input, EntityEditContext context)
-    {
-        Element.Fields(document.Root)["active"] = true;
-        return context.Definition.ToRef(document);
-    }
-
-    protected override async Task<AbilityResult> ExecuteAsync(ActivateDiscountInput input, AbilityContext context, CancellationToken cancellationToken)
-    {
-        var discount = await discounts.LoadAsync(input.Discount, cancellationToken)
-            ?? throw new AbilityInputException($"No discount {input.Discount}.", [new Problem("discount", "Not found.")]);
-
-        Element.Fields(discount.Root)["active"] = true;
-        return Success(await discounts.SaveAsync(discount, cancellationToken));
-    }
+    protected override void Edit(Discount discount, ActivateDiscountInput input) => discount.Active = true;
 }

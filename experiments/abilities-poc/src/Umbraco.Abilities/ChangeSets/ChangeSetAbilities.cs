@@ -45,10 +45,10 @@ public sealed class ApplyChangeSetAbility(ChangeSetService changeSets) : Ability
     Description = "Throws the set away. No live data changes.")]
 public sealed class DiscardChangeSetAbility(ChangeSetService changeSets) : AbilityBase<ChangeSetIdInput, object>, IChangeSetLifecycleAbility
 {
-    protected override Task<AbilityResult> ExecuteAsync(ChangeSetIdInput input, AbilityContext context, CancellationToken cancellationToken)
+    protected override async Task<AbilityResult> ExecuteAsync(ChangeSetIdInput input, AbilityContext context, CancellationToken cancellationToken)
     {
-        changeSets.Discard(input.ChangeSetId);
-        return Task.FromResult(Success(new { discarded = input.ChangeSetId }));
+        await changeSets.DiscardAsync(input.ChangeSetId, cancellationToken);
+        return Success(new { discarded = input.ChangeSetId });
     }
 }
 

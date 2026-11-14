@@ -19,6 +19,7 @@ using Umbraco.Cms.Core.PropertyEditors;
 using Umbraco.Cms.Core.Scoping;
 using Umbraco.Cms.Core.Serialization;
 using Umbraco.Cms.Core.Services;
+using Umbraco.Cms.DraftSets;
 using Umbraco.Cms.Tests.Common.Builders;
 using Umbraco.Cms.Tests.Common.Builders.Extensions;
 using Umbraco.Cms.Tests.Common.Testing;
@@ -40,6 +41,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
     private Agent _agent = null!;
     private CmsDocumentDefinition _documents = null!;
     private ChangeSetService _changeSets = null!;
+    private DraftSetService _draftSets = null!;
 
     private IContentTypeService ContentTypeService => GetRequiredService<IContentTypeService>();
 
@@ -121,13 +123,18 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         var definitions = new EntityDefinitionRegistry();
         var itemTypes = new ItemTypeRegistry();
         _changeSets = new ChangeSetService(new InMemoryChangeSetStore(), abilities, definitions, itemTypes);
+        _draftSets = new DraftSetService(
+            ContentEditingService,
+            GetRequiredService<PropertyEditorCollection>(),
+            GetRequiredService<IJsonSerializer>(),
+            GetRequiredService<ICoreScopeProvider>());
         _documents = new CmsDocumentDefinition(
             ContentTypeService,
             GetRequiredService<IDataTypeService>(),
             GetRequiredService<ILanguageService>(),
             ContentEditingService,
             GetRequiredService<IEntityService>(),
-            GetRequiredService<PropertyEditorCollection>(),
+            _draftSets,
             GetRequiredService<IJsonSerializer>(),
             itemTypes,
             new CmsScopeUnitOfWorkProvider(GetRequiredService<ICoreScopeProvider>()),
@@ -361,6 +368,87 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
             """);
         await _agent.OkAsync("changeSet_apply", SetJson());
         Assert.That(ContentService.GetById(page.Key)!.GetValue<string>("subtitle", "en-US"), Is.EqualTo("Changed in the backoffice"));
+    }
+
+    [Test]
+    public async Task Content_changes_in_a_change_set_are_a_CMS_draft_set_that_records_only_what_changed()
+    {
+        await _agent.StartChangeSetAsync("Create");
+        var page = await BuildSummerPageAsync();
+        await _agent.OkAsync("changeSet_apply", SetJson());
+
+        await _agent.StartChangeSetAsync("Edit");
+        await SetAsync(page.Key, "", "subtitle", "\"Sun, sand and sea\"", "en-US");
+
+        // The change set holds a CMS draft set for content, which the backoffice can read and preview.
+        var draftId = _changeSets.Get(_agent.ChangeSetId!.Value).Drafts["Content"];
+        var draft = _draftSets.Get(draftId)!;
+        var inDraft = (await _draftSets.GetAsync(draftId, page.Key))!;
+        Assert.Multiple(() =>
+        {
+            Assert.That(draft.Name, Is.EqualTo("Edit"));
+            Assert.That(draft.ContentKeys, Is.EqualTo(new[] { page.Key }));
+            Assert.That(inDraft.Values.Single(v => v.Alias == "subtitle" && v.Culture == "en-US").Value!.ToString(), Is.EqualTo("Sun, sand and sea"));
+            Assert.That(ContentService.GetById(page.Key)!.GetValue<string>("subtitle", "en-US"), Is.EqualTo("Sun and sand"), "live is untouched");
+        });
+
+        // Setting it back is no longer a change.
+        await SetAsync(page.Key, "", "subtitle", "\"Sun and sand\"", "en-US");
+        await Task.Delay(20);
+        var content = ContentService.GetById(page.Key)!;
+        content.SetValue("subtitle", "Changed in the backoffice", "en-US");
+        ContentService.Save(content);
+        var summary = await _agent.OkAsync("changeSet_summarize", SetJson());
+        Assert.That(summary.GetProperty("rebased")[0].GetProperty("conflicts").GetArrayLength(), Is.Zero, "the draft set no longer changes the subtitle");
+
+        // Discarding the change set discards the draft set.
+        await _agent.OkAsync("changeSet_discard", SetJson());
+        Assert.That(_draftSets.Get(draftId), Is.Null);
+    }
+
+    [Test]
+    public async Task A_draft_set_works_on_its_own_with_no_abilities()
+    {
+        // Everything here is CMS only: content editing and the draft set, as the backoffice would use them.
+        var key = Guid.NewGuid();
+        var created = await ContentEditingService.CreateAsync(
+            new ContentCreateModel
+            {
+                Key = key,
+                ContentTypeKey = _page.Key,
+                Variants = [new VariantModel { Culture = "en-US", Name = "Plain" }],
+                Properties = [new PropertyValueModel { Alias = "subtitle", Culture = "en-US", Value = "One" }],
+            },
+            Constants.Security.SuperUserKey);
+        Assert.That(created.Success, Is.True);
+
+        var draft = _draftSets.Create("Rename");
+        await _draftSets.StageChangesAsync(draft.Id, key,
+        [
+            new DraftValue(DraftSetService.NameAlias, "en-US", null, JsonValue.Create("Renamed")),
+            new DraftValue("subtitle", "en-US", null, JsonValue.Create("Two")),
+        ]);
+        Assert.That((await _draftSets.GetAsync(draft.Id, key))!.Names["en-US"], Is.EqualTo("Renamed"));
+
+        // Someone changes the subtitle meanwhile: a conflict. They keep the live value.
+        await Task.Delay(20);
+        var content = ContentService.GetById(key)!;
+        content.SetValue("subtitle", "Three", "en-US");
+        ContentService.Save(content);
+        var conflict = (await _draftSets.GetRebaseAsync(draft.Id)).Single().Conflicts.Single();
+        Assert.That((conflict.Alias, conflict.Draft!.ToString(), conflict.Live!.ToString()), Is.EqualTo(("subtitle", "Two", "Three")));
+        await _draftSets.ResolveAsync(draft.Id, key, "subtitle", "en-US", null, DraftKeep.Live);
+
+        var errors = (await _draftSets.ValidateAsync(draft.Id, Constants.Security.SuperUserKey))[key];
+        Assert.That(errors.Select(e => $"{e.Alias}|{e.Culture}|{e.JsonPath}|{string.Join(" ", e.ErrorMessages)}"), Is.Empty);
+        await _draftSets.ApplyAsync(draft.Id, Constants.Security.SuperUserKey);
+        content = ContentService.GetById(key)!;
+        Assert.Multiple(() =>
+        {
+            Assert.That(content.GetCultureName("en-US"), Is.EqualTo("Renamed"));
+            Assert.That(content.GetValue<string>("subtitle", "en-US"), Is.EqualTo("Three"));
+            Assert.That(draft.Applied, Is.True);
+        });
     }
 
     private sealed record SummerPage(Guid Key, Guid Hero, Guid AreaText);

@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Stands in for a Draft Sets feature in CMS core. It references Umbraco only: no Abilities, no AI. The Abilities
+    change set drives it through Umbraco.Abilities.Cms, as one participant among products.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Cms.Core" />
+    <PackageReference Include="Umbraco.Cms.Infrastructure" />
+  </ItemGroup>
+</Project>

@@ -2,6 +2,7 @@
   <!-- A real entity definition for CMS documents, on IContentEditingService. -->
   <ItemGroup>
     <ProjectReference Include="../Umbraco.Abilities/Umbraco.Abilities.csproj" />
+    <ProjectReference Include="../Umbraco.Cms.DraftSets/Umbraco.Cms.DraftSets.csproj" />
     <PackageReference Include="Umbraco.Cms.Core" />
     <PackageReference Include="Umbraco.Cms.Infrastructure" />
   </ItemGroup>

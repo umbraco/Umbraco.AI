@@ -32,7 +32,16 @@ public sealed class ChangeSetService(
     public ChangeSet Get(Guid id)
         => store.Get(id) ?? throw new AbilityInputException($"No change set {id}.", [new Problem("changeSetId", "Not found.")]);
 
-    public void Discard(Guid id) => store.Remove(Get(id).Id);
+    public async Task DiscardAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var set = Get(id);
+        foreach (var (step, draftId) in set.Drafts.Where(d => !set.AppliedSteps.Contains(d.Key)))
+        {
+            await DraftingFor(step).DiscardDraftAsync(draftId, cancellationToken);
+        }
+
+        store.Remove(set.Id);
+    }
 
     public async Task<AbilityResult> RecordAsync(Guid setId, IAbility ability, JsonObject input, CancellationToken cancellationToken = default)
     {
@@ -64,6 +73,7 @@ public sealed class ChangeSetService(
             }
 
             var working = await GetWorkingStateAsync(set, target.EntityType, target.EntityKey, cancellationToken);
+            var before = working?.Clone();
 
             if (target.Creates)
             {
@@ -94,7 +104,8 @@ public sealed class ChangeSetService(
 
             // Remember the version the set starts editing from, to rebase onto newer live versions later.
             // (Only for entities that exist live: one the set creates has nothing to rebase onto.)
-            if (!target.Creates && working.LiveVersion is { } version && !set.Bases.ContainsKey(ChangeSet.EntityKey(target.EntityType, target.EntityKey)))
+            // (Products with their own drafts keep their own base.)
+            if (definition is not IDraftingEntityDefinition && !target.Creates && working.LiveVersion is { } version && !set.Bases.ContainsKey(ChangeSet.EntityKey(target.EntityType, target.EntityKey)))
             {
                 if (definition is IVersionedEntityDefinition)
                 {
@@ -108,6 +119,11 @@ public sealed class ChangeSetService(
 
             var structure = await definition.DescribeAsync(working.Subtype, cancellationToken);
             var output = edit.Apply(working, recorded, new EntityEditContext(definition, structure, itemTypes));
+            if (definition is IDraftingEntityDefinition drafting)
+            {
+                // The product's draft records the change; the set only remembers that it touched the entity.
+                await drafting.StageAsync(await EnsureDraftAsync(set, drafting, cancellationToken), target.Creates ? null : before, working, cancellationToken);
+            }
 
             set.Changes.Add(new RecordedCall(ability.Descriptor.Id, recorded, target.EntityType, target.EntityKey, target.Creates, working.LiveVersion, working.Subtype));
             store.Save(set);
@@ -132,6 +148,13 @@ public sealed class ChangeSetService(
     public async Task<EntityDocument?> GetWorkingStateAsync(ChangeSet set, string entityType, Guid key, CancellationToken cancellationToken = default)
     {
         var definition = definitions.Get(entityType);
+        if (definition is IDraftingEntityDefinition drafting)
+        {
+            return set.Drafts.TryGetValue(definition.UnitOfWork.Name, out var draftId)
+                ? await drafting.LoadDraftAsync(draftId, key, cancellationToken)
+                : (await definition.LoadAsync(key, cancellationToken))?.Clone();
+        }
+
         var calls = set.Changes.Where(c => c.EntityType == entityType && c.EntityKey == key).ToList();
 
         if (calls.FirstOrDefault() is { Creates: true } create)
@@ -173,9 +196,19 @@ public sealed class ChangeSetService(
     public async Task<IReadOnlyList<RebasedEntity>> GetRebasedAsync(ChangeSet set, CancellationToken cancellationToken = default)
     {
         var result = new List<RebasedEntity>();
+        foreach (var (step, draftId) in set.Drafts.Where(d => !set.AppliedSteps.Contains(d.Key)))
+        {
+            result.AddRange(await DraftingFor(step).GetRebasedAsync(draftId, cancellationToken));
+        }
+
         foreach (var (entityType, key) in PendingEntities(set))
         {
             var definition = definitions.Get(entityType);
+            if (definition is IDraftingEntityDefinition)
+            {
+                continue; // reported by the product's draft, above
+            }
+
             var start = await GetStartAsync(set, definition, key, cancellationToken);
             var live = await definition.LoadAsync(key, cancellationToken);
             if (start is null)
@@ -240,6 +273,13 @@ public sealed class ChangeSetService(
     public async Task ResolveConflictAsync(Guid setId, string entityType, Guid key, string path, VariantId variant, ConflictSide keep, CancellationToken cancellationToken = default)
     {
         var set = Get(setId);
+        if (definitions.Get(entityType) is IDraftingEntityDefinition drafting
+            && set.Drafts.TryGetValue(drafting.UnitOfWork.Name, out var draftId))
+        {
+            await drafting.ResolveConflictAsync(draftId, key, path, variant, keep, cancellationToken);
+            return;
+        }
+
         var conflict = (await GetRebasedAsync(set, cancellationToken))
             .Where(r => r.Entity.EntityType == entityType && r.Entity.Key == key)
             .SelectMany(r => r.Conflicts)
@@ -415,10 +455,24 @@ public sealed class ChangeSetService(
                 if (step.UnitOfWork is { } unitOfWork)
                 {
                     using var transaction = unitOfWork.Begin();
-                    foreach (var (entityType, key) in step.Entities)
+                    if (set.Drafts.TryGetValue(step.Key, out var draftId))
                     {
-                        var document = (await GetWorkingStateAsync(set, entityType, key, cancellationToken))!;
-                        saved.Add(await definitions.Get(entityType).SaveAsync(document, cancellationToken));
+                        // The product applies its own draft, all or nothing.
+                        var drafting = DraftingFor(step.Key);
+                        foreach (var (_, key) in step.Entities)
+                        {
+                            saved.Add(drafting.ToRef((await drafting.LoadDraftAsync(draftId, key, cancellationToken))!));
+                        }
+
+                        await drafting.ApplyDraftAsync(draftId, cancellationToken);
+                    }
+                    else
+                    {
+                        foreach (var (entityType, key) in step.Entities)
+                        {
+                            var document = (await GetWorkingStateAsync(set, entityType, key, cancellationToken))!;
+                            saved.Add(await definitions.Get(entityType).SaveAsync(document, cancellationToken));
+                        }
                     }
 
                     transaction.Complete();
@@ -499,6 +553,20 @@ public sealed class ChangeSetService(
 
     private static IEnumerable<(string EntityType, Guid Key)> TouchedEntities(ChangeSet set)
         => set.Changes.Select(c => (c.EntityType!, c.EntityKey!.Value)).Distinct();
+
+    private async Task<Guid> EnsureDraftAsync(ChangeSet set, IDraftingEntityDefinition drafting, CancellationToken cancellationToken)
+    {
+        if (!set.Drafts.TryGetValue(drafting.UnitOfWork.Name, out var draftId))
+        {
+            draftId = await drafting.CreateDraftAsync(set.Name, cancellationToken);
+            set.Drafts[drafting.UnitOfWork.Name] = draftId;
+        }
+
+        return draftId;
+    }
+
+    private IDraftingEntityDefinition DraftingFor(string step)
+        => definitions.All.OfType<IDraftingEntityDefinition>().First(d => d.UnitOfWork.Name == step);
 
     private sealed class ChangeSetApplyException(string message) : Exception(message);
 }

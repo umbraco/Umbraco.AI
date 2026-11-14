@@ -25,7 +25,8 @@ Umbraco 18 on SQLite through `Umbraco.Cms.Tests.Integration`, and take about 15 
 | `Umbraco.Abilities` | The contract and runtime: abilities, entity definitions, the path editor, change sets, the invoker | Nothing |
 | `Umbraco.Abilities.AI` | Umbraco.AI's adapter: every ability becomes an M.E.AI `AIFunction` | Contract, `Microsoft.Extensions.AI.Abstractions` |
 | `Umbraco.Abilities.Samples` | Product packages: CMS pages with nested blocks, Commerce collections and discounts, a third-party rule type, an email package, Automate workflows | Contract only |
-| `Umbraco.Abilities.Cms` | The real entity definition for CMS documents, on `IContentEditingService` | Contract, Umbraco 18 |
+| `Umbraco.Abilities.Cms` | The real entity definition for CMS documents, on `IContentEditingService`, and the adapter that stages content changes into a CMS draft set | Contract, Umbraco 18, the draft sets stand-in |
+| `Umbraco.Cms.DraftSets` | A stand-in for a Draft Sets feature in CMS core: per-property content changes held apart from live, read-through, rebase and conflicts, apply in one scope | Umbraco 18 only: no Abilities |
 | `Umbraco.Abilities.Tests` | A scripted model calling the AI tools with JSON arguments | Contract, AI adapter, samples |
 | `Umbraco.Abilities.Cms.Tests` | The same, against a real Umbraco on SQLite | Contract, AI adapter, CMS definition, Umbraco test host |
 
@@ -160,6 +161,90 @@ a class to describe, so `CmsDocumentDefinition` and `WorkflowDefinition` impleme
 `BlockItemData`, `BlockPropertyValue`, `BlockGridLayoutItem` and `BlockItemVariation` instead of hand-built
 envelopes, and Umbraco's serializer reads and writes them. Moving to the typed document took it from 621 lines to 599.
 
+## CMS Draft Sets as a participant
+
+The CMS is building Draft Sets for content. It shouldn't depend on Abilities, and Abilities shouldn't keep and replay
+content edits itself when the CMS has its own drafts. So a product that keeps its own drafts implements
+`IDraftingEntityDefinition`. The change set then holds one of the product's drafts and hands it that product's changes:
+
+```
+Change set (Abilities)
+├── Content step  → a CMS draft set  (Umbraco.Cms.DraftSets: references Umbraco only)
+├── Commerce step → the change set's own recorded changes, replayed
+└── Side effects  → email.send, …
+```
+
+The draft set is the source of truth for content. Changes an AI makes are a CMS draft set the backoffice can review
+and preview. The change set keeps only the draft set's id and the fact that it touched an entity. Products with no
+drafts of their own (the in-memory samples) work as before. Both kinds mix in one set.
+
+What the adapter (`CmsDocumentDefinition`) does:
+
+| Change set needs | CMS draft set provides |
+| --- | --- |
+| Record an edit | `StageNew` for new content (whole), `StageChangesAsync` for existing content: only the property values, per culture and segment, that the edit changed. The adapter works them out by diffing the entity document before and after |
+| The working state | `GetAsync`: live content with the set's changes over it, or the set's new content, in editor format |
+| Rebase and conflicts | `GetRebaseAsync`: what others changed since, and the values both changed. Conflicts are per property value, not per block |
+| Resolve | `ResolveAsync`: keep the draft's value or the live one |
+| Apply its step | `ApplyAsync`: every document in one scope, all or nothing |
+| Discard | `Discard` |
+
+Because the draft set records per-property changes over live content, rebasing is automatic: someone else's change to
+another property is simply kept.
+
+**Found while building it**
+
+1. **A one-language document failed validation and save** on a mandatory property in the other language.
+   `ValidateUpdateAsync` checks every culture unless `ValidateContentUpdateModel.Cultures` says otherwise.
+   `UpdateAsync` saves anyway but returns `PropertyValidationError` with problems in every culture. The draft set and
+   the definition now validate only the cultures the document has, and treat "saved with problems" as decided by those
+   problems alone. The definition had the same bug, hidden because every earlier test page existed in both languages.
+2. **Conflicts are coarser than the generic diff.** A block property is one value, so two people editing different
+   blocks in the same Block List conflict. Item-level merging needs block-level change tracking in the draft set.
+
+### If core owned the change set
+
+The other option is for CMS core's Draft Sets to *be* the change set. Every product already depends on CMS core, but
+not on Abilities, so a core coordinator would reach all of them:
+
+```
+CMS core: Draft Sets = the change set
+├── coordinator: one step per product, all or nothing per product, resumable, rebase and conflicts
+├── IDraftSetParticipant, public: the seam IDraftingEntityDefinition is here
+├── content participant, built by the CMS team
+└── Commerce, Forms, … implement their own participant
+
+Abilities, on top
+├── structure, paths, generic edit tools, item types
+├── records ability calls by staging them into a draft set
+└── side effects after apply, approval
+```
+
+We chose the Abilities-owned coordinator for the PoC, because it moves faster. Moving the coordinator into core later
+needs nothing in the participant contract to change, as long as core's Draft Sets is built with the points below in
+mind.
+
+### What core's Draft Sets must address to become the generic change set
+
+| # | Must | Why |
+| --- | --- | --- |
+| 1 | Address entities by type plus key (`document`, `media`, …), even if v1 does only documents | Media created in the same set, then other products' entities, without a redesign |
+| 2 | Record per-property changes (alias, culture, segment) over a base, not whole update models | An update model replaces every value, so it can only overwrite or refuse; per-property changes rebase |
+| 3 | Keep a base version (and base values) per entity from its first change | To show what others changed since, and find conflicts |
+| 4 | Report conflicts in a neutral form: entity, property alias, culture, segment, base, draft and live values | So a coordinator, the backoffice or an agent can show and resolve them |
+| 5 | Let the caller choose keys for new content | So other changes in the set can refer to content before it exists |
+| 6 | Make reads draft-aware: get by key, and find, through a draft set | So whoever builds the set sees their own changes |
+| 7 | Validate a whole set, per entity, only in the cultures each document has | Before anyone approves it; see finding 1 |
+| 8 | Apply all or nothing in one scope, record that it applied, and refuse to apply twice | A coordinator applies products one after another and resumes after a failure |
+| 9 | Raise notifications: applying, applied, discarded | Audit, cache and other packages hook in |
+| 10 | Make the draft set's id, create, apply and discard public, with no assumption about who started it | A coordinator, the backoffice or Automate can drive it |
+| 11 | Shape the coordinator and the participant contract generically from day one, with content as its first participant | The step from content-only to the generic change set is then adding participants, not redesigning |
+| 12 | Leave side effects, approval and the AI-facing structure language out of core | Core has no "operation to run afterwards". Approval is per caller. The structure language is a large, fast-moving API |
+
+Recommended, not required: block-level change tracking inside block properties (finding 2), and capturing
+`IContentEditingService` calls into an ambient draft set, as the original Draft Sets PoC does, so existing code is
+drafted without a new API.
+
 ## What the tests show
 
 | Claim | Test |
@@ -185,6 +270,8 @@ envelopes, and Umbraco's serializer reads and writes them. Moving to the typed d
 | The structure (types, required, allowed values, references, slots, variation, settings, placement, JSON Schema) comes from model classes and attributes | `TypedModelTests.The_structure_comes_from_the_model_class_and_its_attributes`, `Varying_values_settings_layout_and_json_values_are_described_too` |
 | A model round-trips through its working copy, keeping item keys and giving each item its path | `A_model_round_trips_through_its_document_with_item_keys_and_paths` |
 | Each problem is reported once, whether it comes from the structure, an attribute or a domain rule | `Each_problem_is_reported_once_whether_it_comes_from_the_structure_or_an_attribute` |
+| Content changes in a change set are a CMS draft set: the backoffice can read it, it records only what changed, and discarding the set discards it | `CmsDocumentDefinitionTests.Content_changes_in_a_change_set_are_a_CMS_draft_set_that_records_only_what_changed` |
+| The CMS draft set works on its own, with no abilities: stage, read through, conflict, resolve, validate, apply | `A_draft_set_works_on_its_own_with_no_abilities` |
 | Workflow step types are derived from abilities | `WorkflowTests.Step_types_are_derived_from_abilities` |
 | A workflow graph (edges as item references) is validated, and can refer to a discount created in the same set | `A_workflow_from_text_links_its_steps_and_can_refer_to_a_discount_in_the_same_set` |
 | Names and values vary by culture; invariant values are shared across cultures | `CmsContentTests.Names_and_values_vary_by_culture_while_invariant_values_are_shared` |

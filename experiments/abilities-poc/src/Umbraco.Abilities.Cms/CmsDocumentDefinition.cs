@@ -16,18 +16,24 @@ using Umbraco.Cms.Core.Scoping;
 using Umbraco.Cms.Core.Serialization;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Services.OperationStatus;
+using Umbraco.Cms.DraftSets;
 using Umbraco.Cms.Infrastructure.Serialization;
 using Umbraco.Extensions;
 
 namespace Umbraco.Abilities.Cms;
 
 /// <summary>
+/// The real entity definition for CMS documents. It is also the adapter to CMS Draft Sets: inside a change set, content
+/// changes are staged into a CMS draft set (per property) instead of being kept and replayed by the change set, so the
+/// draft set is the source of truth for content and its own rebasing, review and apply are used.
+/// <para>
 /// The real entity definition for CMS documents. One entity type, <c>cms.document</c>, whose subtypes are the
 /// document types. It reads through <see cref="IContentEditingService"/> in the editor (Management API) format,
 /// maps block editor values to slots and back, validates with Umbraco's own validation, and saves with
 /// <see cref="ContentCreateModel"/> / <see cref="ContentUpdateModel"/>.
+/// </para>
 /// </summary>
-public sealed class CmsDocumentDefinition : IEntityDefinition
+public sealed class CmsDocumentDefinition : IDraftingEntityDefinition
 {
     public const string Type = "cms.document";
 
@@ -45,7 +51,7 @@ public sealed class CmsDocumentDefinition : IEntityDefinition
     private readonly ILanguageService _languages;
     private readonly IContentEditingService _editing;
     private readonly IEntityService _entities;
-    private readonly PropertyEditorCollection _editors;
+    private readonly DraftSetService _draftSets;
     private readonly IJsonSerializer _json;
     private readonly Func<Guid> _actingUser;
     private readonly CmsStructureMapper _mapper;
@@ -56,7 +62,7 @@ public sealed class CmsDocumentDefinition : IEntityDefinition
         ILanguageService languages,
         IContentEditingService editing,
         IEntityService entities,
-        PropertyEditorCollection editors,
+        DraftSetService draftSets,
         IJsonSerializer json,
         ItemTypeRegistry itemTypes,
         IUnitOfWorkProvider unitOfWork,
@@ -67,7 +73,7 @@ public sealed class CmsDocumentDefinition : IEntityDefinition
         _languages = languages;
         _editing = editing;
         _entities = entities;
-        _editors = editors;
+        _draftSets = draftSets;
         _json = json;
         _actingUser = actingUser;
         _mapper = new CmsStructureMapper(contentTypes, dataTypes, itemTypes);
@@ -100,60 +106,47 @@ public sealed class CmsDocumentDefinition : IEntityDefinition
     public EntityDocument New(Guid key, string? subtype) => new() { EntityType = Type, Key = key, Subtype = subtype };
 
     public async Task<EntityDocument?> LoadAsync(Guid key, CancellationToken cancellationToken = default)
-    {
-        var content = await _editing.GetAsync(key);
-        if (content is null)
-        {
-            return null;
-        }
+        => await _draftSets.GetLiveAsync(key) is { } live ? await ToDocumentAsync(live) : null;
 
-        var type = _mapper.RequireType(content.ContentType.Key);
+    /// <summary>A document in editor format, live or as a draft set would leave it, as an entity document.</summary>
+    private async Task<EntityDocument> ToDocumentAsync(DraftContent content)
+    {
+        var type = _mapper.RequireType(content.ContentTypeKey);
         var map = await _mapper.MapAsync(type, isDocument: true);
         var document = new EntityDocument
         {
             EntityType = Type,
-            Key = key,
+            Key = content.Key,
             Subtype = type.Alias,
-            LiveVersion = content.UpdateDate.Ticks,
+            LiveVersion = content.Version,
         };
 
         var root = document.Root;
-        if (type.VariesByCulture())
+        foreach (var (culture, name) in content.Names)
         {
-            foreach (var culture in content.AvailableCultures)
-            {
-                root.Variant(new VariantId(culture, null)).Fields[CmsStructureMapper.NameField] = content.GetCultureName(culture);
-            }
-        }
-        else
-        {
-            root.Fields[CmsStructureMapper.NameField] = content.Name;
+            root.Variant(new VariantId(culture.Length == 0 ? null : culture, null)).Fields[CmsStructureMapper.NameField] = name;
         }
 
-        foreach (var property in content.Properties)
+        if (content.ParentKey is { } parent)
         {
-            if (!map.Properties.TryGetValue(property.Alias, out var propertyMap))
+            root.Fields[CmsStructureMapper.ParentField] = parent.ToString();
+        }
+
+        foreach (var value in content.Values)
+        {
+            if (!map.Properties.TryGetValue(value.Alias, out var propertyMap) || value.Value is not { } node)
             {
                 continue;
             }
 
-            foreach (var value in property.Values)
+            var variant = new VariantId(value.Culture, value.Segment);
+            if (propertyMap.Field is { } field)
             {
-                var node = ReadEditorValue(property, value.Culture, value.Segment);
-                if (node is null)
-                {
-                    continue;
-                }
-
-                var variant = new VariantId(value.Culture, value.Segment);
-                if (propertyMap.Field is { } field)
-                {
-                    root.Set(field, variant, node);
-                }
-                else
-                {
-                    root.Items(propertyMap.Slot!, variant).AddRange(await ReadBlocksAsync(node, propertyMap));
-                }
+                root.Set(field, variant, node);
+            }
+            else
+            {
+                root.Items(propertyMap.Slot!, variant).AddRange(await ReadBlocksAsync(node, propertyMap));
             }
         }
 
@@ -195,9 +188,12 @@ public sealed class CmsDocumentDefinition : IEntityDefinition
 
         // Umbraco saves invalid property values and reports them afterwards. A change set must not apply
         // half-valid content, so any reported problem fails the save and the surrounding scope rolls back.
-        if (status != ContentEditingOperationStatus.Success || validation.ValidationErrors.Any())
+        // Umbraco reports problems in every culture; only those in cultures the document has (or invariant) fail it.
+        var cultures = model.Variants.Select(v => v.Culture).ToHashSet();
+        var errors = validation.ValidationErrors.Where(e => e.Culture is null || cultures.Contains(null) || cultures.Contains(e.Culture)).ToList();
+        if (status is not (ContentEditingOperationStatus.Success or ContentEditingOperationStatus.PropertyValidationError) || errors.Count > 0)
         {
-            var details = string.Join("; ", validation.ValidationErrors.Select(model.Index.ToProblem).Select(p => $"{p.Path}{(p.Culture is null ? "" : $" ({p.Culture})")}: {p.Message}"));
+            var details = string.Join("; ", errors.Select(model.Index.ToProblem).Select(p => $"{p.Path}{(p.Culture is null ? "" : $" ({p.Culture})")}: {p.Message}"));
             throw new InvalidOperationException($"Umbraco did not save {ToRef(document).Name}: {status}. {details}".Trim());
         }
 
@@ -213,23 +209,106 @@ public sealed class CmsDocumentDefinition : IEntityDefinition
     public EntityRef ToRef(EntityDocument document)
         => new(Type, document.Key, document.Root.ReadAny(CmsStructureMapper.NameField)?.GetValue<string>() ?? "(unnamed)", EditUrl(document.Key));
 
+    // ── CMS Draft Sets: the change set hands content changes to a CMS draft set ─────────────────────
+
+    public Task<Guid> CreateDraftAsync(string name, CancellationToken cancellationToken = default)
+        => Task.FromResult(_draftSets.Create(name).Id);
+
+    public async Task<EntityDocument?> LoadDraftAsync(Guid draftId, Guid key, CancellationToken cancellationToken = default)
+        => await _draftSets.GetAsync(draftId, key) is { } content ? await ToDocumentAsync(content) : null;
+
+    /// <summary>
+    /// Stages an edit. New content is staged whole. For existing content only the values the edit changed are staged,
+    /// per property, culture and segment, so the draft set can rebase onto values others change meanwhile.
+    /// </summary>
+    public async Task StageAsync(Guid draftId, EntityDocument? before, EntityDocument after, CancellationToken cancellationToken = default)
+    {
+        var model = await BuildModelAsync(after);
+        if (before is null || before.LiveVersion is null)
+        {
+            _draftSets.StageNew(draftId, new DraftContent
+            {
+                Key = model.Key,
+                ContentTypeKey = model.ContentTypeKey,
+                ParentKey = model.ParentKey,
+                Names = model.Variants.ToDictionary(v => v.Culture ?? string.Empty, v => v.Name),
+                Values = model.Values,
+            });
+            return;
+        }
+
+        // What the edit changed, as the property values (or names) it touched: a change anywhere inside a block
+        // property is a change to that property's value in its own variant.
+        var type = DocumentType(after.Subtype);
+        var map = await _mapper.MapAsync(type, isDocument: true);
+        var touched = new HashSet<(string Alias, string? Culture, string? Segment)>();
+        foreach (var change in EntityDiff.Compare(before.Root, after.Root))
+        {
+            var alias = change.Path.Split('/')[0];
+            if (alias == CmsStructureMapper.NameField)
+            {
+                touched.Add((DraftSetService.NameAlias, type.VariesByCulture() ? change.Variant.Culture : null, null));
+            }
+            else if (map.Properties.TryGetValue(alias, out var property))
+            {
+                var variant = change.Variant.Narrow(property.Field?.Variations ?? property.Slot!.Variations);
+                touched.Add((alias, variant.Culture, variant.Segment));
+            }
+        }
+
+        var values = touched.Select(t => t.Alias == DraftSetService.NameAlias
+            ? new DraftValue(t.Alias, t.Culture, null, model.Variants.FirstOrDefault(v => v.Culture == t.Culture)?.Name is { } name ? JsonValue.Create(name) : null)
+            : model.Values.FirstOrDefault(v => v.Alias == t.Alias && v.Culture == t.Culture && v.Segment == t.Segment) ?? new DraftValue(t.Alias, t.Culture, t.Segment, null));
+        await _draftSets.StageChangesAsync(draftId, after.Key, values);
+    }
+
+    public async Task<IReadOnlyList<RebasedEntity>> GetRebasedAsync(Guid draftId, CancellationToken cancellationToken = default)
+    {
+        var result = new List<RebasedEntity>();
+        foreach (var rebase in await _draftSets.GetRebaseAsync(draftId))
+        {
+            var live = await LoadAsync(rebase.ContentKey, cancellationToken);
+            var entity = live is not null ? ToRef(live) : new EntityRef(Type, rebase.ContentKey, "(deleted)", EditUrl(rebase.ContentKey));
+            if (rebase.DeletedLive)
+            {
+                result.Add(new RebasedEntity(entity, ["(deleted)"], [new ChangeSetConflict(entity, string.Empty, null, null, null, null, null, null)]));
+                continue;
+            }
+
+            result.Add(new RebasedEntity(
+                entity,
+                rebase.ChangedSince.Select(c => c.Culture is null ? PathOf(c.Alias) : $"{PathOf(c.Alias)} ({c.Culture})").Distinct().ToList(),
+                rebase.Conflicts.Select(c => new ChangeSetConflict(entity, PathOf(c.Alias), c.Culture, c.Segment, c.Base, c.Draft, c.Live, null)).ToList()));
+        }
+
+        return result;
+    }
+
+    public Task ResolveConflictAsync(Guid draftId, Guid key, string path, VariantId variant, ConflictSide keep, CancellationToken cancellationToken = default)
+        => _draftSets.ResolveAsync(
+            draftId,
+            key,
+            path == CmsStructureMapper.NameField ? DraftSetService.NameAlias : path,
+            variant.Culture,
+            variant.Segment,
+            keep == ConflictSide.Yours ? DraftKeep.Draft : DraftKeep.Live);
+
+    public Task ApplyDraftAsync(Guid draftId, CancellationToken cancellationToken = default) => _draftSets.ApplyAsync(draftId, _actingUser());
+
+    public Task DiscardDraftAsync(Guid draftId, CancellationToken cancellationToken = default)
+    {
+        _draftSets.Discard(draftId);
+        return Task.CompletedTask;
+    }
+
+    private static string PathOf(string alias) => alias == DraftSetService.NameAlias ? CmsStructureMapper.NameField : alias;
+
     private static string EditUrl(Guid key) => $"/umbraco/section/content/workspace/document/edit/{key}";
 
     private IContentType DocumentType(string? alias)
         => _contentTypes.Get(alias ?? string.Empty) is { IsElement: false } type
             ? type
             : throw new AbilityInputException($"No document type '{alias}'.", [new Problem("subtype", "Not a document type.")]);
-
-    /// <summary>The value in editor format, as the backoffice loads it: through the property editor's ToEditor.</summary>
-    private JsonNode? ReadEditorValue(IProperty property, string? culture, string? segment)
-    {
-        if (!_editors.TryGet(property.PropertyType.PropertyEditorAlias, out var editor))
-        {
-            return property.GetValue(culture, segment) is { } stored ? JsonNode.Parse(_json.Serialize(stored)) : null;
-        }
-
-        return ToNode(editor.GetValueEditor().ToEditor(property, culture, segment));
-    }
 
     private JsonNode? ToNode(object? value) => value switch
     {
@@ -346,23 +425,19 @@ public sealed class CmsDocumentDefinition : IEntityDefinition
             variants.Add(new VariantModel { Name = root.Fields.GetValueOrDefault(CmsStructureMapper.NameField)?.GetValue<string>() ?? string.Empty });
         }
 
-        var properties = new List<PropertyValueModel>();
+        var values = new List<DraftValue>();
         foreach (var property in map.Properties.Values)
         {
             foreach (var (variant, value) in Values(root, property))
             {
-                properties.Add(new PropertyValueModel
-                {
-                    Alias = property.Alias,
-                    Value = await ToModelValueAsync(value, property, cultures, variant.Culture, property.Alias, index.ForProperty(property.Alias, variant)),
-                    Culture = variant.Culture,
-                    Segment = variant.Segment,
-                });
+                var node = await ToNodeAsync(value, property, cultures, variant.Culture, property.Alias, index.ForProperty(property.Alias, variant));
+                values.Add(new DraftValue(property.Alias, variant.Culture, variant.Segment, node));
             }
         }
 
+        var properties = values.Select(v => new PropertyValueModel { Alias = v.Alias, Value = ToModelValue(v.Value), Culture = v.Culture, Segment = v.Segment }).ToList();
         var parent = root.Fields.GetValueOrDefault(CmsStructureMapper.ParentField) is { } parentNode && Guid.TryParse(parentNode.ToString(), out var parentKey) ? parentKey : (Guid?)null;
-        return new ContentModel(document.Key, type.Key, parent, variants, properties, index);
+        return new ContentModel(document.Key, type.Key, parent, variants, properties, values, index);
     }
 
     /// <summary>
@@ -378,11 +453,11 @@ public sealed class CmsDocumentDefinition : IEntityDefinition
         return values.Where(v => v.Variant.IsInvariant == invariant);
     }
 
-    /// <summary>A value as the content model takes it: a field's JSON, or a block property's items as a block value.</summary>
-    private async Task<object?> ToModelValueAsync(object value, PropertyMap property, IReadOnlyList<string> documentCultures, string? envelopeCulture, string slotPath, EnvelopeIndex index)
-        => ToModelValue(value is JsonNode node
-            ? node
-            : JsonNode.Parse(_json.Serialize(await WriteBlocksAsync((List<EntityItem>)value, property, documentCultures, envelopeCulture, slotPath, index))));
+    /// <summary>A value in editor format: a field's JSON, or a block property's items as a block value.</summary>
+    private async Task<JsonNode?> ToNodeAsync(object value, PropertyMap property, IReadOnlyList<string> documentCultures, string? envelopeCulture, string slotPath, EnvelopeIndex index)
+        => value is JsonNode node
+            ? node.DeepClone()
+            : JsonNode.Parse(_json.Serialize(await WriteBlocksAsync((List<EntityItem>)value, property, documentCultures, envelopeCulture, slotPath, index)));
 
     /// <summary>Slot items as Umbraco's own block value: layout, content and settings data, and which cultures expose each block.</summary>
     private async Task<BlockValue> WriteBlocksAsync(List<EntityItem> items, PropertyMap property, IReadOnlyList<string> documentCultures, string? envelopeCulture, string slotPath, EnvelopeIndex index)
@@ -477,7 +552,7 @@ public sealed class CmsDocumentDefinition : IEntityDefinition
                     Alias = property.Alias,
                     Culture = variant.Culture,
                     Segment = variant.Segment,
-                    Value = await ToModelValueAsync(value, property, documentCultures, variant.Culture ?? envelopeCulture, $"{path}/{property.Alias}", new EnvelopeIndex()),
+                    Value = ToModelValue(await ToNodeAsync(value, property, documentCultures, variant.Culture ?? envelopeCulture, $"{path}/{property.Alias}", new EnvelopeIndex())),
                 });
             }
         }
@@ -494,7 +569,7 @@ public sealed class CmsDocumentDefinition : IEntityDefinition
     private static Guid DerivedKey(Guid key, string purpose)
         => new(MD5.HashData(Encoding.UTF8.GetBytes($"{key:N}/{purpose}")));
 
-    private sealed record ContentModel(Guid Key, Guid ContentTypeKey, Guid? ParentKey, List<VariantModel> Variants, List<PropertyValueModel> Properties, ErrorIndex Index)
+    private sealed record ContentModel(Guid Key, Guid ContentTypeKey, Guid? ParentKey, List<VariantModel> Variants, List<PropertyValueModel> Properties, List<DraftValue> Values, ErrorIndex Index)
     {
         public ContentCreateModel ToCreateModel() => new()
         {
@@ -509,7 +584,13 @@ public sealed class CmsDocumentDefinition : IEntityDefinition
         // current template key, because a null TemplateKey clears it.
         public ContentUpdateModel ToUpdateModel() => new() { Variants = Variants, Properties = Properties };
 
-        public ValidateContentUpdateModel ToValidateUpdateModel() => new() { Variants = Variants, Properties = Properties };
+        // Only the cultures the document has: validating all of them fails mandatory values in cultures it doesn't exist in.
+        public ValidateContentUpdateModel ToValidateUpdateModel() => new()
+        {
+            Variants = Variants,
+            Properties = Properties,
+            Cultures = Variants.Any(v => v.Culture is not null) ? Variants.Select(v => v.Culture!).Where(c => c is not null).ToHashSet() : null,
+        };
     }
 
     private sealed record IndexedElement(Guid ContentKey, string Path, IList<BlockPropertyValue> Values);

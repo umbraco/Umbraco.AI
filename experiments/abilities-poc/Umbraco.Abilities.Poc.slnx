@@ -4,6 +4,7 @@
     <Project Path="src/Umbraco.Abilities.AI/Umbraco.Abilities.AI.csproj" />
     <Project Path="src/Umbraco.Abilities.Samples/Umbraco.Abilities.Samples.csproj" />
     <Project Path="src/Umbraco.Abilities.Cms/Umbraco.Abilities.Cms.csproj" />
+    <Project Path="src/Umbraco.Cms.DraftSets/Umbraco.Cms.DraftSets.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Umbraco.Abilities.Tests/Umbraco.Abilities.Tests.csproj" />

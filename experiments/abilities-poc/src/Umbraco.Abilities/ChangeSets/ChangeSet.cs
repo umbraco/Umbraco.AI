@@ -50,6 +50,12 @@ public sealed class ChangeSet
     /// </summary>
     public Dictionary<string, long> BaseVersions { get; } = [];
 
+    /// <summary>
+    /// The product drafts this set holds, keyed by the product's step name: for products that keep their own drafts
+    /// (CMS Draft Sets), recording, reading, rebasing and applying their changes is left to that draft.
+    /// </summary>
+    public Dictionary<string, Guid> Drafts { get; } = [];
+
     /// <summary>How each conflict was resolved, keyed by <see cref="ResolutionKey"/>.</summary>
     public Dictionary<string, ConflictSide> Resolutions { get; } = [];
 
@@ -135,6 +141,37 @@ public interface IEntityEditAbility : IAbility
 public sealed record EntityEditTarget(string EntityType, Guid EntityKey, bool Creates, string? Subtype = null);
 
 public sealed record EntityEditContext(IEntityDefinition Definition, EntityStructure Structure, ItemTypeRegistry ItemTypes);
+
+/// <summary>
+/// An entity definition whose product keeps its own drafts, such as CMS Draft Sets. A change set then holds one of the
+/// product's drafts and hands it the product's changes, instead of keeping and replaying them itself: the product's
+/// draft is the source of truth for its changes, so its own review, preview and rebasing work for changes an AI made.
+/// The product's drafts know nothing about abilities or change sets; this interface is the adapter.
+/// </summary>
+public interface IDraftingEntityDefinition : IEntityDefinition
+{
+    /// <summary>Starts a draft in the product, e.g. a CMS draft set. Called once per change set, on its first change to the product.</summary>
+    Task<Guid> CreateDraftAsync(string name, CancellationToken cancellationToken = default);
+
+    /// <summary>The entity as the draft would leave it: live plus the draft's changes, the draft's new entity, or null.</summary>
+    Task<EntityDocument?> LoadDraftAsync(Guid draftId, Guid key, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Records an edit into the draft. <paramref name="before"/> is the entity as the draft had it (null when the edit
+    /// creates it), so the product can record only what changed.
+    /// </summary>
+    Task StageAsync(Guid draftId, EntityDocument? before, EntityDocument after, CancellationToken cancellationToken = default);
+
+    /// <summary>Entities someone else changed since the draft started editing them, and where that conflicts.</summary>
+    Task<IReadOnlyList<RebasedEntity>> GetRebasedAsync(Guid draftId, CancellationToken cancellationToken = default);
+
+    Task ResolveConflictAsync(Guid draftId, Guid key, string path, VariantId variant, ConflictSide keep, CancellationToken cancellationToken = default);
+
+    /// <summary>Applies every change in the draft, all or nothing. Throws to fail; nothing is then applied.</summary>
+    Task ApplyDraftAsync(Guid draftId, CancellationToken cancellationToken = default);
+
+    Task DiscardDraftAsync(Guid draftId, CancellationToken cancellationToken = default);
+}
 
 /// <summary>Abilities that manage change sets themselves are never recorded into one.</summary>
 public interface IChangeSetLifecycleAbility : IAbility

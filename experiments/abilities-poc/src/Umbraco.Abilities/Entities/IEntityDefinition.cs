@@ -12,7 +12,7 @@ public interface IEntityDefinition
     bool CanCreate { get; }
 
     /// <summary>The product transaction this entity type saves in. Entity types sharing one apply together.</summary>
-    DraftSets.IUnitOfWorkProvider UnitOfWork { get; }
+    ChangeSets.IUnitOfWorkProvider UnitOfWork { get; }
 
     /// <summary>
     /// The subtypes an entity of this type can be created as, each with its own structure, such as the document

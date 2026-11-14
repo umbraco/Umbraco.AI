@@ -4,7 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
-using Umbraco.Abilities.DraftSets;
+using Umbraco.Abilities.ChangeSets;
 using Umbraco.Abilities.Entities;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Models;
@@ -195,7 +195,7 @@ public sealed class CmsDocumentDefinition : IEntityDefinition
             (status, validation) = (updated.Status, updated.Result.ValidationResult);
         }
 
-        // Umbraco saves invalid property values and reports them afterwards. A draft set must not apply
+        // Umbraco saves invalid property values and reports them afterwards. A change set must not apply
         // half-valid content, so any reported problem fails the save and the surrounding scope rolls back.
         if (status != ContentEditingOperationStatus.Success || validation.ValidationErrors.Any())
         {
@@ -605,7 +605,7 @@ public sealed class CmsDocumentDefinition : IEntityDefinition
     }
 }
 
-/// <summary>Content's step of applying a draft set runs in one Umbraco scope, so every document saves or none does.</summary>
+/// <summary>Content's step of applying a change set runs in one Umbraco scope, so every document saves or none does.</summary>
 public sealed class CmsScopeUnitOfWorkProvider(ICoreScopeProvider scopes) : IUnitOfWorkProvider
 {
     public string Name => "Content";

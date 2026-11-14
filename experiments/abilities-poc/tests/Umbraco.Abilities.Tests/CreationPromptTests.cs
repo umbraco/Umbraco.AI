@@ -19,7 +19,7 @@ public class CreationPromptTests
     [Fact]
     public async Task Discount_from_text_is_built_in_a_draft_set_and_only_goes_live_when_applied()
     {
-        await _agent.StartDraftSetAsync("VIP summer sale");
+        await _agent.StartChangeSetAsync("VIP summer sale");
 
         // 1. Discover the structure, in two steps.
         var schema = await _agent.OkAsync("entity_getSchema", """{ "entityType": "commerce.discount" }""");
@@ -55,16 +55,16 @@ public class CreationPromptTests
             """);
 
         // 4. Check, review, apply.
-        var validation = await _agent.OkAsync("draftSet_validate", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
+        var validation = await _agent.OkAsync("changeSet_validate", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
         Assert.True(validation.GetProperty("valid").GetBoolean(), validation.ToString());
         Assert.Empty(_site.CommerceDatabase.All("commerce.discount"));
 
-        var summary = await _agent.OkAsync("draftSet_summarize", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
+        var summary = await _agent.OkAsync("changeSet_summarize", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
         var change = summary.GetProperty("entities")[0];
         Assert.Equal("created", change.GetProperty("change").GetString());
         Assert.Equal("VIP summer sale", change.GetProperty("entity").GetProperty("name").GetString());
 
-        await _agent.OkAsync("draftSet_apply", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
+        await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
 
         var live = (await _site.Discounts.LoadAsync(discount))!;
         Assert.Equal(1, live.LiveVersion);
@@ -75,19 +75,19 @@ public class CreationPromptTests
     [Fact]
     public async Task Validation_reports_problems_by_path_and_the_agent_fixes_them_with_the_same_paths()
     {
-        await _agent.StartDraftSetAsync("Draft with problems");
+        await _agent.StartChangeSetAsync("Draft with problems");
         var discount = (await _agent.OkAsync("entity_create", """{ "entityType": "commerce.discount" }""")).GetProperty("key").GetGuid();
         var reward = await _agent.OkAsync("entity_addItem", $$"""
             { "entityType": "commerce.discount", "key": "{{discount}}", "slotPath": "rewards", "itemType": "percentageOff", "fields": { "percent": 150 } }
             """);
         var rewardPath = reward.GetProperty("path").GetString();
 
-        var validation = await _agent.OkAsync("draftSet_validate", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
+        var validation = await _agent.OkAsync("changeSet_validate", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
         Assert.False(validation.GetProperty("valid").GetBoolean());
         Assert.Equal(["name", "rules", $"{rewardPath}/percent"], JsonAssert.ProblemPaths(validation));
 
         // Applying now fails, and the failure says it can be corrected.
-        var refused = await _agent.FailAsync("draftSet_apply", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
+        var refused = await _agent.FailAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
         Assert.Equal("Input", refused.GetProperty("category").GetString());
         Assert.True(refused.GetProperty("correctable").GetBoolean());
 
@@ -102,14 +102,14 @@ public class CreationPromptTests
             { "entityType": "commerce.discount", "key": "{{discount}}", "slotPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 100 } }
             """);
 
-        validation = await _agent.OkAsync("draftSet_validate", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
+        validation = await _agent.OkAsync("changeSet_validate", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
         Assert.True(validation.GetProperty("valid").GetBoolean(), validation.ToString());
     }
 
     [Fact]
     public async Task Bad_edits_are_correctable_input_failures_with_paths()
     {
-        await _agent.StartDraftSetAsync("Bad edits");
+        await _agent.StartChangeSetAsync("Bad edits");
         var discount = (await _agent.OkAsync("entity_create", """{ "entityType": "commerce.discount", "fields": { "name": "x" } }""")).GetProperty("key").GetGuid();
 
         var wrongType = await _agent.FailAsync("entity_addItem", $$"""
@@ -127,16 +127,16 @@ public class CreationPromptTests
             """);
         Assert.Equal($"{reward.GetProperty("path").GetString()}/percent", wrongValue.GetProperty("problems")[0].GetProperty("path").GetString());
 
-        // Edits never run outside a draft set.
-        _agent.DraftSetId = null;
+        // Edits never run outside a change set.
+        _agent.ChangeSetId = null;
         var outside = await _agent.FailAsync("entity_create", """{ "entityType": "commerce.discount" }""");
-        Assert.Contains("draftSet_create", outside.GetProperty("message").GetString());
+        Assert.Contains("changeSet_create", outside.GetProperty("message").GetString());
     }
 
     [Fact]
     public async Task A_third_party_rule_type_is_creatable_with_no_change_to_commerce()
     {
-        await _agent.StartDraftSetAsync("Weekend deal");
+        await _agent.StartChangeSetAsync("Weekend deal");
         var discount = (await _agent.OkAsync("entity_create", """{ "entityType": "commerce.discount", "fields": { "name": "Weekend deal" } }""")).GetProperty("key").GetGuid();
         await _agent.OkAsync("entity_addItem", $$"""
             { "entityType": "commerce.discount", "key": "{{discount}}", "slotPath": "rules", "itemType": "acmeDayOfWeek", "fields": { "days": "weekends" } }
@@ -145,7 +145,7 @@ public class CreationPromptTests
             { "entityType": "commerce.discount", "key": "{{discount}}", "slotPath": "rewards", "itemType": "freeShipping" }
             """);
 
-        await _agent.OkAsync("draftSet_apply", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
+        await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
 
         var live = (await _site.Discounts.LoadAsync(discount))!;
         Assert.Equal("acmeDayOfWeek", Element.ItemType(Element.Slot(live.Root, "rules")[0]!));
@@ -159,12 +159,12 @@ public class CreationPromptTests
 #pragma warning disable MEAI001
         var needApproval = _agent.Tools.Values.OfType<ApprovalRequiredAIFunction>().Select(t => t.Name).Order().ToList();
 #pragma warning restore MEAI001
-        Assert.Equal(["commerce_activateDiscount", "draftSet_apply", "email_send"], needApproval);
+        Assert.Equal(["changeSet_apply", "commerce_activateDiscount", "email_send"], needApproval);
 
         var addItem = _agent.Tools["entity_addItem"].JsonSchema;
         var properties = addItem.GetProperty("properties").EnumerateObject().Select(p => p.Name).ToList();
         Assert.Contains("slotPath", properties);
         Assert.Contains("itemType", properties);
-        Assert.Contains("draft set", _agent.Tools["entity_addItem"].Description);
+        Assert.Contains("change set", _agent.Tools["entity_addItem"].Description);
     }
 }

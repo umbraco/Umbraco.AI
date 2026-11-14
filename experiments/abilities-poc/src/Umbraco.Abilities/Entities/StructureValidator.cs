@@ -17,7 +17,7 @@ public static class StructureValidator
         IReadOnlyList<VariantId> Variants,
         List<Problem> Problems);
 
-    /// <param name="entityExists">Whether an entity is live or created in the same draft set.</param>
+    /// <param name="entityExists">Whether an entity is live or created in the same change set.</param>
     public static async Task<IReadOnlyList<Problem>> ValidateAsync(
         EntityDocument document,
         EntityStructure structure,
@@ -137,7 +137,7 @@ public static class StructureValidator
             {
                 if (!await context.EntityExists(entityType, key))
                 {
-                    context.Problems.Add(At($"No {entityType} with key {key}, live or in this draft set."));
+                    context.Problems.Add(At($"No {entityType} with key {key}, live or in this change set."));
                 }
             }
         }

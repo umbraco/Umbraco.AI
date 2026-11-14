@@ -1,10 +1,10 @@
-# Abilities, entities and draft sets: proof of concept
+# Abilities, entities and change sets: proof of concept
 
 > **Status:** Experiment. Not a product, not shipped, not wired into the monorepo build. It exists to
-> test the design in the "Abilities, entities and draft sets" doc before anything is built for real.
+> test the design in the "Abilities, entities and change sets" doc before anything is built for real.
 
 It tests one claim: if packages declare **abilities** and **entity definitions**, and Write calls are
-recorded into **draft sets**, then "create an entity from a description" needs no per-product code. That
+recorded into **change sets**, then "create an entity from a description" needs no per-product code. That
 covers a discount with a rule tree, a page with nested blocks, or a workflow whose steps form a graph.
 
 ## Run it
@@ -22,7 +22,7 @@ Umbraco 18 on SQLite through `Umbraco.Cms.Tests.Integration`, and take about 15 
 
 | Project | Plays the part of | Depends on |
 | --- | --- | --- |
-| `Umbraco.Abilities` | The contract and runtime: abilities, entity definitions, the path editor, draft sets, the invoker | Nothing |
+| `Umbraco.Abilities` | The contract and runtime: abilities, entity definitions, the path editor, change sets, the invoker | Nothing |
 | `Umbraco.Abilities.AI` | Umbraco.AI's adapter: every ability becomes an M.E.AI `AIFunction` | Contract, `Microsoft.Extensions.AI.Abstractions` |
 | `Umbraco.Abilities.Samples` | Product packages: CMS pages with nested blocks, Commerce collections and discounts, a third-party rule type, an email package, Automate workflows | Contract only |
 | `Umbraco.Abilities.Cms` | The real entity definition for CMS documents, on `IContentEditingService` | Contract, Umbraco 18 |
@@ -35,7 +35,7 @@ Each design layer and where it lives:
 | --- | --- |
 | 1. Abilities | `Abilities/Ability.cs`: `[Ability]` with `Kind` and `Reversible`, typed `AbilityBase`, failures with categories and paths, `EntityRef` |
 | 2. Entity definitions | `Entities/`: fields, slots of typed items, entity and item references, an item type registry, a path editor generalised from Umbraco.AI's block path engine, and the generic entity abilities |
-| 3. Draft sets | `DraftSets/`: a recorded unit of "any Write ability call", working state worked out in memory, all-or-nothing apply, live-change detection |
+| 3. Change sets | `ChangeSets/`: a recorded unit of "any Write ability call", working state worked out in memory, apply product by product (each all or nothing) and resumable, live-change detection. Generalises the CMS Draft Sets PoC (`Umbraco.Cms.DraftSets`) |
 
 ## What the tests show
 
@@ -46,7 +46,7 @@ Each design layer and where it lives:
 | Bad edits are correctable Input failures with a path; edits never run outside a set | `Bad_edits_are_correctable_input_failures_with_paths` |
 | A third party's item type is creatable with no change to Commerce or the AI adapter | `A_third_party_rule_type_is_creatable_with_no_change_to_commerce` |
 | Every ability becomes an AI tool; only irreversible Writes are wrapped for approval | `Every_ability_is_an_AI_tool_and_only_irreversible_writes_need_approval` |
-| One set holds a page with nested blocks, a discount referring to that new page, and a recorded operation, all applied together | `DraftSetTests.A_campaign_spanning_content_commerce_and_operations_is_applied_together` |
+| One set holds a page with nested blocks, a discount referring to that new page, and a recorded operation, all applied together | `ChangeSetTests.A_campaign_spanning_content_commerce_and_operations_is_applied_together` |
 | A failed step leaves earlier products' changes applied; applying again resumes at the failed step and applies nothing twice | `A_failed_step_leaves_earlier_steps_applied_and_applying_again_resumes` |
 | A product whose save fails rolls back all of its changes in the set, which can then be fixed and resumed | `A_product_whose_save_fails_rolls_back_all_of_its_changes_and_can_be_fixed_and_resumed` |
 | Apply is refused if live data changed under the set | `Applying_is_refused_when_live_data_changed_underneath_the_set` |
@@ -67,8 +67,8 @@ Each design layer and where it lives:
 These feed back into the design doc.
 
 1. **Approval depends on the call, not just the tool.** `email.send` and `commerce.activateDiscount` need
-   approval when run directly. Inside a draft set they are only recorded, so asking then is pointless; the
-   approval belongs on `draftSet.apply`. M.E.AI's `ApprovalRequiredAIFunction` wraps a tool once, so the
+   approval when run directly. Inside a change set they are only recorded, so asking then is pointless; the
+   approval belongs on `changeSet.apply`. M.E.AI's `ApprovalRequiredAIFunction` wraps a tool once, so the
    adapter can't express "only outside a set". The contract needs approval decided per call, from the
    context.
 2. **Recorded operations are not checked when recorded.** An `email.send` with a bad recipient is
@@ -99,7 +99,7 @@ work, and applying a set runs in steps:
 
 Progress is kept on the set after each step. If a step fails, it rolls back, earlier steps stay applied, and
 the set is kept. Its applied products can't be edited in it any more, the rest can be fixed, and applying
-again resumes at the failed step without applying anything twice. `draftSet.summarize` lists the plan (each
+again resumes at the failed step without applying anything twice. `changeSet.summarize` lists the plan (each
 product, then each operation) so a person sees before approving which parts are all or nothing.
 
 ## Against a real Umbraco
@@ -170,7 +170,7 @@ What still does not fit, and needs a decision rather than more code:
 | CMS | No concurrency token on update | Change detection has to compare `UpdateDate` or `VersionId` inside the apply scope |
 | Commerce | A discount's rules are one recursive tree under a group rule (AND/OR is a setting); rule and reward nodes have no ids | Fits as a single-item slot with nested slots, but the definition must assign item keys on load and drop them on save |
 | Commerce | Validation is message-only and stops at the first error; rule and reward settings are not validated on write | Problems by path have to come from the definition, not from Commerce |
-| Commerce | Saves use Commerce's own unit of work and connection, and can't join an Umbraco scope | No longer a gap: draft sets don't assume a transaction across products (see "Applying a set") |
+| Commerce | Saves use Commerce's own unit of work and connection, and can't join an Umbraco scope | No longer a gap: change sets don't assume a transaction across products (see "Applying a set") |
 | Commerce | `Version` exists but isn't exposed, and conflicts are retried (last writer wins) | No change detection for discounts without a Commerce change |
 | Automate | Steps are a flat list and edges are their own list carrying data (outcome, handle, filter); loops and parallel paths come from edges, not nesting | Item references on fields are not enough: the contract needs **edges as a first-class part of an entity** |
 | Automate | Validation errors are strings with no path; unknown step types aren't caught at publish | Problems by path have to come from the definition |

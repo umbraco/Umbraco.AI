@@ -20,7 +20,7 @@ public class CmsContentTests
     [Fact]
     public async Task Names_and_values_vary_by_culture_while_invariant_values_are_shared()
     {
-        await _agent.StartDraftSetAsync("Summer page");
+        await _agent.StartChangeSetAsync("Summer page");
         var page = await CreatePageAsync("Summer", "en-US");
 
         await SetAsync(page, "", "title", "\"Sommer\"", "da-DK");
@@ -34,14 +34,14 @@ public class CmsContentTests
         Assert.False(working.GetProperty("variants").GetProperty("da-DK").GetProperty("fields").TryGetProperty("tags", out _));
 
         await AssertValidAsync();
-        await _agent.OkAsync("draftSet_apply", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
+        await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
         Assert.Equal("Summer", _site.Pages.ToRef((await _site.Pages.LoadAsync(page))!).Name);
     }
 
     [Fact]
     public async Task A_value_that_varies_by_culture_needs_a_known_culture()
     {
-        await _agent.StartDraftSetAsync("Cultures");
+        await _agent.StartChangeSetAsync("Cultures");
 
         var missing = await _agent.FailAsync("entity_create", """{ "entityType": "cms.page", "fields": { "title": "No culture" } }""");
         Assert.True(missing.GetProperty("correctable").GetBoolean());
@@ -60,7 +60,7 @@ public class CmsContentTests
     [Fact]
     public async Task Each_culture_is_validated_separately_and_problems_say_which()
     {
-        await _agent.StartDraftSetAsync("Danish page");
+        await _agent.StartChangeSetAsync("Danish page");
         var page = await CreatePageAsync("Summer", "en-US");
         await SetAsync(page, "", "urlSegment", "\"sommer\"", "da-DK"); // starts a Danish variant with no name
 
@@ -75,7 +75,7 @@ public class CmsContentTests
     [Fact]
     public async Task Block_values_vary_per_culture_inside_an_invariant_block_list_and_settings_are_their_own_element()
     {
-        await _agent.StartDraftSetAsync("Hero");
+        await _agent.StartChangeSetAsync("Hero");
         var page = await CreatePageAsync("Summer", "en-US");
         await SetAsync(page, "", "title", "\"Sommer\"", "da-DK");
 
@@ -104,7 +104,7 @@ public class CmsContentTests
     [Fact]
     public async Task Grid_blocks_have_placement_values_and_areas_that_are_slots()
     {
-        await _agent.StartDraftSetAsync("Grid");
+        await _agent.StartChangeSetAsync("Grid");
         var page = await CreatePageAsync("Grid page", "en-US");
 
         var row = (await AddItemAsync(page, "grid", "twoColumn", null)).GetProperty("path").GetString()!;
@@ -133,7 +133,7 @@ public class CmsContentTests
     [Fact]
     public async Task A_culture_variant_block_property_holds_a_list_per_culture()
     {
-        await _agent.StartDraftSetAsync("Promos");
+        await _agent.StartChangeSetAsync("Promos");
         var page = await CreatePageAsync("Shop", "en-US");
         await SetAsync(page, "", "title", "\"Butik\"", "da-DK");
 
@@ -153,7 +153,7 @@ public class CmsContentTests
     [Fact]
     public async Task Pickers_refer_to_media_and_pages_created_in_the_same_set()
     {
-        await _agent.StartDraftSetAsync("Media");
+        await _agent.StartChangeSetAsync("Media");
         var media = Guid.NewGuid();
         await _agent.OkAsync("entity_create", $$"""{ "entityType": "cms.media", "key": "{{media}}", "fields": { "name": "Beach.jpg" } }""");
 
@@ -171,7 +171,7 @@ public class CmsContentTests
 
         await SetAsync(page, "", "related", $$"""[{ "entityType": "cms.media", "key": "{{media}}" }]""");
         await AssertValidAsync();
-        await _agent.OkAsync("draftSet_apply", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
+        await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
 
         var live = (await _site.Pages.LoadAsync(page))!;
         Assert.Equal(media.ToString(), Element.Fields((JsonObject)Element.Slot(live.Root, "image")[0]!)["media"]!.GetValue<string>());
@@ -189,7 +189,7 @@ public class CmsContentTests
 
     private Task<JsonElement> GetAsync(Guid page) => _agent.OkAsync("entity_get", $$"""{ "entityType": "cms.page", "key": "{{page}}" }""");
 
-    private Task<JsonElement> ValidateAsync() => _agent.OkAsync("draftSet_validate", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
+    private Task<JsonElement> ValidateAsync() => _agent.OkAsync("changeSet_validate", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
 
     private async Task AssertValidAsync()
     {

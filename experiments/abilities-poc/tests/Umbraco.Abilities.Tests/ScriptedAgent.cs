@@ -9,20 +9,20 @@ namespace Umbraco.Abilities.Tests;
 
 /// <summary>
 /// Plays the part of a model: calls the AI tools by name with JSON arguments, exactly as a chat client's
-/// function invocation would. The draft set id is the surface's context, like the Umbraco Draft Sets header.
+/// function invocation would. The change set id is the surface's context, like the Umbraco Draft Sets header.
 /// </summary>
 public sealed class ScriptedAgent
 {
     public ScriptedAgent(SampleSite site)
     {
         Tools = AbilityAITools
-            .Create(site.Abilities, site.Invoker, () => new AbilityContext("editor@example.com", "ai", DraftSetId))
+            .Create(site.Abilities, site.Invoker, () => new AbilityContext("editor@example.com", "ai", ChangeSetId))
             .ToDictionary(t => t.Name);
     }
 
     public IReadOnlyDictionary<string, AIFunction> Tools { get; }
 
-    public Guid? DraftSetId { get; set; }
+    public Guid? ChangeSetId { get; set; }
 
     public async Task<JsonElement> CallAsync(string tool, string argumentsJson)
     {
@@ -50,11 +50,11 @@ public sealed class ScriptedAgent
         return result;
     }
 
-    public async Task<Guid> StartDraftSetAsync(string name)
+    public async Task<Guid> StartChangeSetAsync(string name)
     {
-        var output = await OkAsync("draftSet_create", $$"""{ "name": "{{name}}" }""");
-        DraftSetId = output.GetProperty("draftSetId").GetGuid();
-        return DraftSetId.Value;
+        var output = await OkAsync("changeSet_create", $$"""{ "name": "{{name}}" }""");
+        ChangeSetId = output.GetProperty("changeSetId").GetGuid();
+        return ChangeSetId.Value;
     }
 }
 

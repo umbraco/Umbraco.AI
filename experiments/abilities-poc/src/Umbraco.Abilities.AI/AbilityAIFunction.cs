@@ -3,7 +3,7 @@ using System.Text.Json.Nodes;
 
 using Microsoft.Extensions.AI;
 
-using Umbraco.Abilities.DraftSets;
+using Umbraco.Abilities.ChangeSets;
 
 namespace Umbraco.Abilities.AI;
 

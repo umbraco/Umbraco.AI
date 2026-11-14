@@ -2,12 +2,12 @@ using System.ComponentModel;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-using Umbraco.Abilities.DraftSets;
+using Umbraco.Abilities.ChangeSets;
 
 namespace Umbraco.Abilities.Entities;
 
 // The generic entity abilities. They work for every registered entity definition, so no package writes
-// create_discount, add_discount_rule and so on. Edits only run inside a draft set.
+// create_discount, add_discount_rule and so on. Edits only run inside a change set.
 
 public interface IEntityEditInput
 {
@@ -20,7 +20,7 @@ public interface IEntityEditInput
     string? Segment { get; }
 }
 
-/// <summary>Base for entity edits: recorded into a draft set, applied to a working copy on replay.</summary>
+/// <summary>Base for entity edits: recorded into a change set, applied to a working copy on replay.</summary>
 public abstract class EntityEditAbilityBase<TInput> : AbilityBase<TInput, object>, IEntityEditAbility
     where TInput : IEntityEditInput
 {
@@ -51,7 +51,7 @@ public abstract class EntityEditAbilityBase<TInput> : AbilityBase<TInput, object
     protected override Task<AbilityResult> ExecuteAsync(TInput input, AbilityContext context, CancellationToken cancellationToken)
         => Task.FromResult(AbilityResult.Fail(
             FailureCategory.Input,
-            "Entity edits are recorded in a draft set. Call draftSet_create first and run with its id as the active draft set."));
+            "Entity edits are recorded in a change set. Call changeSet_create first and run with its id as the active change set."));
 
     private static TInput Read(JsonObject input)
         => input.Deserialize<TInput>(AbilityJson.Options) ?? throw new AbilityInputException("Input is required.");
@@ -133,8 +133,8 @@ public sealed record FindEntityInput(
     [property: Description("Words in the entity's name.")] string Query);
 
 [Ability("entity.find", "Find entities", Kind = AbilityKind.Read,
-    Description = "Finds entities by name, live and in the active draft set. Use it to turn a name the person used into a key.")]
-public sealed class FindEntityAbility(EntityDefinitionRegistry definitions, DraftSetService draftSets)
+    Description = "Finds entities by name, live and in the active change set. Use it to turn a name the person used into a key.")]
+public sealed class FindEntityAbility(EntityDefinitionRegistry definitions, ChangeSetService changeSets)
     : AbilityBase<FindEntityInput, IReadOnlyList<EntityRef>>
 {
     protected override async Task<AbilityResult> ExecuteAsync(FindEntityInput input, AbilityContext context, CancellationToken cancellationToken)
@@ -142,16 +142,16 @@ public sealed class FindEntityAbility(EntityDefinitionRegistry definitions, Draf
         var definition = definitions.Get(input.EntityType);
         var found = (await definition.FindAsync(input.Query, cancellationToken)).ToList();
 
-        if (context.DraftSetId is { } setId)
+        if (context.ChangeSetId is { } setId)
         {
             // Entities the set touches are matched on their working state, not their live name.
-            var set = draftSets.Get(setId);
+            var set = changeSets.Get(setId);
             var touched = set.Calls.Where(c => c.EntityType == input.EntityType).Select(c => c.EntityKey!.Value).Distinct().ToList();
             found.RemoveAll(r => touched.Contains(r.Key));
 
             foreach (var key in touched)
             {
-                var document = await draftSets.GetWorkingStateAsync(set, input.EntityType, key, cancellationToken);
+                var document = await changeSets.GetWorkingStateAsync(set, input.EntityType, key, cancellationToken);
                 var reference = definition.ToRef(document!);
                 if (reference.Name.Contains(input.Query, StringComparison.OrdinalIgnoreCase))
                 {
@@ -169,14 +169,14 @@ public sealed record GetEntityInput(
     [property: Description("Entity key.")] Guid Key);
 
 [Ability("entity.get", "Get entity", Kind = AbilityKind.Read,
-    Description = "Returns an entity's fields and slots. Inside a draft set this includes the set's edits.")]
-public sealed class GetEntityAbility(EntityDefinitionRegistry definitions, DraftSetService draftSets)
+    Description = "Returns an entity's fields and slots. Inside a change set this includes the set's edits.")]
+public sealed class GetEntityAbility(EntityDefinitionRegistry definitions, ChangeSetService changeSets)
     : AbilityBase<GetEntityInput, JsonObject>
 {
     protected override async Task<AbilityResult> ExecuteAsync(GetEntityInput input, AbilityContext context, CancellationToken cancellationToken)
     {
-        var document = context.DraftSetId is { } setId
-            ? await draftSets.GetWorkingStateAsync(draftSets.Get(setId), input.EntityType, input.Key, cancellationToken)
+        var document = context.ChangeSetId is { } setId
+            ? await changeSets.GetWorkingStateAsync(changeSets.Get(setId), input.EntityType, input.Key, cancellationToken)
             : await definitions.Get(input.EntityType).LoadAsync(input.Key, cancellationToken);
 
         return document is null
@@ -194,7 +194,7 @@ public sealed record CreateEntityInput(
     [property: Description("Segment to edit. Omit for the default segment.")] string? Segment = null) : IEntityEditInput;
 
 [Ability("entity.create", "Create entity", Kind = AbilityKind.Write, Reversible = true,
-    Description = "Creates an entity in the active draft set. Nothing goes live until the set is applied. " +
+    Description = "Creates an entity in the active change set. Nothing goes live until the set is applied. " +
                   "Returns the new key. Add slot items afterwards with entity.addItem.")]
 public sealed class CreateEntityAbility : EntityEditAbilityBase<CreateEntityInput>
 {
@@ -220,8 +220,8 @@ public sealed record SetEntityValueInput(
     [property: Description("Segment to edit. Omit for the default segment.")] string? Segment = null) : IEntityEditInput;
 
 [Ability("entity.setValue", "Set entity value", Kind = AbilityKind.Write, Reversible = true,
-    Description = "Sets one field on the entity, on an item, or on an item's @settings or @layout, in the active draft set. " +
-                  "Give a culture for values that vary by culture. Problem paths from draftSet.validate have the same form: elementPath plus field.")]
+    Description = "Sets one field on the entity, on an item, or on an item's @settings or @layout, in the active change set. " +
+                  "Give a culture for values that vary by culture. Problem paths from changeSet.validate have the same form: elementPath plus field.")]
 public sealed class SetEntityValueAbility : EntityEditAbilityBase<SetEntityValueInput>
 {
     protected override object? Apply(EntityDocument document, SetEntityValueInput input, EntityEditContext context)
@@ -245,7 +245,7 @@ public sealed record AddEntityItemInput(
     [property: Description("Segment to edit. Omit for the default segment.")] string? Segment = null) : IEntityEditInput;
 
 [Ability("entity.addItem", "Add entity item", Kind = AbilityKind.Write, Reversible = true,
-    Description = "Adds a typed item to a slot, in the active draft set. Returns the item's path; use it as the " +
+    Description = "Adds a typed item to a slot, in the active change set. Returns the item's path; use it as the " +
                   "start of a slot path to fill nested slots, or as elementPath to set its fields.")]
 public sealed class AddEntityItemAbility : EntityEditAbilityBase<AddEntityItemInput>
 {
@@ -269,7 +269,7 @@ public sealed record RemoveEntityItemInput(
     [property: Description("Segment to edit. Omit for the default segment.")] string? Segment = null) : IEntityEditInput;
 
 [Ability("entity.removeItem", "Remove entity item", Kind = AbilityKind.Write, Reversible = true,
-    Description = "Removes an item from a slot, in the active draft set.")]
+    Description = "Removes an item from a slot, in the active change set.")]
 public sealed class RemoveEntityItemAbility : EntityEditAbilityBase<RemoveEntityItemInput>
 {
     protected override object? Apply(EntityDocument document, RemoveEntityItemInput input, EntityEditContext context)
@@ -289,7 +289,7 @@ public sealed record MoveEntityItemInput(
     [property: Description("Segment to edit. Omit for the default segment.")] string? Segment = null) : IEntityEditInput;
 
 [Ability("entity.moveItem", "Move entity item", Kind = AbilityKind.Write, Reversible = true,
-    Description = "Moves an item within its slot, in the active draft set.")]
+    Description = "Moves an item within its slot, in the active change set.")]
 public sealed class MoveEntityItemAbility : EntityEditAbilityBase<MoveEntityItemInput>
 {
     protected override object? Apply(EntityDocument document, MoveEntityItemInput input, EntityEditContext context)

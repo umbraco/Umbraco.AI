@@ -5,18 +5,18 @@ using Umbraco.Abilities.Samples;
 
 namespace Umbraco.Abilities.Tests;
 
-/// <summary>Draft sets that span products: a page, a discount, a workflow and recorded operations, applied as one.</summary>
-public class DraftSetTests
+/// <summary>Change sets that span products: a page, a discount, a workflow and recorded operations, applied as one.</summary>
+public class ChangeSetTests
 {
     private readonly SampleSite _site = SampleSite.Create();
     private readonly ScriptedAgent _agent;
 
-    public DraftSetTests() => _agent = new ScriptedAgent(_site);
+    public ChangeSetTests() => _agent = new ScriptedAgent(_site);
 
     [Fact]
     public async Task A_campaign_spanning_content_commerce_and_operations_is_applied_together()
     {
-        await _agent.StartDraftSetAsync("Black Friday");
+        await _agent.StartChangeSetAsync("Black Friday");
         var page = Guid.NewGuid();
         var discount = Guid.NewGuid();
 
@@ -50,7 +50,7 @@ public class DraftSetTests
         var recorded = await _agent.OkAsync("commerce_activateDiscount", $$"""{ "discount": "{{discount}}" }""");
         Assert.True(recorded.GetProperty("runsWhenApplied").GetBoolean());
 
-        var summary = await _agent.OkAsync("draftSet_summarize", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
+        var summary = await _agent.OkAsync("changeSet_summarize", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
         Assert.Equal(2, summary.GetProperty("entities").GetArrayLength());
         Assert.Equal("commerce.activateDiscount", summary.GetProperty("operationsOnApply")[0].GetString());
         Assert.Empty(_site.ContentDatabase.All("cms.page"));
@@ -58,7 +58,7 @@ public class DraftSetTests
         // The plan says how it will apply: each product in its own transaction, the switch-on last.
         Assert.Equal(["Content", "Commerce", "commerce.activateDiscount"], summary.GetProperty("applyPlan").EnumerateArray().Select(s => s.GetProperty("name").GetString()));
 
-        await _agent.OkAsync("draftSet_apply", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
+        await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
 
         var livePage = (await _site.Pages.LoadAsync(page))!;
         var liveGrid = (JsonObject)Element.Slot(livePage.Root, "blocks")[1]!;
@@ -72,12 +72,12 @@ public class DraftSetTests
     [Fact]
     public async Task A_failed_step_leaves_earlier_steps_applied_and_applying_again_resumes()
     {
-        await _agent.StartDraftSetAsync("Launch");
+        await _agent.StartChangeSetAsync("Launch");
         var page = (await _agent.OkAsync("entity_create", """{ "entityType": "cms.page", "culture": "en-US", "fields": { "title": "Launch" } }""")).GetProperty("key").GetGuid();
         await _agent.OkAsync("email_send", """{ "to": "list@example.com", "subject": "We launched" }""");
 
         _site.Outbox.ServerDown = true;
-        var failure = await _agent.FailAsync("draftSet_apply", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
+        var failure = await _agent.FailAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
         Assert.Equal("Runtime", failure.GetProperty("category").GetString());
         Assert.Contains("Partly applied", failure.GetProperty("message").GetString());
         Assert.Equal(
@@ -93,7 +93,7 @@ public class DraftSetTests
 
         // Applying again resumes at the failed step, and does not save the page twice.
         _site.Outbox.ServerDown = false;
-        await _agent.OkAsync("draftSet_apply", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
+        await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
         Assert.Single(_site.Outbox.Sent);
         Assert.Equal(1, (await _site.Pages.LoadAsync(page))!.LiveVersion);
     }
@@ -101,12 +101,12 @@ public class DraftSetTests
     [Fact]
     public async Task A_product_whose_save_fails_rolls_back_all_of_its_changes_and_can_be_fixed_and_resumed()
     {
-        await _agent.StartDraftSetAsync("Two discounts");
+        await _agent.StartChangeSetAsync("Two discounts");
         var page = (await _agent.OkAsync("entity_create", """{ "entityType": "cms.page", "culture": "en-US", "fields": { "title": "Deals" } }""")).GetProperty("key").GetGuid();
         var first = await CreateDiscountAsync("First", "DEAL");
         var second = await CreateDiscountAsync("Second", "DEAL"); // passes validation (only live codes are checked), fails on save
 
-        var failure = await _agent.FailAsync("draftSet_apply", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
+        var failure = await _agent.FailAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
         Assert.Contains("Commerce failed and was rolled back", failure.GetProperty("message").GetString());
 
         // Content applied; Commerce rolled back as a whole, including the first discount, which saved fine.
@@ -118,7 +118,7 @@ public class DraftSetTests
         await _agent.OkAsync("entity_setValue", $$"""
             { "entityType": "commerce.discount", "key": "{{second}}", "elementPath": "", "field": "code", "value": "DEAL2" }
             """);
-        await _agent.OkAsync("draftSet_apply", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
+        await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
         Assert.NotNull(await _site.Discounts.LoadAsync(first));
         Assert.NotNull(await _site.Discounts.LoadAsync(second));
     }
@@ -136,7 +136,7 @@ public class DraftSetTests
     {
         var discount = await CreateLiveDiscountAsync("Original");
 
-        await _agent.StartDraftSetAsync("Rename");
+        await _agent.StartChangeSetAsync("Rename");
         await _agent.OkAsync("entity_setValue", $$"""
             { "entityType": "commerce.discount", "key": "{{discount}}", "elementPath": "", "field": "name", "value": "Renamed in set" }
             """);
@@ -146,7 +146,7 @@ public class DraftSetTests
         Element.Fields(meanwhile.Root)["name"] = "Changed live";
         await _site.Discounts.SaveAsync(meanwhile);
 
-        var failure = await _agent.FailAsync("draftSet_apply", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
+        var failure = await _agent.FailAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
         Assert.Equal($"commerce.discount:{discount}", failure.GetProperty("problems")[0].GetProperty("path").GetString());
         Assert.Equal("Changed live", _site.Discounts.ToRef((await _site.Discounts.LoadAsync(discount))!).Name);
     }
@@ -156,7 +156,7 @@ public class DraftSetTests
     {
         var discount = await CreateLiveDiscountAsync("Live name");
 
-        var set = await _agent.StartDraftSetAsync("Rename");
+        var set = await _agent.StartChangeSetAsync("Rename");
         await _agent.OkAsync("entity_setValue", $$"""
             { "entityType": "commerce.discount", "key": "{{discount}}", "elementPath": "", "field": "name", "value": "Draft name" }
             """);
@@ -164,18 +164,18 @@ public class DraftSetTests
         Assert.Equal("Draft name", inSet.GetProperty("fields").GetProperty("name").GetString());
         Assert.Single((await _agent.OkAsync("entity_find", """{ "entityType": "commerce.discount", "query": "Draft" }""")).EnumerateArray());
 
-        _agent.DraftSetId = null;
+        _agent.ChangeSetId = null;
         var live = await _agent.OkAsync("entity_get", $$"""{ "entityType": "commerce.discount", "key": "{{discount}}" }""");
         Assert.Equal("Live name", live.GetProperty("fields").GetProperty("name").GetString());
 
-        await _agent.OkAsync("draftSet_discard", $$"""{ "draftSetId": "{{set}}" }""");
-        await _agent.FailAsync("draftSet_validate", $$"""{ "draftSetId": "{{set}}" }""");
+        await _agent.OkAsync("changeSet_discard", $$"""{ "changeSetId": "{{set}}" }""");
+        await _agent.FailAsync("changeSet_validate", $$"""{ "changeSetId": "{{set}}" }""");
     }
 
     [Fact]
     public async Task Replaying_a_set_gives_the_same_entity_every_time()
     {
-        await _agent.StartDraftSetAsync("Replay");
+        await _agent.StartChangeSetAsync("Replay");
         var page = (await _agent.OkAsync("entity_create", """{ "entityType": "cms.page", "culture": "en-US", "fields": { "title": "Replay" } }""")).GetProperty("key").GetGuid();
         var hero = await _agent.OkAsync("entity_addItem", $$"""
             { "entityType": "cms.page", "key": "{{page}}", "slotPath": "blocks", "itemType": "hero", "culture": "en-US", "fields": { "heading": "Hi" } }
@@ -187,24 +187,24 @@ public class DraftSetTests
             { "entityType": "cms.page", "key": "{{page}}", "slotPath": "blocks", "itemKey": "{{hero.GetProperty("itemKey").GetGuid()}}", "position": 0 }
             """);
 
-        var set = _site.DraftSets.Get(_agent.DraftSetId!.Value);
-        var first = (await _site.DraftSets.GetWorkingStateAsync(set, "cms.page", page))!.ToJson().ToJsonString();
-        var second = (await _site.DraftSets.GetWorkingStateAsync(set, "cms.page", page))!.ToJson().ToJsonString();
+        var set = _site.ChangeSets.Get(_agent.ChangeSetId!.Value);
+        var first = (await _site.ChangeSets.GetWorkingStateAsync(set, "cms.page", page))!.ToJson().ToJsonString();
+        var second = (await _site.ChangeSets.GetWorkingStateAsync(set, "cms.page", page))!.ToJson().ToJsonString();
         Assert.Equal(first, second);
 
         // The key the agent was given is the key that is stored, so later calls can refer to it.
-        var blocks = Element.Slot((await _site.DraftSets.GetWorkingStateAsync(set, "cms.page", page))!.Root, "blocks");
+        var blocks = Element.Slot((await _site.ChangeSets.GetWorkingStateAsync(set, "cms.page", page))!.Root, "blocks");
         Assert.Equal(hero.GetProperty("itemKey").GetGuid(), Element.ItemKey(blocks[0]!));
     }
 
     private async Task<Guid> CreateLiveDiscountAsync(string name)
     {
-        var set = await _agent.StartDraftSetAsync("Seed");
+        var set = await _agent.StartChangeSetAsync("Seed");
         var discount = (await _agent.OkAsync("entity_create", $$"""{ "entityType": "commerce.discount", "fields": { "name": "{{name}}" } }""")).GetProperty("key").GetGuid();
         await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "commerce.discount", "key": "{{discount}}", "slotPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 50 } }""");
         await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "commerce.discount", "key": "{{discount}}", "slotPath": "rewards", "itemType": "freeShipping" }""");
-        await _agent.OkAsync("draftSet_apply", $$"""{ "draftSetId": "{{set}}" }""");
-        _agent.DraftSetId = null;
+        await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{set}}" }""");
+        _agent.ChangeSetId = null;
         return discount;
     }
 }

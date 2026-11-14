@@ -1,6 +1,6 @@
 using System.Text.Json.Nodes;
 
-using Umbraco.Abilities.DraftSets;
+using Umbraco.Abilities.ChangeSets;
 using Umbraco.Abilities.Entities;
 
 namespace Umbraco.Abilities.Samples;

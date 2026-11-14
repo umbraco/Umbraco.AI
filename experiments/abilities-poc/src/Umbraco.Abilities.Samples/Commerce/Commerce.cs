@@ -112,7 +112,7 @@ public sealed class DiscountDefinition(InMemoryDatabase database)
 public sealed record ActivateDiscountInput(
     [property: Description("The discount to switch on."), EntityKey("commerce.discount")] Guid Discount);
 
-/// <summary>A plain operation ability. Inside a draft set it is recorded and runs when the set is applied.</summary>
+/// <summary>A plain operation ability. Inside a change set it is recorded and runs when the set is applied.</summary>
 [Ability("commerce.activateDiscount", "Activate discount", Kind = AbilityKind.Write,
     Description = "Switches a discount on so customers get it.")]
 public sealed class ActivateDiscountAbility(DiscountDefinition discounts) : AbilityBase<ActivateDiscountInput, EntityRef>

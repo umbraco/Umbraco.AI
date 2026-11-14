@@ -121,7 +121,7 @@ public sealed class CmsPageDefinition(InMemoryDatabase database)
     }
 }
 
-/// <summary>Media items, so pickers and references can point at media created in the same draft set.</summary>
+/// <summary>Media items, so pickers and references can point at media created in the same change set.</summary>
 public sealed class CmsMediaDefinition(InMemoryDatabase database)
     : InMemoryEntityDefinition(database, "cms.media", "name", "/umbraco/section/media/workspace/media/edit")
 {

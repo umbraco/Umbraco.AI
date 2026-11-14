@@ -7,7 +7,7 @@ using Microsoft.Extensions.Configuration;
 using NUnit.Framework;
 
 using Umbraco.Abilities.AI;
-using Umbraco.Abilities.DraftSets;
+using Umbraco.Abilities.ChangeSets;
 using Umbraco.Abilities.Entities;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.DependencyInjection;
@@ -31,7 +31,7 @@ namespace Umbraco.Abilities.Cms.Tests;
 /// <summary>
 /// The CMS document definition against a real Umbraco (SQLite): culture-variant documents with a Block List
 /// (blocks with culture-variant values and a settings element) and a Block Grid (placement and areas), built
-/// through the AI tools in a draft set, validated by Umbraco, and saved through IContentEditingService.
+/// through the AI tools in a change set, validated by Umbraco, and saved through IContentEditingService.
 /// </summary>
 [TestFixture]
 [UmbracoTest(Database = UmbracoTestOptions.Database.NewSchemaPerTest, WithApplication = true)]
@@ -40,7 +40,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
     private IContentType _page = null!;
     private Agent _agent = null!;
     private CmsDocumentDefinition _documents = null!;
-    private DraftSetService _draftSets = null!;
+    private ChangeSetService _changeSets = null!;
 
     private IContentTypeService ContentTypeService => GetRequiredService<IContentTypeService>();
 
@@ -116,12 +116,12 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         _page.AllowedAsRoot = true;
         await ContentTypeService.CreateAsync(_page, Constants.Security.SuperUserKey);
 
-        // The framework: generic abilities, the draft set service applying inside an Umbraco scope, and the
+        // The framework: generic abilities, the change set service applying inside an Umbraco scope, and the
         // CMS document definition.
         var abilities = new AbilityRegistry();
         var definitions = new EntityDefinitionRegistry();
         var itemTypes = new ItemTypeRegistry();
-        _draftSets = new DraftSetService(new InMemoryDraftSetStore(), abilities, definitions, itemTypes);
+        _changeSets = new ChangeSetService(new InMemoryChangeSetStore(), abilities, definitions, itemTypes);
         _documents = new CmsDocumentDefinition(
             ContentTypeService,
             GetRequiredService<IDataTypeService>(),
@@ -137,21 +137,21 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
 
         abilities
             .Add(new GetEntitySchemaAbility(definitions, itemTypes))
-            .Add(new FindEntityAbility(definitions, _draftSets))
-            .Add(new GetEntityAbility(definitions, _draftSets))
+            .Add(new FindEntityAbility(definitions, _changeSets))
+            .Add(new GetEntityAbility(definitions, _changeSets))
             .Add(new CreateEntityAbility())
             .Add(new SetEntityValueAbility())
             .Add(new AddEntityItemAbility())
             .Add(new RemoveEntityItemAbility())
             .Add(new MoveEntityItemAbility())
-            .Add(new CreateDraftSetAbility(_draftSets))
-            .Add(new ValidateDraftSetAbility(_draftSets))
-            .Add(new SummarizeDraftSetAbility(_draftSets))
-            .Add(new ApplyDraftSetAbility(_draftSets))
-            .Add(new DiscardDraftSetAbility(_draftSets))
+            .Add(new CreateChangeSetAbility(_changeSets))
+            .Add(new ValidateChangeSetAbility(_changeSets))
+            .Add(new SummarizeChangeSetAbility(_changeSets))
+            .Add(new ApplyChangeSetAbility(_changeSets))
+            .Add(new DiscardChangeSetAbility(_changeSets))
             .Add(new FailingOperationAbility());
 
-        _agent = new Agent(abilities, new AbilityInvoker(abilities, _draftSets));
+        _agent = new Agent(abilities, new AbilityInvoker(abilities, _changeSets));
     }
 
     [Test]
@@ -178,14 +178,14 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
     [Test]
     public async Task A_page_built_from_text_is_saved_by_Umbraco_with_its_blocks_settings_grid_and_cultures()
     {
-        await _agent.StartDraftSetAsync("Summer landing page");
+        await _agent.StartChangeSetAsync("Summer landing page");
         var page = await BuildSummerPageAsync();
 
-        var validation = await _agent.OkAsync("draftSet_validate", SetJson());
+        var validation = await _agent.OkAsync("changeSet_validate", SetJson());
         Assert.That(validation.GetProperty("valid").GetBoolean(), Is.True, validation.ToString());
         Assert.That(ContentService.GetById(page.Key), Is.Null, "nothing is saved before apply");
 
-        await _agent.OkAsync("draftSet_apply", SetJson());
+        await _agent.OkAsync("changeSet_apply", SetJson());
 
         // What Umbraco stored.
         var content = ContentService.GetById(page.Key)!;
@@ -222,7 +222,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
     [Test]
     public async Task Umbraco_validation_problems_come_back_on_the_entity_paths_and_cultures()
     {
-        await _agent.StartDraftSetAsync("Missing Danish");
+        await _agent.StartChangeSetAsync("Missing Danish");
         var page = await CreatePageAsync();
         await SetAsync(page, "", "name", "\"Sommer\"", "da-DK");
         await SetAsync(page, "", "subtitle", "\"Sun and sand\"", "en-US");
@@ -235,13 +235,13 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         await SetAsync(page, $"{empty}/@settings", "theme", "\"light\"");
 
         // Ask Umbraco directly, skipping the generic structure check, to see its own errors mapped back.
-        var working = (await _draftSets.GetWorkingStateAsync(_draftSets.Get(_agent.DraftSetId!.Value), "cms.document", page))!;
+        var working = (await _changeSets.GetWorkingStateAsync(_changeSets.Get(_agent.ChangeSetId!.Value), "cms.document", page))!;
         var problems = (await _documents.ValidateAsync(working)).Select(p => $"{p.Path}|{p.Culture}").ToList();
 
         Assert.That(problems, Is.EquivalentTo(new[] { "subtitle|da-DK", $"{empty}/heading|en-US", $"{empty}/heading|da-DK" }), string.Join(", ", problems));
 
         // The generic structure check agrees with Umbraco, including about the English-only hero.
-        var generic = await _agent.OkAsync("draftSet_validate", SetJson());
+        var generic = await _agent.OkAsync("changeSet_validate", SetJson());
         Assert.That(generic.GetProperty("entities")[0].GetProperty("problems").EnumerateArray().Select(p => $"{p.GetProperty("path").GetString()}|{p.GetProperty("culture").GetString()}"),
             Is.EquivalentTo(new[] { "subtitle|da-DK", $"{empty}/heading|en-US", $"{empty}/heading|da-DK" }));
     }
@@ -249,14 +249,14 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
     [Test]
     public async Task Editing_an_existing_page_keeps_everything_the_edit_did_not_touch()
     {
-        await _agent.StartDraftSetAsync("Create");
+        await _agent.StartChangeSetAsync("Create");
         var page = await BuildSummerPageAsync();
-        await _agent.OkAsync("draftSet_apply", SetJson());
+        await _agent.OkAsync("changeSet_apply", SetJson());
 
-        await _agent.StartDraftSetAsync("Edit");
+        await _agent.StartChangeSetAsync("Edit");
         await SetAsync(page.Key, $"blocks/{page.Hero}", "heading", "\"Big summer sale\"", "en-US");
         await AddItemAsync(page.Key, "blocks", "textBlock", """{ "text": "Ends Sunday" }""", "en-US");
-        await _agent.OkAsync("draftSet_apply", SetJson());
+        await _agent.OkAsync("changeSet_apply", SetJson());
 
         var content = ContentService.GetById(page.Key)!;
         var blocks = JsonNode.Parse(content.GetValue<string>("blocks")!)!;
@@ -274,12 +274,12 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
     [Test]
     public async Task A_failed_save_rolls_back_every_document_in_the_Umbraco_scope()
     {
-        await _agent.StartDraftSetAsync("Two pages");
+        await _agent.StartChangeSetAsync("Two pages");
         var page = await BuildSummerPageAsync();
         var refused = (await _agent.OkAsync("entity_create", """{ "entityType": "cms.document", "subtype": "landingPage", "culture": "en-US", "fields": { "name": "Refused", "subtitle": "No" } }"""))
             .GetProperty("key").GetGuid();
 
-        var failure = await _agent.FailAsync("draftSet_apply", SetJson());
+        var failure = await _agent.FailAsync("changeSet_apply", SetJson());
         Assert.That(failure.GetProperty("message").GetString(), Does.Contain("Nothing was applied").And.Contain("Content failed and was rolled back"));
         Assert.That(ContentService.GetById(page.Key), Is.Null, "the page saved before the refused one was rolled back");
         Assert.That(ContentService.GetById(refused), Is.Null);
@@ -288,29 +288,29 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
     [Test]
     public async Task A_failed_operation_after_the_content_leaves_the_content_applied_and_the_set_resumable()
     {
-        await _agent.StartDraftSetAsync("Content, then an operation");
+        await _agent.StartChangeSetAsync("Content, then an operation");
         var page = await BuildSummerPageAsync();
         await _agent.OkAsync("test_fail", "{}");
 
         FailingOperationAbility.Fail = true;
-        var failure = await _agent.FailAsync("draftSet_apply", SetJson());
+        var failure = await _agent.FailAsync("changeSet_apply", SetJson());
         Assert.That(failure.GetProperty("message").GetString(), Does.Contain("Partly applied"));
         Assert.That(ContentService.GetById(page.Key), Is.Not.Null, "Content's step committed before the operation failed");
         var version = ContentService.GetById(page.Key)!.VersionId;
 
         FailingOperationAbility.Fail = false;
-        await _agent.OkAsync("draftSet_apply", SetJson());
+        await _agent.OkAsync("changeSet_apply", SetJson());
         Assert.That(ContentService.GetById(page.Key)!.VersionId, Is.EqualTo(version), "resuming does not save the page again");
     }
 
     [Test]
     public async Task Applying_is_refused_when_the_page_changed_in_Umbraco_after_it_was_edited_in_the_set()
     {
-        await _agent.StartDraftSetAsync("Create");
+        await _agent.StartChangeSetAsync("Create");
         var page = await BuildSummerPageAsync();
-        await _agent.OkAsync("draftSet_apply", SetJson());
+        await _agent.OkAsync("changeSet_apply", SetJson());
 
-        await _agent.StartDraftSetAsync("Edit");
+        await _agent.StartChangeSetAsync("Edit");
         await SetAsync(page.Key, "", "subtitle", "\"Sun and sand\"", "en-US");
 
         // Someone saves the page in the backoffice meanwhile.
@@ -319,7 +319,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         content.SetValue("subtitle", "Changed in the backoffice", "en-US");
         ContentService.Save(content);
 
-        var failure = await _agent.FailAsync("draftSet_apply", SetJson());
+        var failure = await _agent.FailAsync("changeSet_apply", SetJson());
         Assert.That(failure.GetProperty("message").GetString(), Does.Contain("changed underneath"));
         Assert.That(ContentService.GetById(page.Key)!.GetValue<string>("subtitle", "en-US"), Is.EqualTo("Changed in the backoffice"));
     }
@@ -358,7 +358,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         => (await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "cms.document", "key": "{{page}}", "slotPath": "{{slotPath}}", "itemType": "{{itemType}}", "fields": {{fieldsJson}}{{Culture(culture)}} }"""))
             .GetProperty("path").GetString()!;
 
-    private string SetJson() => $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""";
+    private string SetJson() => $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""";
 
     private static string Culture(string? culture) => culture is null ? string.Empty : $", \"culture\": \"{culture}\"";
 
@@ -423,14 +423,14 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         private readonly Dictionary<string, AIFunction> _tools;
 
         public Agent(AbilityRegistry abilities, AbilityInvoker invoker)
-            => _tools = AbilityAITools.Create(abilities, invoker, () => new AbilityContext("admin", "ai", DraftSetId)).ToDictionary(t => t.Name);
+            => _tools = AbilityAITools.Create(abilities, invoker, () => new AbilityContext("admin", "ai", ChangeSetId)).ToDictionary(t => t.Name);
 
-        public Guid? DraftSetId { get; private set; }
+        public Guid? ChangeSetId { get; private set; }
 
-        public async Task StartDraftSetAsync(string name)
+        public async Task StartChangeSetAsync(string name)
         {
-            DraftSetId = null;
-            DraftSetId = (await OkAsync("draftSet_create", $$"""{ "name": "{{name}}" }""")).GetProperty("draftSetId").GetGuid();
+            ChangeSetId = null;
+            ChangeSetId = (await OkAsync("changeSet_create", $$"""{ "name": "{{name}}" }""")).GetProperty("changeSetId").GetGuid();
         }
 
         public async Task<JsonElement> OkAsync(string tool, string json)

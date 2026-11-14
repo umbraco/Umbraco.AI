@@ -29,7 +29,7 @@ public class WorkflowTests
     public async Task A_workflow_from_text_links_its_steps_and_can_refer_to_a_discount_in_the_same_set()
     {
         // "When someone signs up for the newsletter, email them, then switch on the welcome discount."
-        await _agent.StartDraftSetAsync("Welcome flow");
+        await _agent.StartChangeSetAsync("Welcome flow");
 
         var discount = (await _agent.OkAsync("entity_create", """{ "entityType": "commerce.discount", "fields": { "name": "Welcome 10%" } }""")).GetProperty("key").GetGuid();
         await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "commerce.discount", "key": "{{discount}}", "slotPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 0 } }""");
@@ -48,7 +48,7 @@ public class WorkflowTests
             """);
 
         // The edge points at a step that does not exist yet.
-        var validation = await _agent.OkAsync("draftSet_validate", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
+        var validation = await _agent.OkAsync("changeSet_validate", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
         Assert.Equal([$"steps/{emailStep}/next"], JsonAssert.ProblemPaths(validation));
 
         await _agent.OkAsync("entity_addItem", $$"""
@@ -56,10 +56,10 @@ public class WorkflowTests
               "fields": { "discount": "{{discount}}" } }
             """);
 
-        validation = await _agent.OkAsync("draftSet_validate", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
+        validation = await _agent.OkAsync("changeSet_validate", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
         Assert.True(validation.GetProperty("valid").GetBoolean(), validation.ToString());
 
-        await _agent.OkAsync("draftSet_apply", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
+        await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
         var live = (await _site.Workflows.LoadAsync(workflow))!;
         Assert.Equal(["email.send", "commerce.activateDiscount"], Element.Slot(live.Root, "steps").Select(s => Element.ItemType(s!)));
     }
@@ -67,14 +67,14 @@ public class WorkflowTests
     [Fact]
     public async Task A_step_referring_to_a_missing_discount_is_a_problem()
     {
-        await _agent.StartDraftSetAsync("Broken flow");
+        await _agent.StartChangeSetAsync("Broken flow");
         var workflow = (await _agent.OkAsync("entity_create", """{ "entityType": "automate.workflow", "fields": { "name": "Broken" } }""")).GetProperty("key").GetGuid();
         await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "automate.workflow", "key": "{{workflow}}", "slotPath": "trigger", "itemType": "schedule", "fields": { "cron": "0 9 * * 1" } }""");
         var step = await _agent.OkAsync("entity_addItem", $$"""
             { "entityType": "automate.workflow", "key": "{{workflow}}", "slotPath": "steps", "itemType": "commerce.activateDiscount", "fields": { "discount": "{{Guid.NewGuid()}}" } }
             """);
 
-        var validation = await _agent.OkAsync("draftSet_validate", $$"""{ "draftSetId": "{{_agent.DraftSetId}}" }""");
+        var validation = await _agent.OkAsync("changeSet_validate", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
         Assert.Equal([$"{step.GetProperty("path").GetString()}/discount"], JsonAssert.ProblemPaths(validation));
     }
 }

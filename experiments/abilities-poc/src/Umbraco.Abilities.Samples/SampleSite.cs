@@ -1,4 +1,4 @@
-using Umbraco.Abilities.DraftSets;
+using Umbraco.Abilities.ChangeSets;
 using Umbraco.Abilities.Entities;
 using Umbraco.Abilities.Samples.Acme;
 using Umbraco.Abilities.Samples.Automate;
@@ -16,24 +16,24 @@ public sealed class SampleSite
 {
     private SampleSite()
     {
-        DraftSets = new DraftSetService(new InMemoryDraftSetStore(), Abilities, Definitions, ItemTypes);
-        Invoker = new AbilityInvoker(Abilities, DraftSets);
+        ChangeSets = new ChangeSetService(new InMemoryChangeSetStore(), Abilities, Definitions, ItemTypes);
+        Invoker = new AbilityInvoker(Abilities, ChangeSets);
 
-        // Framework: the generic entity and draft set abilities.
+        // Framework: the generic entity and change set abilities.
         Abilities
             .Add(new GetEntitySchemaAbility(Definitions, ItemTypes))
-            .Add(new FindEntityAbility(Definitions, DraftSets))
-            .Add(new GetEntityAbility(Definitions, DraftSets))
+            .Add(new FindEntityAbility(Definitions, ChangeSets))
+            .Add(new GetEntityAbility(Definitions, ChangeSets))
             .Add(new CreateEntityAbility())
             .Add(new SetEntityValueAbility())
             .Add(new AddEntityItemAbility())
             .Add(new RemoveEntityItemAbility())
             .Add(new MoveEntityItemAbility())
-            .Add(new CreateDraftSetAbility(DraftSets))
-            .Add(new ValidateDraftSetAbility(DraftSets))
-            .Add(new SummarizeDraftSetAbility(DraftSets))
-            .Add(new ApplyDraftSetAbility(DraftSets))
-            .Add(new DiscardDraftSetAbility(DraftSets));
+            .Add(new CreateChangeSetAbility(ChangeSets))
+            .Add(new ValidateChangeSetAbility(ChangeSets))
+            .Add(new SummarizeChangeSetAbility(ChangeSets))
+            .Add(new ApplyChangeSetAbility(ChangeSets))
+            .Add(new DiscardChangeSetAbility(ChangeSets));
 
         // CMS content.
         Pages = new CmsPageDefinition(ContentDatabase);
@@ -77,7 +77,7 @@ public sealed class SampleSite
 
     public ItemTypeRegistry ItemTypes { get; } = new();
 
-    public DraftSetService DraftSets { get; }
+    public ChangeSetService ChangeSets { get; }
 
     public AbilityInvoker Invoker { get; }
 

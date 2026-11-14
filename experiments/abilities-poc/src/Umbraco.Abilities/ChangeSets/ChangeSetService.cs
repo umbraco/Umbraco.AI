@@ -3,7 +3,7 @@ using System.Text.Json.Nodes;
 
 using Umbraco.Abilities.Entities;
 
-namespace Umbraco.Abilities.DraftSets;
+namespace Umbraco.Abilities.ChangeSets;
 
 /// <summary>
 /// Records Write ability calls instead of running them, works out an entity's state inside a set, and applies
@@ -16,21 +16,21 @@ namespace Umbraco.Abilities.DraftSets;
 /// failed step.
 /// </para>
 /// </summary>
-public sealed class DraftSetService(
-    IDraftSetStore store,
+public sealed class ChangeSetService(
+    IChangeSetStore store,
     AbilityRegistry abilities,
     EntityDefinitionRegistry definitions,
     ItemTypeRegistry itemTypes)
 {
-    public DraftSet Create(string name)
+    public ChangeSet Create(string name)
     {
-        var set = new DraftSet { Name = name };
+        var set = new ChangeSet { Name = name };
         store.Save(set);
         return set;
     }
 
-    public DraftSet Get(Guid id)
-        => store.Get(id) ?? throw new AbilityInputException($"No draft set {id}.", [new Problem("draftSetId", "Not found.")]);
+    public ChangeSet Get(Guid id)
+        => store.Get(id) ?? throw new AbilityInputException($"No change set {id}.", [new Problem("changeSetId", "Not found.")]);
 
     public void Discard(Guid id) => store.Remove(Get(id).Id);
 
@@ -54,7 +54,7 @@ public sealed class DraftSetService(
             if (set.AppliedSteps.Contains(definition.UnitOfWork.Name))
             {
                 throw new AbilityInputException(
-                    $"{definition.UnitOfWork.Name} changes in this set are already applied. Start a new draft set to change them again.",
+                    $"{definition.UnitOfWork.Name} changes in this set are already applied. Start a new change set to change them again.",
                     [new Problem("entityType", "Already applied.")]);
             }
 
@@ -105,7 +105,7 @@ public sealed class DraftSetService(
     }
 
     /// <summary>The entity as it would be if the set were applied now, or null if it exists neither live nor in the set.</summary>
-    public async Task<EntityDocument?> GetWorkingStateAsync(DraftSet set, string entityType, Guid key, CancellationToken cancellationToken = default)
+    public async Task<EntityDocument?> GetWorkingStateAsync(ChangeSet set, string entityType, Guid key, CancellationToken cancellationToken = default)
     {
         var definition = definitions.Get(entityType);
         var calls = set.Calls.Where(c => c.EntityType == entityType && c.EntityKey == key).ToList();
@@ -154,20 +154,20 @@ public sealed class DraftSetService(
         return result;
     }
 
-    public async Task<DraftSetSummary> SummarizeAsync(Guid setId, CancellationToken cancellationToken = default)
+    public async Task<ChangeSetSummary> SummarizeAsync(Guid setId, CancellationToken cancellationToken = default)
     {
         var set = Get(setId);
-        var changes = new List<DraftSetChange>();
+        var changes = new List<ChangeSetChange>();
         foreach (var (entityType, key) in TouchedEntities(set))
         {
             var document = (await GetWorkingStateAsync(set, entityType, key, cancellationToken))!;
             var calls = set.Calls.Where(c => c.EntityType == entityType && c.EntityKey == key).ToList();
-            changes.Add(new DraftSetChange(definitions.Get(entityType).ToRef(document), calls[0].Creates ? "created" : "updated", calls.Count));
+            changes.Add(new ChangeSetChange(definitions.Get(entityType).ToRef(document), calls[0].Creates ? "created" : "updated", calls.Count));
         }
 
         var operations = set.Calls.Where(c => c.EntityType is null).Select(c => c.AbilityId).ToList();
         var plan = Plan(set).Select(s => new ApplyStep(s.Name, s.Description, set.AppliedSteps.Contains(s.Key))).ToList();
-        return new DraftSetSummary(set.Id, set.Name, changes, operations, plan);
+        return new ChangeSetSummary(set.Id, set.Name, changes, operations, plan);
     }
 
     /// <summary>
@@ -177,7 +177,7 @@ public sealed class DraftSetService(
     /// </summary>
     public async Task<AbilityResult> ApplyAsync(Guid setId, AbilityContext context, CancellationToken cancellationToken = default)
     {
-        DraftSet set;
+        ChangeSet set;
         try
         {
             set = Get(setId);
@@ -191,7 +191,7 @@ public sealed class DraftSetService(
         if (invalid.Count > 0)
         {
             var problems = invalid.SelectMany(e => e.Problems.Select(p => p with { Path = $"{e.Entity.EntityType}:{e.Entity.Key}/{p.Path}" })).ToList();
-            return AbilityResult.Fail(FailureCategory.Input, "The draft set has problems. Fix them and apply again.", problems);
+            return AbilityResult.Fail(FailureCategory.Input, "The change set has problems. Fix them and apply again.", problems);
         }
 
         var conflicts = new List<Problem>();
@@ -212,13 +212,13 @@ public sealed class DraftSetService(
 
         if (conflicts.Count > 0)
         {
-            return AbilityResult.Fail(FailureCategory.Runtime, "Live data changed underneath the draft set.", conflicts);
+            return AbilityResult.Fail(FailureCategory.Runtime, "Live data changed underneath the change set.", conflicts);
         }
 
         var saved = new List<EntityRef>();
         var steps = new List<Problem>();
         string? failure = null;
-        var runContext = context with { DraftSetId = null };
+        var runContext = context with { ChangeSetId = null };
 
         foreach (var step in Plan(set))
         {
@@ -252,7 +252,7 @@ public sealed class DraftSetService(
                     var result = await abilities.Find(step.Call!.AbilityId)!.InvokeAsync(step.Call.Input, runContext, cancellationToken);
                     if (!result.Success)
                     {
-                        throw new DraftSetApplyException(result.Failure!.Message);
+                        throw new ChangeSetApplyException(result.Failure!.Message);
                     }
                 }
 
@@ -286,7 +286,7 @@ public sealed class DraftSetService(
     /// The steps of applying a set: one per product transaction, in the order the set first touched them, then each
     /// recorded operation in the order it was recorded, so that switching things on comes after saving them.
     /// </summary>
-    private IReadOnlyList<PlannedStep> Plan(DraftSet set)
+    private IReadOnlyList<PlannedStep> Plan(ChangeSet set)
     {
         var steps = TouchedEntities(set)
             .GroupBy(e => definitions.Get(e.EntityType).UnitOfWork.Name)
@@ -314,22 +314,22 @@ public sealed class DraftSetService(
         RecordedCall? Call);
 
     /// <summary>Entities whose product's changes are not applied yet.</summary>
-    private IEnumerable<(string EntityType, Guid Key)> PendingEntities(DraftSet set)
+    private IEnumerable<(string EntityType, Guid Key)> PendingEntities(ChangeSet set)
         => TouchedEntities(set).Where(e => !set.AppliedSteps.Contains(definitions.Get(e.EntityType).UnitOfWork.Name));
 
-    private async Task<bool> ExistsAsync(DraftSet set, string entityType, Guid key, CancellationToken cancellationToken)
+    private async Task<bool> ExistsAsync(ChangeSet set, string entityType, Guid key, CancellationToken cancellationToken)
         => definitions.Find(entityType) is not null && await GetWorkingStateAsync(set, entityType, key, cancellationToken) is not null;
 
-    private static IEnumerable<(string EntityType, Guid Key)> TouchedEntities(DraftSet set)
+    private static IEnumerable<(string EntityType, Guid Key)> TouchedEntities(ChangeSet set)
         => set.Calls.Where(c => c.EntityType is not null).Select(c => (c.EntityType!, c.EntityKey!.Value)).Distinct();
 
-    private sealed class DraftSetApplyException(string message) : Exception(message);
+    private sealed class ChangeSetApplyException(string message) : Exception(message);
 }
 
 /// <summary>
-/// The single entry point products call. A Write ability called with an active draft set is recorded instead of run.
+/// The single entry point products call. A Write ability called with an active change set is recorded instead of run.
 /// </summary>
-public sealed class AbilityInvoker(AbilityRegistry abilities, DraftSetService draftSets)
+public sealed class AbilityInvoker(AbilityRegistry abilities, ChangeSetService changeSets)
 {
     public async Task<AbilityResult> InvokeAsync(string abilityId, JsonObject input, AbilityContext context, CancellationToken cancellationToken = default)
     {
@@ -339,11 +339,11 @@ public sealed class AbilityInvoker(AbilityRegistry abilities, DraftSetService dr
             return AbilityResult.Fail(FailureCategory.Input, $"Unknown ability '{abilityId}'.");
         }
 
-        if (context.DraftSetId is { } setId
+        if (context.ChangeSetId is { } setId
             && ability.Descriptor.Kind == AbilityKind.Write
-            && ability is not IDraftSetLifecycleAbility)
+            && ability is not IChangeSetLifecycleAbility)
         {
-            return await draftSets.RecordAsync(setId, ability, input, cancellationToken);
+            return await changeSets.RecordAsync(setId, ability, input, cancellationToken);
         }
 
         return await ability.InvokeAsync(input, context, cancellationToken);

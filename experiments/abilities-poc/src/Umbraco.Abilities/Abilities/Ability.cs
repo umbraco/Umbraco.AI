@@ -27,7 +27,7 @@ public sealed class AbilityAttribute(string id, string name) : Attribute
     public AbilityKind Kind { get; set; } = AbilityKind.Read;
 
     /// <summary>
-    /// A Write that changes no live data, or whose change can be undone (recording into a draft set,
+    /// A Write that changes no live data, or whose change can be undone (recording into a change set,
     /// creating or discarding a set). Approval is only needed for a Write that is not reversible.
     /// </summary>
     public bool Reversible { get; set; }
@@ -54,8 +54,8 @@ public sealed record AbilityDescriptor(
     public bool RequiresApproval => Kind == AbilityKind.Write && !Reversible;
 }
 
-/// <summary>Who is calling, from where, and which draft set (if any) is active.</summary>
-public sealed record AbilityContext(string ActingUser, string Caller, Guid? DraftSetId = null);
+/// <summary>Who is calling, from where, and which change set (if any) is active.</summary>
+public sealed record AbilityContext(string ActingUser, string Caller, Guid? ChangeSetId = null);
 
 public enum FailureCategory
 {

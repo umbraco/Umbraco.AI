@@ -2,7 +2,7 @@ using System.Text.Json.Nodes;
 
 using Umbraco.Abilities.Entities;
 
-namespace Umbraco.Abilities.DraftSets;
+namespace Umbraco.Abilities.ChangeSets;
 
 /// <summary>
 /// One recorded Write ability call. This replaces the Draft Sets PoC's content-only
@@ -20,7 +20,7 @@ public sealed record RecordedCall(
     long? BaseVersion,
     string? Subtype = null);
 
-public sealed class DraftSet
+public sealed class ChangeSet
 {
     public Guid Id { get; init; } = Guid.NewGuid();
 
@@ -32,29 +32,29 @@ public sealed class DraftSet
     public HashSet<string> AppliedSteps { get; } = [];
 }
 
-public interface IDraftSetStore
+public interface IChangeSetStore
 {
-    DraftSet? Get(Guid id);
+    ChangeSet? Get(Guid id);
 
-    void Save(DraftSet set);
+    void Save(ChangeSet set);
 
     void Remove(Guid id);
 }
 
-public sealed class InMemoryDraftSetStore : IDraftSetStore
+public sealed class InMemoryChangeSetStore : IChangeSetStore
 {
-    private readonly Dictionary<Guid, DraftSet> _sets = [];
+    private readonly Dictionary<Guid, ChangeSet> _sets = [];
 
-    public DraftSet? Get(Guid id) => _sets.GetValueOrDefault(id);
+    public ChangeSet? Get(Guid id) => _sets.GetValueOrDefault(id);
 
-    public void Save(DraftSet set) => _sets[set.Id] = set;
+    public void Save(ChangeSet set) => _sets[set.Id] = set;
 
     public void Remove(Guid id) => _sets.Remove(id);
 }
 
 /// <summary>
 /// A product's own transaction, such as an Umbraco scope for content or Commerce's unit of work. Products can use
-/// their own connection strings, so a draft set never assumes one transaction across products: each product's
+/// their own connection strings, so a change set never assumes one transaction across products: each product's
 /// changes apply all or nothing in its own unit of work, one product after another.
 /// </summary>
 public interface IUnitOfWorkProvider
@@ -87,21 +87,21 @@ public sealed record EntityEditTarget(string EntityType, Guid EntityKey, bool Cr
 
 public sealed record EntityEditContext(IEntityDefinition Definition, EntityStructure Structure, ItemTypeRegistry ItemTypes);
 
-/// <summary>Abilities that manage draft sets themselves are never recorded into one.</summary>
-public interface IDraftSetLifecycleAbility : IAbility
+/// <summary>Abilities that manage change sets themselves are never recorded into one.</summary>
+public interface IChangeSetLifecycleAbility : IAbility
 {
 }
 
 public sealed record EntityProblems(EntityRef Entity, IReadOnlyList<Problem> Problems);
 
-public sealed record DraftSetChange(EntityRef Entity, string Change, int Edits);
+public sealed record ChangeSetChange(EntityRef Entity, string Change, int Edits);
 
 /// <summary>One step of applying a set: a product's changes in its own transaction, or one recorded operation.</summary>
 public sealed record ApplyStep(string Name, string Description, bool Applied);
 
-public sealed record DraftSetSummary(
+public sealed record ChangeSetSummary(
     Guid Id,
     string Name,
-    IReadOnlyList<DraftSetChange> Entities,
+    IReadOnlyList<ChangeSetChange> Entities,
     IReadOnlyList<string> OperationsOnApply,
     IReadOnlyList<ApplyStep> ApplyPlan);

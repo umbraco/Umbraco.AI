@@ -79,32 +79,79 @@ A package declares each entity type once. The framework derives the generic oper
 
 ### The structure language
 
-One building block: the **field**, with a value type. That's how Umbraco, JSON Schema and GraphQL all model it: a Block List is a property like any other, whose value happens to contain elements.
+> **Proposed (2026-11-15), not yet in the proof of concept.** The proof of concept still stores items apart from other
+> values. This section is the design it moves to.
 
-| Value type | Meaning | Examples |
+An entity is **fields, and each field has a value**. A value can be anything: a string, an object, an array of objects
+holding further values. That is how content works (a property has a value, and its editor defines what's inside it) and
+how JSON Schema works. There is no second kind of field. What the framework needs to know about a value, it reads from
+the value's schema.
+
+**The path rule.** A path goes down through values, one step at a time:
+
+- In an **object**, a step is a property name: `seo/title`.
+- In an array of **items**, a step is the item's key: `blocks/{key}/heading`.
+- Any other array is a value like any other: it is set whole, with no paths into its entries.
+
+So paths never use positions. `blocks/2` would point at a different block once someone adds one above it, which breaks
+edits, problem paths and rebasing; `blocks/{key}` doesn't.
+
+**Items** are not a separate kind of field. They are an array whose entries are objects with a `key` and a `type`, and
+the schema says so with one note, `x-item-types`, naming the group whose registered types it holds. Everything else
+about an item is ordinary: its fields are its properties, so its fields can hold items in turn. A block's settings are a
+property too (`blocks/{key}/settings/theme`). So are a grid block's placement values (`grid/{key}/columnSpan`), which
+the field adds to every item it holds.
+
+```jsonc
+// The schema the AI sees (abridged): plain JSON Schema, plus a few notes.
+"blocks": {
+  "type": "array",
+  "x-item-types": "cms.block",            // keyed, typed items from this group; types listed by entity.getSchema
+  "maxItems": 10,
+  "items": { "oneOf": [ { "$ref": "#/itemTypes/hero" }, { "$ref": "#/itemTypes/cardGrid" } ] }
+},
+"title": { "type": "string", "x-variations": "Culture" }
+```
+
+**The notes.** Plain JSON Schema covers most of a value. It has no word for these three things, so they are notes:
+
+| Note | Says | Why the framework needs it |
 | --- | --- | --- |
-| A value | A string, number, date or boolean, an array of those, or a JSON value with a schema | Name, start date, percentage, tags, a focal point |
-| A reference | A key pointing at another entity, or at another item in the same entity | A product collection; a workflow edge from one step to another |
-| Items | Typed elements, each with its own key; each item's type comes from a registry and has its own fields and settings | Discount rules and rewards, blocks in a Block List, Automate steps |
+| `x-item-types` | The array holds keyed, typed items from a group in the item type registry | Paths by key; plugin seams (discount rules, Automate steps); add, remove and move |
+| `x-variations` | The value varies by culture or segment, at any depth | Which culture an edit or a problem is about. A heading can vary inside an invariant block list |
+| `x-references` | The value is the key of another entity (by UDI type), or of an item in the same entity | Reference checks, and creating referenced entities in the same change set |
 
-Items are where the work is. Because each item has a key, it is addressed by path (`rules/{key}/minTotal`), so it can be edited, reported on and rebased on its own. The set of item types is open, so plugins add to it. Items are edited by adding, removing and moving them. A single item, such as a single block, is an items field with a maximum of one.
+**Edits.** `setValue` sets the value at any path. `addItem`, `removeItem` and `moveItem` work on any items array at any
+path, so items inside items, inside an object or inside a handled value are all the same. A value that varies is
+written for the edit's culture.
 
-References between items in the same entity are what let graphs fit: a workflow's steps are items whose edges are item references.
+**Storing values that vary.** In the working copy, a field whose schema says it varies holds one value per variant
+(`{ "en-US": "Summer", "da-DK": "Sommer" }`). The schema says which fields vary, so nothing has to be guessed from the
+data. Each product maps that to its own storage: the CMS to a block's values with their cultures, a typed model to
+`Varying<T>`.
 
-**Item types register separately from the entity.** A third-party discount rule provider registers a rule item type, and discounts using it become creatable from text with no more work. Automate step types are abilities, so a workflow is an entity whose steps are abilities.
+**Handlers add behaviour, not structure.** Paths and storage are the framework's for every value. A handler is only
+needed for what a schema can't say. Rich Text is `{ markup, blocks }`, where `blocks` is an items array that paths reach
+like any other. Its handler adds the rest: adding a block places its tag in the markup, removing one removes the tag,
+and every tag must have a block. Umbraco.AI's update tools have one handler per property editor, and the same split
+applies to them.
 
-**A value's inner model belongs to whoever defines it.** A CMS property can hold anything, and only its editor knows the model inside: Rich Text is markup plus blocks, placed by key in the markup, and a Block Grid's layout is the Block Grid's own. The framework doesn't model those. A value type can have a **handler** that owns the paths inside the value, what setting, adding, removing and moving mean there, the rules between its parts, and its problems. The framework routes the same tools to it. That's how Umbraco.AI's update tools already work, with one handler per property editor. Without a handler a value is set whole, described by its schema: for CMS properties, the editor's own value schema, which Umbraco 18 gives for every core editor tried.
+**What this replaces.** The proof of concept first kept "slots" (lists of items) apart from fields, then folded them into
+fields as an items value type, but still stored items apart from other values. Each step removed a question that
+shouldn't exist: whether a property editor is a field or a slot, and then why items are stored differently. Storing one
+value tree also removes guessing which JSON is items, and the separate walks over items in the editor, diff,
+validation and authorization. Diff and rebase walk the schema with the value, and match items by key.
 
-| Value type | Who owns the model inside | Example |
-| --- | --- | --- |
-| Scalar or reference | Nothing inside | Name, landing page |
-| JSON with a schema | Set whole; checked against the schema and on save | A colour, a date |
-| JSON with a handler | The handler | Rich Text |
-| Keyed items | The framework's built-in handler | Discount rules, workflow steps |
+**What stays hard.**
 
-Keyed items are the built-in value type for products with fixed models, such as a discount whose rules and rewards come from providers. They keep per-item paths, problems, rebasing and reference checks. A handled value rebases per field, and its references aren't seen, until a handler adds those capabilities.
+- **Keys.** Something has to supply a key per item. CMS blocks have one. Commerce's rules don't, so their keys are
+  derived (a request to Commerce to add them is open).
+- **Where variance is stored.** Each product maps the per-variant form to its own. The CMS mapper already does this for
+  block values.
 
-An earlier draft kept "slots" (lists of items) apart from fields. The proof of concept folded them together: what a slot added are properties of the items value type, and the split raised a question that shouldn't exist, whether a property editor is a field or a slot. An editor declares its value type, and items are one value type.
+**References** are values holding a key (`x-references`), so an entity stays a tree of values it owns, and graphs are
+references between items or between entities. A workflow's steps are items, and each step's `next` is a reference to
+another step.
 
 ### What a package implements
 
@@ -216,7 +263,7 @@ Two things surfaced in the proof of concept. Commerce Deploy defines `umbraco-co
 ### What the framework derives
 
 - `get_entity_schema`: the structure, fetched in two steps (outline and available item types, then the settings schema of the chosen types) to keep prompts small.
-- `create_entity`, `set_entity_value`, `add_entity_item`, `remove_entity_item`, `move_entity_item`: path-based edits, generalised from today's block path engine.
+- `create_entity`, `set_entity_value`, `add_entity_item`, `remove_entity_item`, `move_entity_item`: path-based edits (the path rule above), generalised from today's block path engine.
 - `validate_entity` and `find_entity` (name to key).
 
 All of them are ordinary abilities, so they reach every surface the way any ability does. CMS documents, media and elements become the first entity definitions, and today's content tools sit on top of them.

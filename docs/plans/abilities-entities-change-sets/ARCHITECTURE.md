@@ -79,8 +79,8 @@ A package declares each entity type once. The framework derives the generic oper
 
 ### The structure language
 
-> **Proposed (2026-11-15), not yet in the proof of concept.** The proof of concept still stores items apart from other
-> values. This section is the design it moves to.
+> **Changed 15-11-2026:** the proof of concept now works this way. It used to store items apart from other values, with
+> `@settings` and `@layout` path steps.
 
 An entity is **fields, and each field has a value**. A value can be anything: a string, an object, an array of objects
 holding further values. That is how content works (a property has a value, and its editor defines what's inside it) and
@@ -98,9 +98,8 @@ edits, problem paths and rebasing; `blocks/{key}` doesn't.
 
 **Items** are not a separate kind of field. They are an array whose entries are objects with a `key` and a `type`, and
 the schema says so with one note, `x-item-types`, naming the group whose registered types it holds. Everything else
-about an item is ordinary: its fields are its properties, so its fields can hold items in turn. A block's settings are a
-property too (`blocks/{key}/settings/theme`). So are a grid block's placement values (`grid/{key}/columnSpan`), which
-the field adds to every item it holds.
+about an item is ordinary: its fields are its properties, so its fields can hold items in turn. A block's settings are an
+object field of the block (`blocks/{key}/settings/theme`), and so is a grid block's layout (`grid/{key}/layout/columnSpan`).
 
 ```jsonc
 // The schema the AI sees (abridged): plain JSON Schema, plus a few notes.
@@ -142,12 +141,24 @@ shouldn't exist: whether a property editor is a field or a slot, and then why it
 value tree also removes guessing which JSON is items, and the separate walks over items in the editor, diff,
 validation and authorization. Diff and rebase walk the schema with the value, and match items by key.
 
+**Which variants an entity has is not part of the contract.** The CMS tracks which cultures a document exists in (a
+culture exists when it has a name) and which cultures a block is exposed in. Consumers of the entity tools don't need
+that as its own concept: they write values per culture, see them per culture, and get problems per culture. Which
+cultures exist is product meaning, worked out from the values. The generic validator uses the cultures that have
+values; the CMS definition maps names and block exposure, and Umbraco's own validation stays the source of truth.
+Removing a culture is an operation (a CMS ability), not a value.
+
 **What stays hard.**
 
 - **Keys.** Something has to supply a key per item. CMS blocks have one. Commerce's rules don't, so their keys are
   derived (a request to Commerce to add them is open).
 - **Where variance is stored.** Each product maps the per-variant form to its own. The CMS mapper already does this for
   block values.
+- **Reserved names.** An item's `key` and `type` are fixed property names, so an item type can't have fields with those
+  aliases. A product's own data that isn't a field (the CMS's block settings key) is kept under a `$` name.
+- **Variation isn't only culture.** The CMS also has segments, and other products have their own dimensions (a price
+  per currency, a setting per store). The next step makes variation a set of named dimensions, with culture and
+  segment as the CMS's two.
 
 **References** are values holding a key (`x-references`), so an entity stays a tree of values it owns, and graphs are
 references between items or between entities. A workflow's steps are items, and each step's `next` is a reference to
@@ -209,7 +220,7 @@ The framework works out the rest from the contract:
 | Fields, value types (items included), required, allowed values, references and limits | Property types, plus attributes or fluent configuration |
 | JSON Schema for structured values | `JsonSchemaExporter` over the property type |
 | Culture variation | `Varying<T>`, a value per culture, on any field |
-| Block settings and grid placement | `[ItemSettings]`, `[ItemLayout]`, an items field's layout type |
+| Block settings and a grid block's layout | Ordinary object properties: a class becomes an object field |
 | Turning the contract into the working copy and back | Done both ways, keeping item keys and giving each item its path |
 | Range and format checks on entity paths | DataAnnotations, as attributes or fluent `Rule(...)`. Each problem is reported once |
 | An edit ability that works inside a change set | One `Edit(model, input)` method |
@@ -511,8 +522,7 @@ The structure language holds up against the real CMS, Commerce and Automate code
 | --- | --- |
 | Variations on the entity and its fields (the CMS's ContentVariation): values stored per culture and segment, edits take a culture, problems say which culture | CMS: names and properties vary by culture or segment; blocks in an invariant block property hold per-culture values |
 | Culture-variant items fields: a separate item list per culture | CMS: a culture-variant block property holds one whole value per culture |
-| A settings element per item, edited at `{item}/@settings` | CMS: blocks have a settings element type beside their content type |
-| Placement values per item, edited at `{item}/@layout` | CMS: a Block Grid block's column and row span belong to its place, not its values |
+| Object fields: a block's `settings`, a grid block's `layout` | CMS: blocks have a settings element type beside their content type, and a Block Grid block has a column and row span; the PoC first modelled these as an item's own sub-elements, not values |
 | Arrays, references to several entity types, and JSON values | CMS: tags, tree pickers pointing at documents or media, focal points and crops |
 | Edges as a first-class part of an entity, carrying their own data | Automate: steps are a flat list and edges are a separate list with an outcome, handle and filter; loops and parallel paths come from edges, not nesting |
 

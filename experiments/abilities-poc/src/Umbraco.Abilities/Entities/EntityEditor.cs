@@ -9,204 +9,45 @@ namespace Umbraco.Abilities.Entities;
 public sealed record EditTarget(EntityDocument Document, EntityStructure Structure, ItemTypeRegistry ItemTypes, VariantId Variant);
 
 /// <summary>
-/// Edits an entity document by path. Generalised from Umbraco.AI's block path engine: a path alternates
-/// items field aliases and item keys, so <c>"blocks"</c> is an items field on the root, <c>"blocks/{key}"</c> is an
-/// item and <c>"blocks/{key}/cards"</c> is an items field inside that item. <c>"{itemPath}/@settings"</c> and
-/// <c>"{itemPath}/@layout"</c> are an item's settings element and its placement values. Fields are addressed
-/// as an element path plus a field alias, and problems use the same paths (<c>"blocks/{key}/@settings/theme"</c>).
-/// Values that vary are read and written for the edit's variant, narrowed to what each value varies by.
+/// Edits an entity by path. A path goes down through values: in an object a step is a field alias, in an items field a
+/// step is an item's key. So <c>"blocks/{key}/heading"</c> is a field of an item, <c>"blocks/{key}/settings/theme"</c> a
+/// field of an object in it, and <c>"blocks/{key}/cards"</c> an items field inside it. Problems use the same paths.
+/// Values that vary are read and written for the edit's variant, narrowed to what each value varies by. Generalised from
+/// Umbraco.AI's block path engine.
 /// </summary>
 public static class EntityEditor
 {
-    public sealed record ResolvedElement(EntityElement Element, ElementShape Shape, string Path, ItemTypeDefinition? ItemType, FieldDefinition? InField);
+    public static string Join(string path, string segment) => EntityValues.Join(path, segment);
 
-    public sealed record ResolvedItems(List<EntityItem> Items, FieldDefinition Field, string Path, VariantId Variant);
+    /// <summary>What a path points at, for editing: the variant of each varying value on the way is the edit's.</summary>
+    public static PathTarget Find(EditTarget target, string path, bool create = true)
+        => EntityValues.Find(target.Document.Root, target.Structure.Shape, target.ItemTypes, path, (field, at) => RequireVariant(target, field.Variations, at), create);
 
-    public static string Join(string path, string segment) => string.IsNullOrEmpty(path) ? segment : $"{path}/{segment}";
-
-    public static ResolvedElement ResolveElement(EditTarget target, string? path) => Walk(target, path, findHandled: false).Element;
-
-    /// <summary>A field whose value has a handler, found on the way along a path, and the path inside its value.</summary>
-    public sealed record HandledPath(ResolvedElement Owner, FieldDefinition Field, string Inner)
+    /// <summary>Sets the value at a path. Returns the path.</summary>
+    public static string SetValue(EditTarget target, string path, JsonNode? value)
     {
-        public string FieldPath => Join(Owner.Path, Field.Alias);
-    }
-
-    /// <summary>Finds whether a path goes into a field whose value has a handler.</summary>
-    public static HandledPath? FindHandled(EditTarget target, string? path) => Walk(target, path, findHandled: true).Handled;
-
-    /// <summary>
-    /// Follows a path: items field alias, item key, and so on, with <c>@settings</c> or <c>@layout</c> last. With
-    /// <paramref name="findHandled"/>, it stops at a field whose value has a handler, and where the path leaves the
-    /// items, so the built-in edit can report the problem.
-    /// </summary>
-    private static (ResolvedElement Element, HandledPath? Handled) Walk(EditTarget target, string? path, bool findHandled)
-    {
-        var segments = Split(path);
-        var current = new ResolvedElement(target.Document.Root, target.Structure.Shape, string.Empty, null, null);
-        var i = 0;
-        while (i < segments.Length)
+        var at = Find(target, path);
+        if (at.ItemKey is not null || at.Order)
         {
-            var segment = segments[i];
-            if (segment.StartsWith('@'))
-            {
-                current = ResolveSubElement(current, segment, isLast: findHandled || i == segments.Length - 1);
-                i++;
-                continue;
-            }
-
-            if (findHandled)
-            {
-                if (current.Shape.Fields.FirstOrDefault(f => f.Alias == segment && f.Handler is not null) is { } handled)
-                {
-                    return (current, new HandledPath(current, handled, string.Join('/', segments[(i + 1)..])));
-                }
-
-                if (i + 1 >= segments.Length || !current.Shape.ItemFields.Any(f => f.Alias == segment))
-                {
-                    return (current, null);
-                }
-            }
-
-            if (i + 1 >= segments.Length)
-            {
-                throw Invalid(path ?? string.Empty, "An element path ends with an item key, @settings or @layout. Use \"\" for the entity itself.");
-            }
-
-            var items = ResolveItemsOn(target, current, segment);
-            if (!Guid.TryParse(segments[i + 1], out var key))
-            {
-                throw Invalid(Join(items.Path, segments[i + 1]), "Expected an item key (a GUID).");
-            }
-
-            var item = items.Items.FirstOrDefault(i => i.Key == key)
-                ?? throw Invalid(Join(items.Path, key.ToString()), "No item with this key in the field.");
-
-            var itemType = target.ItemTypes.Find(items.Field.ItemTypeGroup!, item.Type)
-                ?? throw Invalid(Join(items.Path, key.ToString()), $"Item type '{item.Type}' is not registered.");
-
-            current = new ResolvedElement(item, itemType.Shape, Join(items.Path, key.ToString()), itemType, items.Field);
-            i += 2;
+            throw Invalid(path, "A path to set ends with a field alias.");
         }
 
-        return (current, null);
+        SetField(at.Owner, at.Field, at.Path, at.Variant, value);
+        return at.Path;
     }
 
-    // ── Edits: into a handled value through its handler, else on the framework's own fields and items ────────────
-
-    /// <summary>Sets a field, or a path inside a handled value (Rich Text's markup, a block's field). Returns its path.</summary>
-    public static string SetValue(EditTarget target, string? elementPath, string alias, JsonNode? value)
+    /// <summary>Sets fields of an object (the entity, or a new item) from a JSON object of values by alias.</summary>
+    public static void SetFields(EditTarget target, JsonObject owner, ElementShape shape, string path, JsonObject? values)
     {
-        var path = Join(elementPath ?? string.Empty, alias);
-        if (FindHandled(target, path) is { Inner.Length: > 0 } handled)
-        {
-            UpdateHandled(target, handled, current => handled.Field.Handler!.SetValue(current, handled.Inner, value));
-            return path;
-        }
-
-        var element = ResolveElement(target, elementPath);
-        SetField(target, element, alias, value);
-        return Join(element.Path, alias);
-    }
-
-    /// <summary>Adds an item with field values, to an items field or a handled value. Returns the item's path.</summary>
-    public static string AddItem(EditTarget target, string fieldPath, string itemType, Guid key, JsonObject? fields, int? position)
-    {
-        if (FindHandled(target, fieldPath) is { } handled)
-        {
-            ValueItem? added = null;
-            UpdateHandled(target, handled, current => (added = handled.Field.Handler!.AddItem(current, handled.Inner, itemType, fields, key, position)).Value);
-            return Join(handled.FieldPath, added!.ItemPath);
-        }
-
-        var item = InsertItem(target, fieldPath, itemType, key, position);
-        SetFields(target, item, fields);
-        return item.Path;
-    }
-
-    public static void RemoveItem(EditTarget target, string fieldPath, Guid key)
-    {
-        if (FindHandled(target, fieldPath) is { } handled)
-        {
-            UpdateHandled(target, handled, current => handled.Field.Handler!.RemoveItem(current, handled.Inner, key));
-            return;
-        }
-
-        var items = ResolveItems(target, fieldPath);
-        items.Items.Remove(FindItem(items, key));
-    }
-
-    public static void MoveItem(EditTarget target, string fieldPath, Guid key, int position)
-    {
-        if (FindHandled(target, fieldPath) is { } handled)
-        {
-            UpdateHandled(target, handled, current => handled.Field.Handler!.MoveItem(current, handled.Inner, key, position));
-            return;
-        }
-
-        var items = ResolveItems(target, fieldPath);
-        var item = FindItem(items, key);
-        items.Items.Remove(item);
-        items.Items.Insert(Math.Clamp(position, 0, items.Items.Count), item);
-    }
-
-    private static EntityItem FindItem(ResolvedItems items, Guid key)
-        => items.Items.FirstOrDefault(i => i.Key == key) ?? throw Invalid(Join(items.Path, key.ToString()), "No item with this key in the field.");
-
-    /// <summary>Changes a handled field's value through its handler, in the edit's variant.</summary>
-    private static void UpdateHandled(EditTarget target, HandledPath handled, Func<JsonNode?, JsonNode?> change)
-    {
-        var variant = RequireVariant(target, handled.Field.Variations, handled.FieldPath);
-        var current = handled.Owner.Element.Get(handled.Field, variant);
-        handled.Owner.Element.Set(handled.Field, variant, change(current?.DeepClone()));
-    }
-
-    public static ResolvedItems ResolveItems(EditTarget target, string fieldPath)
-    {
-        var segments = Split(fieldPath);
-        if (segments.Length == 0 || segments[^1].StartsWith('@'))
-        {
-            throw Invalid(fieldPath, "A field path ends with an items field's alias, e.g. \"rules\" or \"blocks/{key}/cards\".");
-        }
-
-        var owner = ResolveElement(target, string.Join('/', segments[..^1]));
-        return ResolveItemsOn(target, owner, segments[^1]);
-    }
-
-    public static void SetField(EditTarget target, ResolvedElement element, string alias, JsonNode? value)
-    {
-        var path = Join(element.Path, alias);
-        var field = element.Shape.Fields.FirstOrDefault(f => f.Alias == alias)
-            ?? throw Invalid(path, $"No field '{alias}' here. Fields: {Names(element.Shape.Fields.Select(f => f.Alias))}.");
-
-        if (field.IsItems)
-        {
-            throw Invalid(path, $"'{alias}' holds items. Use entity.addItem, removeItem or moveItem with fieldPath \"{path}\".");
-        }
-
-        var variant = RequireVariant(target, field.Variations, path);
-        value = FieldChecker.Normalize(field, value);
-        if (FieldChecker.Check(field, value, path) is { } problem)
-        {
-            throw new AbilityInputException(problem.ToString(), [problem with { Culture = variant.Culture, Segment = variant.Segment }]);
-        }
-
-        element.Element.Set(field, variant, value);
-    }
-
-    public static void SetFields(EditTarget target, ResolvedElement element, JsonObject? values)
-    {
-        if (values is null)
-        {
-            return;
-        }
-
         var problems = new List<Problem>();
-        foreach (var (alias, value) in values)
+        foreach (var (alias, value) in values ?? [])
         {
+            var fieldPath = Join(path, alias);
             try
             {
-                SetField(target, element, alias, value);
+                var field = shape.Find(alias)
+                    ?? throw Invalid(fieldPath, $"No field '{alias}' here. Fields: {EntityValues.Names(shape.Fields.Select(f => f.Alias))}.");
+                SetField(owner, field, fieldPath, RequireVariant(target, field.Variations, fieldPath), value);
             }
             catch (AbilityInputException ex)
             {
@@ -220,22 +61,49 @@ public static class EntityEditor
         }
     }
 
-    private static ResolvedElement InsertItem(EditTarget target, string fieldPath, string itemTypeAlias, Guid itemKey, int? position)
+    /// <summary>Adds an item to the items field at <paramref name="fieldPath"/>, with field values. Returns the item's path.</summary>
+    public static string AddItem(EditTarget target, string fieldPath, string itemTypeAlias, Guid key, JsonObject? fields, int? position)
     {
-        var items = ResolveItems(target, fieldPath);
-        var allowed = target.ItemTypes.InGroup(items.Field.ItemTypeGroup!);
+        var at = RequireItemsField(Find(target, fieldPath), fieldPath);
+        var allowed = target.ItemTypes.InGroup(at.Field.ItemTypeGroup!);
         var itemType = allowed.FirstOrDefault(t => t.Alias == itemTypeAlias)
-            ?? throw Invalid(items.Path, $"Item type '{itemTypeAlias}' is not allowed in this field. Allowed: {Names(allowed.Select(t => t.Alias))}.");
+            ?? throw Invalid(at.Path, $"Item type '{itemTypeAlias}' is not allowed in this field. Allowed: {EntityValues.Names(allowed.Select(t => t.Alias))}.");
 
-        if (items.Field.Max is { } max && items.Items.Count >= max)
+        var items = EntityValues.Items(at.Owner, at.Field, at.Variant, create: true)!;
+        if (at.Field.Max is { } max && items.Count >= max)
         {
-            throw Invalid(items.Path, $"This field holds at most {max} item(s).");
+            throw Invalid(at.Path, $"This field holds at most {max} item(s).");
         }
 
-        var item = new EntityItem { Key = itemKey, Type = itemType.Alias };
-        var index = position is { } p ? Math.Clamp(p, 0, items.Items.Count) : items.Items.Count;
-        items.Items.Insert(index, item);
-        return new ResolvedElement(item, itemType.Shape, Join(items.Path, itemKey.ToString()), itemType, items.Field);
+        if (EntityValues.FindItem(items, key) is not null)
+        {
+            throw Invalid(Join(at.Path, key.ToString()), "An item with this key is already in the field.");
+        }
+
+        var item = EntityValues.NewItem(key, itemType.Alias);
+        items.Insert(position is { } p ? Math.Clamp(p, 0, items.Count) : items.Count, item);
+        var itemPath = Join(at.Path, key.ToString());
+        SetFields(target, item, itemType.Shape, itemPath, fields);
+        Notify(at, (handler, value, inside) => handler.ItemAdded(value, inside, key));
+        return itemPath;
+    }
+
+    public static void RemoveItem(EditTarget target, string fieldPath, Guid key)
+    {
+        var at = RequireItemsField(Find(target, fieldPath, create: false), fieldPath);
+        var items = (JsonArray?)at.Value;
+        items!.Remove(EntityValues.FindItem(items, key) ?? throw Invalid(Join(at.Path, key.ToString()), "No item with this key in the field."));
+        Notify(at, (handler, value, inside) => handler.ItemRemoved(value, inside, key));
+    }
+
+    public static void MoveItem(EditTarget target, string fieldPath, Guid key, int position)
+    {
+        var at = RequireItemsField(Find(target, fieldPath, create: false), fieldPath);
+        var items = (JsonArray?)at.Value;
+        var item = EntityValues.FindItem(items, key) ?? throw Invalid(Join(at.Path, key.ToString()), "No item with this key in the field.");
+        items!.Remove(item);
+        items.Insert(Math.Clamp(position, 0, items.Count), item);
+        Notify(at, (handler, value, inside) => handler.ItemMoved(value, inside, key));
     }
 
     /// <summary>
@@ -258,58 +126,45 @@ public static class EntityEditor
                 return variant with { Culture = cultures[0] };
             }
 
-            throw Invalid(path, $"This varies by culture. Give a culture: {Names(cultures)}.");
+            throw Invalid(path, $"This varies by culture. Give a culture: {EntityValues.Names(cultures)}.");
         }
 
         if (!cultures.Contains(variant.Culture))
         {
-            throw Invalid(path, $"Unknown culture '{variant.Culture}'. Cultures: {Names(cultures)}.");
+            throw Invalid(path, $"Unknown culture '{variant.Culture}'. Cultures: {EntityValues.Names(cultures)}.");
         }
 
         return variant;
     }
 
-    private static ResolvedElement ResolveSubElement(ResolvedElement current, string segment, bool isLast)
+    private static void SetField(JsonObject owner, FieldDefinition field, string path, VariantId variant, JsonNode? value)
     {
-        var path = Join(current.Path, segment);
-        if (current.ItemType is null || current.InField is null)
+        if (field.IsItems)
         {
-            throw Invalid(path, "@settings and @layout follow an item key.");
+            throw Invalid(path, $"'{field.Alias}' holds items. Use entity.addItem, removeItem or moveItem with fieldPath \"{path}\".");
         }
 
-        if (!isLast)
+        value = FieldChecker.Normalize(field, value);
+        if (FieldChecker.Check(field, value, path) is { } problem)
         {
-            throw Invalid(path, "Nothing can follow @settings or @layout.");
+            throw new AbilityInputException(problem.ToString(), [problem with { Culture = variant.Culture, Segment = variant.Segment }]);
         }
 
-        return segment switch
+        EntityValues.Set(owner, field, variant, value);
+    }
+
+    private static PathTarget RequireItemsField(PathTarget at, string path)
+        => at.Field.IsItems && at.ItemKey is null && !at.Order
+            ? at
+            : throw Invalid(path, "A field path ends with an items field's alias, e.g. \"rules\" or \"blocks/{key}/cards\".");
+
+    // Tells the handler of the value the items are in, if any, so it can keep the rest of its value in step.
+    private static void Notify(PathTarget at, Action<IValueHandler, JsonObject, string> change)
+    {
+        if (at.Handled is { } handled && handled.Value is JsonObject value)
         {
-            "@settings" when current.ItemType.SettingsShape is { } settings
-                => new ResolvedElement(((EntityItem)current.Element).EnsureSettings(), settings, path, null, null),
-            "@settings" => throw Invalid(path, $"Item type '{current.ItemType.Alias}' has no settings."),
-            "@layout" when current.InField.ItemLayout is { } layout
-                => new ResolvedElement(((EntityItem)current.Element).EnsureLayout(), layout, path, null, null),
-            "@layout" => throw Invalid(path, $"Field '{current.InField.Alias}' has no layout values."),
-            _ => throw Invalid(path, "Use @settings or @layout."),
-        };
-    }
-
-    private static ResolvedItems ResolveItemsOn(EditTarget target, ResolvedElement owner, string alias)
-    {
-        var path = Join(owner.Path, alias);
-        var field = owner.Shape.ItemFields.FirstOrDefault(f => f.Alias == alias)
-            ?? throw Invalid(path, $"No items field '{alias}' here. Items fields: {Names(owner.Shape.ItemFields.Select(f => f.Alias))}.");
-
-        var variant = RequireVariant(target, field.Variations, path);
-        return new ResolvedItems(owner.Element.ItemsFor(field, variant), field, path, variant);
-    }
-
-    private static string[] Split(string? path) => (path ?? string.Empty).Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-    private static string Names(IEnumerable<string> names)
-    {
-        var list = names.ToList();
-        return list.Count == 0 ? "none" : string.Join(", ", list);
+            change(handled.Field.Handler!, value, at.PathInside(handled));
+        }
     }
 
     private static AbilityInputException Invalid(string path, string message) => new(message, [new Problem(path, message)]);
@@ -396,6 +251,11 @@ public static class FieldChecker
         if (field.Type == FieldType.Json)
         {
             return null; // Checked against the editor's own schema by the entity definition.
+        }
+
+        if (field.Type == FieldType.Object)
+        {
+            return value is JsonObject ? null : new Problem(path, "Expected an object.");
         }
 
         if (field.Type == FieldType.EntityReference && field.ReferencesAnyOf is { Count: > 0 } types)

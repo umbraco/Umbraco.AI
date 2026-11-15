@@ -3,7 +3,7 @@ using System.Text.Json.Nodes;
 namespace Umbraco.Abilities.Entities;
 
 /// <summary>
-/// A difference between two versions of an entity, at a path in the entity edit abilities' form. A field change has
+/// A difference between two versions of an entity, at a path in the entity edit abilities' form. A value change has
 /// the variant it is in; <see cref="Structural"/> marks an item added or removed (<c>"blocks/{key}"</c>) or a list
 /// reordered (<c>"blocks/@order"</c>).
 /// </summary>
@@ -13,19 +13,19 @@ public sealed record ChangedPath(string Path, string VariantKey, bool Structural
 }
 
 /// <summary>
-/// Compares two versions of any entity document, and copies a path from one to another. This is what lets a change set
-/// rebase onto a newer live version: what someone else changed is the difference between the version the set started
-/// from and the live one, what the set changed is the difference between that start and the set's result, and a
-/// conflict is a path both changed differently.
+/// Compares two versions of an entity, and copies a path from one to another. This is what lets a change set rebase onto
+/// a newer live version: what someone else changed is the difference between the version the set started from and the
+/// live one, what the set changed is the difference between that start and the set's result, and a conflict is a path
+/// both changed differently. It walks the structure with the values, so items are matched by key and objects by field.
 /// </summary>
 public static class EntityDiff
 {
     public const string Order = "@order";
 
-    public static IReadOnlyCollection<ChangedPath> Compare(EntityElement before, EntityElement after)
+    public static IReadOnlyCollection<ChangedPath> Compare(JsonObject before, JsonObject after, ElementShape shape, ItemTypeRegistry itemTypes)
     {
         var changes = new HashSet<ChangedPath>();
-        CompareElement(before, after, string.Empty, changes);
+        CompareObject(before, after, shape, itemTypes, string.Empty, VariantId.Invariant, changes);
         return changes;
     }
 
@@ -40,169 +40,131 @@ public static class EntityDiff
         return (a.Structural && Inside(b.Path, a.Path)) || (b.Structural && Inside(a.Path, b.Path));
     }
 
-    /// <summary>The value at a path, for showing a conflict: a field's value, an item, a list's item keys in order, or null when absent.</summary>
-    public static JsonNode? ValueAt(EntityElement root, ChangedPath change)
-        => Locate(root, change, create: false) switch
+    /// <summary>The value at a path, for showing a conflict: a value, an item, a list's item keys in order, or null when absent.</summary>
+    public static JsonNode? ValueAt(JsonObject root, ElementShape shape, ItemTypeRegistry itemTypes, ChangedPath change)
+        => Find(root, shape, itemTypes, change, create: false) switch
         {
             null => null,
-            { Order: true } at => new JsonArray(at.Items!.Select(i => (JsonNode?)i.Key.ToString()).ToArray()),
-            { ItemKey: { } key } at => at.Items!.FirstOrDefault(i => i.Key == key) is { } item ? EntityJson.ToJson(item) : null,
-            var at => at.Values?.Fields.GetValueOrDefault(at.Field!)?.DeepClone(),
+            { Order: true } at => new JsonArray(((at.Value as JsonArray) ?? []).OfType<JsonObject>().Select(i => (JsonNode?)EntityValues.KeyOf(i).ToString()).ToArray()),
+            { ItemKey: { } key } at => EntityValues.FindItem(at.Value as JsonArray, key)?.DeepClone(),
+            var at => at.Value?.DeepClone(),
         };
 
     /// <summary>Makes <paramref name="change"/>'s path in <paramref name="target"/> the same as in <paramref name="source"/>: keeping theirs.</summary>
-    public static void CopyPath(EntityElement source, EntityElement target, ChangedPath change)
+    public static void CopyPath(JsonObject source, JsonObject target, ElementShape shape, ItemTypeRegistry itemTypes, ChangedPath change)
     {
-        var from = Locate(source, change, create: false);
-        var to = Locate(target, change, create: true);
-        if (to is null)
+        var from = Find(source, shape, itemTypes, change, create: false);
+        if (Find(target, shape, itemTypes, change, create: true) is not { } to)
         {
             return;
         }
 
-        if (to.Order)
+        var fromItems = from?.Value as JsonArray;
+        if (change.Path.EndsWith("/" + Order, StringComparison.Ordinal))
         {
-            var order = (from?.Items ?? []).Select(i => i.Key).ToList();
-            var sorted = to.Items!.OrderBy(i => order.IndexOf(i.Key) is var index and >= 0 ? index : int.MaxValue).ToList();
-            to.Items!.Clear();
-            to.Items.AddRange(sorted);
+            var order = (fromItems ?? []).OfType<JsonObject>().Select(EntityValues.KeyOf).ToList();
+            var items = EntityValues.Items(to.Owner, to.Field, to.Variant, create: true)!;
+            var sorted = items.OfType<JsonObject>().OrderBy(i => order.IndexOf(EntityValues.KeyOf(i)) is var index and >= 0 ? index : int.MaxValue).ToList();
+            items.Clear();
+            sorted.ForEach(i => items.Add(i));
             return;
         }
 
-        if (to.ItemKey is { } key)
+        if (to.ItemKey is { } key || (change.Structural && Guid.TryParse(change.Path.Split('/')[^1], out key)))
         {
-            to.Items!.RemoveAll(i => i.Key == key);
-            var position = from?.Items?.FindIndex(i => i.Key == key) ?? -1;
+            var items = EntityValues.Items(to.Owner, to.Field, to.Variant, create: true)!;
+            if (EntityValues.FindItem(items, key) is { } existing)
+            {
+                items.Remove(existing);
+            }
+
+            var theirs = fromItems?.OfType<JsonObject>().ToList() ?? [];
+            var position = theirs.FindIndex(i => EntityValues.KeyOf(i) == key);
             if (position >= 0)
             {
-                to.Items.Insert(Math.Min(position, to.Items.Count), EntityJson.Clone(from!.Items![position]));
+                items.Insert(Math.Min(position, items.Count), theirs[position].DeepClone());
             }
 
             return;
         }
 
-        to.Values!.Fields[to.Field!] = from?.Values?.Fields.GetValueOrDefault(to.Field!)?.DeepClone();
+        EntityValues.Set(to.Owner, to.Field, to.Variant, from?.Value?.DeepClone());
     }
 
     private static bool Inside(string path, string container) => path.StartsWith(container + "/", StringComparison.Ordinal);
 
-    private static void CompareElement(EntityElement? a, EntityElement? b, string path, HashSet<ChangedPath> changes)
+    private static void CompareObject(JsonObject? a, JsonObject? b, ElementShape shape, ItemTypeRegistry itemTypes, string path, VariantId context, HashSet<ChangedPath> changes)
     {
-        CompareValues(a, b, path, string.Empty, changes);
-
-        var variantKeys = Keys(a?.Variants).Union(Keys(b?.Variants));
-        foreach (var key in variantKeys)
+        foreach (var field in shape.Fields)
         {
-            CompareValues(a?.Variants.GetValueOrDefault(key), b?.Variants.GetValueOrDefault(key), path, key, changes);
-        }
-
-        if (a is EntityItem || b is EntityItem)
-        {
-            var itemA = a as EntityItem;
-            var itemB = b as EntityItem;
-            if (itemA?.Settings is not null || itemB?.Settings is not null)
+            var fieldPath = EntityValues.Join(path, field.Alias);
+            var variants = Variants(a, field).Union(Variants(b, field));
+            foreach (var own in variants)
             {
-                CompareElement(itemA?.Settings, itemB?.Settings, EntityEditor.Join(path, "@settings"), changes);
-            }
-
-            if (itemA?.Layout is not null || itemB?.Layout is not null)
-            {
-                CompareElement(itemA?.Layout, itemB?.Layout, EntityEditor.Join(path, "@layout"), changes);
-            }
-        }
-    }
-
-    private static void CompareValues(ElementValues? a, ElementValues? b, string path, string variantKey, HashSet<ChangedPath> changes)
-    {
-        foreach (var alias in Keys(a?.Fields).Union(Keys(b?.Fields)))
-        {
-            if (!JsonNode.DeepEquals(a?.Fields.GetValueOrDefault(alias), b?.Fields.GetValueOrDefault(alias)))
-            {
-                changes.Add(new ChangedPath(EntityEditor.Join(path, alias), variantKey, Structural: false));
-            }
-        }
-
-        foreach (var alias in Keys(a?.Items).Union(Keys(b?.Items)))
-        {
-            var fieldPath = EntityEditor.Join(path, alias);
-            var itemsA = (a?.Items.GetValueOrDefault(alias) ?? []).ToDictionary(i => i.Key);
-            var itemsB = (b?.Items.GetValueOrDefault(alias) ?? []).ToDictionary(i => i.Key);
-
-            foreach (var key in itemsA.Keys.Union(itemsB.Keys))
-            {
-                var itemPath = EntityEditor.Join(fieldPath, key.ToString());
-                if (itemsA.TryGetValue(key, out var itemA) && itemsB.TryGetValue(key, out var itemB))
+                var variant = new VariantId(own.Culture ?? context.Culture, own.Segment ?? context.Segment);
+                var valueA = a is null ? null : EntityValues.Get(a, field, own);
+                var valueB = b is null ? null : EntityValues.Get(b, field, own);
+                switch (field.Type)
                 {
-                    CompareElement(itemA, itemB, itemPath, changes);
-                }
-                else
-                {
-                    changes.Add(new ChangedPath(itemPath, variantKey, Structural: true));
+                    case FieldType.Items:
+                        CompareItems(valueA as JsonArray, valueB as JsonArray, field, itemTypes, fieldPath, variant, changes);
+                        break;
+                    case FieldType.Object when field.Shape is { } objectShape && (valueA is JsonObject || valueB is JsonObject):
+                        CompareObject(valueA as JsonObject, valueB as JsonObject, objectShape, itemTypes, fieldPath, variant, changes);
+                        break;
+                    default:
+                        if (!JsonNode.DeepEquals(valueA, valueB))
+                        {
+                            changes.Add(new ChangedPath(fieldPath, variant.Key, Structural: false));
+                        }
+
+                        break;
                 }
             }
-
-            if (!itemsA.Keys.Where(itemsB.ContainsKey).SequenceEqual(itemsB.Keys.Where(itemsA.ContainsKey)))
-            {
-                changes.Add(new ChangedPath(EntityEditor.Join(fieldPath, Order), variantKey, Structural: true));
-            }
         }
     }
 
-    private static IEnumerable<string> Keys<T>(Dictionary<string, T>? dictionary) => dictionary?.Keys ?? Enumerable.Empty<string>();
-
-    private sealed record Location(ElementValues? Values, string? Field, List<EntityItem>? Items, Guid? ItemKey, bool Order);
-
-    /// <summary>Finds where a path points: the values and field, or the list and item key, or a list's order.</summary>
-    private static Location? Locate(EntityElement root, ChangedPath change, bool create)
+    private static void CompareItems(JsonArray? a, JsonArray? b, FieldDefinition field, ItemTypeRegistry itemTypes, string fieldPath, VariantId variant, HashSet<ChangedPath> changes)
     {
-        var segments = change.Path.Split('/', StringSplitOptions.RemoveEmptyEntries);
-        EntityElement? element = root;
-        var i = 0;
-
-        while (element is not null && i < segments.Length - 1)
+        var itemsA = (a ?? []).OfType<JsonObject>().ToDictionary(EntityValues.KeyOf);
+        var itemsB = (b ?? []).OfType<JsonObject>().ToDictionary(EntityValues.KeyOf);
+        foreach (var key in itemsA.Keys.Union(itemsB.Keys))
         {
-            var segment = segments[i];
-            if (segment is "@settings" or "@layout" && element is EntityItem item)
+            var itemPath = EntityValues.Join(fieldPath, key.ToString());
+            if (itemsA.TryGetValue(key, out var itemA) && itemsB.TryGetValue(key, out var itemB)
+                && EntityValues.TypeOf(itemA) == EntityValues.TypeOf(itemB)
+                && itemTypes.Find(field.ItemTypeGroup!, EntityValues.TypeOf(itemA)) is { } itemType)
             {
-                element = segment == "@settings"
-                    ? create ? item.EnsureSettings() : item.Settings
-                    : create ? item.EnsureLayout() : item.Layout;
-                i++;
-                continue;
+                CompareObject(itemA, itemB, itemType.Shape, itemTypes, itemPath, variant, changes);
             }
-
-            var list = ItemListOf(element, segment, change.Variant, create);
-            if (i + 1 == segments.Length - 1)
+            else if (!JsonNode.DeepEquals(itemsA.GetValueOrDefault(key), itemsB.GetValueOrDefault(key)))
             {
-                var last = segments[^1];
-                return list is null ? null
-                    : last == Order ? new Location(null, null, list, null, Order: true)
-                    : Guid.TryParse(last, out var key) ? new Location(null, null, list, key, Order: false)
-                    : null;
+                changes.Add(new ChangedPath(itemPath, variant.Key, Structural: true));
             }
-
-            element = Guid.TryParse(segments[i + 1], out var itemKey) ? list?.FirstOrDefault(n => n.Key == itemKey) : null;
-            i += 2;
         }
 
-        if (element is null)
+        if (!itemsA.Keys.Where(itemsB.ContainsKey).SequenceEqual(itemsB.Keys.Where(itemsA.ContainsKey)))
         {
-            return null;
+            changes.Add(new ChangedPath(EntityValues.Join(fieldPath, Order), variant.Key, Structural: true));
         }
-
-        var values = create ? element.Variant(change.Variant) : element.VariantOrNull(change.Variant);
-        return new Location(values, segments[^1], null, null, Order: false);
     }
 
-    /// <summary>An items field's items, invariant if the element has them so, else in the change's variant.</summary>
-    private static List<EntityItem>? ItemListOf(EntityElement element, string alias, VariantId variant, bool create)
-    {
-        if (element.Items.TryGetValue(alias, out var invariant))
-        {
-            return invariant;
-        }
+    private static IEnumerable<VariantId> Variants(JsonObject? owner, FieldDefinition field)
+        => owner is null ? [] : EntityValues.Values(owner, field).Select(v => v.Variant);
 
-        var values = create ? element.Variant(variant) : element.VariantOrNull(variant);
-        return create ? values!.ItemsOf(alias) : values?.Items.GetValueOrDefault(alias);
+    // Where a change is, in a document: its own variant for each varying value on the way.
+    private static PathTarget? Find(JsonObject root, ElementShape shape, ItemTypeRegistry itemTypes, ChangedPath change, bool create)
+    {
+        var path = change.Structural && !change.Path.EndsWith("/" + Order, StringComparison.Ordinal) && create
+            ? change.Path[..change.Path.LastIndexOf('/')] // the items field, to put their item back into
+            : change.Path;
+        try
+        {
+            return EntityValues.Find(root, shape, itemTypes, path, (field, _) => change.Variant.Narrow(field.Variations), create);
+        }
+        catch (AbilityInputException)
+        {
+            return null; // Not there in this version.
+        }
     }
 }

@@ -109,14 +109,14 @@ This is the core idea: a product-neutral way to describe and edit any entity. Re
 
 | File | What it is |
 | --- | --- |
-| `Entities/Structure.cs` | The structure language. `ElementShape` holds fields. A **field** has a value type, required, allowed values, references and `ContentVariation`. One value type is `Items`: typed elements each with its own key (rules, blocks, workflow steps), with min and max, optional per-item settings, and placement values (`ItemLayout`). `ItemTypeRegistry` maps a group to item types, registered once or read from an `IItemTypeSource`: a product's plugin registry, read whenever needed |
+| `Entities/Structure.cs` | The structure language. `ElementShape` holds fields. A **field** has a value type, required, allowed values, references and `ContentVariation`. Two value types nest: `Object` (fields of its own, such as a block's settings or a grid block's layout) and `Items` (keyed, typed objects: rules, blocks, workflow steps, with min and max). `ItemTypeRegistry` maps a group to item types, registered once or read from an `IItemTypeSource`: a product's plugin registry, read whenever needed |
 | `Entities/IEntityDefinition.cs` | What a product implements: describe, new, load, validate, save, find, and optional subtypes (document types). `IVersionedEntityDefinition` is for products with version history |
-| `Entities/EntityDocument.cs` | The working copy: a typed tree (`EntityDocument` → `EntityElement` → `EntityItem`) of fields (values, or lists of items) per culture and segment. Its JSON form is what tools return |
-| `Entities/EntityEditor.cs` | Path editing, generalised from Umbraco.AI's block path engine: `field/{key}/field`, `{item}/@settings`, `{item}/@layout`. `FieldChecker` checks and normalizes values. A UDI given for a reference is turned into the field's own form |
+| `Entities/EntityDocument.cs` | The working copy: one JSON value tree. A varying value is stored per variant where its field is. `EntityValues` reads and writes values through their fields, `Walk` lists every value, and `Find` is the one path walker: object steps by field, item steps by key |
+| `Entities/EntityEditor.cs` | Path editing over `EntityValues.Find`, generalised from Umbraco.AI's block path engine: `title`, `blocks/{key}/heading`, `blocks/{key}/settings/theme`. `FieldChecker` checks and normalizes values. A UDI given for a reference is turned into the field's own form |
 | `Entities/StructureValidator.cs` | Generic validation from the structure: required (per culture), allowed values, references that exist (including in the same set), item counts. It also renders the JSON Schema the model sees |
 | `Entities/EntityAbilities.cs` | The generic tools every entity gets: `entity.getSchema`, `find`, `get`, `create`, `setValue`, `addItem`, `removeItem`, `moveItem` |
 | `Entities/EntityUdis.cs` | Identity is a UDI. Entity types are UDI entity types, registered with `UdiParser` |
-| `Entities/ValueHandlers.cs` | `IValueHandler`: a value type's own inner model (paths, set, add, remove and move, rules between its parts, problems). The framework routes paths that go into a handled field to it |
+| `Entities/ValueHandlers.cs` | `IValueHandler`: behaviour a value's schema can't say. Told when items inside the value are added, removed or moved, and checks rules between its parts. Paths and storage stay the framework's |
 | `Entities/EntityAuthorization.cs` | `IAuthorizingEntityDefinition`: the product answers "may this user read, create or update this entity, in these cultures?" |
 | `Entities/ItemTypeFields.cs` | Turns a product's setting metadata (CLR type, rules, editor alias, bindings) into fields: how plugin seams become item types with nothing written per plugin |
 | `Entities/AbilityItemTypes.cs` | Abilities become item types: workflow steps can be any package's abilities |
@@ -125,7 +125,7 @@ Then the typed layer, which is what a package developer actually writes against:
 
 | File | What it is |
 | --- | --- |
-| `Entities/Models/ModelAttributes.cs` | `[Entity]`, `[ItemType]`, `[Items]`, `[EntityName]`, `[EntityVersion]`, `[ItemSettings]`, `[ItemLayout]`, `Varying<T>`, `EntityItemModel` |
+| `Entities/Models/ModelAttributes.cs` | `[Entity]`, `[ItemType]`, `[Items]`, `[EntityName]`, `[EntityVersion]`, `[ValueHandler]`, `Varying<T>`, `EntityItemModel`, `DynamicItem`. A property whose type is a class becomes an object field |
 | `Entities/Models/ModelConfiguration.cs` | The same, fluently, for classes a package can't annotate, such as Management API request models |
 | `Entities/Models/ModelShapes.cs` | Works out the structure from a class, maps the class to and from an `EntityDocument`, and runs DataAnnotations on entity paths |
 | `Entities/Models/EntityDefinitionBase.cs` | `EntityDefinitionBase<TModel>`: a package implements load and save of its model, and the framework does the rest. `ModelEditAbilityBase` turns `Edit(model, input)` into an ability that works directly and inside a change set |

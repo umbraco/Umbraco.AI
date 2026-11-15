@@ -3,54 +3,29 @@ using System.Text.Json.Nodes;
 namespace Umbraco.Abilities.Entities;
 
 /// <summary>
-/// The owner of a value's inner model. A field's value is opaque to the framework unless its value type has a handler:
-/// a property editor's (Rich Text's markup and blocks, a Block Grid's layout) or a product's own. The handler defines
-/// the paths inside the value, what setting, adding, removing and moving mean there, and the rules between its parts.
-/// The framework routes any path that goes into the field to it. Without a handler a value is set whole and checked
-/// against its schema.
-/// <para>
-/// Keyed items (<see cref="FieldType.Items"/>) are the framework's own built-in value type, for products with fixed
-/// models (discount rules, workflow steps); they keep per-item rebasing and reference checks. A value with a handler
-/// rebases per field: finer merging is a capability a handler could add later.
-/// </para>
+/// Behaviour a value's schema can't express. Paths and storage are the framework's for every value; a handler adds the
+/// rest for its field's value: what else changes when an item inside it is added, removed or moved, and the rules
+/// between its parts. Rich Text is <c>{ markup, blocks }</c>: its handler places a block's tag in the markup when the
+/// block is added, and requires every tag to have a block.
 /// </summary>
 public interface IValueHandler
 {
-    /// <summary>Told to the model in the field's schema: what the inner paths are and what can be done there.</summary>
+    /// <summary>Told to the model in the field's schema: what else happens when the value is edited.</summary>
     string Usage { get; }
 
-    /// <summary>Sets the value at a path inside <paramref name="value"/>, e.g. <c>markup</c> or <c>blocks/{key}/heading</c>.</summary>
-    JsonNode? SetValue(JsonNode? value, string innerPath, JsonNode? newValue);
+    /// <summary>An item was added to the items field at <paramref name="itemsPath"/> inside <paramref name="value"/>.</summary>
+    void ItemAdded(JsonObject value, string itemsPath, Guid key)
+    {
+    }
 
-    /// <summary>Adds an item at a path inside the value. Returns the new value and the item's path inside it.</summary>
-    ValueItem AddItem(JsonNode? value, string innerPath, string itemType, JsonObject? fields, Guid key, int? position);
+    void ItemRemoved(JsonObject value, string itemsPath, Guid key)
+    {
+    }
 
-    JsonNode? RemoveItem(JsonNode? value, string innerPath, Guid key);
-
-    JsonNode? MoveItem(JsonNode? value, string innerPath, Guid key, int position);
+    void ItemMoved(JsonObject value, string itemsPath, Guid key)
+    {
+    }
 
     /// <summary>Problems in the value, with paths inside it, e.g. a block tag in the markup with no block.</summary>
-    IEnumerable<Problem> Validate(JsonNode? value);
-}
-
-public sealed record ValueItem(JsonNode Value, string ItemPath);
-
-/// <summary>A handler that supports only some operations: the rest refuse with a correctable message.</summary>
-public abstract class ValueHandlerBase : IValueHandler
-{
-    public abstract string Usage { get; }
-
-    public virtual JsonNode? SetValue(JsonNode? value, string innerPath, JsonNode? newValue) => throw NotSupported("Setting a value inside");
-
-    public virtual ValueItem AddItem(JsonNode? value, string innerPath, string itemType, JsonObject? fields, Guid key, int? position) => throw NotSupported("Adding an item to");
-
-    public virtual JsonNode? RemoveItem(JsonNode? value, string innerPath, Guid key) => throw NotSupported("Removing an item from");
-
-    public virtual JsonNode? MoveItem(JsonNode? value, string innerPath, Guid key, int position) => throw NotSupported("Moving an item in");
-
-    public virtual IEnumerable<Problem> Validate(JsonNode? value) => [];
-
-    protected static AbilityInputException NotSupported(string what) => new($"{what} this value isn't supported. Set the whole value instead.");
-
-    protected static AbilityInputException Invalid(string path, string message) => new(message, [new Problem(path, message)]);
+    IEnumerable<Problem> Validate(JsonObject value) => [];
 }

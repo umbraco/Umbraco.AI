@@ -218,12 +218,33 @@ public sealed class DiscountProviderItemTypes(string group, DiscountProviderColl
 /// </summary>
 internal static class ProviderItems
 {
+    private const string Children = "children";
+
+    private static JsonObject ToJson(DynamicItem item)
+    {
+        var json = EntityValues.NewItem(item.Key, item.Type);
+        foreach (var (alias, value) in item.Fields)
+        {
+            json[alias] = value?.DeepClone();
+        }
+
+        return json;
+    }
+
+    private static DynamicItem FromJson(JsonObject json) => new()
+    {
+        Key = EntityValues.KeyOf(json),
+        Type = EntityValues.TypeOf(json),
+        Fields = json.Where(p => p.Key is not (EntityValues.KeyProperty or EntityValues.TypeProperty)).ToDictionary(p => p.Key, p => p.Value?.DeepClone()),
+    };
+
     public static DynamicItem ToItem(DiscountProviderCollection providers, DiscountRuleConfig rule, Guid key)
     {
         var item = ToItem(providers, rule.RuleProviderAlias, rule.Settings, key);
         if (rule.Children is { Count: > 0 } children)
         {
-            item.Items["children"] = children.Select((c, i) => ToItem(providers, c, DiscountDefinition.DerivedKey(key, i, c.RuleProviderAlias))).ToList();
+            // A group's child rules are an items field like any other: an array of keyed, typed items.
+            item.Fields[Children] = new JsonArray(children.Select((c, i) => (JsonNode?)ToJson(ToItem(providers, c, DiscountDefinition.DerivedKey(key, i, c.RuleProviderAlias)))).ToArray());
         }
 
         return item;
@@ -244,11 +265,11 @@ internal static class ProviderItems
     }
 
     public static DiscountRuleConfig ToRuleConfig(DynamicItem item)
-        => new(item.Type, Settings(item), item.Items.GetValueOrDefault("children")?.Select(ToRuleConfig).ToList());
+        => new(item.Type, Settings(item), (item.Fields.GetValueOrDefault(Children) as JsonArray)?.OfType<JsonObject>().Select(c => ToRuleConfig(FromJson(c))).ToList());
 
     public static Dictionary<string, string> Settings(DynamicItem item)
         => item.Fields
-            .Where(f => f.Value is not null)
+            .Where(f => f.Value is not null && f.Key != Children)
             .ToDictionary(f => f.Key, f => f.Value is JsonValue scalar && scalar.TryGetValue<string>(out var text) ? text : f.Value!.ToJsonString(), StringComparer.Ordinal);
 }
 

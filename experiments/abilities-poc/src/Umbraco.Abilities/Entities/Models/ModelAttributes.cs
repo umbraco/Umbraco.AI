@@ -49,26 +49,11 @@ public sealed class ItemsAttribute(string itemTypeGroup) : Attribute
 
     /// <summary>Maximum number of items; -1 for none.</summary>
     public int Max { get; set; } = -1;
-
-    /// <summary>A class describing the values an item has because of its place in this field, e.g. a grid's column span.</summary>
-    public Type? Layout { get; set; }
-}
-
-/// <summary>On an item class: the property that holds the item's settings element (a block's settings).</summary>
-[AttributeUsage(AttributeTargets.Property)]
-public sealed class ItemSettingsAttribute : Attribute
-{
-}
-
-/// <summary>On an item class: the property that holds the item's placement values, of the field's layout type.</summary>
-[AttributeUsage(AttributeTargets.Property)]
-public sealed class ItemLayoutAttribute : Attribute
-{
 }
 
 /// <summary>
-/// The handler that owns the property's value model, for a value whose editor defines one (Rich Text). The handler type
-/// needs a parameterless constructor and may have a static <c>Schema</c> property giving the value's JSON Schema.
+/// The handler that adds behaviour to an object property's value beyond its fields (Rich Text keeping its markup's
+/// block tags in step with its blocks). The handler type needs a parameterless constructor.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]
 public sealed class ValueHandlerAttribute(Type handlerType) : Attribute
@@ -89,21 +74,18 @@ public abstract class EntityItemModel
 /// <summary>
 /// An item whose type has no model class: a plugin's item type, such as a Commerce discount rule provider or an Automate
 /// action, described by its product's registry at run time. A model class declares an items field of these
-/// (<c>List&lt;DynamicItem&gt;</c>) when its item types are a plugin seam. Values are the item's JSON fields.
+/// (<c>List&lt;DynamicItem&gt;</c>) when its item types are a plugin seam. Fields are the item's values as JSON, items fields included.
 /// </summary>
 public class DynamicItem : EntityItemModel
 {
     public string Type { get; set; } = string.Empty;
 
     public Dictionary<string, System.Text.Json.Nodes.JsonNode?> Fields { get; init; } = new(StringComparer.Ordinal);
-
-    /// <summary>Nested items fields, e.g. a rule group's child rules.</summary>
-    public Dictionary<string, List<DynamicItem>> Items { get; init; } = new(StringComparer.Ordinal);
 }
 
 /// <summary>
 /// A value per variant, keyed by culture (<c>"en-US"</c>), or <c>"culture|segment"</c> when it also varies by segment.
-/// A property of this type varies by culture unless <see cref="VariationsAttribute"/> says otherwise.
+/// A property of this type varies by culture.
 /// </summary>
 public sealed class Varying<T> : Dictionary<string, T>
 {

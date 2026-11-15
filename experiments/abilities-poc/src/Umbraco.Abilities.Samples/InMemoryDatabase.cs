@@ -93,7 +93,7 @@ public abstract class InMemoryModelDefinition<TModel>(InMemoryDatabase database,
     public override Task SaveModelAsync(TModel model, CancellationToken cancellationToken = default)
     {
         var document = ToDocument(model);
-        Database.Put(EntityType, document.Key, EntityJson.ToJson(document.Root));
+        Database.Put(EntityType, document.Key, document.Root);
         return Task.CompletedTask;
     }
 
@@ -110,7 +110,7 @@ public abstract class InMemoryModelDefinition<TModel>(InMemoryDatabase database,
         => Database.GetVersion(EntityType, key, version) is { } row ? Document(key, row) : null;
 
     private EntityDocument Document(Guid key, InMemoryDatabase.Row row)
-        => new() { EntityType = EntityType, Key = key, LiveVersion = row.Version, Root = EntityJson.FromJson(row.Root) };
+        => new() { EntityType = EntityType, Key = key, LiveVersion = row.Version, Root = row.Root };
 }
 
 /// <summary>
@@ -142,7 +142,7 @@ public abstract class InMemoryEntityDefinition(InMemoryDatabase database, string
 
     public Task<EntityDocument?> LoadAsync(Guid key, CancellationToken cancellationToken = default)
         => Task.FromResult(Database.Get(EntityType, key) is { } row
-            ? new EntityDocument { EntityType = EntityType, Key = key, LiveVersion = row.Version, Root = EntityJson.FromJson(row.Root) }
+            ? new EntityDocument { EntityType = EntityType, Key = key, LiveVersion = row.Version, Root = row.Root }
             : null);
 
     public virtual Task<IReadOnlyList<Problem>> ValidateAsync(EntityDocument document, CancellationToken cancellationToken = default)
@@ -150,16 +150,16 @@ public abstract class InMemoryEntityDefinition(InMemoryDatabase database, string
 
     public virtual Task<EntityRef> SaveAsync(EntityDocument document, CancellationToken cancellationToken = default)
     {
-        Database.Put(EntityType, document.Key, EntityJson.ToJson(document.Root));
+        Database.Put(EntityType, document.Key, document.Root);
         return Task.FromResult(ToRef(document));
     }
 
     public Task<IReadOnlyList<EntityRef>> FindAsync(string query, CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<EntityRef>>(Database.All(EntityType)
-            .Select(r => ToRef(new EntityDocument { EntityType = EntityType, Key = r.Key, Root = EntityJson.FromJson(r.Row.Root) }))
+            .Select(r => ToRef(new EntityDocument { EntityType = EntityType, Key = r.Key, Root = r.Row.Root }))
             .Where(r => r.Name.Contains(query, StringComparison.OrdinalIgnoreCase))
             .ToList());
 
     public EntityRef ToRef(EntityDocument document)
-        => new(EntityType, document.Key, document.Root.ReadAny(nameField)?.GetValue<string>() ?? "(unnamed)", $"{editUrlPrefix}/{document.Key}");
+        => new(EntityType, document.Key, EntityValues.ReadAny(document.Root, nameField)?.GetValue<string>() ?? "(unnamed)", $"{editUrlPrefix}/{document.Key}");
 }

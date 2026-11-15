@@ -117,7 +117,6 @@ public sealed class GetEntitySchemaAbility(EntityDefinitionRegistry definitions,
                 {
                     ["name"] = itemType.Name,
                     ["fields"] = SchemaWriter.Fields(itemType.Shape, itemTypes, context.UserKey),
-                    ["settings"] = itemType.SettingsShape is { } settings ? SchemaWriter.Fields(settings) : null,
                 };
             }
 
@@ -222,8 +221,7 @@ public sealed class CreateEntityAbility : EntityEditAbilityBase<CreateEntityInpu
 
     protected override object? Apply(EntityDocument document, CreateEntityInput input, EntityEditContext context)
     {
-        var target = Target(document, input, context);
-        EntityEditor.SetFields(target, EntityEditor.ResolveElement(target, string.Empty), input.Fields);
+        EntityEditor.SetFields(Target(document, input, context), document.Root, context.Structure.Shape, string.Empty, input.Fields);
         return context.Definition.ToRef(document);
     }
 }
@@ -231,21 +229,19 @@ public sealed class CreateEntityAbility : EntityEditAbilityBase<CreateEntityInpu
 public sealed record SetEntityValueInput(
     [property: Description("Entity type.")] string EntityType,
     [property: Description("Entity key.")] Guid? Key,
-    [property: Description("Path of the element that holds the field: \"\" for the entity itself, \"field/itemKey\" for an item, or \"field/itemKey/@settings\" or \"@layout\".")] string? ElementPath,
-    [property: Description("Field alias.")] string Field,
+    [property: Description("Path of the value: a field alias, going down through items by key and objects by field, e.g. \"title\", \"blocks/{itemKey}/heading\" or \"blocks/{itemKey}/settings/theme\".")] string Path,
     [property: Description("The new value, matching the field's schema. null clears it.")] JsonNode? Value,
     [property: Description("Culture to edit, e.g. 'en-US'. Needed for values that vary by culture; ignored for invariant values.")] string? Culture = null,
     [property: Description("Segment to edit. Omit for the default segment.")] string? Segment = null) : IEntityEditInput;
 
 [Ability("entity.setValue", "Set entity value", Kind = AbilityKind.Write, Reversible = true,
-    Description = "Sets one field on the entity, on an item, or on an item's @settings or @layout, in the active change set. " +
-                  "Give a culture for values that vary by culture. Problem paths from changeSet.validate have the same form: elementPath plus field.")]
+    Description = "Sets the value at a path, in the active change set. A path goes down through items by key and objects by " +
+                  "field. Give a culture for values that vary by culture. Problem paths from changeSet.validate have the same form.")]
 public sealed class SetEntityValueAbility : EntityEditAbilityBase<SetEntityValueInput>
 {
     protected override object? Apply(EntityDocument document, SetEntityValueInput input, EntityEditContext context)
     {
-        // Inside a value whose type has a handler (Rich Text's markup, a block's field), the handler sets it.
-        return new { path = EntityEditor.SetValue(Target(document, input, context), input.ElementPath, input.Field, input.Value) };
+        return new { path = EntityEditor.SetValue(Target(document, input, context), input.Path, input.Value) };
     }
 }
 
@@ -261,8 +257,8 @@ public sealed record AddEntityItemInput(
     [property: Description("Segment to edit. Omit for the default segment.")] string? Segment = null) : IEntityEditInput;
 
 [Ability("entity.addItem", "Add entity item", Kind = AbilityKind.Write, Reversible = true,
-    Description = "Adds a typed item to an items field, in the active change set. Returns the item's path; use it as the " +
-                  "start of a fieldPath to fill items fields inside it, or as elementPath to set its fields.")]
+    Description = "Adds a typed item to an items field, in the active change set. Returns the item's path; set its fields " +
+                  "at '<item path>/<field>', and use '<item path>/<items field>' as fieldPath to add items inside it.")]
 public sealed class AddEntityItemAbility : EntityEditAbilityBase<AddEntityItemInput>
 {
     protected override void FillKeys(JsonObject input) => EnsureKey(input, "itemKey");

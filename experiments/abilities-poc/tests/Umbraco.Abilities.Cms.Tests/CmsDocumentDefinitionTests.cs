@@ -219,12 +219,14 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         var fields = schema.GetProperty("fields").GetProperty("properties");
         Assert.That(TypesIn(fields.GetProperty("blocks")), Is.EquivalentTo(new[] { "hero", "textBlock", "cardGroup" }));
         Assert.That(TypesIn(fields.GetProperty("grid")), Is.EquivalentTo(new[] { "twoColumns", "textBlock" }));
-        Assert.That(fields.GetProperty("grid").GetProperty("x-item-layout").GetProperty("required")[0].GetString(), Is.EqualTo("columnSpan"));
 
         var hero = await _agent.OkAsync("entity_getSchema", """{ "entityType": "document", "subtype": "landingPage", "itemTypes": ["hero", "twoColumns"] }""");
-        Assert.That(hero.GetProperty("itemTypes").GetProperty("hero").GetProperty("settings").GetProperty("properties").TryGetProperty("theme", out _), Is.True);
-        var areas = hero.GetProperty("itemTypes").GetProperty("twoColumns").GetProperty("fields").GetProperty("properties").EnumerateObject()
-            .Where(p => p.Value.TryGetProperty("x-item-types", out _)).Select(p => p.Name);
+        // Settings and a grid block's layout are object fields of the block; areas are items fields.
+        var heroFields = hero.GetProperty("itemTypes").GetProperty("hero").GetProperty("fields").GetProperty("properties");
+        Assert.That(heroFields.GetProperty("settings").GetProperty("properties").TryGetProperty("theme", out _), Is.True);
+        var rowFields = hero.GetProperty("itemTypes").GetProperty("twoColumns").GetProperty("fields").GetProperty("properties");
+        Assert.That(rowFields.GetProperty("layout").GetProperty("required")[0].GetString(), Is.EqualTo("columnSpan"));
+        var areas = rowFields.EnumerateObject().Where(p => p.Value.TryGetProperty("x-item-types", out _)).Select(p => p.Name);
         Assert.That(areas, Is.EquivalentTo(new[] { "left", "right" }));
     }
 
@@ -261,14 +263,15 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
 
         // And loading it back through the definition gives the same working copy shape.
         var loaded = (await _documents.LoadAsync(page.Key))!;
-        var hero = loaded.Root.ItemsOf("blocks").Single(b => b.Key == page.Hero);
+        // A value tree: blocks are keyed items, settings and layout are objects, and a varying value is per culture.
+        var hero = loaded.Root["blocks"]!.AsArray().Single(b => EntityValues.KeyOf(b!.AsObject()) == page.Hero)!;
         Assert.Multiple(() =>
         {
-            Assert.That(hero.VariantOrNull(new VariantId("da-DK", null))!.Fields["heading"]!.ToString(), Is.EqualTo("Sommerudsalg"));
-            Assert.That(hero.Settings!.Fields["theme"]!.ToString(), Is.EqualTo("dark"));
-            var row = loaded.Root.ItemsOf("grid")[0];
-            Assert.That(row.Layout!.Fields["columnSpan"]!.GetValue<int>(), Is.EqualTo(12));
-            Assert.That(row.ItemsOf("left")[0].Key, Is.EqualTo(page.AreaText));
+            Assert.That(hero["heading"]!["da-DK"]!.ToString(), Is.EqualTo("Sommerudsalg"));
+            Assert.That(hero["settings"]!["theme"]!.ToString(), Is.EqualTo("dark"));
+            var row = loaded.Root["grid"]![0]!;
+            Assert.That(row["layout"]!["columnSpan"]!.GetValue<int>(), Is.EqualTo(12));
+            Assert.That(EntityValues.KeyOf(row["left"]![0]!.AsObject()), Is.EqualTo(page.AreaText));
         });
     }
 
@@ -285,7 +288,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
 
         // A hero with no values yet exists in both cultures, and its mandatory heading is missing in both.
         var empty = await AddItemAsync(page, "blocks", "hero", "{}");
-        await SetAsync(page, $"{empty}/@settings", "theme", "\"light\"");
+        await SetAsync(page, $"{empty}/settings", "theme", "\"light\"");
 
         // Ask Umbraco directly, skipping the generic structure check, to see its own errors mapped back.
         var working = (await _changeSets.GetWorkingStateAsync(_changeSets.Get(_agent.ChangeSetId!.Value), "document", page))!;
@@ -571,7 +574,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         _agent.UserKey = reader;
         await _agent.StartChangeSetAsync("Edit");
         await _agent.OkAsync("entity_get", $$"""{ "entityType": "document", "key": "{{page.Key}}" }""");
-        var refused = await _agent.FailAsync("entity_setValue", $$"""{ "entityType": "document", "key": "{{page.Key}}", "elementPath": "", "field": "subtitle", "value": "Changed", "culture": "en-US" }""");
+        var refused = await _agent.FailAsync("entity_setValue", $$"""{ "entityType": "document", "key": "{{page.Key}}", "path": "subtitle", "value": "Changed", "culture": "en-US" }""");
         Assert.Multiple(() =>
         {
             Assert.That(refused.GetProperty("status").GetString(), Is.EqualTo("AccessDenied"));
@@ -713,14 +716,14 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
 
         var hero = await AddItemAsync(page, "blocks", "hero", """{ "heading": "Summer sale" }""", "en-US");
         await SetAsync(page, hero, "heading", "\"Sommerudsalg\"", "da-DK");
-        await SetAsync(page, $"{hero}/@settings", "theme", "\"dark\"");
+        await SetAsync(page, $"{hero}/settings", "theme", "\"dark\"");
 
         var row = await AddItemAsync(page, "grid", "twoColumns", """{ "label": "Intro row" }""");
-        await SetAsync(page, $"{row}/@layout", "columnSpan", "12");
+        await SetAsync(page, $"{row}/layout", "columnSpan", "12");
         var areaText = await AddItemAsync(page, $"{row}/left", "textBlock", """{ "text": "Left column" }""", "en-US");
-        await SetAsync(page, $"{areaText}/@layout", "columnSpan", "6");
+        await SetAsync(page, $"{areaText}/layout", "columnSpan", "6");
         var rootText = await AddItemAsync(page, "grid", "textBlock", """{ "text": "Below the row" }""", "en-US");
-        await SetAsync(page, $"{rootText}/@layout", "columnSpan", "12");
+        await SetAsync(page, $"{rootText}/layout", "columnSpan", "12");
 
         return new SummerPage(page, Guid.Parse(hero.Split('/')[^1]), Guid.Parse(areaText.Split('/')[^1]));
     }
@@ -730,7 +733,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
             .GetProperty("key").GetGuid();
 
     private Task<JsonElement> SetAsync(Guid page, string elementPath, string field, string valueJson, string? culture = null)
-        => _agent.OkAsync("entity_setValue", $$"""{ "entityType": "document", "key": "{{page}}", "elementPath": "{{elementPath}}", "field": "{{field}}", "value": {{valueJson}}{{Culture(culture)}} }""");
+        => _agent.OkAsync("entity_setValue", $$"""{ "entityType": "document", "key": "{{page}}", "path": "{{elementPath}}/{{field}}", "value": {{valueJson}}{{Culture(culture)}} }""");
 
     private async Task<string> AddItemAsync(Guid page, string fieldPath, string itemType, string fieldsJson, string? culture = null)
         => (await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "document", "key": "{{page}}", "fieldPath": "{{fieldPath}}", "itemType": "{{itemType}}", "fields": {{fieldsJson}}{{Culture(culture)}} }"""))

@@ -24,13 +24,16 @@ public enum FieldType
     /// <summary>The key of an item in an items field of the same entity (<see cref="FieldDefinition.ReferencesItemIn"/>).</summary>
     ItemReference,
 
-    /// <summary>Any JSON value matching <see cref="FieldDefinition.Schema"/>: the escape hatch for editor values that are not scalars.</summary>
+    /// <summary>Any JSON value matching <see cref="FieldDefinition.Schema"/>, set whole: for editor values the framework doesn't describe.</summary>
     Json,
 
+    /// <summary>An object whose fields are described (<see cref="FieldDefinition.Shape"/>), so paths go into it: <c>seo/title</c>, a block's <c>settings/theme</c>.</summary>
+    Object,
+
     /// <summary>
-    /// Items: typed elements, each with its own key, of the types registered for <see cref="FieldDefinition.ItemTypeGroup"/>.
-    /// A Block List, discount rules, workflow steps. Each item is addressed by key (<c>rules/{key}/minTotal</c>), so it can
-    /// be edited, reported on and rebased on its own. A single item (a single block) is <see cref="FieldDefinition.Max"/> 1.
+    /// An array of items: objects with a <c>key</c> and a <c>type</c>, the type registered for
+    /// <see cref="FieldDefinition.ItemTypeGroup"/>. A Block List, discount rules, workflow steps. Paths step into an item by
+    /// its key (<c>rules/{key}/minTotal</c>), so it can be edited, reported on and rebased on its own.
     /// </summary>
     Items,
 }
@@ -42,7 +45,7 @@ public sealed record VariantId(string? Culture, string? Segment)
 
     public bool IsInvariant => Culture is null && Segment is null;
 
-    /// <summary>The key a variant is stored under in an element's <c>variants</c> object.</summary>
+    /// <summary>The key a varying value is stored under: <c>{ "en-US": …, "da-DK": … }</c>.</summary>
     public string Key => Segment is null ? Culture ?? string.Empty : $"{Culture}|{Segment}";
 
     /// <summary>Keeps only the parts a value varies by, as the CMS does for each property.</summary>
@@ -101,26 +104,28 @@ public sealed record FieldDefinition(string Alias, string Description, FieldType
     /// <summary>The most items. 1 for a single item.</summary>
     public int? Max { get; init; }
 
-    /// <summary>
-    /// Values that belong to an item's place in this field rather than to the item, such as a block grid's column and row
-    /// span. Edited at <c>{itemPath}/@layout</c>.
-    /// </summary>
-    public ElementShape? ItemLayout { get; init; }
+    // ── For FieldType.Object ─────────────────────────────────────────────────────────────────────
+
+    /// <summary>The object's fields.</summary>
+    public ElementShape? Shape { get; init; }
 
     public bool IsItems => Type == FieldType.Items;
 
     /// <summary>An items field holding items of a group.</summary>
     public static FieldDefinition ItemsOf(string alias, string description, string itemTypeGroup)
         => new(alias, description, FieldType.Items) { ItemTypeGroup = itemTypeGroup };
+
+    /// <summary>An object field with its own fields.</summary>
+    public static FieldDefinition ObjectOf(string alias, string description, ElementShape shape)
+        => new(alias, description, FieldType.Object) { Shape = shape };
 }
 
-/// <summary>The shape of the entity root or of an item: its fields. An items field holds items with shapes of their own, so shapes nest.</summary>
+/// <summary>The fields of an object: the entity, an item, or an object value. Items and objects have fields of their own, so shapes nest.</summary>
 public sealed record ElementShape(IReadOnlyList<FieldDefinition> Fields)
 {
     public static ElementShape Of(params FieldDefinition[] fields) => new(fields);
 
-    /// <summary>The fields holding values (not items).</summary>
-    public IEnumerable<FieldDefinition> ValueFields => Fields.Where(f => !f.IsItems);
+    public FieldDefinition? Find(string alias) => Fields.FirstOrDefault(f => f.Alias == alias);
 
     /// <summary>The fields holding items.</summary>
     public IEnumerable<FieldDefinition> ItemFields => Fields.Where(f => f.IsItems);
@@ -137,9 +142,6 @@ public sealed record EntityStructure(string EntityType, string Name, string Desc
 
 public sealed record ItemTypeDefinition(string Group, string Alias, string Name, string Description, ElementShape Shape)
 {
-    /// <summary>A second element per item, edited at <c>{itemPath}/@settings</c>, like a block's settings element type.</summary>
-    public ElementShape? SettingsShape { get; init; }
-
     /// <summary>Further groups the type belongs to, e.g. a grid block allowed both at the root and in areas.</summary>
     public IReadOnlyList<string> AlsoIn { get; init; } = [];
 
@@ -189,8 +191,8 @@ public sealed class ItemTypeRegistry
     }
 
     /// <summary>
-    /// Adds an item type from its model class: the alias, name and description from <c>[ItemType]</c>, the fields and
-    /// items fields from its properties, and the settings from its <c>[ItemSettings]</c> property.
+    /// Adds an item type from its model class: the alias, name and description from <c>[ItemType]</c>, and the fields
+    /// from its properties.
     /// </summary>
     public ItemTypeRegistry Add<T>(string group, params string[] alsoIn)
         where T : class
@@ -205,7 +207,6 @@ public sealed class ItemTypeRegistry
 
         return Add(new ItemTypeDefinition(group, alias, name, description, info.Shape)
         {
-            SettingsShape = info.Settings is { } settings ? Models.ModelShapes.ShapeOf(settings.PropertyType) : null,
             AlsoIn = alsoIn,
             ClrType = typeof(T),
         });

@@ -37,11 +37,12 @@ internal sealed class CmsStructureMapper(
     IContentTypeService contentTypes,
     IDataTypeService dataTypes,
     ItemTypeRegistry itemTypes,
-    IPropertyEditorSchemaService? schemas,
-    IReadOnlyDictionary<string, IValueHandler> editorHandlers)
+    IPropertyEditorSchemaService? schemas)
 {
     public const string NameField = "name";
     public const string ParentField = "parent";
+    public const string SettingsField = "settings";
+    public const string LayoutField = "layout";
 
     private readonly HashSet<Guid> _dataTypesInProgress = [];
 
@@ -114,9 +115,8 @@ internal sealed class CmsStructureMapper(
     }
 
     /// <summary>
-    /// Any other editor defines its own value model. Its handler, when one is registered for the editor, owns the paths
-    /// inside the value; otherwise the value is set whole, described by the editor's own value schema when it has one
-    /// (<see cref="IPropertyEditorSchemaService"/>), and checked by Umbraco when saved.
+    /// Any other editor defines its own value model. The value is set whole, described by the editor's own value schema
+    /// when it has one (<see cref="IPropertyEditorSchemaService"/>), and checked by Umbraco when saved.
     /// </summary>
     private async Task<PropertyMap> MapByEditorAsync(IPropertyType propertyType, string description, ContentVariation varies)
     {
@@ -132,8 +132,7 @@ internal sealed class CmsStructureMapper(
             // An editor whose schema can't be built is treated like one without a schema.
         }
 
-        var handler = editorHandlers.GetValueOrDefault(editor);
-        if (schema is null && handler is null)
+        if (schema is null)
         {
             description = $"{description} A value in the '{editor}' editor's own format.";
         }
@@ -142,7 +141,6 @@ internal sealed class CmsStructureMapper(
         {
             Variations = varies,
             Schema = schema,
-            Handler = handler,
         }, []);
     }
 
@@ -160,9 +158,11 @@ internal sealed class CmsStructureMapper(
         {
             var config = dataType.ConfigurationObject as BlockGridConfiguration ?? new BlockGridConfiguration();
             var columns = config.GridColumns ?? 12;
-            var layout = ElementShape.Of(
+            // Every grid block, at the root or in an area, has a layout: where it sits.
+            var layout = FieldDefinition.ObjectOf(LayoutField, "Where the block sits in the grid.", ElementShape.Of(
                 new FieldDefinition("columnSpan", $"Columns the block spans, 1 to {columns}.", FieldType.Integer, Required: true),
-                new FieldDefinition("rowSpan", "Rows the block spans.", FieldType.Integer));
+                new FieldDefinition("rowSpan", "Rows the block spans.", FieldType.Integer))) with
+            { Required = true };
 
             foreach (var block in config.Blocks)
             {
@@ -173,8 +173,7 @@ internal sealed class CmsStructureMapper(
                 {
                     Min = a.MinAllowed,
                     Max = a.MaxAllowed,
-                    ItemLayout = layout,
-                }).ToArray();
+                }).Append(layout).ToArray();
 
                 blocks.Add(await RegisterBlockAsync(dataType.Key, block.ContentElementTypeKey, block.SettingsElementTypeKey, areas, areaFields,
                     group: block.AllowAtRoot || !block.AllowInAreas ? rootGroup : areaGroup,
@@ -186,7 +185,6 @@ internal sealed class CmsStructureMapper(
                 Variations = varies,
                 Min = config.ValidationLimit.Min ?? (propertyType.Mandatory ? 1 : null),
                 Max = config.ValidationLimit.Max,
-                ItemLayout = layout,
             };
         }
         else
@@ -214,7 +212,7 @@ internal sealed class CmsStructureMapper(
         Guid contentKey,
         Guid? settingsKey,
         IReadOnlyList<AreaMap> areas,
-        FieldDefinition[] areaFields,
+        FieldDefinition[] extraFields,
         string group,
         IReadOnlyList<string> alsoIn)
     {
@@ -231,12 +229,14 @@ internal sealed class CmsStructureMapper(
         try
         {
             var shape = (await MapAsync(content, isDocument: false)).Shape;
-            var settings = settingsKey is { } key ? (await MapAsync(RequireType(key), isDocument: false)).Shape : null;
+            // A block's settings element is an object field of the block, beside its own fields.
+            FieldDefinition[] settings = settingsKey is { } key
+                ? [FieldDefinition.ObjectOf(SettingsField, "The block's settings.", (await MapAsync(RequireType(key), isDocument: false)).Shape)]
+                : [];
 
             itemTypes.AddIfMissing(new ItemTypeDefinition(group, content.Alias, content.Name ?? content.Alias, content.Description ?? string.Empty,
-                shape with { Fields = [.. shape.Fields, .. areaFields] })
+                shape with { Fields = [.. shape.Fields, .. settings, .. extraFields] })
             {
-                SettingsShape = settings,
                 AlsoIn = alsoIn,
             });
         }

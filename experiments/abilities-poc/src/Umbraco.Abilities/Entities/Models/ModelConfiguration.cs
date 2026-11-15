@@ -12,8 +12,6 @@ internal enum PropertyRole
     Items,
     Key,
     Version,
-    Settings,
-    Layout,
     Ignored,
 }
 
@@ -37,8 +35,6 @@ internal sealed class PropertyConfig
     public int? Min { get; set; }
 
     public int? Max { get; set; }
-
-    public Type? Layout { get; set; }
 
     public List<ValidationAttribute> Rules { get; } = [];
 }

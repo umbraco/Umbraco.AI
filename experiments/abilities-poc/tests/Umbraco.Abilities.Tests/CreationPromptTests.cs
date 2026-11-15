@@ -96,10 +96,10 @@ public class CreationPromptTests
 
         // Each problem path is an element path plus a field, so it maps straight onto entity_setValue.
         await _agent.OkAsync("entity_setValue", $$"""
-            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "elementPath": "", "field": "name", "value": "Fixed" }
+            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "path": "name", "value": "Fixed" }
             """);
         await _agent.OkAsync("entity_setValue", $$"""
-            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "elementPath": "{{rewardPath}}", "field": "percent", "value": 15 }
+            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "path": "{{rewardPath}}/percent", "value": 15 }
             """);
         await _agent.OkAsync("entity_addItem", $$"""
             { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 100 } }
@@ -126,7 +126,7 @@ public class CreationPromptTests
             { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rewards", "itemType": "percentageOff" }
             """);
         var wrongValue = await _agent.FailAsync("entity_setValue", $$"""
-            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "elementPath": "{{reward.GetProperty("path").GetString()}}", "field": "percent", "value": "ten" }
+            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "path": "{{reward.GetProperty("path").GetString()}}/percent", "value": "ten" }
             """);
         Assert.Equal($"{reward.GetProperty("path").GetString()}/percent", wrongValue.GetProperty("problems")[0].GetProperty("path").GetString());
 

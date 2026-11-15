@@ -13,19 +13,15 @@ using Umbraco.Cms.Core.Models;
 using Umbraco.Extensions;
 namespace Umbraco.Abilities.Entities.Models;
 
+/// <summary>A property that is a field. <see cref="ValueType"/> is the property's type, or a <see cref="Varying{T}"/>'s value type.</summary>
 internal sealed record FieldMember(PropertyInfo Property, FieldDefinition Field, bool Varying, Type ValueType, IReadOnlyList<ValidationAttribute> Rules);
-
-internal sealed record ItemsMember(PropertyInfo Property, FieldDefinition Field, bool Varying, Type ListType);
 
 internal sealed record ModelInfo(
     ElementShape Shape,
     IReadOnlyList<FieldMember> Fields,
-    IReadOnlyList<ItemsMember> ItemFields,
     PropertyInfo? Key,
     PropertyInfo? Name,
     PropertyInfo? Version,
-    PropertyInfo? Settings,
-    PropertyInfo? Layout,
     ContentVariation Variations,
     (string EntityType, string Name, string Description)? Entity,
     (string Alias, string Name, string Description)? ItemType);
@@ -62,9 +58,7 @@ public static class ModelShapes
     {
         var typeConfig = ModelConfiguration.Find(type);
         var fields = new List<FieldMember>();
-        var itemFields = new List<ItemsMember>();
-        var ordered = new List<FieldDefinition>();
-        PropertyInfo? key = null, name = null, version = null, settings = null, layout = null;
+        PropertyInfo? key = null, name = null, version = null;
 
         foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
         {
@@ -84,60 +78,49 @@ public static class ModelShapes
                 case PropertyRole.Version:
                     version = property;
                     continue;
-                case PropertyRole.Settings:
-                    settings = property;
-                    continue;
-                case PropertyRole.Layout:
-                    layout = property;
-                    continue;
             }
 
             var alias = AliasOf(property);
             var description = config.Description ?? string.Empty;
             var (varying, valueType) = Unwrap(property.PropertyType);
-            var variations = varying ? ContentVariation.Culture : ContentVariation.Nothing;
+            var field = config.Role == PropertyRole.Items
+                ? FieldDefinition.ItemsOf(alias, description, config.ItemTypeGroup!) with { Min = config.Min, Max = config.Max }
+                : IsObject(valueType)
+                    ? FieldDefinition.ObjectOf(alias, description, ShapeOf(valueType)) with { Required = config.Required ?? false }
+                    : FieldFor(config, alias, description, valueType);
+            field = field with { Variations = varying ? ContentVariation.Culture : ContentVariation.Nothing };
 
-            if (config.Role == PropertyRole.Items)
-            {
-                var items = FieldDefinition.ItemsOf(alias, description, config.ItemTypeGroup!) with
-                {
-                    Min = config.Min,
-                    Max = config.Max,
-                    Variations = variations,
-                    ItemLayout = config.Layout is { } layoutType ? ShapeOf(layoutType) : null,
-                };
-                itemFields.Add(new ItemsMember(property, items, varying, valueType));
-                ordered.Add(items);
-                continue;
-            }
-
-            var field = FieldFor(config, alias, description, valueType) with { Variations = variations };
             if (property.GetCustomAttribute<ValueHandlerAttribute>() is { } handled)
             {
-                field = field with
-                {
-                    Type = FieldType.Json,
-                    Handler = (IValueHandler)Activator.CreateInstance(handled.HandlerType)!,
-                    Schema = handled.HandlerType.GetProperty("Schema", BindingFlags.Public | BindingFlags.Static)?.GetValue(null) as JsonObject ?? field.Schema,
-                };
+                field = field.Type == FieldType.Object
+                    ? field with { Handler = (IValueHandler)Activator.CreateInstance(handled.HandlerType)! }
+                    : throw new InvalidOperationException($"{type.Name}.{property.Name}: a value handler goes on an object property, whose fields it adds behaviour to.");
             }
 
             fields.Add(new FieldMember(property, field, varying, valueType, config.Rules));
-            ordered.Add(fields[^1].Field);
             if (config.IsName)
             {
                 name = property;
             }
         }
 
-        var all = ordered.Select(f => f.Variations);
-        var entityVariations = all.Any(v => v.VariesByCulture()) ? ContentVariation.Culture : ContentVariation.Nothing;
+        var entityVariations = fields.Any(f => f.Field.Variations.VariesByCulture()) ? ContentVariation.Culture : ContentVariation.Nothing;
         var entity = typeConfig?.Entity ?? (type.GetCustomAttribute<EntityAttribute>() is { } e ? (e.EntityType, e.Name, e.Description) : null);
         var itemType = typeConfig?.ItemType ?? (type.GetCustomAttribute<ItemTypeAttribute>() is { } i ? (i.Alias, i.Name, i.Description) : null);
-        return new ModelInfo(
-            new ElementShape(ordered),
-            fields, itemFields, key, name, version, settings, layout, entityVariations, entity, itemType);
+        return new ModelInfo(new ElementShape(fields.Select(f => f.Field).ToList()), fields, key, name, version, entityVariations, entity, itemType);
     }
+
+    /// <summary>
+    /// Whether a property's type is an object with fields of its own (a block's settings, an SEO group): a class the
+    /// framework can create, so paths go into it. Anything else that isn't a scalar is a JSON value, set whole.
+    /// </summary>
+    private static bool IsObject(Type type)
+        => type.IsClass
+            && type != typeof(string)
+            && type != typeof(EntityReference)
+            && !typeof(IEnumerable).IsAssignableFrom(type)
+            && !typeof(JsonNode).IsAssignableFrom(type)
+            && type.GetConstructor(Type.EmptyTypes) is not null;
 
     /// <summary>What a property's attributes say, as configuration.</summary>
     private static PropertyConfig FromAttributes(PropertyInfo property)
@@ -149,8 +132,6 @@ public static class ModelShapes
                 : property.DeclaringType == typeof(EntityItemModel) ? PropertyRole.Ignored
                 : property.IsDefined(typeof(KeyAttribute)) ? PropertyRole.Key
                 : property.IsDefined(typeof(EntityVersionAttribute)) ? PropertyRole.Version
-                : property.IsDefined(typeof(ItemSettingsAttribute)) ? PropertyRole.Settings
-                : property.IsDefined(typeof(ItemLayoutAttribute)) ? PropertyRole.Layout
                 : property.IsDefined(typeof(ItemsAttribute)) ? PropertyRole.Items
                 : null,
             Description = property.GetCustomAttribute<DescriptionAttribute>()?.Description,
@@ -165,7 +146,6 @@ public static class ModelShapes
             config.ItemTypeGroup = items.ItemTypeGroup;
             config.Min = items.Min >= 0 ? items.Min : null;
             config.Max = items.Max >= 0 ? items.Max : null;
-            config.Layout = items.Layout;
         }
 
         // [Required] and [AllowedValues] are part of the structure, which the generic validator checks per variant.
@@ -192,7 +172,6 @@ public static class ModelShapes
             ItemTypeGroup = fluent.ItemTypeGroup ?? attributes.ItemTypeGroup,
             Min = fluent.Min ?? attributes.Min,
             Max = fluent.Max ?? attributes.Max,
-            Layout = fluent.Layout ?? attributes.Layout,
         };
         merged.Rules.AddRange(attributes.Rules.Concat(fluent.Rules));
         return merged;
@@ -249,165 +228,154 @@ public static class ModelShapes
 
     // ── Mapping ──────────────────────────────────────────────────────────────────────────────────────
 
-    /// <summary>Writes a model's values into an element.</summary>
-    public static void Write(object model, EntityElement element)
+    /// <summary>A model's values as the JSON object an entity document holds: items as keyed, typed objects, varying values per variant.</summary>
+    public static JsonObject Write(object model)
     {
-        var info = Info(model.GetType());
-        foreach (var field in info.Fields)
-        {
-            var value = field.Property.GetValue(model);
-            if (field.Varying)
-            {
-                foreach (DictionaryEntry entry in (IDictionary?)value ?? new Hashtable())
-                {
-                    if (entry.Value is not null)
-                    {
-                        element.Variant(VariantId.Parse((string)entry.Key)).Fields[field.Field.Alias] = ToNode(entry.Value);
-                    }
-                }
-            }
-            else if (value is not null)
-            {
-                element.Fields[field.Field.Alias] = ToNode(value);
-            }
-        }
-
-        foreach (var member in info.ItemFields)
+        var json = new JsonObject();
+        foreach (var member in Info(model.GetType()).Fields)
         {
             var value = member.Property.GetValue(model);
-            if (member.Varying)
+            if (value is null)
             {
-                foreach (DictionaryEntry entry in (IDictionary?)value ?? new Hashtable())
+                continue;
+            }
+
+            if (!member.Varying)
+            {
+                json[member.Field.Alias] = WriteValue(member, value);
+                continue;
+            }
+
+            var variants = new JsonObject();
+            foreach (DictionaryEntry entry in (IDictionary)value)
+            {
+                if (entry.Value is not null)
                 {
-                    WriteItems((IEnumerable?)entry.Value, element.Variant(VariantId.Parse((string)entry.Key)).ItemsOf(member.Field.Alias));
+                    variants[(string)entry.Key] = WriteValue(member, entry.Value);
                 }
             }
-            else
+
+            if (variants.Count > 0)
             {
-                WriteItems((IEnumerable?)value, element.ItemsOf(member.Field.Alias));
+                json[member.Field.Alias] = variants;
             }
         }
+
+        return json;
     }
 
-    /// <summary>Reads a model of <paramref name="type"/> from an element. Items are created as their registered item type classes.</summary>
-    public static object Read(Type type, EntityElement element, ItemTypeRegistry itemTypes, string path)
+    /// <summary>Reads a model of <paramref name="type"/> from an object in an entity document. Items are created as their registered item type classes.</summary>
+    public static object Read(Type type, JsonObject json, ItemTypeRegistry itemTypes, string path)
     {
-        var info = Info(type);
         var model = Activator.CreateInstance(type)!;
-
-        foreach (var field in info.Fields)
-        {
-            if (field.Varying)
-            {
-                var varying = (IDictionary)Activator.CreateInstance(field.Property.PropertyType)!;
-                foreach (var (variant, node) in element.Values(field.Field.Alias).Where(v => !v.Variant.IsInvariant))
-                {
-                    varying[variant.Key] = FromNode(node, field.ValueType);
-                }
-
-                field.Property.SetValue(model, varying);
-            }
-            else if (element.Fields.GetValueOrDefault(field.Field.Alias) is { } node)
-            {
-                field.Property.SetValue(model, FromNode(node, field.Property.PropertyType));
-            }
-        }
-
-        foreach (var member in info.ItemFields)
+        foreach (var member in Info(type).Fields)
         {
             var fieldPath = EntityEditor.Join(path, member.Field.Alias);
-            if (member.Varying)
+            if (json[member.Field.Alias] is not { } node)
             {
-                var varying = (IDictionary)Activator.CreateInstance(member.Property.PropertyType)!;
-                foreach (var (variant, items) in element.ItemValues(member.Field.Alias).Where(v => !v.Variant.IsInvariant))
-                {
-                    varying[variant.Key] = ReadItems(items, member, member.ListType, itemTypes, fieldPath);
-                }
+                continue;
+            }
 
-                member.Property.SetValue(model, varying);
-            }
-            else
+            if (!member.Varying)
             {
-                member.Property.SetValue(model, ReadItems(element.Items.GetValueOrDefault(member.Field.Alias) ?? [], member, member.Property.PropertyType, itemTypes, fieldPath));
+                member.Property.SetValue(model, ReadValue(member, node, member.Property.PropertyType, itemTypes, fieldPath));
+                continue;
             }
+
+            var varying = (IDictionary)Activator.CreateInstance(member.Property.PropertyType)!;
+            foreach (var (variant, value) in node.AsObject())
+            {
+                if (value is not null)
+                {
+                    varying[variant] = ReadValue(member, value, member.ValueType, itemTypes, fieldPath);
+                }
+            }
+
+            member.Property.SetValue(model, varying);
         }
 
         return model;
     }
 
-    private static void WriteItems(IEnumerable? models, List<EntityItem> items)
+    private static JsonNode? WriteValue(FieldMember member, object value) => member.Field.Type switch
     {
-        foreach (var model in models ?? Array.Empty<object>())
+        FieldType.Items => new JsonArray(((IEnumerable)value).Cast<object>().Select(item => (JsonNode?)WriteItem(item)).ToArray()),
+        FieldType.Object => Write(value),
+        _ => ToNode(value),
+    };
+
+    private static object? ReadValue(FieldMember member, JsonNode node, Type type, ItemTypeRegistry itemTypes, string path) => member.Field.Type switch
+    {
+        FieldType.Items => ReadItems(node as JsonArray ?? [], member.Field, type, itemTypes, path),
+        FieldType.Object => Read(type, node.AsObject(), itemTypes, path),
+        _ => FromNode(node, type),
+    };
+
+    private static JsonObject WriteItem(object model)
+    {
+        if (model is DynamicItem dynamic)
         {
-            if (model is DynamicItem dynamic)
+            if (dynamic.Key == Guid.Empty)
             {
-                items.Add(WriteDynamic(dynamic));
-                continue;
+                dynamic.Key = Guid.NewGuid();
             }
 
-            var info = Info(model.GetType());
-            var itemType = info.ItemType
-                ?? throw new InvalidOperationException($"{model.GetType().Name} is not an item type: add [ItemType] or configure it with IsItemType.");
-            var keyProperty = info.Key
-                ?? throw new InvalidOperationException($"{model.GetType().Name} has no key: derive from EntityItemModel, add [Key] or configure HasKey.");
-            if ((Guid)keyProperty.GetValue(model)! == Guid.Empty)
+            var json = EntityValues.NewItem(dynamic.Key, dynamic.Type);
+            foreach (var (alias, value) in dynamic.Fields)
             {
-                keyProperty.SetValue(model, Guid.NewGuid());
+                json[alias] = value?.DeepClone();
             }
 
-            var item = new EntityItem { Key = (Guid)keyProperty.GetValue(model)!, Type = itemType.Alias };
-            Write(model, item);
-
-            if (info.Settings?.GetValue(model) is { } settings)
-            {
-                Write(settings, item.EnsureSettings());
-            }
-
-            if (info.Layout?.GetValue(model) is { } layout)
-            {
-                Write(layout, item.EnsureLayout());
-            }
-
-            items.Add(item);
+            return json;
         }
+
+        var info = Info(model.GetType());
+        var itemType = info.ItemType
+            ?? throw new InvalidOperationException($"{model.GetType().Name} is not an item type: add [ItemType] or configure it with IsItemType.");
+        var keyProperty = info.Key
+            ?? throw new InvalidOperationException($"{model.GetType().Name} has no key: derive from EntityItemModel, add [Key] or configure HasKey.");
+        if ((Guid)keyProperty.GetValue(model)! == Guid.Empty)
+        {
+            keyProperty.SetValue(model, Guid.NewGuid());
+        }
+
+        var item = EntityValues.NewItem((Guid)keyProperty.GetValue(model)!, itemType.Alias);
+        foreach (var (alias, value) in Write(model))
+        {
+            item[alias] = value?.DeepClone();
+        }
+
+        return item;
     }
 
-    private static IList ReadItems(IEnumerable<EntityItem> items, ItemsMember member, Type listType, ItemTypeRegistry itemTypes, string fieldPath)
+    private static IList ReadItems(JsonArray items, FieldDefinition field, Type listType, ItemTypeRegistry itemTypes, string fieldPath)
     {
         var list = (IList)Activator.CreateInstance(listType)!;
         var dynamic = ElementTypeOf(listType) is { } elementType && typeof(DynamicItem).IsAssignableFrom(elementType);
-        foreach (var item in items)
+        foreach (var item in items.OfType<JsonObject>())
         {
-            var itemPath = EntityEditor.Join(fieldPath, item.Key.ToString());
+            var key = EntityValues.KeyOf(item);
+            var itemPath = EntityEditor.Join(fieldPath, key.ToString());
+            object model;
             if (dynamic)
             {
-                list.Add(ReadDynamic(item, itemPath));
-                continue;
+                var fields = item.Where(p => p.Key is not (EntityValues.KeyProperty or EntityValues.TypeProperty)).ToDictionary(p => p.Key, p => p.Value?.DeepClone());
+                model = new DynamicItem { Key = key, Type = EntityValues.TypeOf(item), Fields = fields };
+            }
+            else
+            {
+                var itemClass = itemTypes.Find(field.ItemTypeGroup!, EntityValues.TypeOf(item))?.ClrType
+                    ?? throw new AbilityInputException($"Item type '{EntityValues.TypeOf(item)}' has no model class.", [new Problem(itemPath, "No model class for this item type.")]);
+                model = Read(itemClass, item, itemTypes, itemPath);
+                Info(itemClass).Key?.SetValue(model, key);
             }
 
-            var itemClass = itemTypes.Find(member.Field.ItemTypeGroup!, item.Type)?.ClrType
-                ?? throw new AbilityInputException($"Item type '{item.Type}' has no model class.", [new Problem(itemPath, "No model class for this item type.")]);
-
-            var model = Read(itemClass, item, itemTypes, itemPath);
-            var info = Info(itemClass);
-            info.Key?.SetValue(model, item.Key);
             if (model is EntityItemModel itemModel)
             {
                 itemModel.Path = itemPath;
             }
 
             Paths.AddOrUpdate(model, itemPath);
-
-            if (info.Settings is { } settingsProperty && item.Settings is { } settings)
-            {
-                settingsProperty.SetValue(model, Read(settingsProperty.PropertyType, settings, itemTypes, $"{itemPath}/@settings"));
-            }
-
-            if (info.Layout is { } layoutProperty && item.Layout is { } layout)
-            {
-                layoutProperty.SetValue(model, Read(layoutProperty.PropertyType, layout, itemTypes, $"{itemPath}/@layout"));
-            }
-
             list.Add(model);
         }
 
@@ -429,83 +397,42 @@ public static class ModelShapes
 
     private static void ValidateObject(object model, string path, List<Problem> problems)
     {
-        var info = Info(model.GetType());
-        foreach (var field in info.Fields.Where(f => !f.Varying))
+        foreach (var member in Info(model.GetType()).Fields)
         {
-            var value = field.Property.GetValue(model);
-            var context = new ValidationContext(model) { MemberName = field.Property.Name, DisplayName = field.Field.Alias };
-            foreach (var attribute in field.Rules)
-            {
-                if (attribute.GetValidationResult(value, context) is { } result && result != ValidationResult.Success)
-                {
-                    problems.Add(new Problem(EntityEditor.Join(path, field.Field.Alias), result.ErrorMessage ?? "Invalid."));
-                }
-            }
-        }
-
-        foreach (var member in info.ItemFields)
-        {
+            var fieldPath = EntityEditor.Join(path, member.Field.Alias);
             var value = member.Property.GetValue(model);
-            var lists = member.Varying ? ((IDictionary?)value)?.Values.Cast<IEnumerable>() ?? [] : [(IEnumerable?)value ?? Array.Empty<object>()];
-            // Dynamic items have no class to carry rules: their fields' rules are checked from the structure.
-            foreach (var item in lists.SelectMany(l => l.Cast<object>()).Where(i => i is not DynamicItem))
+            if (!member.Varying)
             {
-                var itemPath = EntityEditor.Join(EntityEditor.Join(path, member.Field.Alias), KeyOf(item).ToString());
-                ValidateObject(item, itemPath, problems);
-
-                var itemInfo = Info(item.GetType());
-                if (itemInfo.Settings?.GetValue(item) is { } settings)
+                var context = new ValidationContext(model) { MemberName = member.Property.Name, DisplayName = member.Field.Alias };
+                foreach (var attribute in member.Rules)
                 {
-                    ValidateObject(settings, $"{itemPath}/@settings", problems);
+                    if (attribute.GetValidationResult(value, context) is { } result && result != ValidationResult.Success)
+                    {
+                        problems.Add(new Problem(fieldPath, result.ErrorMessage ?? "Invalid."));
+                    }
                 }
+            }
 
-                if (itemInfo.Layout?.GetValue(item) is { } layout)
+            var values = member.Varying ? ((IDictionary?)value)?.Values.Cast<object?>() ?? [] : [value];
+            foreach (var single in values.OfType<object>())
+            {
+                switch (member.Field.Type)
                 {
-                    ValidateObject(layout, $"{itemPath}/@layout", problems);
+                    case FieldType.Object:
+                        ValidateObject(single, fieldPath, problems);
+                        break;
+
+                    // Dynamic items have no class to carry rules: their fields' rules are checked from the structure.
+                    case FieldType.Items:
+                        foreach (var item in ((IEnumerable)single).Cast<object>().Where(i => i is not DynamicItem))
+                        {
+                            ValidateObject(item, EntityEditor.Join(fieldPath, KeyOf(item).ToString()), problems);
+                        }
+
+                        break;
                 }
             }
         }
-    }
-
-    // ── Dynamic items ───────────────────────────────────────────────────────────────────────────────
-
-    private static EntityItem WriteDynamic(DynamicItem model)
-    {
-        if (model.Key == Guid.Empty)
-        {
-            model.Key = Guid.NewGuid();
-        }
-
-        var item = new EntityItem { Key = model.Key, Type = model.Type };
-        foreach (var (alias, value) in model.Fields)
-        {
-            item.Fields[alias] = value?.DeepClone();
-        }
-
-        foreach (var (alias, children) in model.Items)
-        {
-            item.ItemsOf(alias).AddRange(children.Select(WriteDynamic));
-        }
-
-        return item;
-    }
-
-    private static DynamicItem ReadDynamic(EntityItem item, string path)
-    {
-        var model = new DynamicItem { Key = item.Key, Type = item.Type, Path = path };
-        foreach (var (alias, value) in item.Fields)
-        {
-            model.Fields[alias] = value?.DeepClone();
-        }
-
-        foreach (var (alias, children) in item.Items)
-        {
-            var fieldPath = EntityEditor.Join(path, alias);
-            model.Items[alias] = children.Select(c => ReadDynamic(c, EntityEditor.Join(fieldPath, c.Key.ToString()))).ToList();
-        }
-
-        Paths.AddOrUpdate(model, path);
-        return model;
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────────────────────────────────

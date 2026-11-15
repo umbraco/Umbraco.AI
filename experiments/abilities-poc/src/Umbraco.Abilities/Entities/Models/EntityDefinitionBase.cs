@@ -37,7 +37,7 @@ public abstract class EntityDefinitionBase<TModel> : IEntityDefinition
 
     public IUnitOfWorkProvider UnitOfWork { get; }
 
-    protected ItemTypeRegistry ItemTypes { get; }
+    protected internal ItemTypeRegistry ItemTypes { get; }
 
     // ── What a package implements ──────────────────────────────────────────────────────────────────
 
@@ -106,7 +106,7 @@ public abstract class EntityDefinitionBase<TModel> : IEntityDefinition
 
     public EntityRef ToRef(EntityDocument document)
     {
-        var name = _info.Name is { } nameProperty ? document.Root.ReadAny(ModelShapes.AliasOf(nameProperty))?.GetValue<string>() : null;
+        var name = _info.Name is { } nameProperty ? EntityValues.ReadAny(document.Root, ModelShapes.AliasOf(nameProperty))?.GetValue<string>() : null;
         return new EntityRef(EntityType, document.Key, name ?? "(unnamed)", GetEditUrl(document.Key));
     }
 
@@ -128,7 +128,7 @@ public abstract class EntityDefinitionBase<TModel> : IEntityDefinition
             Key = (Guid)_info.Key!.GetValue(model)!,
             LiveVersion = _info.Version?.GetValue(model) is { } version ? Convert.ToInt64(version) : null,
         };
-        ModelShapes.Write(model, document.Root);
+        document.Root = ModelShapes.Write(model);
         return document;
     }
 
@@ -171,7 +171,7 @@ public abstract class ModelEditAbilityBase<TInput, TModel>(EntityDefinitionBase<
 
         // Run directly, the ability saves: the user must be allowed to change the entity, as inside a change set.
         var after = definition.ToDocument(model);
-        if (await EntityAccess.CheckAsync(definition, new EntityAccessRequest(context.UserKey, EntityPermission.Update, key, after, EntityAccess.CulturesChanged(before, after)), cancellationToken) is { } denied)
+        if (await EntityAccess.CheckAsync(definition, new EntityAccessRequest(context.UserKey, EntityPermission.Update, key, after, EntityAccess.CulturesChanged(before, after, ModelShapes.ShapeOf(typeof(TModel)), definition.ItemTypes)), cancellationToken) is { } denied)
         {
             return EntityAccess.Denied(denied);
         }

@@ -134,7 +134,7 @@ public sealed class ChangeSetService(
 
             // The user the edit is made for must be allowed to make it, in the cultures it touches.
             var permission = working.LiveVersion is null ? EntityPermission.Create : EntityPermission.Update;
-            if (await EntityAccess.CheckAsync(definition, new EntityAccessRequest(context.UserKey, permission, target.EntityKey, working, EntityAccess.CulturesChanged(before, working)), cancellationToken) is { } denied)
+            if (await EntityAccess.CheckAsync(definition, new EntityAccessRequest(context.UserKey, permission, target.EntityKey, working, EntityAccess.CulturesChanged(before, working, structure.Shape, itemTypes)), cancellationToken) is { } denied)
             {
                 return EntityAccess.Denied(denied);
             }
@@ -252,10 +252,11 @@ public sealed class ChangeSetService(
         }
 
         // Someone else saved since: replay the set's edits onto theirs, skipping edits to what they removed.
-        var theirs = EntityDiff.Compare(start.Root, live.Root);
+        var shape = (await definition.DescribeAsync(live.Subtype, cancellationToken)).Shape;
+        var theirs = EntityDiff.Compare(start.Root, live.Root, shape, itemTypes);
         var working = await ReplayAsync(definition, live.Clone(), calls, theirs.Where(t => t.Structural).ToList(), cancellationToken);
         var yoursDocument = await ReplayAsync(definition, start.Clone(), calls, skipUnder: [], cancellationToken);
-        var yours = EntityDiff.Compare(start.Root, yoursDocument.Root);
+        var yours = EntityDiff.Compare(start.Root, yoursDocument.Root, shape, itemTypes);
         var entity = ChangeSet.EntityKey(entityType, key);
 
         var conflicts = new List<ChangeSetConflict>();
@@ -263,8 +264,8 @@ public sealed class ChangeSetService(
         {
             // Report at the item someone else added or removed, else at the value itself.
             var at = other.Structural ? other : mine;
-            var yourValue = EntityDiff.ValueAt(yoursDocument.Root, at);
-            var theirValue = EntityDiff.ValueAt(live.Root, at);
+            var yourValue = EntityDiff.ValueAt(yoursDocument.Root, shape, itemTypes, at);
+            var theirValue = EntityDiff.ValueAt(live.Root, shape, itemTypes, at);
             if (JsonNode.DeepEquals(yourValue, theirValue) || conflicts.Any(c => c.Path == at.Path && c.Culture == at.Variant.Culture && c.Segment == at.Variant.Segment))
             {
                 continue; // Both made the same change, or it's already listed.
@@ -273,10 +274,10 @@ public sealed class ChangeSetService(
             var resolution = set.Resolutions.TryGetValue(new ConflictKey(entity, at.Path, at.VariantKey), out var side) ? side : (ConflictSide?)null;
             if (resolution == ConflictSide.Theirs)
             {
-                EntityDiff.CopyPath(live.Root, working.Root, at with { Structural = false });
+                EntityDiff.CopyPath(live.Root, working.Root, shape, itemTypes, at);
             }
 
-            conflicts.Add(new ChangeSetConflict(definition.ToRef(live), at.Path, at.Variant.Culture, at.Variant.Segment, EntityDiff.ValueAt(start.Root, at), yourValue, theirValue, resolution));
+            conflicts.Add(new ChangeSetConflict(definition.ToRef(live), at.Path, at.Variant.Culture, at.Variant.Segment, EntityDiff.ValueAt(start.Root, shape, itemTypes, at), yourValue, theirValue, resolution));
         }
 
         return State(working, new RebasedEntity(definition.ToRef(live), theirs.Select(Describe).Distinct().ToList(), conflicts));
@@ -451,7 +452,8 @@ public sealed class ChangeSetService(
         foreach (var entity in state.Entities.Where(e => e.Working is not null))
         {
             var permission = entity.Live is null ? EntityPermission.Create : EntityPermission.Update;
-            var request = new EntityAccessRequest(context.UserKey, permission, entity.Key, entity.Working, EntityAccess.CulturesChanged(entity.Live, entity.Working!));
+            var shape = (await entity.Definition.DescribeAsync(entity.Working!.Subtype, cancellationToken)).Shape;
+            var request = new EntityAccessRequest(context.UserKey, permission, entity.Key, entity.Working, EntityAccess.CulturesChanged(entity.Live, entity.Working, shape, itemTypes));
             if (await EntityAccess.CheckAsync(entity.Definition, request, cancellationToken) is { } denied)
             {
                 denials.Add(new Problem($"{entity.EntityType}:{entity.Key}", denied));

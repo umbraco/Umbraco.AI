@@ -25,7 +25,7 @@ public static class StructureValidator
         Func<string, Guid, Task<bool>> entityExists)
     {
         var problems = new List<Problem>();
-        var variants = document.Variants();
+        var variants = EntityValues.VariantsIn(document.Root, structure.Shape, itemTypes);
 
         if (structure.Variations.VariesByCulture() && !variants.Any(v => v.Culture is not null))
         {
@@ -38,31 +38,38 @@ public static class StructureValidator
         }
 
         var context = new Context(document, itemTypes, entityExists, problems);
-        await ValidateElementAsync(context, document.Root, structure.Shape, string.Empty, variants);
+        await ValidateObjectAsync(context, document.Root, structure.Shape, string.Empty, variants);
         return problems;
     }
 
-    /// <param name="variants">The variants the element exists in. Below an items field that varies, only that field's culture.</param>
-    private static async Task ValidateElementAsync(Context context, EntityElement element, ElementShape shape, string path, IReadOnlyList<VariantId> variants)
+    /// <param name="variants">The variants the object exists in. Below a value that varies, only that value's variant.</param>
+    private static async Task ValidateObjectAsync(Context context, JsonObject owner, ElementShape shape, string path, IReadOnlyList<VariantId> variants)
     {
         foreach (var field in shape.Fields)
         {
+            var fieldPath = EntityValues.Join(path, field.Alias);
             foreach (var variant in Targets(field.Variations, variants))
             {
-                if (!field.IsItems)
-                {
-                    await ValidateFieldAsync(context, field, element.Get(field, variant), EntityEditor.Join(path, field.Alias), variant);
-                    continue;
-                }
-
-                var items = element.VariantOrNull(variant.Narrow(field.Variations))?.Items.GetValueOrDefault(field.Alias) ?? [];
+                var value = EntityValues.Get(owner, field, variant);
                 var below = field.Variations == ContentVariation.Nothing ? variants : variants.Where(v => v.Culture == variant.Culture).ToList();
-                await ValidateItemsAsync(context, field, items, EntityEditor.Join(path, field.Alias), field.Variations == ContentVariation.Nothing ? null : variant, below);
+                switch (field.Type)
+                {
+                    case FieldType.Items:
+                        await ValidateItemsAsync(context, field, value as JsonArray ?? [], fieldPath, field.Variations == ContentVariation.Nothing ? null : variant, below);
+                        break;
+                    case FieldType.Object when field.Shape is { } objectShape && value is JsonObject obj:
+                        await ValidateObjectAsync(context, obj, objectShape, fieldPath, below);
+                        AddHandlerProblems(context, field, obj, fieldPath, variant);
+                        break;
+                    default:
+                        await ValidateFieldAsync(context, field, value, fieldPath, variant);
+                        break;
+                }
             }
         }
     }
 
-    private static async Task ValidateItemsAsync(Context context, FieldDefinition field, List<EntityItem> items, string fieldPath, VariantId? scope, IReadOnlyList<VariantId> variants)
+    private static async Task ValidateItemsAsync(Context context, FieldDefinition field, JsonArray items, string fieldPath, VariantId? scope, IReadOnlyList<VariantId> variants)
     {
         var located = new Problem(fieldPath, string.Empty) { Culture = scope?.Culture, Segment = scope?.Segment };
         if (field.Min is { } min && items.Count < min)
@@ -76,31 +83,33 @@ public static class StructureValidator
         }
 
         var allowed = context.ItemTypes.InGroup(field.ItemTypeGroup!).ToDictionary(t => t.Alias);
-        foreach (var item in items)
+        foreach (var item in items.OfType<JsonObject>())
         {
-            var itemPath = EntityEditor.Join(fieldPath, item.Key.ToString());
-            if (!allowed.TryGetValue(item.Type, out var itemType))
+            var itemPath = EntityValues.Join(fieldPath, EntityValues.KeyOf(item).ToString());
+            if (!allowed.TryGetValue(EntityValues.TypeOf(item), out var itemType))
             {
-                context.Problems.Add(located with { Path = itemPath, ErrorMessages = [$"Item type '{item.Type}' is not allowed here."] });
+                context.Problems.Add(located with { Path = itemPath, ErrorMessages = [$"Item type '{EntityValues.TypeOf(item)}' is not allowed here."] });
                 continue;
             }
 
             // An item exists in the cultures it has values for, or in every culture when it has none yet.
             // This is the CMS's "expose": a block with only English values is not in the Danish page.
-            var own = item.VariantIds.Select(v => v.Culture).OfType<string>().ToHashSet();
+            var own = EntityValues.OwnCultures(item, itemType.Shape);
             var itemVariants = own.Count == 0 ? variants : variants.Where(v => v.Culture is null || own.Contains(v.Culture)).ToList();
+            await ValidateObjectAsync(context, item, itemType.Shape, itemPath, itemVariants);
+        }
+    }
 
-            await ValidateElementAsync(context, item, itemType.Shape, itemPath, itemVariants);
-
-            if (itemType.SettingsShape is { } settings)
+    private static void AddHandlerProblems(Context context, FieldDefinition field, JsonObject value, string path, VariantId variant)
+    {
+        if (field.Handler is { } handler)
+        {
+            context.Problems.AddRange(handler.Validate(value).Select(p => p with
             {
-                await ValidateElementAsync(context, item.Settings ?? new EntityElement(), settings, $"{itemPath}/@settings", itemVariants);
-            }
-
-            if (field.ItemLayout is { } layout)
-            {
-                await ValidateElementAsync(context, item.Layout ?? new EntityElement(), layout, $"{itemPath}/@layout", itemVariants);
-            }
+                Path = EntityValues.Join(path, p.Path),
+                Culture = p.Culture ?? variant.Culture,
+                Segment = p.Segment ?? variant.Segment,
+            }));
         }
     }
 
@@ -118,16 +127,9 @@ public static class StructureValidator
             return;
         }
 
-        // A value with a handler is checked by its handler, which knows its inner model.
-        if (field.Handler is { } handler)
+        if (FieldChecker.IsBinding(field, value))
         {
-            context.Problems.AddRange(handler.Validate(value).Select(p => p with
-            {
-                Path = EntityEditor.Join(path, p.Path),
-                Culture = p.Culture ?? variant.Culture,
-                Segment = p.Segment ?? variant.Segment,
-            }));
-            return;
+            return; // Checked when the binding resolves.
         }
 
         if (FieldChecker.Check(field, value, path) is { } problem)
@@ -141,7 +143,7 @@ public static class StructureValidator
             context.Problems.Add(At(message));
         }
 
-        if (field.Type == FieldType.EntityReference && !FieldChecker.IsBinding(field, value))
+        if (field.Type == FieldType.EntityReference)
         {
             foreach (var (entityType, key) in FieldChecker.EntityReferences(field, value))
             {
@@ -155,14 +157,14 @@ public static class StructureValidator
         if (field.Type == FieldType.ItemReference && field.ReferencesItemIn is { } itemsAlias)
         {
             var key = Guid.Parse(value.GetValue<string>());
-            if (!(context.Document.Root.Items.GetValueOrDefault(itemsAlias) ?? []).Any(item => item.Key == key))
+            if (EntityValues.FindItem(context.Document.Root[itemsAlias] as JsonArray, key) is null)
             {
                 context.Problems.Add(At($"No item with key {key} in '{itemsAlias}'."));
             }
         }
     }
 
-    /// <summary>The variants a value is checked in: once if invariant, else each variant the element exists in, narrowed to what it varies by.</summary>
+    /// <summary>The variants a value is checked in: once if invariant, else each variant the object exists in, narrowed to what it varies by.</summary>
     private static IEnumerable<VariantId> Targets(ContentVariation varies, IReadOnlyList<VariantId> variants)
     {
         if (varies == ContentVariation.Nothing)
@@ -177,7 +179,7 @@ public static class StructureValidator
     }
 }
 
-/// <summary>Writes a shape as JSON Schema, for models and editors. Items fields list their item types.</summary>
+/// <summary>Writes a shape as JSON Schema, for models and editors. Object fields nest; items fields list their item types.</summary>
 public static class SchemaWriter
 {
     /// <summary>
@@ -195,7 +197,7 @@ public static class SchemaWriter
                 continue;
             }
 
-            var schema = Single(field);
+            var schema = field.Type == FieldType.Object && field.Shape is { } objectShape ? Fields(objectShape, itemTypes, userKey) : Single(field);
             if (field.Many)
             {
                 schema = new JsonObject { ["type"] = "array", ["items"] = schema };
@@ -224,7 +226,7 @@ public static class SchemaWriter
         {
             ["type"] = "object",
             ["properties"] = properties,
-            ["required"] = new JsonArray(shape.ValueFields.Where(f => f.Required).Select(f => (JsonNode?)f.Alias).ToArray()),
+            ["required"] = new JsonArray(shape.Fields.Where(f => f.Required && !f.IsItems).Select(f => (JsonNode?)f.Alias).ToArray()),
         };
     }
 
@@ -234,7 +236,7 @@ public static class SchemaWriter
         {
             ["type"] = "array",
             ["description"] = field.Description,
-            ["x-edit"] = "Items: edit with entity.addItem, removeItem and moveItem, using this field's path.",
+            ["x-edit"] = "Items: each has a key and a type. Add, remove and move them with entity.addItem, removeItem and moveItem at this field's path; set their fields at '<this path>/{key}/<field>'.",
             ["x-item-types"] = new JsonArray((itemTypes?.InGroup(field.ItemTypeGroup!) ?? [])
                 .Where(t => userKey is null || t.IsAvailableTo(userKey.Value))
                 .Select(t => (JsonNode?)new JsonObject { ["alias"] = t.Alias, ["group"] = t.Group, ["name"] = t.Name, ["description"] = t.Description })
@@ -254,11 +256,6 @@ public static class SchemaWriter
         if (field.Variations != ContentVariation.Nothing)
         {
             schema["x-variations"] = field.Variations.ToString();
-        }
-
-        if (field.ItemLayout is { } layout)
-        {
-            schema["x-item-layout"] = Fields(layout);
         }
 
         return schema;

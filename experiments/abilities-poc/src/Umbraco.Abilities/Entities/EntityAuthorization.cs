@@ -1,3 +1,5 @@
+using System.Text.Json.Nodes;
+
 namespace Umbraco.Abilities.Entities;
 
 public enum EntityPermission
@@ -30,8 +32,8 @@ public static class EntityAccess
         => definition is IAuthorizingEntityDefinition authorizing ? await authorizing.AuthorizeAsync(request, cancellationToken) : null;
 
     /// <summary>The cultures whose values differ between two versions of an entity.</summary>
-    public static IReadOnlySet<string> CulturesChanged(EntityDocument? before, EntityDocument after)
-        => EntityDiff.Compare((before ?? new EntityDocument { EntityType = after.EntityType, Key = after.Key }).Root, after.Root)
+    public static IReadOnlySet<string> CulturesChanged(EntityDocument? before, EntityDocument after, ElementShape shape, ItemTypeRegistry itemTypes)
+        => EntityDiff.Compare(before?.Root ?? [], after.Root, shape, itemTypes)
             .Select(c => c.Variant.Culture)
             .OfType<string>()
             .ToHashSet();
@@ -43,41 +45,20 @@ public static class EntityAccess
     /// </summary>
     public static IReadOnlyList<string> NewItemTypesNotAvailable(EntityDocument? before, EntityDocument after, ElementShape shape, ItemTypeRegistry itemTypes, Guid userKey)
     {
-        var existing = before is null ? [] : Items(before.Root, shape, itemTypes).Select(i => i.Item.Key).ToHashSet();
+        var existing = before is null ? [] : Items(before.Root, shape, itemTypes).Select(i => i.Key).ToHashSet();
         return Items(after.Root, shape, itemTypes)
-            .Where(i => !existing.Contains(i.Item.Key) && i.Type is { } type && !type.IsAvailableTo(userKey))
-            .Select(i => i.Item.Type)
+            .Where(i => !existing.Contains(i.Key) && i.Type is { } type && !type.IsAvailableTo(userKey))
+            .Select(i => i.Type!.Alias)
             .Distinct()
             .ToList();
     }
 
-    // Every item in an element, with its item type, including items in items, settings and placement.
-    private static IEnumerable<(EntityItem Item, ItemTypeDefinition? Type)> Items(EntityElement element, ElementShape shape, ItemTypeRegistry itemTypes)
-    {
-        foreach (var field in shape.ItemFields)
-        {
-            foreach (var item in element.ItemValues(field.Alias).SelectMany(v => v.Items))
-            {
-                var type = itemTypes.Find(field.ItemTypeGroup!, item.Type);
-                yield return (item, type);
-                IEnumerable<(EntityItem, ItemTypeDefinition?)> nested = type is null ? [] : Items(item, type.Shape, itemTypes);
-                if (type?.SettingsShape is { } settingsShape && item.Settings is { } settings)
-                {
-                    nested = nested.Concat(Items(settings, settingsShape, itemTypes));
-                }
-
-                if (field.ItemLayout is { } layoutShape && item.Layout is { } layout)
-                {
-                    nested = nested.Concat(Items(layout, layoutShape, itemTypes));
-                }
-
-                foreach (var inner in nested)
-                {
-                    yield return inner;
-                }
-            }
-        }
-    }
+    // Every item in the entity, at any depth, with its item type.
+    private static IEnumerable<(Guid Key, ItemTypeDefinition? Type)> Items(JsonObject root, ElementShape shape, ItemTypeRegistry itemTypes)
+        => EntityValues.Walk(root, shape, itemTypes)
+            .Where(v => v.Field.IsItems)
+            .SelectMany(v => (v.Value as JsonArray ?? []).OfType<JsonObject>()
+                .Select(item => (EntityValues.KeyOf(item), itemTypes.Find(v.Field.ItemTypeGroup!, EntityValues.TypeOf(item)))));
 
     public static AbilityResult Denied(string reason, string path = "")
         => AbilityResult.Fail(AbilityOperationStatus.AccessDenied, reason, [new Problem(path, reason)]);

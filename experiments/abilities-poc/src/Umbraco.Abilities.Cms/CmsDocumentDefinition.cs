@@ -38,8 +38,8 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
 {
     public const string Type = Constants.UdiEntityType.Document;
 
-    // A block's settings key, kept on the item so a save reuses it.
-    private const string SettingsKeyExtra = "settingsKey";
+    // A block's settings key, kept on the item so a save reuses it. Not a field: '$' marks product data.
+    private const string SettingsKeyProperty = "$settingsKey";
 
     private static readonly JsonSerializerOptions ModelValueOptions = new() { Converters = { new JsonObjectConverter() } };
     // Umbraco points into a block value either by index, ".contentData[0].values[2].value", or, for a value
@@ -58,6 +58,7 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
     private readonly IJsonSerializer _json;
     private readonly Func<Guid> _actingUser;
     private readonly CmsStructureMapper _mapper;
+    private readonly ItemTypeRegistry _itemTypes;
 
     public CmsDocumentDefinition(
         IContentTypeService contentTypes,
@@ -72,8 +73,7 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
         ItemTypeRegistry itemTypes,
         IUnitOfWorkProvider unitOfWork,
         Func<Guid> actingUser,
-        IPropertyEditorSchemaService? schemas = null,
-        IReadOnlyDictionary<string, IValueHandler>? editorHandlers = null)
+        IPropertyEditorSchemaService? schemas = null)
     {
         UnitOfWork = unitOfWork;
         _contentTypes = contentTypes;
@@ -85,7 +85,8 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
         _permissions = permissions;
         _json = json;
         _actingUser = actingUser;
-        _mapper = new CmsStructureMapper(contentTypes, dataTypes, itemTypes, schemas, editorHandlers ?? new Dictionary<string, IValueHandler>());
+        _itemTypes = itemTypes;
+        _mapper = new CmsStructureMapper(contentTypes, dataTypes, itemTypes, schemas);
     }
 
     public string EntityType => Type;
@@ -130,35 +131,18 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
             LiveVersion = content.Version,
         };
 
-        var root = document.Root;
+        var nameField = map.Shape.Find(CmsStructureMapper.NameField)!;
         foreach (var (culture, name) in content.Names)
         {
-            root.Variant(new VariantId(culture.Length == 0 ? null : culture, null)).Fields[CmsStructureMapper.NameField] = name;
+            EntityValues.Set(document.Root, nameField, new VariantId(culture.Length == 0 ? null : culture, null), name);
         }
 
         if (content.ParentKey is { } parent)
         {
-            root.Fields[CmsStructureMapper.ParentField] = parent.ToString();
+            document.Root[CmsStructureMapper.ParentField] = parent.ToString();
         }
 
-        foreach (var value in content.Values)
-        {
-            if (!map.Properties.TryGetValue(value.Alias, out var propertyMap) || value.Value is not { } node)
-            {
-                continue;
-            }
-
-            var variant = new VariantId(value.Culture, value.Segment);
-            if (!propertyMap.Field.IsItems)
-            {
-                root.Set(propertyMap.Field, variant, node);
-            }
-            else
-            {
-                root.ItemsFor(propertyMap.Field, variant).AddRange(await ReadBlocksAsync(node, propertyMap));
-            }
-        }
-
+        await ReadValuesAsync(document.Root, content.Values.Select(v => (v.Alias, v.Culture, v.Segment, v.Value)), map);
         return document;
     }
 
@@ -189,7 +173,7 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
             .ToList());
 
     public EntityRef ToRef(EntityDocument document)
-        => new(Type, document.Key, document.Root.ReadAny(CmsStructureMapper.NameField)?.GetValue<string>() ?? "(unnamed)", EditUrl(document.Key));
+        => new(Type, document.Key, EntityValues.ReadAny(document.Root, CmsStructureMapper.NameField)?.GetValue<string>() ?? "(unnamed)", EditUrl(document.Key));
 
     // ── Authorization: the CMS's own permission model ─────────────────────────────────────────────
 
@@ -220,7 +204,7 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
         ContentAuthorizationStatus status;
         if (request.Permission == EntityPermission.Create)
         {
-            var parent = request.Document?.Root.Fields.GetValueOrDefault(CmsStructureMapper.ParentField) is { } node && Guid.TryParse(node.ToString(), out var key) ? key : (Guid?)null;
+            var parent = request.Document?.Root[CmsStructureMapper.ParentField] is { } node && Guid.TryParse(node.ToString(), out var key) ? key : (Guid?)null;
             status = parent is { } parentKey
                 ? await _permissions.AuthorizeAccessAsync(user, parentKey, permission)
                 : await _permissions.AuthorizeRootAccessAsync(user, permission);
@@ -277,7 +261,7 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
         var type = DocumentType(after.Subtype);
         var map = await _mapper.MapAsync(type, isDocument: true);
         var touched = new HashSet<(string Alias, string? Culture, string? Segment)>();
-        foreach (var change in EntityDiff.Compare(before.Root, after.Root))
+        foreach (var change in EntityDiff.Compare(before.Root, after.Root, map.Shape, _itemTypes))
         {
             var alias = change.Path.Split('/')[0];
             if (alias == CmsStructureMapper.NameField)
@@ -354,8 +338,33 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
 
     // ── Reading block values into items ────────────────────────────────────────────────────
 
+    /// <summary>Property values (a document's or a block's) into an object: a field's JSON, or a block property's items.</summary>
+    private async Task ReadValuesAsync(JsonObject owner, IEnumerable<(string Alias, string? Culture, string? Segment, JsonNode? Value)> values, ShapeMap map)
+    {
+        foreach (var (alias, culture, segment, value) in values)
+        {
+            if (!map.Properties.TryGetValue(alias, out var property) || value is null)
+            {
+                continue;
+            }
+
+            var variant = new VariantId(culture, segment);
+            if (!property.Field.IsItems)
+            {
+                EntityValues.Set(owner, property.Field, variant, value);
+                continue;
+            }
+
+            var items = EntityValues.Items(owner, property.Field, variant, create: true)!;
+            foreach (var item in await ReadBlocksAsync(value, property))
+            {
+                items.Add(item);
+            }
+        }
+    }
+
     /// <summary>A block editor value, read with Umbraco's own block value classes, as items.</summary>
-    private async Task<List<EntityItem>> ReadBlocksAsync(JsonNode node, PropertyMap property)
+    private async Task<List<JsonObject>> ReadBlocksAsync(JsonNode node, PropertyMap property)
     {
         var json = node is JsonValue text && text.GetValueKind() == JsonValueKind.String ? text.GetValue<string>() : node.ToJsonString();
         BlockValue? value = property.Kind == PropertyKind.BlockGrid ? _json.Deserialize<BlockGridValue>(json) : _json.Deserialize<BlockListValue>(json);
@@ -367,7 +376,7 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
         var contentData = value.ContentData.ToDictionary(d => d.Key);
         var settingsData = value.SettingsData.ToDictionary(d => d.Key);
 
-        var items = new List<EntityItem>();
+        var items = new List<JsonObject>();
         var layout = value.Layout.TryGetValue(property.EditorAlias, out var found) ? found : [];
         foreach (var layoutItem in layout.OfType<BlockLayoutItemBase>())
         {
@@ -377,62 +386,45 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
         return items;
     }
 
-    private async Task<EntityItem> ReadItemAsync(BlockLayoutItemBase layoutItem, PropertyMap property, Dictionary<Guid, BlockItemData> contentData, Dictionary<Guid, BlockItemData> settingsData)
+    private async Task<JsonObject> ReadItemAsync(BlockLayoutItemBase layoutItem, PropertyMap property, Dictionary<Guid, BlockItemData> contentData, Dictionary<Guid, BlockItemData> settingsData)
     {
         var content = contentData[layoutItem.ContentKey];
         var elementType = _mapper.RequireType(content.ContentTypeKey);
         var block = property.Blocks.First(b => b.ContentElementTypeKey == content.ContentTypeKey);
 
-        var item = new EntityItem { Key = content.Key, Type = elementType.Alias };
-        await ReadValuesAsync(item, content.Values, await _mapper.MapAsync(elementType, isDocument: false));
+        var item = EntityValues.NewItem(content.Key, elementType.Alias);
+        await ReadValuesAsync(item, BlockValues(content), await _mapper.MapAsync(elementType, isDocument: false));
 
         if (layoutItem.SettingsKey is { } settingsKey
             && settingsData.TryGetValue(settingsKey, out var settings)
             && block.SettingsElementTypeKey is { } settingsType)
         {
-            item.Extra[SettingsKeyExtra] = settingsKey.ToString();
-            await ReadValuesAsync(item.EnsureSettings(), settings.Values, await _mapper.MapAsync(_mapper.RequireType(settingsType), isDocument: false));
+            item[SettingsKeyProperty] = settingsKey.ToString();
+            var settingsValues = new JsonObject();
+            await ReadValuesAsync(settingsValues, BlockValues(settings), await _mapper.MapAsync(_mapper.RequireType(settingsType), isDocument: false));
+            item[CmsStructureMapper.SettingsField] = settingsValues;
         }
 
         if (layoutItem is BlockGridLayoutItem gridItem)
         {
-            var placement = item.EnsureLayout();
-            placement.Fields["columnSpan"] = gridItem.ColumnSpan;
-            placement.Fields["rowSpan"] = gridItem.RowSpan;
-
+            item[CmsStructureMapper.LayoutField] = new JsonObject { ["columnSpan"] = gridItem.ColumnSpan, ["rowSpan"] = gridItem.RowSpan };
             foreach (var area in gridItem.Areas ?? [])
             {
-                var areaItems = item.ItemsOf(block.Areas.FirstOrDefault(a => a.Key == area.Key)?.Alias ?? area.Key.ToString());
+                var areaItems = new JsonArray();
                 foreach (var areaItem in area.Items ?? [])
                 {
                     areaItems.Add(await ReadItemAsync(areaItem, property, contentData, settingsData));
                 }
+
+                item[block.Areas.FirstOrDefault(a => a.Key == area.Key)?.Alias ?? area.Key.ToString()] = areaItems;
             }
         }
 
         return item;
     }
 
-    private async Task ReadValuesAsync(EntityElement element, IEnumerable<BlockPropertyValue> values, ShapeMap map)
-    {
-        foreach (var value in values)
-        {
-            if (!map.Properties.TryGetValue(value.Alias, out var property) || ToNode(value.Value) is not { } node)
-            {
-                continue;
-            }
-
-            var variant = new VariantId(value.Culture, value.Segment);
-            if (!property.Field.IsItems)
-            {
-                element.Set(property.Field, variant, node);
-            }
-            else
-            {
-                element.ItemsFor(property.Field, variant).AddRange(await ReadBlocksAsync(node, property));
-            }
-        }
-    }
+    private IEnumerable<(string Alias, string? Culture, string? Segment, JsonNode? Value)> BlockValues(BlockItemData data)
+        => data.Values.Select(v => (v.Alias, v.Culture, v.Segment, ToNode(v.Value)));
 
     // ── Writing the working copy as a content model ────────────────────────────────────────────
 
@@ -441,7 +433,8 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
         var type = DocumentType(document.Subtype);
         var map = await _mapper.MapAsync(type, isDocument: true);
         var root = document.Root;
-        var cultures = document.Variants().Select(v => v.Culture).OfType<string>().Distinct().ToList();
+        var cultures = EntityValues.VariantsIn(root, map.Shape, _itemTypes).Select(v => v.Culture).OfType<string>().Distinct().ToList();
+        var nameField = map.Shape.Find(CmsStructureMapper.NameField)!;
         var index = new ErrorIndex();
 
         var variants = new List<VariantModel>();
@@ -449,7 +442,7 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
         {
             foreach (var culture in cultures)
             {
-                if (root.VariantOrNull(new VariantId(culture, null))?.Fields.GetValueOrDefault(CmsStructureMapper.NameField) is { } name)
+                if (EntityValues.Get(root, nameField, new VariantId(culture, null)) is { } name)
                 {
                     variants.Add(new VariantModel { Culture = culture, Name = name.GetValue<string>() });
                 }
@@ -457,7 +450,7 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
         }
         else
         {
-            variants.Add(new VariantModel { Name = root.Fields.GetValueOrDefault(CmsStructureMapper.NameField)?.GetValue<string>() ?? string.Empty });
+            variants.Add(new VariantModel { Name = EntityValues.Get(root, nameField, VariantId.Invariant)?.GetValue<string>() ?? string.Empty });
         }
 
         var values = new List<DraftValue>();
@@ -471,104 +464,98 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
         }
 
         var properties = values.Select(v => new PropertyValueModel { Alias = v.Alias, Value = ToModelValue(v.Value), Culture = v.Culture, Segment = v.Segment }).ToList();
-        var parent = root.Fields.GetValueOrDefault(CmsStructureMapper.ParentField) is { } parentNode && Guid.TryParse(parentNode.ToString(), out var parentKey) ? parentKey : (Guid?)null;
+        var parent = root[CmsStructureMapper.ParentField] is { } parentNode && Guid.TryParse(parentNode.ToString(), out var parentKey) ? parentKey : (Guid?)null;
         return new ContentModel(document.Key, type.Key, parent, variants, properties, values, index);
     }
 
-    /// <summary>
-    /// A property's values in the working copy: once if invariant, else once per variant that has one. A field's value
-    /// is its JSON; a block property's is its items.
-    /// </summary>
-    private static IEnumerable<(VariantId Variant, object Value)> Values(EntityElement element, PropertyMap property)
-    {
-        var invariant = property.Field.Variations == ContentVariation.Nothing;
-        var values = !property.Field.IsItems
-            ? element.Values(property.Alias).Where(v => v.Value is not JsonArray { Count: 0 }).Select(v => (v.Variant, (object)v.Value))
-            : element.ItemValues(property.Alias).Select(v => (v.Variant, (object)v.Items));
-        return values.Where(v => v.Variant.IsInvariant == invariant);
-    }
+    /// <summary>A property's values in the working copy: once if invariant, else once per variant that has one.</summary>
+    private static IEnumerable<(VariantId Variant, JsonNode Value)> Values(JsonObject owner, PropertyMap property)
+        => EntityValues.Values(owner, property.Field).Where(v => property.Field.IsItems || v.Value is not JsonArray { Count: 0 });
 
     /// <summary>A value in editor format: a field's JSON, or a block property's items as a block value.</summary>
-    private async Task<JsonNode?> ToNodeAsync(object value, PropertyMap property, IReadOnlyList<string> documentCultures, string? envelopeCulture, string fieldPath, EnvelopeIndex index)
-        => value is JsonNode node
-            ? node.DeepClone()
-            : JsonNode.Parse(_json.Serialize(await WriteBlocksAsync((List<EntityItem>)value, property, documentCultures, envelopeCulture, fieldPath, index)));
+    private async Task<JsonNode?> ToNodeAsync(JsonNode value, PropertyMap property, IReadOnlyList<string> documentCultures, string? envelopeCulture, string fieldPath, EnvelopeIndex index)
+        => property.Field.IsItems
+            ? JsonNode.Parse(_json.Serialize(await WriteBlocksAsync(value.AsArray(), property, documentCultures, envelopeCulture, fieldPath, index)))
+            : value.DeepClone();
 
     /// <summary>Items as Umbraco's own block value: layout, content and settings data, and which cultures expose each block.</summary>
-    private async Task<BlockValue> WriteBlocksAsync(List<EntityItem> items, PropertyMap property, IReadOnlyList<string> documentCultures, string? envelopeCulture, string fieldPath, EnvelopeIndex index)
+    private async Task<BlockValue> WriteBlocksAsync(JsonArray items, PropertyMap property, IReadOnlyList<string> documentCultures, string? envelopeCulture, string fieldPath, EnvelopeIndex index)
     {
         var contentData = new List<BlockItemData>();
         var settingsData = new List<BlockItemData>();
         var expose = new List<BlockItemVariation>();
 
-        async Task<BlockLayoutItemBase> WriteItemAsync(EntityItem item, string path)
+        async Task<BlockLayoutItemBase> WriteItemAsync(JsonObject item, string path)
         {
-            var block = property.BlockFor(item.Type)
-                ?? throw new InvalidOperationException($"Block '{item.Type}' is not configured for '{property.Alias}'.");
+            var key = EntityValues.KeyOf(item);
+            var block = property.BlockFor(EntityValues.TypeOf(item))
+                ?? throw new InvalidOperationException($"Block '{EntityValues.TypeOf(item)}' is not configured for '{property.Alias}'.");
             var elementMap = await _mapper.MapAsync(_mapper.RequireType(block.ContentElementTypeKey), isDocument: false);
 
             var nested = new Envelopes();
             var values = await WriteValuesAsync(item, elementMap, documentCultures, envelopeCulture, path, nested);
-            contentData.Add(new BlockItemData { Key = item.Key, ContentTypeKey = block.ContentElementTypeKey, ContentTypeAlias = block.ContentAlias, Values = values });
-            index.Content.Add(new IndexedElement(item.Key, path, values, nested));
+            contentData.Add(new BlockItemData { Key = key, ContentTypeKey = block.ContentElementTypeKey, ContentTypeAlias = block.ContentAlias, Values = values });
+            index.Content.Add(new IndexedElement(key, path, values, nested));
 
             // An element that varies by culture is exposed in each culture it has values for (or every culture
             // of the document when it has none yet); an invariant element is exposed once.
             List<string?> exposedIn = [envelopeCulture];
             if (elementMap.Variations.VariesByCulture())
             {
-                var own = item.VariantIds.Select(v => v.Culture).OfType<string>().Distinct().Cast<string?>().ToList();
+                var own = EntityValues.OwnCultures(item, elementMap.Shape).Cast<string?>().ToList();
                 exposedIn = own.Count > 0 ? own : envelopeCulture is not null ? [envelopeCulture] : documentCultures.Cast<string?>().ToList();
             }
 
             foreach (var culture in exposedIn)
             {
-                expose.Add(new BlockItemVariation(item.Key, culture, null));
-                index.Exposed.Add((item.Key, culture));
+                expose.Add(new BlockItemVariation(key, culture, null));
+                index.Exposed.Add((key, culture));
             }
 
             Guid? settingsKey = null;
             if (block.SettingsElementTypeKey is { } settingsType)
             {
-                settingsKey = item.Extra.TryGetValue(SettingsKeyExtra, out var stored) ? Guid.Parse(stored) : DerivedKey(item.Key, "settings");
+                settingsKey = item[SettingsKeyProperty] is { } stored ? Guid.Parse(stored.ToString()) : DerivedKey(key, "settings");
                 var settingsMap = await _mapper.MapAsync(_mapper.RequireType(settingsType), isDocument: false);
+                var settingsPath = $"{path}/{CmsStructureMapper.SettingsField}";
                 var settingsNested = new Envelopes();
-                var settingsValues = await WriteValuesAsync(item.Settings ?? new EntityElement(), settingsMap, documentCultures, envelopeCulture, $"{path}/@settings", settingsNested);
+                var settingsValues = await WriteValuesAsync(item[CmsStructureMapper.SettingsField] as JsonObject ?? [], settingsMap, documentCultures, envelopeCulture, settingsPath, settingsNested);
                 settingsData.Add(new BlockItemData { Key = settingsKey.Value, ContentTypeKey = settingsType, Values = settingsValues });
-                index.Settings.Add(new IndexedElement(item.Key, $"{path}/@settings", settingsValues, settingsNested));
+                index.Settings.Add(new IndexedElement(key, settingsPath, settingsValues, settingsNested));
             }
 
             if (property.Kind != PropertyKind.BlockGrid)
             {
-                return new BlockListLayoutItem { ContentKey = item.Key, SettingsKey = settingsKey };
+                return new BlockListLayoutItem { ContentKey = key, SettingsKey = settingsKey };
             }
 
             var areas = new List<BlockGridLayoutAreaItem>();
             foreach (var area in block.Areas)
             {
                 var areaItems = new List<BlockGridLayoutItem>();
-                foreach (var areaItem in item.Items.GetValueOrDefault(area.Alias) ?? [])
+                foreach (var areaItem in (item[area.Alias] as JsonArray ?? []).OfType<JsonObject>())
                 {
-                    areaItems.Add((BlockGridLayoutItem)await WriteItemAsync(areaItem, $"{path}/{area.Alias}/{areaItem.Key}"));
+                    areaItems.Add((BlockGridLayoutItem)await WriteItemAsync(areaItem, $"{path}/{area.Alias}/{EntityValues.KeyOf(areaItem)}"));
                 }
 
                 areas.Add(new BlockGridLayoutAreaItem(area.Key) { Items = [.. areaItems] });
             }
 
+            var layout = item[CmsStructureMapper.LayoutField] as JsonObject;
             return new BlockGridLayoutItem
             {
-                ContentKey = item.Key,
+                ContentKey = key,
                 SettingsKey = settingsKey,
-                ColumnSpan = IntOf(item.Layout?.Fields.GetValueOrDefault("columnSpan")),
-                RowSpan = IntOf(item.Layout?.Fields.GetValueOrDefault("rowSpan")) ?? 1,
+                ColumnSpan = IntOf(layout?["columnSpan"]),
+                RowSpan = IntOf(layout?["rowSpan"]) ?? 1,
                 Areas = [.. areas],
             };
         }
 
         var layout = new List<IBlockLayoutItem>();
-        foreach (var item in items)
+        foreach (var item in items.OfType<JsonObject>())
         {
-            layout.Add(await WriteItemAsync(item, $"{fieldPath}/{item.Key}"));
+            layout.Add(await WriteItemAsync(item, $"{fieldPath}/{EntityValues.KeyOf(item)}"));
         }
 
         var blocks = new Dictionary<string, IEnumerable<IBlockLayoutItem>> { [property.EditorAlias] = layout };
@@ -577,12 +564,12 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
             : new BlockListValue { Layout = blocks, ContentData = contentData, SettingsData = settingsData, Expose = expose };
     }
 
-    private async Task<List<BlockPropertyValue>> WriteValuesAsync(EntityElement element, ShapeMap map, IReadOnlyList<string> documentCultures, string? envelopeCulture, string path, Envelopes nested)
+    private async Task<List<BlockPropertyValue>> WriteValuesAsync(JsonObject owner, ShapeMap map, IReadOnlyList<string> documentCultures, string? envelopeCulture, string path, Envelopes nested)
     {
         var values = new List<BlockPropertyValue>();
         foreach (var property in map.Properties.Values)
         {
-            foreach (var (variant, value) in Values(element, property))
+            foreach (var (variant, value) in Values(owner, property))
             {
                 values.Add(new BlockPropertyValue
                 {

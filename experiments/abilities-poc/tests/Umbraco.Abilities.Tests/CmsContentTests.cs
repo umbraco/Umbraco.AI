@@ -28,11 +28,11 @@ public class CmsContentTests
         await SetAsync(page, "", "urlSegment", "\"summer\"", "en-US");
         await SetAsync(page, "", "tags", """["sale", "summer"]""", "da-DK"); // tags are invariant: the culture is ignored
 
-        var working = await GetAsync(page);
-        Assert.Equal("Summer", working.GetProperty("variants").GetProperty("en-US").GetProperty("fields").GetProperty("title").GetString());
-        Assert.Equal("Sommer", working.GetProperty("variants").GetProperty("da-DK").GetProperty("fields").GetProperty("title").GetString());
-        Assert.Equal(2, working.GetProperty("fields").GetProperty("tags").GetArrayLength());
-        Assert.False(working.GetProperty("variants").GetProperty("da-DK").GetProperty("fields").TryGetProperty("tags", out _));
+        // A value that varies is stored per culture where the field is; an invariant one once.
+        var fields = (await GetAsync(page)).GetProperty("fields");
+        Assert.Equal("Summer", fields.GetProperty("title").GetProperty("en-US").GetString());
+        Assert.Equal("Sommer", fields.GetProperty("title").GetProperty("da-DK").GetString());
+        Assert.Equal(2, fields.GetProperty("tags").GetArrayLength());
 
         await AssertValidAsync();
         await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
@@ -74,7 +74,7 @@ public class CmsContentTests
     }
 
     [Fact]
-    public async Task Block_values_vary_per_culture_inside_an_invariant_block_list_and_settings_are_their_own_element()
+    public async Task Block_values_vary_per_culture_inside_an_invariant_block_list_and_settings_are_an_object()
     {
         await _agent.StartChangeSetAsync("Hero");
         var page = await CreatePageAsync("Summer", "en-US");
@@ -83,51 +83,52 @@ public class CmsContentTests
         var hero = (await AddItemAsync(page, "blocks", "hero", """{ "heading": "Summer sale" }""", "en-US")).GetProperty("path").GetString()!;
         await SetAsync(page, hero, "heading", "\"Sommerudsalg\"", "da-DK");
 
-        // The settings element is required to have a theme, and is checked on its own path.
-        var validation = await ValidateAsync();
-        Assert.Equal([$"{hero}/@settings/theme"], JsonAssert.ProblemPaths(validation));
+        // A hero needs its settings, which need a theme: each is checked on its own path.
+        Assert.Equal([$"{hero}/settings"], JsonAssert.ProblemPaths(await ValidateAsync()));
 
-        var wrong = await _agent.FailAsync("entity_setValue", SetJson(page, $"{hero}/@settings", "theme", "\"neon\""));
-        Assert.Equal($"{hero}/@settings/theme", wrong.GetProperty("problems")[0].GetProperty("path").GetString());
-        await SetAsync(page, $"{hero}/@settings", "theme", "\"dark\"");
+        var wrong = await _agent.FailAsync("entity_setValue", SetJson(page, $"{hero}/settings", "theme", "\"neon\""));
+        Assert.Equal($"{hero}/settings/theme", wrong.GetProperty("problems")[0].GetProperty("path").GetString());
+        await SetAsync(page, $"{hero}/settings", "theme", "\"dark\"");
         await AssertValidAsync();
 
         var item = (await GetAsync(page)).GetProperty("fields").GetProperty("blocks")[0];
-        Assert.Equal("Summer sale", item.GetProperty("variants").GetProperty("en-US").GetProperty("fields").GetProperty("heading").GetString());
-        Assert.Equal("Sommerudsalg", item.GetProperty("variants").GetProperty("da-DK").GetProperty("fields").GetProperty("heading").GetString());
-        Assert.Equal("dark", item.GetProperty("settings").GetProperty("fields").GetProperty("theme").GetString());
+        Assert.Equal("hero", item.GetProperty("type").GetString());
+        Assert.Equal("Summer sale", item.GetProperty("heading").GetProperty("en-US").GetString());
+        Assert.Equal("Sommerudsalg", item.GetProperty("heading").GetProperty("da-DK").GetString());
+        Assert.Equal("dark", item.GetProperty("settings").GetProperty("theme").GetString());
 
-        // A Block List has no placement values.
-        var noLayout = await _agent.FailAsync("entity_setValue", SetJson(page, $"{hero}/@layout", "columnSpan", "6"));
-        Assert.Contains("has no layout values", noLayout.GetProperty("message").GetString());
+        // A Block List's blocks have no grid layout.
+        var noLayout = await _agent.FailAsync("entity_setValue", SetJson(page, $"{hero}/layout", "columnSpan", "6"));
+        Assert.Contains("No field 'layout' here", noLayout.GetProperty("message").GetString());
     }
 
     [Fact]
-    public async Task Grid_blocks_have_placement_values_and_areas_that_are_items_fields()
+    public async Task Grid_blocks_have_a_layout_and_areas_that_are_items_fields()
     {
         await _agent.StartChangeSetAsync("Grid");
         var page = await CreatePageAsync("Grid page", "en-US");
 
         var row = (await AddItemAsync(page, "grid", "twoColumn", null)).GetProperty("path").GetString()!;
-        await SetAsync(page, $"{row}/@layout", "columnSpan", "13");
+        await SetAsync(page, $"{row}/layout", "columnSpan", "13");
 
         // Area contents: only types allowed in areas, up to the area's maximum.
-        await AddItemAsync(page, $"{row}/left", "richText", """{ "text": "One" }""", "en-US");
-        await AddItemAsync(page, $"{row}/left", "richText", """{ "text": "Two" }""", "en-US");
+        // A block in an area has a layout too: its span within the area.
+        await AddItemAsync(page, $"{row}/left", "richText", """{ "text": "One", "layout": { "columnSpan": 6 } }""", "en-US");
+        await AddItemAsync(page, $"{row}/left", "richText", """{ "text": "Two", "layout": { "columnSpan": 6 } }""", "en-US");
         var full = await _agent.FailAsync("entity_addItem", AddJson(page, $"{row}/left", "richText", """{ "text": "Three" }""", "en-US"));
         Assert.Contains("at most 2", full.GetProperty("message").GetString());
         var notAllowed = await _agent.FailAsync("entity_addItem", AddJson(page, $"{row}/right", "twoColumn", null));
         Assert.Contains("not allowed in this field", notAllowed.GetProperty("message").GetString());
 
-        // richText is allowed at the root too, and every root block needs a column span.
+        // richText is allowed at the root too, and every grid block needs a layout with a column span.
         var text = (await AddItemAsync(page, "grid", "richText", """{ "text": "Root" }""", "en-US")).GetProperty("path").GetString()!;
 
         var paths = JsonAssert.ProblemPaths(await ValidateAsync());
-        Assert.Contains($"{text}/@layout/columnSpan", paths);  // required, missing
-        Assert.Contains($"{row}/@layout/columnSpan", paths);   // 13 is wider than the grid
+        Assert.Contains($"{text}/layout", paths);             // required, missing
+        Assert.Contains($"{row}/layout/columnSpan", paths);   // 13 is wider than the grid
 
-        await SetAsync(page, $"{row}/@layout", "columnSpan", "12");
-        await SetAsync(page, $"{text}/@layout", "columnSpan", "6");
+        await SetAsync(page, $"{row}/layout", "columnSpan", "12");
+        await SetAsync(page, $"{text}/layout", "columnSpan", "6");
         await AssertValidAsync();
     }
 
@@ -142,9 +143,9 @@ public class CmsContentTests
         await AddItemAsync(page, "promos", "promo", """{ "text": "Gratis fragt" }""", "da-DK");
         await AddItemAsync(page, "promos", "promo", """{ "text": "Ny kollektion" }""", "da-DK");
 
-        var variants = (await GetAsync(page)).GetProperty("variants");
-        Assert.Equal(1, variants.GetProperty("en-US").GetProperty("fields").GetProperty("promos").GetArrayLength());
-        Assert.Equal(2, variants.GetProperty("da-DK").GetProperty("fields").GetProperty("promos").GetArrayLength());
+        var promos = (await GetAsync(page)).GetProperty("fields").GetProperty("promos");
+        Assert.Equal(1, promos.GetProperty("en-US").GetArrayLength());
+        Assert.Equal(2, promos.GetProperty("da-DK").GetArrayLength());
 
         var noCulture = await _agent.FailAsync("entity_addItem", AddJson(page, "promos", "promo", """{ "text": "?" }""", null));
         Assert.Equal("promos", noCulture.GetProperty("problems")[0].GetProperty("path").GetString());
@@ -199,7 +200,7 @@ public class CmsContentTests
     }
 
     private static string SetJson(Guid page, string elementPath, string field, string valueJson, string? culture = null)
-        => $$"""{ "entityType": "document", "key": "{{page}}", "elementPath": "{{elementPath}}", "field": "{{field}}", "value": {{valueJson}}{{Culture(culture)}} }""";
+        => $$"""{ "entityType": "document", "key": "{{page}}", "path": "{{elementPath}}/{{field}}", "value": {{valueJson}}{{Culture(culture)}} }""";
 
     private static string AddJson(Guid page, string fieldPath, string itemType, string? fieldsJson, string? culture = null)
         => $$"""{ "entityType": "document", "key": "{{page}}", "fieldPath": "{{fieldPath}}", "itemType": "{{itemType}}"{{(fieldsJson is null ? "" : $", \"fields\": {fieldsJson}")}}{{Culture(culture)}} }""";

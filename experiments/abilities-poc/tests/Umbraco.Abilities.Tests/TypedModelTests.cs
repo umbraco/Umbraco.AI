@@ -48,10 +48,10 @@ public class TypedModelTests
         Assert.True(fields["tags"].Many);
         Assert.Equal(["document", "media"], fields["related"].ReferencesAnyOf);
         Assert.Equal(ContentVariation.Culture, page.Shape.Fields.Single(f => f.Alias == "promos").Variations);
-        Assert.Equal("columnSpan", page.Shape.Fields.Single(f => f.Alias == "grid").ItemLayout!.Fields[0].Alias);
+        Assert.Equal("columnSpan", _site.ItemTypes.Find(CmsPageDefinition.GridRootGroup, "richText")!.Shape.Find("layout")!.Shape!.Fields[0].Alias);
 
         var hero = _site.ItemTypes.Find(CmsPageDefinition.BlockGroup, "hero")!;
-        Assert.Equal(["light", "dark"], hero.SettingsShape!.Fields.Single(f => f.Alias == "theme").Allowed);
+        Assert.Equal(["light", "dark"], hero.Shape.Find("settings")!.Shape!.Find("theme")!.Allowed);
 
         var focalPoint = _site.ItemTypes.Find(CmsPageDefinition.MediaEntryGroup, "mediaEntry")!.Shape.Fields.Single(f => f.Alias == "focalPoint");
         Assert.Equal(FieldType.Json, focalPoint.Type);
@@ -66,7 +66,7 @@ public class TypedModelTests
             Key = Guid.NewGuid(),
             Title = { ["en-US"] = "Launch", ["da-DK"] = "Lancering" },
             Blocks = [new Hero { Heading = { ["en-US"] = "Hello" }, Settings = new HeroSettings { Theme = "dark" } }],
-            Grid = [new RichText { Text = { ["en-US"] = "Body" }, Placement = new GridPlacement { ColumnSpan = 6 } }],
+            Grid = [new RichText { Text = { ["en-US"] = "Body" }, Layout = new GridPlacement { ColumnSpan = 6 } }],
             Promos = { ["da-DK"] = [new Promo { Text = "Udsalg" }] },
             Image = [new MediaEntry { Media = Guid.NewGuid(), FocalPoint = new FocalPoint(0.5, 0.25) }],
         };
@@ -79,7 +79,7 @@ public class TypedModelTests
         Assert.Equal(page.Blocks[0].Key, hero.Key); // a key was assigned on the way in and kept
         Assert.Equal($"blocks/{hero.Key}", hero.Path);
         Assert.Equal("dark", hero.Settings!.Theme);
-        Assert.Equal(6, copy.Grid[0].Placement!.ColumnSpan);
+        Assert.Equal(6, copy.Grid[0].Layout!.ColumnSpan);
         Assert.Equal("Udsalg", copy.Promos["da-DK"][0].Text);
         Assert.Equal(new FocalPoint(0.5, 0.25), copy.Image[0].FocalPoint);
     }

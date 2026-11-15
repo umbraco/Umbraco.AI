@@ -38,7 +38,7 @@ Each design layer and where it lives:
 | Layer | Code |
 | --- | --- |
 | 1. Abilities | `Abilities/Ability.cs`: `[Ability]` with `Kind` and `Reversible`, typed `AbilityBase`, failures with categories and paths, `EntityRef` |
-| 2. Entity definitions | `Entities/`: fields (values, or items: typed elements each with its own key), entity and item references, an item type registry, a typed entity document (`EntityDocument`, `EntityElement`, `EntityItem`), a path editor generalised from Umbraco.AI's block path engine, and the generic entity abilities. `Entities/Models/`: the typed layer package developers write against (`EntityDefinitionBase<TModel>`, model attributes, `ModelEditAbilityBase`) |
+| 2. Entity definitions | `Entities/`: fields with values (scalars, objects with fields, items: keyed typed objects), entity and item references, an item type registry, the working copy as one JSON value tree (`EntityDocument`, `EntityValues`), a path editor generalised from Umbraco.AI's block path engine, and the generic entity abilities. `Entities/Models/`: the typed layer package developers write against (`EntityDefinitionBase<TModel>`, model attributes, `ModelEditAbilityBase`) |
 | 3. Change sets | `ChangeSets/`: a recorded unit of "any Write ability call", working state worked out in memory, apply product by product (each all or nothing) and resumable, rebasing onto changes saved elsewhere meanwhile. Generalises the CMS Draft Sets PoC (`Umbraco.Cms.DraftSets`) |
 
 ## Writing a definition
@@ -124,9 +124,9 @@ What the package no longer writes:
 | The structure: fields, types, required, allowed values, references, items fields and their limits | Property types, plus attributes or fluent configuration |
 | JSON Schema for structured values (a focal point) | `JsonSchemaExporter` over the property type |
 | Culture variation | `Varying<T>` (a value per culture), on value and items fields |
-| Block settings and grid placement shapes | `[ItemSettings]`, `[ItemLayout]`, an items field's layout type |
+| Block settings and a grid block's layout | Ordinary object properties (`Settings`, `Layout`): a class becomes an object field |
 | Turning the contract into the working copy and back | Done both ways, keeping item keys and giving each item its path |
-| Range and format checks reported on entity paths (`rewards/{key}/percent`) | DataAnnotations, as attributes or fluent `Rule(...)`, per item, settings and placement |
+| Range and format checks reported on entity paths (`rewards/{key}/percent`) | DataAnnotations, as attributes or fluent `Rule(...)`, on items and objects at any depth |
 | A path for a domain problem | `ProblemAt(x => x.EndDate, ...)`, or `ProblemAt(item, r => r.Percent, ...)` for an item |
 | An ability that edits an entity, both directly and inside a change set | `ModelEditAbilityBase<TInput, TModel>`: one `Edit(model, input)` method |
 
@@ -166,43 +166,43 @@ a class to describe, so `CmsDocumentDefinition` and `WorkflowDefinition` impleme
 `BlockItemData`, `BlockPropertyValue`, `BlockGridLayoutItem` and `BlockItemVariation` instead of hand-built
 envelopes, and Umbraco's serializer reads and writes them. Moving to the typed document took it from 621 lines to 599.
 
-## Value types and handlers
+## Values, paths and handlers
 
-A field's value is opaque to the framework unless its value type has a **handler**. That's how CMS properties already
-work: a property can hold anything, and only its editor defines the model inside. Rich Text is markup plus blocks, with
-the markup placing each block by key, and a Block Grid's layout is the Block Grid's own business. The framework doesn't
-model those. It routes paths that go into a field to the field's handler (`IValueHandler`), which owns:
+An entity is **fields with values**, as content is (a property has a value, and its editor defines what's inside it)
+and as JSON Schema describes data. The working copy is one JSON tree (`EntityDocument.Root`):
 
-- the **paths** inside the value (`intro/markup`, `intro/blocks/{key}/text`);
-- what **setting, adding, removing and moving** mean there, through the same tools (`entity.setValue`,
-  `entity.addItem` …), so a model doesn't learn anything new;
-- the **rules between its parts**, such as "every block tag in the markup has a block, and every block has a tag";
-- its **problems**, reported on paths inside the value.
+```jsonc
+{
+  "title": { "en-US": "Summer", "da-DK": "Sommer" },      // varies: one value per culture, where the field is
+  "tags": ["sale", "summer"],                              // invariant: one value
+  "blocks": [                                              // items: keyed, typed objects
+    { "key": "…", "type": "hero", "heading": { "en-US": "Summer sale" }, "settings": { "theme": "dark" } }
+  ],
+  "intro": { "markup": "<p>…</p><umb-block data-key=\"…\"></umb-block>", "blocks": [ { "key": "…", "type": "callout", "text": "…" } ] }
+}
+```
 
-A value without a handler is set whole, described by its schema. For CMS properties that's the editor's own value
-schema, from Umbraco's `IPropertyEditorSchemaService`, and Umbraco checks it on save.
+**The path rule.** A path goes down through values: in an object a step is a field alias (`blocks/{key}/settings/theme`),
+in an items field a step is an item's key (`blocks/{key}/heading`). Any other array is set whole. Paths never use
+positions, which would point at something else once an item is added above. The structure says which fields vary,
+hold items or hold objects, so nothing is guessed from the data. One walker (`EntityValues.Find`) serves editing, diff
+and rebasing; another (`EntityValues.Walk`) lists every value for validation, authorization and diff.
 
-| Value type | Who owns the model inside | Example |
+| Value | In the schema | Edited with |
 | --- | --- | --- |
-| A scalar or a reference | Nobody: there's nothing inside | Name, landing page |
-| JSON with a schema | Nobody: it's set whole, and checked against the schema and on save | An eyedropper colour, a date (`date-time`) |
-| JSON with a handler | The handler | Rich Text (`Samples/Cms/RichTextValue.cs`) |
-| Keyed items | The framework's built-in handler | Discount rules, workflow steps, the sample page's blocks |
+| A scalar or a reference | `type`, `format`, `enum`, `x-references` | `entity.setValue` at its path |
+| An object with described fields (a block's settings, a grid block's layout, Rich Text) | `type: object` with its `properties` | `entity.setValue` at a path inside it, or whole |
+| Items | `type: array`, `x-item-types` | `entity.addItem`, `removeItem`, `moveItem` at the items field's path |
+| JSON with only a schema (a CMS editor's value) | The editor's own value schema | `entity.setValue`, whole |
 
-**Keyed items are the built-in value type** for products with fixed models. A discount is a fixed model whose `rules`
-and `rewards` are items, with item types from Commerce's providers and child rules nested in group rules. They keep
-everything the framework does for items: paths, problems, rebasing and references per item, and the item types offered
-per user.
+**Handlers add behaviour, not structure.** A handler (`IValueHandler`) is only for what a schema can't say. Rich Text
+is an object of `markup` and `blocks`, and paths reach both like any other value. Its handler keeps them in step:
+adding a block places its tag in the markup, removing or moving one removes or moves its tag, and every tag must have
+a block. A typed model declares one with `[ValueHandler(typeof(...))]` on an object property.
 
-A typed model declares a handler with `[ValueHandler(typeof(...))]`. The CMS definition takes handlers by editor alias,
-so a third party's editor can bring its own.
-
-**What a handled value gives up**, until handlers add the capability:
-
-- **Rebasing is per field.** Two people editing different blocks in the same Rich Text conflict. A handler could offer
-  a merge.
-- **References inside the value aren't seen**, so they aren't checked before save and give Deploy no dependencies. A
-  handler could list them.
+Because paths reach inside every described value, rebasing works per value and per item everywhere, Rich Text's blocks
+included, and references inside objects and items are checked. Only a JSON value with just a schema is still opaque:
+it rebases as one value, and references in it aren't seen.
 
 **Not done yet.** The CMS definition still maps Block List and Block Grid itself, to the built-in items. The next step
 is to make those editors' handlers the ones Umbraco.AI already has (`IAIPropertyValueHandler`), so Abilities and
@@ -242,7 +242,7 @@ How the framework uses them:
   with `x-bindings`, and type and reference checks wait until it resolves.
 - **Availability.** An item type can say who may use it (`AvailableTo`, here from required sections). The schema offers
   a user only those, and adding one they may not use is refused when it's recorded.
-- **In a typed contract** the field is `List<DynamicItem>`: items with a type, JSON fields and nested items. One mapper
+- **In a typed contract** the field is `List<DynamicItem>`: items with a type and JSON fields, items fields included. One mapper
   per seam turns them into the product's stored form (`ProviderItems`: provider alias plus string settings, children
   for groups), using each setting's CLR type.
 - **Abilities** can be item types too (`AbilityItemTypes`), so workflow steps are abilities and Automate's actions side by side.
@@ -476,8 +476,8 @@ drafted without a new API.
 | Names and values vary by culture; invariant values are shared across cultures | `CmsContentTests.Names_and_values_vary_by_culture_while_invariant_values_are_shared` |
 | A value that varies by culture needs a known culture; an entity with no culture can't be applied | `A_value_that_varies_by_culture_needs_a_known_culture` |
 | Each culture is validated separately, and problems say which culture | `Each_culture_is_validated_separately_and_problems_say_which` |
-| Blocks in an invariant Block List hold per-culture values, and a block's settings element is edited and validated at `{item}/@settings` | `Block_values_vary_per_culture_inside_an_invariant_block_list_and_settings_are_their_own_element` |
-| Block Grid: column span is a placement value at `{item}/@layout`, areas are items fields with limits, and a type can be allowed at the root and in areas | `Grid_blocks_have_placement_values_and_areas_that_are_items_fields` |
+| Blocks in an invariant Block List hold per-culture values, and a block's settings are an object edited and validated at `{item}/settings/…` | `Block_values_vary_per_culture_inside_an_invariant_block_list_and_settings_are_their_own_element` |
+| Block Grid: column span is in a layout object at `{item}/layout/…`, areas are items fields with limits, and a type can be allowed at the root and in areas | `Grid_blocks_have_placement_values_and_areas_that_are_items_fields` |
 | A culture-variant block property holds a separate list per culture | `A_culture_variant_block_property_holds_a_list_per_culture` |
 | A media picker and a multi-type picker refer to media and pages created in the same set | `Pickers_refer_to_media_and_pages_created_in_the_same_set` |
 
@@ -502,7 +502,7 @@ These feed back into the design doc.
    That holds only where the product stores item ids. Commerce's rules have none, so their keys are derived
    on load and change once saved (see "What the mapping costs").
 5. **Problem paths that equal edit paths matter.** Because `rewards/{key}/percent` is both what
-   validation reports and what `entity.setValue` takes (`elementPath` + `field`), the fix loop needs no
+   validation reports and what `entity.setValue` takes as its `path`, the fix loop needs no
    translation.
 6. **Abilities as item types works.** Reflecting an ability's input type into fields made Automate's step
    types come for free, including an entity reference from `[EntityKey]`.
@@ -528,6 +528,15 @@ These feed back into the design doc.
    as the built-in value type for fixed models such as discounts. Umbraco 18 describes every core editor tried here
    with a value schema, including a date (`date-time`) and a dropdown (an array of strings). So the "no schema at all"
    fallback is mainly for third parties' editors.
+10. **One value tree, and paths through values.** Finding 9 still stored items apart from other values, and handlers
+   owned paths. Asking what consumers of the entity tools need showed neither was required: a path goes down through
+   values, object steps by field and item steps by key, and the structure says which values vary, hold items or hold
+   objects. So the working copy became one JSON tree, a block's settings and a grid block's layout became ordinary
+   object fields (`@settings` and `@layout` are gone), handlers only add behaviour (Rich Text's tags), and the
+   separate walks over items in the editor, diff, validation and authorization became one. It also removed guessing
+   which JSON is items. Left out on purpose: a list of which variants an entity "has". Consumers write values per
+   culture and see them per culture; which cultures exist is product meaning worked out from the values (the CMS:
+   cultures with a name), so it isn't part of the contract.
 
 ## Applying a set
 
@@ -626,11 +635,10 @@ model's shapes. What the contract gained from that:
 | Added to the structure language | Why (real model) |
 | --- | --- |
 | `Variations` (the CMS's `ContentVariation`) on the entity and its fields, with `VariantId` narrowed per value | CMS property values carry a culture or segment only if their property varies that way, and Umbraco rejects values that don't match |
-| Variant values stored per variant (`variants["en-US"].fields`), names as a culture-variant field | CMS names vary by culture; block values inside an invariant block property vary per culture |
+| A varying value stored per variant where the field is (`"title": { "en-US": … }`), names as a culture-variant field | CMS names vary by culture; block values inside an invariant block property vary per culture |
 | Culture-variant items fields (a list per culture) | A culture-variant block property holds one whole envelope per culture |
 | `culture` / `segment` on `Problem` | The CMS's `PropertyValidationError` reports alias, culture and segment |
-| `ItemTypeDefinition.SettingsShape`, edited at `{item}/@settings` | Blocks have a settings element type next to their content type |
-| `FieldDefinition.ItemLayout` on an items field, edited at `{item}/@layout` | A Block Grid's column and row span belong to the block's place, not its values |
+| Object fields (`FieldType.Object`): a block's `settings`, a grid block's `layout` | Blocks have a settings element type next to their content type; a Block Grid block has a column and row span |
 | `ItemTypeDefinition.AlsoIn` | Grid blocks can be allowed at the root and in areas |
 | `Many`, `ReferencesAnyOf`, `FieldType.Json` | Tags and dropdowns are string arrays; a tree picker points at documents or media; focal points, crops and date-times are objects |
 

@@ -30,7 +30,7 @@ public class ChangeSetTests
             { "entityType": "document", "key": "{{page}}", "fieldPath": "blocks", "itemType": "hero", "culture": "en-US", "fields": { "heading": "Black Friday deals" } }
             """);
         await _agent.OkAsync("entity_setValue", $$"""
-            { "entityType": "document", "key": "{{page}}", "elementPath": "{{hero.GetProperty("path").GetString()}}/@settings", "field": "theme", "value": "dark" }
+            { "entityType": "document", "key": "{{page}}", "path": "{{hero.GetProperty("path").GetString()}}/settings/theme", "value": "dark" }
             """);
         var grid = await _agent.OkAsync("entity_addItem", $$"""
             { "entityType": "document", "key": "{{page}}", "fieldPath": "blocks", "itemType": "cardGrid" }
@@ -98,7 +98,7 @@ public class ChangeSetTests
         // The page is applied; the set is kept, and its applied part can no longer be edited in it.
         Assert.Equal(1, (await _site.Pages.LoadAsync(page))!.LiveVersion);
         var locked = await _agent.FailAsync("entity_setValue", $$"""
-            { "entityType": "document", "key": "{{page}}", "elementPath": "", "field": "title", "value": "Changed", "culture": "en-US" }
+            { "entityType": "document", "key": "{{page}}", "path": "title", "value": "Changed", "culture": "en-US" }
             """);
         Assert.Contains("already applied", locked.GetProperty("message").GetString());
 
@@ -127,7 +127,7 @@ public class ChangeSetTests
 
         // Commerce isn't applied, so it can still be fixed in the set; applying again finishes the job.
         await _agent.OkAsync("entity_setValue", $$"""
-            { "entityType": "umbraco-commerce-discount", "key": "{{second}}", "elementPath": "", "field": "code", "value": "DEAL2" }
+            { "entityType": "umbraco-commerce-discount", "key": "{{second}}", "path": "code", "value": "DEAL2" }
             """);
         await _agent.OkAsync("changeSet_apply", $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""");
         Assert.NotNull(await _site.Discounts.LoadAsync(first));
@@ -254,7 +254,7 @@ public class ChangeSetTests
         await _agent.OkAsync("changeSet_apply", SetJson());
 
         await _agent.StartChangeSetAsync("Edit");
-        await _agent.OkAsync("entity_setValue", $$"""{ "entityType": "document", "key": "{{page}}", "elementPath": "", "field": "title", "value": "Big launch", "culture": "en-US" }""");
+        await _agent.OkAsync("entity_setValue", $$"""{ "entityType": "document", "key": "{{page}}", "path": "title", "value": "Big launch", "culture": "en-US" }""");
 
         // Pages keep version history, so the set remembers only the version it started from.
         var set = _site.ChangeSets.Get(_agent.ChangeSetId!.Value);
@@ -280,7 +280,7 @@ public class ChangeSetTests
         await _agent.OkAsync("changeSet_apply", SetJson());
 
         await _agent.StartChangeSetAsync("Edit");
-        await _agent.OkAsync("entity_setValue", $$"""{ "entityType": "document", "key": "{{page}}", "elementPath": "", "field": "title", "value": "Big launch", "culture": "en-US" }""");
+        await _agent.OkAsync("entity_setValue", $$"""{ "entityType": "document", "key": "{{page}}", "path": "title", "value": "Big launch", "culture": "en-US" }""");
 
         var live = (await _site.Pages.LoadAsync(page))!;
         await _site.Pages.SaveAsync(live);
@@ -291,7 +291,7 @@ public class ChangeSetTests
     }
 
     private Task<JsonElement> SetDiscountAsync(Guid discount, string elementPath, string field, string valueJson)
-        => _agent.OkAsync("entity_setValue", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "elementPath": "{{elementPath}}", "field": "{{field}}", "value": {{valueJson}} }""");
+        => _agent.OkAsync("entity_setValue", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "path": "{{elementPath}}/{{field}}", "value": {{valueJson}} }""");
 
     /// <summary>Someone saves the discount in the backoffice, through Commerce's own service.</summary>
     private Task SaveLiveAsync(Guid discount, Action<Discount> change)
@@ -311,7 +311,7 @@ public class ChangeSetTests
 
         var set = await _agent.StartChangeSetAsync("Rename");
         await _agent.OkAsync("entity_setValue", $$"""
-            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "elementPath": "", "field": "name", "value": "Draft name" }
+            { "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "path": "name", "value": "Draft name" }
             """);
         var inSet = await _agent.OkAsync("entity_get", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}" }""");
         Assert.Equal("Draft name", inSet.GetProperty("fields").GetProperty("name").GetString());
@@ -346,8 +346,8 @@ public class ChangeSetTests
         Assert.Equal(first, second);
 
         // The key the agent was given is the key that is stored, so later calls can refer to it.
-        var blocks = (await _site.ChangeSets.GetWorkingStateAsync(set, "document", page))!.Root.ItemsOf("blocks");
-        Assert.Equal(hero.GetProperty("itemKey").GetGuid(), blocks[0].Key);
+        var blocks = (await _site.ChangeSets.GetWorkingStateAsync(set, "document", page))!.Root["blocks"]!.AsArray();
+        Assert.Equal(hero.GetProperty("itemKey").GetGuid(), Umbraco.Abilities.Entities.EntityValues.KeyOf(blocks[0]!.AsObject()));
     }
 
     private async Task<Guid> CreateLiveDiscountAsync(string name)

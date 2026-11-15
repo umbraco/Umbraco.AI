@@ -9,7 +9,6 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Schema;
 using System.Text.Json.Serialization;
 
-using Umbraco.Cms.Core.Models;
 using Umbraco.Extensions;
 namespace Umbraco.Abilities.Entities.Models;
 
@@ -22,7 +21,7 @@ internal sealed record ModelInfo(
     PropertyInfo? Key,
     PropertyInfo? Name,
     PropertyInfo? Version,
-    ContentVariation Variations,
+    IReadOnlyList<string> Dimensions,
     (string EntityType, string Name, string Description)? Entity,
     (string Alias, string Name, string Description)? ItemType);
 
@@ -88,7 +87,7 @@ public static class ModelShapes
                 : IsObject(valueType)
                     ? FieldDefinition.ObjectOf(alias, description, ShapeOf(valueType)) with { Required = config.Required ?? false }
                     : FieldFor(config, alias, description, valueType);
-            field = field with { Variations = varying ? ContentVariation.Culture : ContentVariation.Nothing };
+            field = field with { VariesBy = varying ? property.GetCustomAttribute<VariesByAttribute>()?.Dimensions ?? [VariationDimensions.Culture] : [] };
 
             if (property.GetCustomAttribute<ValueHandlerAttribute>() is { } handled)
             {
@@ -104,10 +103,10 @@ public static class ModelShapes
             }
         }
 
-        var entityVariations = fields.Any(f => f.Field.Variations.VariesByCulture()) ? ContentVariation.Culture : ContentVariation.Nothing;
+        var dimensions = fields.SelectMany(f => f.Field.VariesBy).Distinct().ToList();
         var entity = typeConfig?.Entity ?? (type.GetCustomAttribute<EntityAttribute>() is { } e ? (e.EntityType, e.Name, e.Description) : null);
         var itemType = typeConfig?.ItemType ?? (type.GetCustomAttribute<ItemTypeAttribute>() is { } i ? (i.Alias, i.Name, i.Description) : null);
-        return new ModelInfo(new ElementShape(fields.Select(f => f.Field).ToList()), fields, key, name, version, entityVariations, entity, itemType);
+        return new ModelInfo(new ElementShape(fields.Select(f => f.Field).ToList()), fields, key, name, version, dimensions, entity, itemType);
     }
 
     /// <summary>

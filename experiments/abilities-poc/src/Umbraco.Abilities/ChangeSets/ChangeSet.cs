@@ -77,8 +77,7 @@ public enum ConflictSide
 public sealed record ChangeSetConflict(
     EntityRef Entity,
     string Path,
-    string? Culture,
-    string? Segment,
+    IReadOnlyDictionary<string, string>? Variant,
     JsonNode? Base,
     JsonNode? Yours,
     JsonNode? Theirs,

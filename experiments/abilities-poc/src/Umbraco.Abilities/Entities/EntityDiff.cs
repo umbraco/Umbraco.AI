@@ -101,7 +101,7 @@ public static class EntityDiff
             var variants = Variants(a, field).Union(Variants(b, field));
             foreach (var own in variants)
             {
-                var variant = new VariantId(own.Culture ?? context.Culture, own.Segment ?? context.Segment);
+                var variant = own.Over(context);
                 var valueA = a is null ? null : EntityValues.Get(a, field, own);
                 var valueB = b is null ? null : EntityValues.Get(b, field, own);
                 switch (field.Type)
@@ -160,7 +160,7 @@ public static class EntityDiff
             : change.Path;
         try
         {
-            return EntityValues.Find(root, shape, itemTypes, path, (field, _) => change.Variant.Narrow(field.Variations), create);
+            return EntityValues.Find(root, shape, itemTypes, path, (field, _) => change.Variant.Narrow(field.VariesBy), create);
         }
         catch (AbilityInputException)
         {

@@ -108,8 +108,12 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
         var cultures = (await _languages.GetAllAsync()).Select(l => l.IsoCode).ToList();
         return new EntityStructure(Type, type.Name ?? type.Alias, type.Description ?? string.Empty, map.Shape)
         {
-            Variations = map.Variations,
-            Cultures = cultures,
+            // Listed for every document type: blocks inside an invariant document can still vary.
+            Dimensions =
+            [
+                new VariationDimension(VariationDimensions.Culture, "The site's languages.", cultures),
+                new VariationDimension(VariationDimensions.Segment, "A segment of the audience. Leave it out for the default."),
+            ],
         };
     }
 
@@ -134,7 +138,7 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
         var nameField = map.Shape.Find(CmsStructureMapper.NameField)!;
         foreach (var (culture, name) in content.Names)
         {
-            EntityValues.Set(document.Root, nameField, new VariantId(culture.Length == 0 ? null : culture, null), name);
+            EntityValues.Set(document.Root, nameField, CmsVariants.Of(culture.Length == 0 ? null : culture, null), name);
         }
 
         if (content.ParentKey is { } parent)
@@ -219,10 +223,11 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
             return status == ContentAuthorizationStatus.NotFound ? "Not found." : $"You don't have permission to {verb} this document.";
         }
 
-        if (request.Cultures.Count > 0
-            && await _permissions.AuthorizeCultureAccessAsync(user, request.Cultures.ToHashSet()) != ContentAuthorizationStatus.Success)
+        var cultures = request.Variants.Select(v => v.Culture).OfType<string>().ToHashSet();
+        if (cultures.Count > 0
+            && await _permissions.AuthorizeCultureAccessAsync(user, cultures) != ContentAuthorizationStatus.Success)
         {
-            return $"You don't have access to edit {string.Join(", ", request.Cultures)}.";
+            return $"You don't have access to edit {string.Join(", ", cultures)}.";
         }
 
         return null;
@@ -270,7 +275,7 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
             }
             else if (map.Properties.TryGetValue(alias, out var property))
             {
-                var variant = change.Variant.Narrow(property.Field.Variations);
+                var variant = change.Variant.Narrow(property.Field.VariesBy);
                 touched.Add((alias, variant.Culture, variant.Segment));
             }
         }
@@ -290,14 +295,14 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
             var entity = live is not null ? ToRef(live) : new EntityRef(Type, rebase.Entity.Guid, "(deleted)", EditUrl(rebase.Entity.Guid));
             if (rebase.DeletedLive)
             {
-                result.Add(new RebasedEntity(entity, ["(deleted)"], [new ChangeSetConflict(entity, string.Empty, null, null, null, null, null, null)]));
+                result.Add(new RebasedEntity(entity, ["(deleted)"], [new ChangeSetConflict(entity, string.Empty, null, null, null, null, null)]));
                 continue;
             }
 
             result.Add(new RebasedEntity(
                 entity,
                 rebase.ChangedSince.Select(c => c.Culture is null ? PathOf(c.Alias) : $"{PathOf(c.Alias)} ({c.Culture})").Distinct().ToList(),
-                rebase.Conflicts.Select(c => new ChangeSetConflict(entity, PathOf(c.Alias), c.Culture, c.Segment, c.Base, c.Draft, c.Live, null)).ToList()));
+                rebase.Conflicts.Select(c => new ChangeSetConflict(entity, PathOf(c.Alias), CmsVariants.Of(c.Culture, c.Segment).ToJson(), c.Base, c.Draft, c.Live, null)).ToList()));
         }
 
         return result;
@@ -348,7 +353,7 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
                 continue;
             }
 
-            var variant = new VariantId(culture, segment);
+            var variant = CmsVariants.Of(culture, segment);
             if (!property.Field.IsItems)
             {
                 EntityValues.Set(owner, property.Field, variant, value);
@@ -442,7 +447,7 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
         {
             foreach (var culture in cultures)
             {
-                if (EntityValues.Get(root, nameField, new VariantId(culture, null)) is { } name)
+                if (EntityValues.Get(root, nameField, CmsVariants.Of(culture, null)) is { } name)
                 {
                     variants.Add(new VariantModel { Culture = culture, Name = name.GetValue<string>() });
                 }
@@ -502,7 +507,7 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
             List<string?> exposedIn = [envelopeCulture];
             if (elementMap.Variations.VariesByCulture())
             {
-                var own = EntityValues.OwnCultures(item, elementMap.Shape).Cast<string?>().ToList();
+                var own = EntityValues.OwnVariants(item, elementMap.Shape).Select(v => v.Culture).OfType<string>().Distinct().Cast<string?>().ToList();
                 exposedIn = own.Count > 0 ? own : envelopeCulture is not null ? [envelopeCulture] : documentCultures.Cast<string?>().ToList();
             }
 
@@ -657,14 +662,14 @@ public sealed class CmsDocumentDefinition : IDraftingEntityDefinition, IAuthoriz
         public Problem ToProblem(PropertyValidationError error)
         {
             // Same fields as Umbraco's error; only the alias and JSON path become one entity path.
-            var located = new Problem(error.Alias, error.ErrorMessages.ToList()) { Culture = error.Culture, Segment = error.Segment };
+            var located = new Problem(error.Alias, error.ErrorMessages.ToList()).In(CmsVariants.Of(error.Culture, error.Segment));
             if (string.IsNullOrEmpty(error.JsonPath) || error.JsonPath == "$")
             {
                 return located;
             }
 
             return Locate(_properties, error.Alias, error.Culture, error.Segment, error.JsonPath) is { } at
-                ? located with { Path = at.Path, Culture = at.Culture, Segment = at.Segment }
+                ? located with { Path = at.Path, Variant = CmsVariants.Of(at.Culture, at.Segment).ToJson() }
                 : located with { Path = $"{error.Alias} {error.JsonPath}" };
         }
 

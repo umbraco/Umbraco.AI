@@ -25,9 +25,9 @@ public class ChangeSetTests
         var discount = Guid.NewGuid();
 
         // A page with nested blocks: a card grid holding a card is an items field inside an item.
-        await _agent.OkAsync("entity_create", $$"""{ "entityType": "document", "key": "{{page}}", "culture": "en-US", "fields": { "title": "Black Friday" } }""");
+        await _agent.OkAsync("entity_create", $$"""{ "entityType": "document", "key": "{{page}}", "variant": { "culture": "en-US" }, "fields": { "title": "Black Friday" } }""");
         var hero = await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "document", "key": "{{page}}", "fieldPath": "blocks", "itemType": "hero", "culture": "en-US", "fields": { "heading": "Black Friday deals" } }
+            { "entityType": "document", "key": "{{page}}", "fieldPath": "blocks", "itemType": "hero", "variant": { "culture": "en-US" }, "fields": { "heading": "Black Friday deals" } }
             """);
         await _agent.OkAsync("entity_setValue", $$"""
             { "entityType": "document", "key": "{{page}}", "path": "{{hero.GetProperty("path").GetString()}}/settings/theme", "value": "dark" }
@@ -84,7 +84,7 @@ public class ChangeSetTests
     public async Task A_failed_step_leaves_earlier_steps_applied_and_applying_again_resumes()
     {
         await _agent.StartChangeSetAsync("Launch");
-        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "culture": "en-US", "fields": { "title": "Launch" } }""")).GetProperty("key").GetGuid();
+        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "variant": { "culture": "en-US" }, "fields": { "title": "Launch" } }""")).GetProperty("key").GetGuid();
         await _agent.OkAsync("email_send", """{ "to": "list@example.com", "subject": "We launched" }""");
 
         _site.Outbox.ServerDown = true;
@@ -98,7 +98,7 @@ public class ChangeSetTests
         // The page is applied; the set is kept, and its applied part can no longer be edited in it.
         Assert.Equal(1, (await _site.Pages.LoadAsync(page))!.LiveVersion);
         var locked = await _agent.FailAsync("entity_setValue", $$"""
-            { "entityType": "document", "key": "{{page}}", "path": "title", "value": "Changed", "culture": "en-US" }
+            { "entityType": "document", "key": "{{page}}", "path": "title", "value": "Changed", "variant": { "culture": "en-US" } }
             """);
         Assert.Contains("already applied", locked.GetProperty("message").GetString());
 
@@ -113,7 +113,7 @@ public class ChangeSetTests
     public async Task A_product_whose_save_fails_rolls_back_all_of_its_changes_and_can_be_fixed_and_resumed()
     {
         await _agent.StartChangeSetAsync("Two discounts");
-        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "culture": "en-US", "fields": { "title": "Deals" } }""")).GetProperty("key").GetGuid();
+        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "variant": { "culture": "en-US" }, "fields": { "title": "Deals" } }""")).GetProperty("key").GetGuid();
         var first = await CreateDiscountAsync("First", "DEAL");
         var second = await CreateDiscountAsync("Second", "DEAL"); // passes validation (only live codes are checked), fails on save
 
@@ -250,11 +250,11 @@ public class ChangeSetTests
     public async Task An_entity_with_version_history_is_rebased_from_its_history_without_a_snapshot()
     {
         await _agent.StartChangeSetAsync("Create");
-        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "culture": "en-US", "fields": { "title": "Launch" } }""")).GetProperty("key").GetGuid();
+        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "variant": { "culture": "en-US" }, "fields": { "title": "Launch" } }""")).GetProperty("key").GetGuid();
         await _agent.OkAsync("changeSet_apply", SetJson());
 
         await _agent.StartChangeSetAsync("Edit");
-        await _agent.OkAsync("entity_setValue", $$"""{ "entityType": "document", "key": "{{page}}", "path": "title", "value": "Big launch", "culture": "en-US" }""");
+        await _agent.OkAsync("entity_setValue", $$"""{ "entityType": "document", "key": "{{page}}", "path": "title", "value": "Big launch", "variant": { "culture": "en-US" } }""");
 
         // Pages keep version history, so the set remembers only the version it started from.
         var set = _site.ChangeSets.Get(_agent.ChangeSetId!.Value);
@@ -276,11 +276,11 @@ public class ChangeSetTests
     public async Task If_the_starting_version_is_gone_from_the_history_the_entity_cant_be_rebased()
     {
         await _agent.StartChangeSetAsync("Create");
-        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "culture": "en-US", "fields": { "title": "Launch" } }""")).GetProperty("key").GetGuid();
+        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "variant": { "culture": "en-US" }, "fields": { "title": "Launch" } }""")).GetProperty("key").GetGuid();
         await _agent.OkAsync("changeSet_apply", SetJson());
 
         await _agent.StartChangeSetAsync("Edit");
-        await _agent.OkAsync("entity_setValue", $$"""{ "entityType": "document", "key": "{{page}}", "path": "title", "value": "Big launch", "culture": "en-US" }""");
+        await _agent.OkAsync("entity_setValue", $$"""{ "entityType": "document", "key": "{{page}}", "path": "title", "value": "Big launch", "variant": { "culture": "en-US" } }""");
 
         var live = (await _site.Pages.LoadAsync(page))!;
         await _site.Pages.SaveAsync(live);
@@ -329,12 +329,12 @@ public class ChangeSetTests
     public async Task Replaying_a_set_gives_the_same_entity_every_time()
     {
         await _agent.StartChangeSetAsync("Replay");
-        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "culture": "en-US", "fields": { "title": "Replay" } }""")).GetProperty("key").GetGuid();
+        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "variant": { "culture": "en-US" }, "fields": { "title": "Replay" } }""")).GetProperty("key").GetGuid();
         var hero = await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "document", "key": "{{page}}", "fieldPath": "blocks", "itemType": "hero", "culture": "en-US", "fields": { "heading": "Hi" } }
+            { "entityType": "document", "key": "{{page}}", "fieldPath": "blocks", "itemType": "hero", "variant": { "culture": "en-US" }, "fields": { "heading": "Hi" } }
             """);
         await _agent.OkAsync("entity_addItem", $$"""
-            { "entityType": "document", "key": "{{page}}", "fieldPath": "blocks", "itemType": "hero", "culture": "en-US", "fields": { "heading": "First" }, "position": 0 }
+            { "entityType": "document", "key": "{{page}}", "fieldPath": "blocks", "itemType": "hero", "variant": { "culture": "en-US" }, "fields": { "heading": "First" }, "position": 0 }
             """);
         await _agent.OkAsync("entity_moveItem", $$"""
             { "entityType": "document", "key": "{{page}}", "fieldPath": "blocks", "itemKey": "{{hero.GetProperty("itemKey").GetGuid()}}", "position": 0 }

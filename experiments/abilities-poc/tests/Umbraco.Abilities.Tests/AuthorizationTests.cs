@@ -16,7 +16,7 @@ public class AuthorizationTests
         _agent.UserKey = SampleAccess.ContentEditor;
         await _agent.StartChangeSetAsync("Sale");
 
-        await _agent.OkAsync("entity_create", """{ "entityType": "document", "culture": "en-US", "fields": { "title": "Launch" } }""");
+        await _agent.OkAsync("entity_create", """{ "entityType": "document", "variant": { "culture": "en-US" }, "fields": { "title": "Launch" } }""");
         var refused = await _agent.FailAsync("entity_create", """{ "entityType": "umbraco-commerce-discount", "fields": { "name": "Sale" } }""");
 
         Assert.Equal("AccessDenied", refused.GetProperty("status").GetString());
@@ -30,7 +30,7 @@ public class AuthorizationTests
     {
         // Built by an editor who may use everything...
         await _agent.StartChangeSetAsync("Campaign");
-        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "culture": "en-US", "fields": { "title": "Launch" } }""")).GetProperty("key").GetGuid();
+        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "variant": { "culture": "en-US" }, "fields": { "title": "Launch" } }""")).GetProperty("key").GetGuid();
         var discount = (await _agent.OkAsync("entity_create", """{ "entityType": "umbraco-commerce-discount", "fields": { "name": "Sale" } }""")).GetProperty("key").GetGuid();
         await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rules", "itemType": "orderTotal", "fields": { "minTotal": 50 } }""");
         await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "umbraco-commerce-discount", "key": "{{discount}}", "fieldPath": "rewards", "itemType": "freeShipping" }""");

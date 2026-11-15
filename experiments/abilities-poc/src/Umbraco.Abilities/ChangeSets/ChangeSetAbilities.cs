@@ -58,8 +58,7 @@ public sealed record ResolveConflictInput(
     [property: Description("Entity key.")] Guid Key,
     [property: Description("The conflict's path, as listed by changeSet.validate or changeSet.summarize.")] string Path,
     [property: Description("Which value to keep: 'yours' (the change set's) or 'theirs' (saved by someone else since).")] string Keep,
-    [property: Description("The conflict's culture, if it has one.")] string? Culture = null,
-    [property: Description("The conflict's segment, if it has one.")] string? Segment = null);
+    [property: Description("The conflict's variant, as changeSet.summarize shows it, e.g. { \"culture\": \"da-DK\" }.")] Dictionary<string, string>? Variant = null);
 
 [Ability("changeSet.resolveConflict", "Resolve change set conflict", Kind = AbilityKind.Write, Reversible = true,
     Description = "When someone else changed something the change set also changed, keeps one of the two values. " +
@@ -75,7 +74,7 @@ public sealed class ResolveConflictAbility(ChangeSetService changeSets) : Abilit
             _ => throw new AbilityInputException("Keep must be 'yours' or 'theirs'.", [new Problem("keep", "Must be 'yours' or 'theirs'.")]),
         };
 
-        await changeSets.ResolveConflictAsync(input.ChangeSetId, input.EntityType, input.Key, input.Path, new Entities.VariantId(input.Culture, input.Segment), keep, cancellationToken);
+        await changeSets.ResolveConflictAsync(input.ChangeSetId, input.EntityType, input.Key, input.Path, Entities.VariantId.From(input.Variant), keep, cancellationToken);
         return Success(new { resolved = input.Path, kept = keep.ToString().ToLowerInvariant() });
     }
 }

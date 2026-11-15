@@ -11,10 +11,10 @@ public enum EntityPermission
 
 /// <summary>
 /// Whether a user may read, create or change an entity. <paramref name="Document"/> is the entity as it would be after
-/// the change (so a create can check its parent), or null for a read by key. <paramref name="Cultures"/> are the cultures
-/// the change touches, for products that limit users to some languages.
+/// the change (so a create can check its parent), or null for a read by key. <paramref name="Variants"/> are the variants
+/// the change touches, for products that limit users to some of them (the CMS's languages).
 /// </summary>
-public sealed record EntityAccessRequest(Guid UserKey, EntityPermission Permission, Guid Key, EntityDocument? Document, IReadOnlySet<string> Cultures);
+public sealed record EntityAccessRequest(Guid UserKey, EntityPermission Permission, Guid Key, EntityDocument? Document, IReadOnlySet<VariantId> Variants);
 
 /// <summary>
 /// A definition whose product has its own permission model: CMS user groups, document permissions and language access, or
@@ -31,11 +31,11 @@ public static class EntityAccess
     public static async Task<string?> CheckAsync(IEntityDefinition definition, EntityAccessRequest request, CancellationToken cancellationToken = default)
         => definition is IAuthorizingEntityDefinition authorizing ? await authorizing.AuthorizeAsync(request, cancellationToken) : null;
 
-    /// <summary>The cultures whose values differ between two versions of an entity.</summary>
-    public static IReadOnlySet<string> CulturesChanged(EntityDocument? before, EntityDocument after, ElementShape shape, ItemTypeRegistry itemTypes)
+    /// <summary>The variants whose values differ between two versions of an entity.</summary>
+    public static IReadOnlySet<VariantId> VariantsChanged(EntityDocument? before, EntityDocument after, ElementShape shape, ItemTypeRegistry itemTypes)
         => EntityDiff.Compare(before?.Root ?? [], after.Root, shape, itemTypes)
-            .Select(c => c.Variant.Culture)
-            .OfType<string>()
+            .Select(c => c.Variant)
+            .Where(v => !v.IsInvariant)
             .ToHashSet();
 
     /// <summary>

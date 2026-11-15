@@ -1,6 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
+using Umbraco.Abilities.Entities;
+
 namespace Umbraco.Abilities;
 
 /// <summary>What an ability does. Products derive retry, approval and MCP hints from it.</summary>
@@ -88,8 +90,8 @@ public enum AbilityOperationStatus
 }
 
 /// <summary>
-/// A problem at a path. Mirrors the CMS's <c>PropertyValidationError</c>: error messages per culture and segment, at a
-/// path. The path is the entity path the edit abilities take (an alias, or a path into items), where the CMS splits it
+/// A problem at a path. Mirrors the CMS's <c>PropertyValidationError</c>: error messages per variant (its culture and
+/// segment are two dimensions of <see cref="Variant"/>), at a path. The path is the entity path the edit abilities take (an alias, or a path into items), where the CMS splits it
 /// into an alias and a JSON path into the value.
 /// </summary>
 public sealed record Problem(string Path, IReadOnlyList<string> ErrorMessages)
@@ -99,9 +101,10 @@ public sealed record Problem(string Path, IReadOnlyList<string> ErrorMessages)
     {
     }
 
-    public string? Culture { get; init; }
+    /// <summary>The variant the problem is in, e.g. <c>{ "culture": "da-DK" }</c>; null for a value that doesn't vary.</summary>
+    public IReadOnlyDictionary<string, string>? Variant { get; init; }
 
-    public string? Segment { get; init; }
+    public Problem In(VariantId variant) => this with { Variant = variant.ToJson() };
 
     /// <summary>The error messages as one sentence.</summary>
     public override string ToString() => string.Join(" ", ErrorMessages);

@@ -55,9 +55,9 @@ public abstract class EntityDefinitionBase<TModel> : IEntityDefinition
     protected virtual Task<IReadOnlyList<Problem>> ValidateModelAsync(TModel model, CancellationToken cancellationToken)
         => Task.FromResult<IReadOnlyList<Problem>>([]);
 
-    /// <summary>The cultures the entity can have, when it has values that vary by culture.</summary>
-    protected virtual Task<IReadOnlyList<string>> GetCulturesAsync(CancellationToken cancellationToken)
-        => Task.FromResult<IReadOnlyList<string>>([]);
+    /// <summary>The values a dimension the model varies by can have, e.g. the site's languages for culture. Null: any value.</summary>
+    protected virtual Task<IReadOnlyList<string>?> GetDimensionValuesAsync(string dimension, CancellationToken cancellationToken)
+        => Task.FromResult<IReadOnlyList<string>?>(null);
 
     protected virtual string? GetEditUrl(Guid key) => null;
 
@@ -78,11 +78,15 @@ public abstract class EntityDefinitionBase<TModel> : IEntityDefinition
         => Task.FromResult<IReadOnlyList<EntitySubtype>>([]);
 
     public async Task<EntityStructure> DescribeAsync(string? subtype, CancellationToken cancellationToken = default)
-        => new(EntityType, _entity.Name, _entity.Description, _info.Shape)
+    {
+        var dimensions = new List<VariationDimension>();
+        foreach (var name in _info.Dimensions)
         {
-            Variations = _info.Variations,
-            Cultures = await GetCulturesAsync(cancellationToken),
-        };
+            dimensions.Add(new VariationDimension(name, $"Values vary by {name}.", await GetDimensionValuesAsync(name, cancellationToken)));
+        }
+
+        return new EntityStructure(EntityType, _entity.Name, _entity.Description, _info.Shape) { Dimensions = dimensions };
+    }
 
     public EntityDocument New(Guid key, string? subtype) => new() { EntityType = EntityType, Key = key };
 
@@ -171,7 +175,7 @@ public abstract class ModelEditAbilityBase<TInput, TModel>(EntityDefinitionBase<
 
         // Run directly, the ability saves: the user must be allowed to change the entity, as inside a change set.
         var after = definition.ToDocument(model);
-        if (await EntityAccess.CheckAsync(definition, new EntityAccessRequest(context.UserKey, EntityPermission.Update, key, after, EntityAccess.CulturesChanged(before, after, ModelShapes.ShapeOf(typeof(TModel)), definition.ItemTypes)), cancellationToken) is { } denied)
+        if (await EntityAccess.CheckAsync(definition, new EntityAccessRequest(context.UserKey, EntityPermission.Update, key, after, EntityAccess.VariantsChanged(before, after, ModelShapes.ShapeOf(typeof(TModel)), definition.ItemTypes)), cancellationToken) is { } denied)
         {
             return EntityAccess.Denied(denied);
         }

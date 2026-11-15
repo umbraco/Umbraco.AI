@@ -23,7 +23,7 @@ public class ValueHandlerTests
         Assert.Equal("array", intro.GetProperty("properties").GetProperty("blocks").GetProperty("type").GetString());
 
         await _agent.StartChangeSetAsync("Intro");
-        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "culture": "en-US", "fields": { "title": "Launch" } }""")).GetProperty("key").GetGuid();
+        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "variant": { "culture": "en-US" }, "fields": { "title": "Launch" } }""")).GetProperty("key").GetGuid();
 
         await SetAsync(page, "intro", "markup", "\"<p>Big news.</p>\"");
         var callout = await _agent.OkAsync("entity_addItem", $$"""{ "entityType": "document", "key": "{{page}}", "fieldPath": "intro/blocks", "itemType": "callout", "fields": { "text": "20% off" } }""");
@@ -52,7 +52,7 @@ public class ValueHandlerTests
     public async Task The_handler_checks_the_rules_between_its_parts()
     {
         await _agent.StartChangeSetAsync("Broken intro");
-        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "culture": "en-US", "fields": { "title": "Launch" } }""")).GetProperty("key").GetGuid();
+        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "variant": { "culture": "en-US" }, "fields": { "title": "Launch" } }""")).GetProperty("key").GetGuid();
         var missing = Guid.NewGuid();
         await SetAsync(page, "intro", "markup", $$"""
             "<p>Hi</p><umb-block data-key=\"{{missing}}\"></umb-block>"
@@ -66,7 +66,7 @@ public class ValueHandlerTests
     }
 
     private Task<System.Text.Json.JsonElement> SetAsync(Guid page, string elementPath, string field, string valueJson)
-        => _agent.OkAsync("entity_setValue", $$"""{ "entityType": "document", "key": "{{page}}", "path": "{{elementPath}}/{{field}}", "value": {{valueJson}}, "culture": "en-US" }""");
+        => _agent.OkAsync("entity_setValue", $$"""{ "entityType": "document", "key": "{{page}}", "path": "{{elementPath}}/{{field}}", "value": {{valueJson}}, "variant": { "culture": "en-US" } }""");
 
     private async Task<System.Text.Json.Nodes.JsonObject> IntroAsync(Guid page)
     {

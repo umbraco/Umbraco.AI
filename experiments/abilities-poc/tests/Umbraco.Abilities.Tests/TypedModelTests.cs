@@ -42,12 +42,11 @@ public class TypedModelTests
         var page = await _site.Pages.DescribeAsync(null);
         var fields = page.Shape.Fields.ToDictionary(f => f.Alias);
 
-        Assert.Equal(ContentVariation.Culture, page.Variations);
-        Assert.Equal(["en-US", "da-DK"], page.Cultures);
-        Assert.Equal(ContentVariation.Culture, fields["title"].Variations);
+        Assert.Equal(["en-US", "da-DK"], Assert.Single(page.Dimensions).Values);
+        Assert.Equal(["culture"], fields["title"].VariesBy);
         Assert.True(fields["tags"].Many);
         Assert.Equal(["document", "media"], fields["related"].ReferencesAnyOf);
-        Assert.Equal(ContentVariation.Culture, page.Shape.Fields.Single(f => f.Alias == "promos").Variations);
+        Assert.Equal(["culture"], page.Shape.Fields.Single(f => f.Alias == "promos").VariesBy);
         Assert.Equal("columnSpan", _site.ItemTypes.Find(CmsPageDefinition.GridRootGroup, "richText")!.Shape.Find("layout")!.Shape!.Fields[0].Alias);
 
         var hero = _site.ItemTypes.Find(CmsPageDefinition.BlockGroup, "hero")!;

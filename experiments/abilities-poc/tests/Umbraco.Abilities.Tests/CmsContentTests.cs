@@ -49,13 +49,15 @@ public class CmsContentTests
         Assert.Equal("title", missing.GetProperty("problems")[0].GetProperty("path").GetString());
         Assert.Contains("en-US, da-DK", missing.GetProperty("problems")[0].GetProperty("errorMessages")[0].GetString());
 
-        var unknown = await _agent.FailAsync("entity_create", """{ "entityType": "document", "culture": "fr-FR", "fields": { "title": "Bonjour" } }""");
+        var unknown = await _agent.FailAsync("entity_create", """{ "entityType": "document", "variant": { "culture": "fr-FR" }, "fields": { "title": "Bonjour" } }""");
         Assert.Contains("Unknown culture 'fr-FR'", unknown.GetProperty("problems")[0].GetProperty("errorMessages")[0].GetString());
 
         // A page with no culture at all can be started, but not applied.
         await _agent.OkAsync("entity_create", """{ "entityType": "document" }""");
         var validation = await ValidateAsync();
-        Assert.Contains("no culture yet", validation.GetProperty("entities")[0].GetProperty("problems")[0].GetProperty("errorMessages")[0].GetString());
+        var problem = validation.GetProperty("entities")[0].GetProperty("problems")[0];
+        Assert.Equal("title", problem.GetProperty("path").GetString());
+        Assert.Contains("at least one culture", problem.GetProperty("errorMessages")[0].GetString());
     }
 
     [Fact]
@@ -67,7 +69,7 @@ public class CmsContentTests
 
         var problem = (await ValidateAsync()).GetProperty("entities")[0].GetProperty("problems")[0];
         Assert.Equal("title", problem.GetProperty("path").GetString());
-        Assert.Equal("da-DK", problem.GetProperty("culture").GetString());
+        Assert.Equal("da-DK", problem.GetProperty("variant").GetProperty("culture").GetString());
 
         await SetAsync(page, "", "title", "\"Sommer\"", "da-DK");
         await AssertValidAsync();
@@ -181,7 +183,7 @@ public class CmsContentTests
     }
 
     private async Task<Guid> CreatePageAsync(string title, string culture)
-        => (await _agent.OkAsync("entity_create", $$"""{ "entityType": "document", "culture": "{{culture}}", "fields": { "title": "{{title}}" } }""")).GetProperty("key").GetGuid();
+        => (await _agent.OkAsync("entity_create", $$"""{ "entityType": "document", "variant": { "culture": "{{culture}}" }, "fields": { "title": "{{title}}" } }""")).GetProperty("key").GetGuid();
 
     private Task<JsonElement> SetAsync(Guid page, string elementPath, string field, string valueJson, string? culture = null)
         => _agent.OkAsync("entity_setValue", SetJson(page, elementPath, field, valueJson, culture));
@@ -205,5 +207,5 @@ public class CmsContentTests
     private static string AddJson(Guid page, string fieldPath, string itemType, string? fieldsJson, string? culture = null)
         => $$"""{ "entityType": "document", "key": "{{page}}", "fieldPath": "{{fieldPath}}", "itemType": "{{itemType}}"{{(fieldsJson is null ? "" : $", \"fields\": {fieldsJson}")}}{{Culture(culture)}} }""";
 
-    private static string Culture(string? culture) => culture is null ? "" : $", \"culture\": \"{culture}\"";
+    private static string Culture(string? culture) => culture is null ? "" : $", \"variant\": {{ \"culture\": \"{culture}\" }}";
 }

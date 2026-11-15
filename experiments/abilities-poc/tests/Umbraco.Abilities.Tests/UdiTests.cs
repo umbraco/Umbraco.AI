@@ -25,7 +25,7 @@ public class UdiTests
     public async Task A_reference_can_be_given_as_a_UDI_and_is_stored_in_the_fields_own_form()
     {
         await _agent.StartChangeSetAsync("Campaign");
-        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "culture": "en-US", "fields": { "title": "Launch" } }""")).GetProperty("key").GetGuid();
+        var page = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "variant": { "culture": "en-US" }, "fields": { "title": "Launch" } }""")).GetProperty("key").GetGuid();
         var media = (await _agent.OkAsync("entity_create", """{ "entityType": "media", "fields": { "name": "Hero" } }""")).GetProperty("key").GetGuid();
         var discount = (await _agent.OkAsync("entity_create", """{ "entityType": "umbraco-commerce-discount", "fields": { "name": "Sale" } }""")).GetProperty("key").GetGuid();
 

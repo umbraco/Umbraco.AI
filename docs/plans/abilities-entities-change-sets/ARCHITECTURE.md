@@ -109,7 +109,7 @@ object field of the block (`blocks/{key}/settings/theme`), and so is a grid bloc
   "maxItems": 10,
   "items": { "oneOf": [ { "$ref": "#/itemTypes/hero" }, { "$ref": "#/itemTypes/cardGrid" } ] }
 },
-"title": { "type": "string", "x-variations": "Culture" }
+"title": { "type": "string", "x-variations": ["culture"] }
 ```
 
 **The notes.** Plain JSON Schema covers most of a value. It has no word for these three things, so they are notes:
@@ -117,7 +117,7 @@ object field of the block (`blocks/{key}/settings/theme`), and so is a grid bloc
 | Note | Says | Why the framework needs it |
 | --- | --- | --- |
 | `x-item-types` | The array holds keyed, typed items from a group in the item type registry | Paths by key; plugin seams (discount rules, Automate steps); add, remove and move |
-| `x-variations` | The value varies by culture or segment, at any depth | Which culture an edit or a problem is about. A heading can vary inside an invariant block list |
+| `x-variations` | The dimensions the value varies by (the CMS's culture and segment, or a product's own, such as currency), at any depth | Which variant an edit or a problem is about. A heading can vary inside an invariant block list |
 | `x-references` | The value is the key of another entity (by UDI type), or of an item in the same entity | Reference checks, and creating referenced entities in the same change set |
 
 **Edits.** `setValue` sets the value at any path. `addItem`, `removeItem` and `moveItem` work on any items array at any
@@ -156,9 +156,10 @@ Removing a culture is an operation (a CMS ability), not a value.
   block values.
 - **Reserved names.** An item's `key` and `type` are fixed property names, so an item type can't have fields with those
   aliases. A product's own data that isn't a field (the CMS's block settings key) is kept under a `$` name.
-- **Variation isn't only culture.** The CMS also has segments, and other products have their own dimensions (a price
-  per currency, a setting per store). The next step makes variation a set of named dimensions, with culture and
-  segment as the CMS's two.
+- **Variation is any dimension.** The CMS has culture and segment; other products have their own (a price per currency,
+  a setting per store). The structure lists an entity's dimensions and their values, each field says which it varies
+  by, edits take a variant (`{ "culture": "da-DK" }`), and problems and conflicts say which variant they're in. A
+  dimension with listed values needs one of them; an open one, such as a segment, may be left out for its default.
 
 **References** are values holding a key (`x-references`), so an entity stays a tree of values it owns, and graphs are
 references between items or between entities. A workflow's steps are items, and each step's `next` is a reference to
@@ -345,7 +346,7 @@ The framework uses CMS features wherever one fits, and builds only what the CMS 
 | Need | Uses | Status |
 | --- | --- | --- |
 | Entity identity | UDIs | Used |
-| What a value varies by | `ContentVariation` | Used; replaced an identical enum of our own |
+| What a value varies by | `ContentVariation` | Mapped in the CMS adapter to the `culture` and `segment` dimensions. The framework has named dimensions, since other products vary by other things |
 | Block editor values | `BlockListValue`, `BlockGridValue`, `BlockItemData` | Used |
 | A transaction for content | Umbraco scopes | Used, behind a unit of work that other products implement with their own connections |
 | Packages reacting to, or vetoing, an apply | CMS notifications | Used: a cancelable applying notification for change sets and draft sets, like `ContentSavingNotification`, then applied and discarded |
@@ -361,7 +362,7 @@ Also used, after a second pass:
 | Work after a transaction commits | Scopes: notifications published through the scope, and enlisted scope-exit actions | Used. Both run only when the outermost scope commits, so a draft set applied inside a scope that rolls back is neither marked applied nor announced |
 | Who may do what | The CMS's permission model (`IContentPermissionService`) | Used. See Authorization below |
 | Side effects that need retries | `IBackgroundTaskQueue`, processed by `QueuedHostedService`, with Polly | Used. Webhooks weren't, as they're going away. See Retries below |
-| Results and problems | `Attempt<TResult, TStatus>` and `PropertyValidationError` | Mirrored: a result has a status (Success, InvalidInput, AccessDenied, Failed) and a result; a problem has error messages, culture and segment |
+| Results and problems | `Attempt<TResult, TStatus>` and `PropertyValidationError` | Mirrored: a result has a status (Success, InvalidInput, AccessDenied, Failed) and a result; a problem has error messages and a variant (culture and segment are its CMS dimensions) |
 
 Left for later: **storage**. Change sets and draft sets are held in memory, which doesn't work across load-balanced servers.
 
@@ -520,7 +521,7 @@ The structure language holds up against the real CMS, Commerce and Automate code
 
 | Addition | Needed by |
 | --- | --- |
-| Variations on the entity and its fields (the CMS's ContentVariation): values stored per culture and segment, edits take a culture, problems say which culture | CMS: names and properties vary by culture or segment; blocks in an invariant block property hold per-culture values |
+| Dimensions on the entity and each field's `VariesBy`: values stored per variant, edits take a variant, problems say which variant | CMS: names and properties vary by culture or segment; blocks in an invariant block property hold per-culture values |
 | Culture-variant items fields: a separate item list per culture | CMS: a culture-variant block property holds one whole value per culture |
 | Object fields: a block's `settings`, a grid block's `layout` | CMS: blocks have a settings element type beside their content type, and a Block Grid block has a column and row span; the PoC first modelled these as an item's own sub-elements, not values |
 | Arrays, references to several entity types, and JSON values | CMS: tags, tree pickers pointing at documents or media, focal points and crops |

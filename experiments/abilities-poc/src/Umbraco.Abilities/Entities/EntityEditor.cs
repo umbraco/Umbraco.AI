@@ -1,8 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-using Umbraco.Cms.Core.Models;
-using Umbraco.Extensions;
 namespace Umbraco.Abilities.Entities;
 
 /// <summary>What an edit works on: the document, its structure, the item types, and the variant being edited.</summary>
@@ -21,7 +19,7 @@ public static class EntityEditor
 
     /// <summary>What a path points at, for editing: the variant of each varying value on the way is the edit's.</summary>
     public static PathTarget Find(EditTarget target, string path, bool create = true)
-        => EntityValues.Find(target.Document.Root, target.Structure.Shape, target.ItemTypes, path, (field, at) => RequireVariant(target, field.Variations, at), create);
+        => EntityValues.Find(target.Document.Root, target.Structure.Shape, target.ItemTypes, path, (field, at) => RequireVariant(target, field.VariesBy, at), create);
 
     /// <summary>Sets the value at a path. Returns the path.</summary>
     public static string SetValue(EditTarget target, string path, JsonNode? value)
@@ -47,7 +45,7 @@ public static class EntityEditor
             {
                 var field = shape.Find(alias)
                     ?? throw Invalid(fieldPath, $"No field '{alias}' here. Fields: {EntityValues.Names(shape.Fields.Select(f => f.Alias))}.");
-                SetField(owner, field, fieldPath, RequireVariant(target, field.Variations, fieldPath), value);
+                SetField(owner, field, fieldPath, RequireVariant(target, field.VariesBy, fieldPath), value);
             }
             catch (AbilityInputException ex)
             {
@@ -107,31 +105,30 @@ public static class EntityEditor
     }
 
     /// <summary>
-    /// The variant to use for a value that varies as given. Invariant values ignore the edit's variant; a value that
-    /// varies by culture needs a known culture, or the entity's only culture when it has just one.
+    /// The variant to use for a value that varies by <paramref name="variesBy"/>: the edit's variant, narrowed to those
+    /// dimensions. A dimension with listed values needs one of them, or the only one when there is just one; an open
+    /// dimension (the CMS's segments) may be left out for its default.
     /// </summary>
-    public static VariantId RequireVariant(EditTarget target, ContentVariation varies, string path)
+    public static VariantId RequireVariant(EditTarget target, IReadOnlyList<string> variesBy, string path)
     {
-        var variant = target.Variant.Narrow(varies);
-        if (!varies.VariesByCulture())
+        var variant = target.Variant.Narrow(variesBy);
+        foreach (var name in variesBy)
         {
-            return variant;
-        }
-
-        var cultures = target.Structure.Cultures;
-        if (variant.Culture is null)
-        {
-            if (cultures.Count == 1)
+            if (target.Structure.Dimension(name)?.Values is not { } values)
             {
-                return variant with { Culture = cultures[0] };
+                continue;
             }
 
-            throw Invalid(path, $"This varies by culture. Give a culture: {EntityValues.Names(cultures)}.");
-        }
-
-        if (!cultures.Contains(variant.Culture))
-        {
-            throw Invalid(path, $"Unknown culture '{variant.Culture}'. Cultures: {EntityValues.Names(cultures)}.");
+            if (variant[name] is not { } value)
+            {
+                variant = values.Count == 1
+                    ? variant.With(name, values[0])
+                    : throw Invalid(path, $"This varies by {name}. Give a {name} in the variant: {EntityValues.Names(values)}.");
+            }
+            else if (!values.Contains(value))
+            {
+                throw Invalid(path, $"Unknown {name} '{value}'. Values: {EntityValues.Names(values)}.");
+            }
         }
 
         return variant;
@@ -147,7 +144,7 @@ public static class EntityEditor
         value = FieldChecker.Normalize(field, value);
         if (FieldChecker.Check(field, value, path) is { } problem)
         {
-            throw new AbilityInputException(problem.ToString(), [problem with { Culture = variant.Culture, Segment = variant.Segment }]);
+            throw new AbilityInputException(problem.ToString(), [problem.In(variant)]);
         }
 
         EntityValues.Set(owner, field, variant, value);

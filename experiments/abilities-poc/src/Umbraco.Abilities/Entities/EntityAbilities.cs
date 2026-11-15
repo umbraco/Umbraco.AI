@@ -4,8 +4,6 @@ using System.Text.Json.Nodes;
 
 using Umbraco.Abilities.ChangeSets;
 
-using Umbraco.Cms.Core.Models;
-using Umbraco.Extensions;
 namespace Umbraco.Abilities.Entities;
 
 // The generic entity abilities. They work for every registered entity definition, so no package writes
@@ -17,9 +15,8 @@ public interface IEntityEditInput
 
     Guid? Key { get; }
 
-    string? Culture { get; }
-
-    string? Segment { get; }
+    /// <summary>The variant to edit, e.g. <c>{ "culture": "da-DK" }</c>. Values that don't vary ignore it.</summary>
+    Dictionary<string, string>? Variant { get; }
 }
 
 /// <summary>Base for entity edits: recorded into a change set, applied to a working copy on replay.</summary>
@@ -59,7 +56,7 @@ public abstract class EntityEditAbilityBase<TInput> : AbilityBase<TInput, object
         => input.Deserialize<TInput>(AbilityJson.Options) ?? throw new AbilityInputException("Input is required.");
 
     protected static EditTarget Target(EntityDocument document, TInput input, EntityEditContext context)
-        => new(document, context.Structure, context.ItemTypes, new VariantId(input.Culture, input.Segment));
+        => new(document, context.Structure, context.ItemTypes, new VariantId(input.Variant?.Select(v => KeyValuePair.Create(v.Key, (string?)v.Value))));
 
     protected static void EnsureKey(JsonObject input, string property)
     {
@@ -101,8 +98,12 @@ public sealed class GetEntitySchemaAbility(EntityDefinitionRegistry definitions,
             ["entityType"] = structure.EntityType,
             ["name"] = structure.Name,
             ["description"] = structure.Description,
-            ["variations"] = structure.Variations == ContentVariation.Nothing ? null : structure.Variations.ToString(),
-            ["cultures"] = new JsonArray(structure.Cultures.Select(c => (JsonNode?)c).ToArray()),
+            ["dimensions"] = new JsonArray(structure.Dimensions.Select(d => (JsonNode?)new JsonObject
+            {
+                ["name"] = d.Name,
+                ["description"] = d.Description,
+                ["values"] = d.Values is { } values ? new JsonArray(values.Select(v => (JsonNode?)v).ToArray()) : null,
+            }).ToArray()),
             ["fields"] = SchemaWriter.Fields(structure.Shape, itemTypes, context.UserKey),
         };
 
@@ -165,7 +166,7 @@ public sealed class FindEntityAbility(EntityDefinitionRegistry definitions, Chan
         foreach (var reference in found)
         {
             if (inSet.Contains(reference.Key)
-                || await EntityAccess.CheckAsync(definition, new EntityAccessRequest(context.UserKey, EntityPermission.Read, reference.Key, null, new HashSet<string>()), cancellationToken) is null)
+                || await EntityAccess.CheckAsync(definition, new EntityAccessRequest(context.UserKey, EntityPermission.Read, reference.Key, null, new HashSet<VariantId>()), cancellationToken) is null)
             {
                 readable.Add(reference);
             }
@@ -187,7 +188,7 @@ public sealed class GetEntityAbility(EntityDefinitionRegistry definitions, Chang
     protected override async Task<AbilityResult> ExecuteAsync(GetEntityInput input, AbilityContext context, CancellationToken cancellationToken)
     {
         var definition = definitions.Get(input.EntityType);
-        if (await EntityAccess.CheckAsync(definition, new EntityAccessRequest(context.UserKey, EntityPermission.Read, input.Key, null, new HashSet<string>()), cancellationToken) is { } denied)
+        if (await EntityAccess.CheckAsync(definition, new EntityAccessRequest(context.UserKey, EntityPermission.Read, input.Key, null, new HashSet<VariantId>()), cancellationToken) is { } denied)
         {
             return EntityAccess.Denied(denied, "key");
         }
@@ -207,8 +208,7 @@ public sealed record CreateEntityInput(
     [property: Description("Optional key for the new entity. Choose one when other entities in the set must refer to it.")] Guid? Key = null,
     [property: Description("Field values, keyed by field alias.")] JsonObject? Fields = null,
     [property: Description("The subtype to create, for entity types that have them, e.g. a document's content type alias.")] string? Subtype = null,
-    [property: Description("Culture to edit, e.g. 'en-US'. Needed for values that vary by culture; ignored for invariant values.")] string? Culture = null,
-    [property: Description("Segment to edit. Omit for the default segment.")] string? Segment = null) : IEntityEditInput;
+    [property: Description("The variant to edit, by dimension, e.g. { \"culture\": \"en-US\" }. Needed for values that vary (x-variations); values that don't vary ignore it. Leave out an open dimension, such as a segment, for its default.")] Dictionary<string, string>? Variant = null) : IEntityEditInput;
 
 [Ability("entity.create", "Create entity", Kind = AbilityKind.Write, Reversible = true,
     Description = "Creates an entity in the active change set. Nothing goes live until the set is applied. " +
@@ -231,8 +231,7 @@ public sealed record SetEntityValueInput(
     [property: Description("Entity key.")] Guid? Key,
     [property: Description("Path of the value: a field alias, going down through items by key and objects by field, e.g. \"title\", \"blocks/{itemKey}/heading\" or \"blocks/{itemKey}/settings/theme\".")] string Path,
     [property: Description("The new value, matching the field's schema. null clears it.")] JsonNode? Value,
-    [property: Description("Culture to edit, e.g. 'en-US'. Needed for values that vary by culture; ignored for invariant values.")] string? Culture = null,
-    [property: Description("Segment to edit. Omit for the default segment.")] string? Segment = null) : IEntityEditInput;
+    [property: Description("The variant to edit, by dimension, e.g. { \"culture\": \"en-US\" }. Needed for values that vary (x-variations); values that don't vary ignore it. Leave out an open dimension, such as a segment, for its default.")] Dictionary<string, string>? Variant = null) : IEntityEditInput;
 
 [Ability("entity.setValue", "Set entity value", Kind = AbilityKind.Write, Reversible = true,
     Description = "Sets the value at a path, in the active change set. A path goes down through items by key and objects by " +
@@ -253,8 +252,7 @@ public sealed record AddEntityItemInput(
     [property: Description("Optional key for the new item. Choose one when another item must refer to it.")] Guid? ItemKey = null,
     [property: Description("Field values for the new item, keyed by field alias.")] JsonObject? Fields = null,
     [property: Description("Optional zero-based position. Omit to append.")] int? Position = null,
-    [property: Description("Culture to edit, e.g. 'en-US'. Needed for values that vary by culture; ignored for invariant values.")] string? Culture = null,
-    [property: Description("Segment to edit. Omit for the default segment.")] string? Segment = null) : IEntityEditInput;
+    [property: Description("The variant to edit, by dimension, e.g. { \"culture\": \"en-US\" }. Needed for values that vary (x-variations); values that don't vary ignore it. Leave out an open dimension, such as a segment, for its default.")] Dictionary<string, string>? Variant = null) : IEntityEditInput;
 
 [Ability("entity.addItem", "Add entity item", Kind = AbilityKind.Write, Reversible = true,
     Description = "Adds a typed item to an items field, in the active change set. Returns the item's path; set its fields " +
@@ -275,8 +273,7 @@ public sealed record RemoveEntityItemInput(
     [property: Description("Entity key.")] Guid? Key,
     [property: Description("Path of the items field.")] string FieldPath,
     [property: Description("Key of the item to remove.")] Guid ItemKey,
-    [property: Description("Culture to edit, e.g. 'en-US'. Needed for values that vary by culture; ignored for invariant values.")] string? Culture = null,
-    [property: Description("Segment to edit. Omit for the default segment.")] string? Segment = null) : IEntityEditInput;
+    [property: Description("The variant to edit, by dimension, e.g. { \"culture\": \"en-US\" }. Needed for values that vary (x-variations); values that don't vary ignore it. Leave out an open dimension, such as a segment, for its default.")] Dictionary<string, string>? Variant = null) : IEntityEditInput;
 
 [Ability("entity.removeItem", "Remove entity item", Kind = AbilityKind.Write, Reversible = true,
     Description = "Removes an item from an items field, in the active change set.")]
@@ -295,8 +292,7 @@ public sealed record MoveEntityItemInput(
     [property: Description("Path of the items field.")] string FieldPath,
     [property: Description("Key of the item to move.")] Guid ItemKey,
     [property: Description("New zero-based position.")] int Position,
-    [property: Description("Culture to edit, e.g. 'en-US'. Needed for values that vary by culture; ignored for invariant values.")] string? Culture = null,
-    [property: Description("Segment to edit. Omit for the default segment.")] string? Segment = null) : IEntityEditInput;
+    [property: Description("The variant to edit, by dimension, e.g. { \"culture\": \"en-US\" }. Needed for values that vary (x-variations); values that don't vary ignore it. Leave out an open dimension, such as a segment, for its default.")] Dictionary<string, string>? Variant = null) : IEntityEditInput;
 
 [Ability("entity.moveItem", "Move entity item", Kind = AbilityKind.Write, Reversible = true,
     Description = "Moves an item within its items field, in the active change set.")]

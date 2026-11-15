@@ -1,7 +1,5 @@
 using System.Text.Json.Nodes;
 
-using Umbraco.Cms.Core.Models;
-using Umbraco.Extensions;
 namespace Umbraco.Abilities.Entities;
 
 /// <summary>The value types a field can hold. Kept deliberately small.</summary>
@@ -38,29 +36,92 @@ public enum FieldType
     Items,
 }
 
-/// <summary>A culture and segment. Either may be null: null culture is invariant, null segment is the default segment.</summary>
-public sealed record VariantId(string? Culture, string? Segment)
+/// <summary>The dimensions Umbraco content varies by. Other products name their own.</summary>
+public static class VariationDimensions
 {
-    public static readonly VariantId Invariant = new(null, null);
+    public const string Culture = "culture";
+    public const string Segment = "segment";
+}
 
-    public bool IsInvariant => Culture is null && Segment is null;
+/// <summary>
+/// Something values can vary by: the CMS's culture and segment, or a product's own (a price per currency, a setting per
+/// store). The structure lists the dimensions an entity has; each field says which of them it varies by.
+/// </summary>
+/// <param name="Values">The values allowed, such as the site's languages; null when any value is allowed (the CMS's segments).</param>
+public sealed record VariationDimension(string Name, string Description, IReadOnlyList<string>? Values = null);
 
-    /// <summary>The key a varying value is stored under: <c>{ "en-US": …, "da-DK": … }</c>.</summary>
-    public string Key => Segment is null ? Culture ?? string.Empty : $"{Culture}|{Segment}";
+/// <summary>
+/// Where a value is, among the dimensions it varies by: <c>{ culture: "da-DK" }</c>, <c>{ culture: "da-DK", segment: "vip" }</c>,
+/// <c>{ currency: "EUR" }</c>. A dimension with no value is its default (the invariant culture, the default segment).
+/// </summary>
+public sealed class VariantId : IEquatable<VariantId>
+{
+    private readonly SortedDictionary<string, string> _values;
 
-    /// <summary>Keeps only the parts a value varies by, as the CMS does for each property.</summary>
-    public VariantId Narrow(ContentVariation variation) => new(variation.VariesByCulture() ? Culture : null, variation.VariesBySegment() ? Segment : null);
+    public VariantId(IEnumerable<KeyValuePair<string, string?>>? values = null)
+        => _values = new SortedDictionary<string, string>((values ?? []).Where(v => v.Value is not null).ToDictionary(v => v.Key, v => v.Value!), StringComparer.Ordinal);
+
+    public static readonly VariantId Invariant = new();
+
+    public static VariantId Of(string dimension, string? value) => new([KeyValuePair.Create(dimension, value)]);
+
+    /// <summary>A variant from its JSON form, <c>{ "culture": "da-DK" }</c>; invariant for null.</summary>
+    public static VariantId From(IReadOnlyDictionary<string, string>? values)
+        => new(values?.Select(v => KeyValuePair.Create(v.Key, (string?)v.Value)));
+
+    public string? this[string dimension] => _values.GetValueOrDefault(dimension);
+
+    public IReadOnlyDictionary<string, string> Values => _values;
+
+    public bool IsInvariant => _values.Count == 0;
+
+    /// <summary>This variant with one dimension's value set, or removed when null.</summary>
+    public VariantId With(string dimension, string? value)
+        => new(_values.Where(v => v.Key != dimension).Select(v => KeyValuePair.Create(v.Key, (string?)v.Value)).Append(KeyValuePair.Create(dimension, value)));
+
+    /// <summary>Keeps only the dimensions a value varies by, as the CMS does for each property.</summary>
+    public VariantId Narrow(IReadOnlyList<string> variesBy) => new(variesBy.Select(d => KeyValuePair.Create(d, this[d])));
+
+    /// <summary>This variant's values on top of <paramref name="context"/>'s: a value inside an item takes the item's variant.</summary>
+    public VariantId Over(VariantId context) => new(context._values.Concat(_values).GroupBy(v => v.Key).Select(g => KeyValuePair.Create(g.Key, (string?)g.Last().Value)));
+
+    /// <summary>Whether a value in this variant is seen in <paramref name="other"/>: every dimension this one sets, the other has too.</summary>
+    public bool Within(VariantId other) => _values.All(v => other[v.Key] == v.Value);
+
+    /// <summary>The key a varying value is stored under: its dimensions' values in the field's order, <c>"da-DK"</c> or <c>"da-DK|vip"</c>.</summary>
+    public string KeyFor(IReadOnlyList<string> variesBy) => string.Join('|', variesBy.Select(d => this[d] ?? string.Empty)).TrimEnd('|');
+
+    public static VariantId FromKey(string key, IReadOnlyList<string> variesBy)
+    {
+        var parts = key.Split('|');
+        return new(variesBy.Select((d, i) => KeyValuePair.Create(d, i < parts.Length && parts[i].Length > 0 ? parts[i] : null)));
+    }
+
+    /// <summary>One string for the whole variant, <c>"culture=da-DK;segment=vip"</c>: for keys that cross fields, such as a conflict's.</summary>
+    public string Key => string.Join(';', _values.Select(v => $"{v.Key}={v.Value}"));
 
     public static VariantId Parse(string key)
-    {
-        var parts = key.Split('|', 2);
-        return new VariantId(parts[0].Length == 0 ? null : parts[0], parts.Length == 2 ? parts[1] : null);
-    }
+        => new(key.Split(';', StringSplitOptions.RemoveEmptyEntries).Select(p => p.Split('=', 2)).Select(p => KeyValuePair.Create(p[0], (string?)p[1])));
+
+    /// <summary>The variant as a problem or conflict shows it: null when invariant.</summary>
+    public IReadOnlyDictionary<string, string>? ToJson() => IsInvariant ? null : new Dictionary<string, string>(_values);
+
+    public bool Equals(VariantId? other) => other is not null && Key == other.Key;
+
+    public override bool Equals(object? obj) => Equals(obj as VariantId);
+
+    public override int GetHashCode() => Key.GetHashCode(StringComparison.Ordinal);
+
+    /// <summary>The values, for showing to people: <c>"da-DK"</c>, <c>"da-DK, vip"</c>.</summary>
+    public override string ToString() => IsInvariant ? "invariant" : string.Join(", ", _values.Values);
 }
 
 public sealed record FieldDefinition(string Alias, string Description, FieldType Type, bool Required = false)
 {
-    public ContentVariation Variations { get; init; } = ContentVariation.Nothing;
+    /// <summary>The dimensions the value varies by, e.g. <c>["culture"]</c>. Empty: one value for all.</summary>
+    public IReadOnlyList<string> VariesBy { get; init; } = [];
+
+    public bool Varies => VariesBy.Count > 0;
 
     /// <summary>The value is an array of values of <see cref="Type"/> (tags, a multi-node tree picker).</summary>
     public bool Many { get; init; }
@@ -133,11 +194,10 @@ public sealed record ElementShape(IReadOnlyList<FieldDefinition> Fields)
 
 public sealed record EntityStructure(string EntityType, string Name, string Description, ElementShape Shape)
 {
-    /// <summary>Whether the entity has variants at all (a culture-variant document type).</summary>
-    public ContentVariation Variations { get; init; } = ContentVariation.Nothing;
+    /// <summary>What the entity's values can vary by, e.g. culture with the site's languages. Empty when nothing varies.</summary>
+    public IReadOnlyList<VariationDimension> Dimensions { get; init; } = [];
 
-    /// <summary>The cultures the entity can have, e.g. the site's languages. Segments are not listed: the CMS doesn't manage them.</summary>
-    public IReadOnlyList<string> Cultures { get; init; } = [];
+    public VariationDimension? Dimension(string name) => Dimensions.FirstOrDefault(d => d.Name == name);
 }
 
 public sealed record ItemTypeDefinition(string Group, string Alias, string Name, string Description, ElementShape Shape)

@@ -213,8 +213,9 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         Assert.That(subtypes.GetProperty("subtypes").EnumerateArray().Select(s => s.GetProperty("alias").GetString()), Does.Contain("landingPage"));
 
         var schema = await _agent.OkAsync("entity_getSchema", """{ "entityType": "document", "subtype": "landingPage" }""");
-        Assert.That(schema.GetProperty("cultures").EnumerateArray().Select(c => c.GetString()), Is.EquivalentTo(new[] { "en-US", "da-DK" }));
-        Assert.That(schema.GetProperty("fields").GetProperty("properties").GetProperty("subtitle").GetProperty("x-variations").GetString(), Is.EqualTo("Culture"));
+        var culture = schema.GetProperty("dimensions").EnumerateArray().Single(d => d.GetProperty("name").GetString() == "culture");
+        Assert.That(culture.GetProperty("values").EnumerateArray().Select(c => c.GetString()), Is.EquivalentTo(new[] { "en-US", "da-DK" }));
+        Assert.That(schema.GetProperty("fields").GetProperty("properties").GetProperty("subtitle").GetProperty("x-variations")[0].GetString(), Is.EqualTo("culture"));
 
         var fields = schema.GetProperty("fields").GetProperty("properties");
         Assert.That(TypesIn(fields.GetProperty("blocks")), Is.EquivalentTo(new[] { "hero", "textBlock", "cardGroup" }));
@@ -292,13 +293,13 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
 
         // Ask Umbraco directly, skipping the generic structure check, to see its own errors mapped back.
         var working = (await _changeSets.GetWorkingStateAsync(_changeSets.Get(_agent.ChangeSetId!.Value), "document", page))!;
-        var problems = (await _documents.ValidateAsync(working)).Select(p => $"{p.Path}|{p.Culture}").ToList();
+        var problems = (await _documents.ValidateAsync(working)).Select(p => $"{p.Path}|{p.Variant?.GetValueOrDefault("culture")}").ToList();
 
         Assert.That(problems, Is.EquivalentTo(new[] { "subtitle|da-DK", $"{empty}/heading|en-US", $"{empty}/heading|da-DK" }), string.Join(", ", problems));
 
         // The generic structure check agrees with Umbraco, including about the English-only hero.
         var generic = await _agent.OkAsync("changeSet_validate", SetJson());
-        Assert.That(generic.GetProperty("entities")[0].GetProperty("problems").EnumerateArray().Select(p => $"{p.GetProperty("path").GetString()}|{p.GetProperty("culture").GetString()}"),
+        Assert.That(generic.GetProperty("entities")[0].GetProperty("problems").EnumerateArray().Select(p => $"{p.GetProperty("path").GetString()}|{p.GetProperty("variant").GetProperty("culture").GetString()}"),
             Is.EquivalentTo(new[] { "subtitle|da-DK", $"{empty}/heading|en-US", $"{empty}/heading|da-DK" }));
     }
 
@@ -348,7 +349,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
     {
         await _agent.StartChangeSetAsync("Two pages");
         var page = await BuildSummerPageAsync();
-        var refused = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "subtype": "landingPage", "culture": "en-US", "fields": { "name": "Refused", "subtitle": "No" } }"""))
+        var refused = (await _agent.OkAsync("entity_create", """{ "entityType": "document", "subtype": "landingPage", "variant": { "culture": "en-US" }, "fields": { "name": "Refused", "subtitle": "No" } }"""))
             .GetProperty("key").GetGuid();
 
         var failure = await _agent.FailAsync("changeSet_apply", SetJson());
@@ -441,11 +442,11 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         Assert.Multiple(() =>
         {
             Assert.That(problem.GetProperty("path").GetString(), Does.EndWith("/subtitle"));
-            Assert.That(problem.GetProperty("culture").GetString(), Is.EqualTo("en-US"));
+            Assert.That(problem.GetProperty("variant").GetProperty("culture").GetString(), Is.EqualTo("en-US"));
         });
 
         await _agent.OkAsync("changeSet_resolveConflict", $$"""
-            { "changeSetId": "{{_agent.ChangeSetId}}", "entityType": "document", "key": "{{page.Key}}", "path": "subtitle", "culture": "en-US", "keep": "theirs" }
+            { "changeSetId": "{{_agent.ChangeSetId}}", "entityType": "document", "key": "{{page.Key}}", "path": "subtitle", "variant": { "culture": "en-US" }, "keep": "theirs" }
             """);
         await _agent.OkAsync("changeSet_apply", SetJson());
         Assert.That(ContentService.GetById(page.Key)!.GetValue<string>("subtitle", "en-US"), Is.EqualTo("Changed in the backoffice"));
@@ -574,7 +575,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
         _agent.UserKey = reader;
         await _agent.StartChangeSetAsync("Edit");
         await _agent.OkAsync("entity_get", $$"""{ "entityType": "document", "key": "{{page.Key}}" }""");
-        var refused = await _agent.FailAsync("entity_setValue", $$"""{ "entityType": "document", "key": "{{page.Key}}", "path": "subtitle", "value": "Changed", "culture": "en-US" }""");
+        var refused = await _agent.FailAsync("entity_setValue", $$"""{ "entityType": "document", "key": "{{page.Key}}", "path": "subtitle", "value": "Changed", "variant": { "culture": "en-US" } }""");
         Assert.Multiple(() =>
         {
             Assert.That(refused.GetProperty("status").GetString(), Is.EqualTo("AccessDenied"));
@@ -729,7 +730,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
     }
 
     private async Task<Guid> CreatePageAsync()
-        => (await _agent.OkAsync("entity_create", """{ "entityType": "document", "subtype": "landingPage", "culture": "en-US", "fields": { "name": "Summer" } }"""))
+        => (await _agent.OkAsync("entity_create", """{ "entityType": "document", "subtype": "landingPage", "variant": { "culture": "en-US" }, "fields": { "name": "Summer" } }"""))
             .GetProperty("key").GetGuid();
 
     private Task<JsonElement> SetAsync(Guid page, string elementPath, string field, string valueJson, string? culture = null)
@@ -741,7 +742,7 @@ public sealed class CmsDocumentDefinitionTests : UmbracoIntegrationTest
 
     private string SetJson() => $$"""{ "changeSetId": "{{_agent.ChangeSetId}}" }""";
 
-    private static string Culture(string? culture) => culture is null ? string.Empty : $", \"culture\": \"{culture}\"";
+    private static string Culture(string? culture) => culture is null ? string.Empty : $", \"variant\": {{ \"culture\": \"{culture}\" }}";
 
     private static IEnumerable<string?> TypesIn(JsonElement field) => field.GetProperty("x-item-types").EnumerateArray().Select(t => t.GetProperty("alias").GetString());
 

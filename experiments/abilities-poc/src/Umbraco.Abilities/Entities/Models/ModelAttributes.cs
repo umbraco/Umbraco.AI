@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization;
 
-using Umbraco.Cms.Core.Models;
 using Umbraco.Extensions;
 namespace Umbraco.Abilities.Entities.Models;
 
@@ -83,9 +82,16 @@ public class DynamicItem : EntityItemModel
     public Dictionary<string, System.Text.Json.Nodes.JsonNode?> Fields { get; init; } = new(StringComparer.Ordinal);
 }
 
+/// <summary>What a <see cref="Varying{T}"/> property varies by, when not culture: e.g. <c>[VariesBy("currency")]</c>.</summary>
+[AttributeUsage(AttributeTargets.Property)]
+public sealed class VariesByAttribute(params string[] dimensions) : Attribute
+{
+    public IReadOnlyList<string> Dimensions { get; } = dimensions;
+}
+
 /// <summary>
-/// A value per variant, keyed by culture (<c>"en-US"</c>), or <c>"culture|segment"</c> when it also varies by segment.
-/// A property of this type varies by culture.
+/// A value per variant, keyed by its dimensions' values: <c>"en-US"</c>, or <c>"en-US|vip"</c> for culture and segment.
+/// A property of this type varies by culture unless <see cref="VariesByAttribute"/> says otherwise.
 /// </summary>
 public sealed class Varying<T> : Dictionary<string, T>
 {

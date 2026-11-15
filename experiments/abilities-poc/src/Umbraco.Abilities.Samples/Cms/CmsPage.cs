@@ -217,8 +217,8 @@ public sealed class CmsPageDefinition(InMemoryDatabase database, ItemTypeRegistr
         .Add<Callout>(RichTextValue.BlockGroup)
         .Add<Quote>(RichTextValue.BlockGroup);
 
-    protected override Task<IReadOnlyList<string>> GetCulturesAsync(CancellationToken cancellationToken)
-        => Task.FromResult(Cultures);
+    protected override Task<IReadOnlyList<string>?> GetDimensionValuesAsync(string dimension, CancellationToken cancellationToken)
+        => Task.FromResult(dimension == VariationDimensions.Culture ? Cultures : null);
 
     /// <summary>Content keeps version history, so change sets don't need their own snapshot of a page.</summary>
     public Task<EntityDocument?> LoadVersionAsync(Guid key, long version, CancellationToken cancellationToken = default)

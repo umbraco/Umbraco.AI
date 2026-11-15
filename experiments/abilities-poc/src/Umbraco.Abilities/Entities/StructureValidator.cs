@@ -1,7 +1,5 @@
 using System.Text.Json.Nodes;
 
-using Umbraco.Cms.Core.Models;
-using Umbraco.Extensions;
 namespace Umbraco.Abilities.Entities;
 
 /// <summary>
@@ -13,6 +11,7 @@ public static class StructureValidator
 {
     private sealed record Context(
         EntityDocument Document,
+        EntityStructure Structure,
         ItemTypeRegistry ItemTypes,
         Func<string, Guid, Task<bool>> EntityExists,
         List<Problem> Problems);
@@ -27,17 +26,18 @@ public static class StructureValidator
         var problems = new List<Problem>();
         var variants = EntityValues.VariantsIn(document.Root, structure.Shape, itemTypes);
 
-        if (structure.Variations.VariesByCulture() && !variants.Any(v => v.Culture is not null))
+        foreach (var variant in variants)
         {
-            problems.Add(new Problem(string.Empty, "The entity has no culture yet. Set a value, such as its name, in at least one culture."));
+            foreach (var (name, value) in variant.Values)
+            {
+                if (structure.Dimension(name) is not { } dimension || dimension.Values is { } values && !values.Contains(value))
+                {
+                    problems.Add(new Problem(string.Empty, $"Unknown {name} '{value}'.").In(variant));
+                }
+            }
         }
 
-        foreach (var unknown in variants.Where(v => v.Culture is not null && !structure.Cultures.Contains(v.Culture)))
-        {
-            problems.Add(new Problem(string.Empty, $"Unknown culture '{unknown.Culture}'.") { Culture = unknown.Culture, Segment = unknown.Segment });
-        }
-
-        var context = new Context(document, itemTypes, entityExists, problems);
+        var context = new Context(document, structure, itemTypes, entityExists, problems);
         await ValidateObjectAsync(context, document.Root, structure.Shape, string.Empty, variants);
         return problems;
     }
@@ -48,14 +48,21 @@ public static class StructureValidator
         foreach (var field in shape.Fields)
         {
             var fieldPath = EntityValues.Join(path, field.Alias);
-            foreach (var variant in Targets(field.Variations, variants))
+            var targets = Targets(context.Structure, field.VariesBy, variants).ToList();
+            if (field.Required && field.Varies && targets.Count == 0)
+            {
+                // A required value that varies, with no value in any variant yet: the entity has no culture (or currency…) yet.
+                context.Problems.Add(new Problem(fieldPath, $"Required. Give it a value in at least one {string.Join(" and ", field.VariesBy)}."));
+            }
+
+            foreach (var variant in targets)
             {
                 var value = EntityValues.Get(owner, field, variant);
-                var below = field.Variations == ContentVariation.Nothing ? variants : variants.Where(v => v.Culture == variant.Culture).ToList();
+                var below = field.Varies ? variants.Where(variant.Within).ToList() : variants;
                 switch (field.Type)
                 {
                     case FieldType.Items:
-                        await ValidateItemsAsync(context, field, value as JsonArray ?? [], fieldPath, field.Variations == ContentVariation.Nothing ? null : variant, below);
+                        await ValidateItemsAsync(context, field, value as JsonArray ?? [], fieldPath, variant, below);
                         break;
                     case FieldType.Object when field.Shape is { } objectShape && value is JsonObject obj:
                         await ValidateObjectAsync(context, obj, objectShape, fieldPath, below);
@@ -69,9 +76,9 @@ public static class StructureValidator
         }
     }
 
-    private static async Task ValidateItemsAsync(Context context, FieldDefinition field, JsonArray items, string fieldPath, VariantId? scope, IReadOnlyList<VariantId> variants)
+    private static async Task ValidateItemsAsync(Context context, FieldDefinition field, JsonArray items, string fieldPath, VariantId scope, IReadOnlyList<VariantId> variants)
     {
-        var located = new Problem(fieldPath, string.Empty) { Culture = scope?.Culture, Segment = scope?.Segment };
+        var located = new Problem(fieldPath, string.Empty).In(scope);
         if (field.Min is { } min && items.Count < min)
         {
             context.Problems.Add(located with { ErrorMessages = [$"Needs at least {min} item(s)."] });
@@ -92,10 +99,10 @@ public static class StructureValidator
                 continue;
             }
 
-            // An item exists in the cultures it has values for, or in every culture when it has none yet.
+            // An item exists in the variants it has values in, or in every variant when it has none yet.
             // This is the CMS's "expose": a block with only English values is not in the Danish page.
-            var own = EntityValues.OwnCultures(item, itemType.Shape);
-            var itemVariants = own.Count == 0 ? variants : variants.Where(v => v.Culture is null || own.Contains(v.Culture)).ToList();
+            var own = EntityValues.OwnVariants(item, itemType.Shape);
+            var itemVariants = own.Count == 0 ? variants : variants.Where(v => v.IsInvariant || own.Any(o => o.Within(v))).ToList();
             await ValidateObjectAsync(context, item, itemType.Shape, itemPath, itemVariants);
         }
     }
@@ -107,15 +114,14 @@ public static class StructureValidator
             context.Problems.AddRange(handler.Validate(value).Select(p => p with
             {
                 Path = EntityValues.Join(path, p.Path),
-                Culture = p.Culture ?? variant.Culture,
-                Segment = p.Segment ?? variant.Segment,
+                Variant = p.Variant ?? variant.ToJson(),
             }));
         }
     }
 
     private static async Task ValidateFieldAsync(Context context, FieldDefinition field, JsonNode? value, string path, VariantId variant)
     {
-        Problem At(string message) => new(path, message) { Culture = variant.Culture, Segment = variant.Segment };
+        Problem At(string message) => new Problem(path, message).In(variant);
 
         if (value is null)
         {
@@ -164,17 +170,20 @@ public static class StructureValidator
         }
     }
 
-    /// <summary>The variants a value is checked in: once if invariant, else each variant the object exists in, narrowed to what it varies by.</summary>
-    private static IEnumerable<VariantId> Targets(ContentVariation varies, IReadOnlyList<VariantId> variants)
+    /// <summary>
+    /// The variants a value is checked in: once if it doesn't vary, else each variant the object exists in, narrowed to
+    /// what it varies by. A dimension with listed values (cultures) must have one; an open one (segments) may be the default.
+    /// </summary>
+    private static IEnumerable<VariantId> Targets(EntityStructure structure, IReadOnlyList<string> variesBy, IReadOnlyList<VariantId> variants)
     {
-        if (varies == ContentVariation.Nothing)
+        if (variesBy.Count == 0)
         {
             return [VariantId.Invariant];
         }
 
         return variants
-            .Select(v => v.Narrow(varies))
-            .Where(v => !varies.VariesByCulture() || v.Culture is not null)
+            .Select(v => v.Narrow(variesBy))
+            .Where(v => variesBy.All(d => structure.Dimension(d)?.Values is null || v[d] is not null))
             .Distinct();
     }
 }
@@ -214,9 +223,9 @@ public static class SchemaWriter
                 schema["x-bindings"] = true;
             }
 
-            if (field.Variations != ContentVariation.Nothing)
+            if (field.Varies)
             {
-                schema["x-variations"] = field.Variations.ToString();
+                schema["x-variations"] = new JsonArray(field.VariesBy.Select(d => (JsonNode?)d).ToArray());
             }
 
             properties[field.Alias] = schema;
@@ -253,9 +262,9 @@ public static class SchemaWriter
             schema["maxItems"] = max;
         }
 
-        if (field.Variations != ContentVariation.Nothing)
+        if (field.Varies)
         {
-            schema["x-variations"] = field.Variations.ToString();
+            schema["x-variations"] = new JsonArray(field.VariesBy.Select(d => (JsonNode?)d).ToArray());
         }
 
         return schema;

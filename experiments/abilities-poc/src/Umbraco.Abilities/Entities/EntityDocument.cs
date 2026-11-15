@@ -1,7 +1,5 @@
 using System.Text.Json.Nodes;
 
-using Umbraco.Cms.Core.Models;
-
 namespace Umbraco.Abilities.Entities;
 
 /// <summary>
@@ -63,13 +61,13 @@ public static class EntityValues
     public static JsonNode? Get(JsonObject owner, FieldDefinition field, VariantId variant)
     {
         var stored = owner[field.Alias];
-        return field.Variations == ContentVariation.Nothing ? stored : (stored as JsonObject)?[variant.Narrow(field.Variations).Key];
+        return field.Varies ? (stored as JsonObject)?[variant.KeyFor(field.VariesBy)] : stored;
     }
 
     /// <summary>Sets a field's value in a variant, narrowed to what the field varies by. Null removes it.</summary>
     public static void Set(JsonObject owner, FieldDefinition field, VariantId variant, JsonNode? value)
     {
-        if (field.Variations == ContentVariation.Nothing)
+        if (!field.Varies)
         {
             Put(owner, field.Alias, value);
             return;
@@ -81,7 +79,7 @@ public static class EntityValues
             owner[field.Alias] = variants;
         }
 
-        Put(variants, variant.Narrow(field.Variations).Key, value);
+        Put(variants, variant.KeyFor(field.VariesBy), value);
         if (variants.Count == 0)
         {
             owner.Remove(field.Alias);
@@ -97,7 +95,7 @@ public static class EntityValues
             yield break;
         }
 
-        if (field.Variations == ContentVariation.Nothing)
+        if (!field.Varies)
         {
             yield return (VariantId.Invariant, stored);
             yield break;
@@ -107,7 +105,7 @@ public static class EntityValues
         {
             if (value is not null)
             {
-                yield return (VariantId.Parse(key), value);
+                yield return (VariantId.FromKey(key, field.VariesBy), value);
             }
         }
     }
@@ -152,7 +150,7 @@ public static class EntityValues
             var fieldPath = Join(path, field.Alias);
             foreach (var (own, value) in Values(owner, field))
             {
-                var variant = new VariantId(own.Culture ?? context.Culture, own.Segment ?? context.Segment);
+                var variant = own.Over(context);
                 yield return new EntityValue(fieldPath, field, variant, value, owner);
 
                 IEnumerable<EntityValue> inner = field.Type switch
@@ -173,13 +171,13 @@ public static class EntityValues
         }
     }
 
-    /// <summary>The variants an entity has values in: every culture and segment that appears anywhere in it.</summary>
+    /// <summary>The variants an entity has values in: every one that appears anywhere in it.</summary>
     public static IReadOnlyList<VariantId> VariantsIn(JsonObject root, ElementShape shape, ItemTypeRegistry itemTypes)
         => Walk(root, shape, itemTypes).Select(v => v.Variant).Where(v => !v.IsInvariant).Distinct().ToList();
 
-    /// <summary>The cultures a value directly on this object varies in, not counting objects and items inside it.</summary>
-    public static IReadOnlySet<string> OwnCultures(JsonObject owner, ElementShape shape)
-        => shape.Fields.SelectMany(f => Values(owner, f)).Select(v => v.Variant.Culture).OfType<string>().ToHashSet();
+    /// <summary>The variants values directly on this object are in, not counting objects and items inside it.</summary>
+    public static IReadOnlySet<VariantId> OwnVariants(JsonObject owner, ElementShape shape)
+        => shape.Fields.SelectMany(f => Values(owner, f)).Select(v => v.Variant).Where(v => !v.IsInvariant).ToHashSet();
 
     /// <summary>
     /// Finds what a path points at: a field (with the object holding it), an item in an items field

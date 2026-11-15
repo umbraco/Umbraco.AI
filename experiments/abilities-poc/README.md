@@ -293,7 +293,7 @@ Before building something, check whether the CMS has it. This is where the PoC l
 | Need | Uses | Notes |
 | --- | --- | --- |
 | Entity identity | UDIs (`GuidUdi`, `UdiParser`) | See "Identity: UDIs" |
-| What a value varies by | `ContentVariation` | Replaced the PoC's own `Variation` enum, which had the same four values |
+| What a value varies by | `ContentVariation`, in the CMS adapter only | The framework has named dimensions (`VariationDimension`); the CMS definition maps `ContentVariation` to its `culture` and `segment` dimensions. Using `ContentVariation` in the framework had made culture and segment the only ways to vary |
 | Block editor values | `BlockListValue`, `BlockGridValue`, `BlockItemData`, … | Read and written with Umbraco's serializer |
 | A product's transaction, for content | `ICoreScopeProvider` | Behind `IUnitOfWorkProvider`, which stays because Commerce and Automate have their own connections |
 | Packages reacting to, or vetoing, an apply | Notifications through `IEventAggregator` | `ChangeSetApplyingNotification` and `DraftSetApplyingNotification` are cancelable, like `ContentSavingNotification`. Then applied and discarded |
@@ -301,7 +301,7 @@ Before building something, check whether the CMS has it. This is where the PoC l
 | Work after a transaction commits | Scopes: notifications published through `scope.Notifications`, and `Context.Enlist` actions | Both run only when the outermost scope commits. The draft set's applied notification and its "applied" flag use them, so neither happens when an outer scope rolls back |
 | Who may do what | The CMS's own permission model, through `IContentPermissionService` | See "Authorization" |
 | Side effects that need retries | `IBackgroundTaskQueue`, run by `QueuedHostedService`, with Polly | See "Retries". Webhooks weren't used, as they're going away |
-| Results and problems | `Attempt<TResult, TStatus>` and `PropertyValidationError`, mirrored | `AbilityResult` has a status (`AbilityOperationStatus`: Success, InvalidInput, AccessDenied, Failed) and a result. `Problem` has `ErrorMessages`, culture and segment. The CMS definition passes Umbraco's messages straight through |
+| Results and problems | `Attempt<TResult, TStatus>` and `PropertyValidationError`, mirrored | `AbilityResult` has a status (`AbilityOperationStatus`: Success, InvalidInput, AccessDenied, Failed) and a result. `Problem` has `ErrorMessages` and a `Variant` (the CMS's culture and segment are two of its dimensions). The CMS definition passes Umbraco's messages straight through |
 
 Checked, and not usable:
 
@@ -537,6 +537,14 @@ These feed back into the design doc.
    which JSON is items. Left out on purpose: a list of which variants an entity "has". Consumers write values per
    culture and see them per culture; which cultures exist is product meaning worked out from the values (the CMS:
    cultures with a name), so it isn't part of the contract.
+11. **Variation is named dimensions, not culture.** The framework had used the CMS's `ContentVariation`, so values
+   could only vary by culture and segment. Now an entity's structure lists its dimensions (`culture` with the site's
+   languages; `segment`, open; or a product's own, such as `currency`), each field says which it `VariesBy`, tools take
+   a `variant` object (`{ "culture": "da-DK" }`), and problems and conflicts carry one. A dimension with listed values
+   needs one of them; an open one may be left out for its default. A required value that varies but has no value in
+   any variant is reported, which covers "the page has no culture yet" without a culture rule. The CMS adapter maps
+   `ContentVariation` to its two dimensions; a typed model's `Varying<T>` is per culture unless `[VariesBy(...)]` says
+   otherwise.
 
 ## Applying a set
 
@@ -634,10 +642,10 @@ model's shapes. What the contract gained from that:
 
 | Added to the structure language | Why (real model) |
 | --- | --- |
-| `Variations` (the CMS's `ContentVariation`) on the entity and its fields, with `VariantId` narrowed per value | CMS property values carry a culture or segment only if their property varies that way, and Umbraco rejects values that don't match |
+| Dimensions on the entity (`VariationDimension`, with their values) and `VariesBy` on each field, with `VariantId` narrowed per value | CMS property values carry a culture or segment only if their property varies that way, and Umbraco rejects values that don't match. Other products vary by their own dimensions (a price per currency) |
 | A varying value stored per variant where the field is (`"title": { "en-US": … }`), names as a culture-variant field | CMS names vary by culture; block values inside an invariant block property vary per culture |
 | Culture-variant items fields (a list per culture) | A culture-variant block property holds one whole envelope per culture |
-| `culture` / `segment` on `Problem` | The CMS's `PropertyValidationError` reports alias, culture and segment |
+| `Variant` on `Problem` and on conflicts | The CMS's `PropertyValidationError` reports alias, culture and segment |
 | Object fields (`FieldType.Object`): a block's `settings`, a grid block's `layout` | Blocks have a settings element type next to their content type; a Block Grid block has a column and row span |
 | `ItemTypeDefinition.AlsoIn` | Grid blocks can be allowed at the root and in areas |
 | `Many`, `ReferencesAnyOf`, `FieldType.Json` | Tags and dropdowns are string arrays; a tree picker points at documents or media; focal points, crops and date-times are objects |

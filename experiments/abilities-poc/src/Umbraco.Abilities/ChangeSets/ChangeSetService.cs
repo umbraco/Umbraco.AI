@@ -134,7 +134,7 @@ public sealed class ChangeSetService(
 
             // The user the edit is made for must be allowed to make it, in the cultures it touches.
             var permission = working.LiveVersion is null ? EntityPermission.Create : EntityPermission.Update;
-            if (await EntityAccess.CheckAsync(definition, new EntityAccessRequest(context.UserKey, permission, target.EntityKey, working, EntityAccess.CulturesChanged(before, working, structure.Shape, itemTypes)), cancellationToken) is { } denied)
+            if (await EntityAccess.CheckAsync(definition, new EntityAccessRequest(context.UserKey, permission, target.EntityKey, working, EntityAccess.VariantsChanged(before, working, structure.Shape, itemTypes)), cancellationToken) is { } denied)
             {
                 return EntityAccess.Denied(denied);
             }
@@ -266,7 +266,7 @@ public sealed class ChangeSetService(
             var at = other.Structural ? other : mine;
             var yourValue = EntityDiff.ValueAt(yoursDocument.Root, shape, itemTypes, at);
             var theirValue = EntityDiff.ValueAt(live.Root, shape, itemTypes, at);
-            if (JsonNode.DeepEquals(yourValue, theirValue) || conflicts.Any(c => c.Path == at.Path && c.Culture == at.Variant.Culture && c.Segment == at.Variant.Segment))
+            if (JsonNode.DeepEquals(yourValue, theirValue) || conflicts.Any(c => c.Path == at.Path && VariantId.From(c.Variant).Equals(at.Variant)))
             {
                 continue; // Both made the same change, or it's already listed.
             }
@@ -277,7 +277,7 @@ public sealed class ChangeSetService(
                 EntityDiff.CopyPath(live.Root, working.Root, shape, itemTypes, at);
             }
 
-            conflicts.Add(new ChangeSetConflict(definition.ToRef(live), at.Path, at.Variant.Culture, at.Variant.Segment, EntityDiff.ValueAt(start.Root, shape, itemTypes, at), yourValue, theirValue, resolution));
+            conflicts.Add(new ChangeSetConflict(definition.ToRef(live), at.Path, at.Variant.ToJson(), EntityDiff.ValueAt(start.Root, shape, itemTypes, at), yourValue, theirValue, resolution));
         }
 
         return State(working, new RebasedEntity(definition.ToRef(live), theirs.Select(Describe).Distinct().ToList(), conflicts));
@@ -285,7 +285,7 @@ public sealed class ChangeSetService(
 
     /// <summary>An entity that can't be rebased: one conflict at the empty path, resolved only by redoing the changes.</summary>
     private static RebasedEntity CantRebase(EntityRef entity, string changedSince)
-        => new(entity, [changedSince], [new ChangeSetConflict(entity, string.Empty, null, null, null, null, null, null)]);
+        => new(entity, [changedSince], [new ChangeSetConflict(entity, string.Empty, null, null, null, null, null)]);
 
     /// <summary>Keeps the set's value or the live one for one conflict.</summary>
     public async Task ResolveConflictAsync(Guid setId, string entityType, Guid key, string path, VariantId variant, ConflictSide keep, CancellationToken cancellationToken = default)
@@ -299,7 +299,7 @@ public sealed class ChangeSetService(
         }
 
         var conflict = ((await ComputeAsync(set, entityType, key, cancellationToken)).Rebased?.Conflicts ?? [])
-            .FirstOrDefault(c => c.Path == path && c.Culture == variant.Culture && c.Segment == variant.Segment)
+            .FirstOrDefault(c => c.Path == path && VariantId.From(c.Variant).Equals(variant))
             ?? throw new AbilityInputException($"No conflict at '{path}' on {entityType} {key}.", [new Problem("path", "No conflict here. List conflicts with changeSet.summarize.")]);
 
         if (conflict.Path.Length == 0)
@@ -361,7 +361,7 @@ public sealed class ChangeSetService(
         return document;
     }
 
-    private static string Describe(ChangedPath change) => change.Variant.Culture is { } culture ? $"{change.Path} ({culture})" : change.Path;
+    private static string Describe(ChangedPath change) => change.Variant.IsInvariant ? change.Path : $"{change.Path} ({change.Variant})";
 
     public async Task<IReadOnlyList<EntityProblems>> ValidateAsync(Guid setId, CancellationToken cancellationToken = default)
     {
@@ -392,15 +392,14 @@ public sealed class ChangeSetService(
                     ? "Someone else changed this since the set started editing it, and what they changed can't be worked out: the version the set started from is gone. Discard the set's changes to it and make them again."
                     : $"Someone else changed this since the set started editing it. Yours: {c.Yours?.ToJsonString() ?? "(removed)"}; theirs: {c.Theirs?.ToJsonString() ?? "(removed)"}. Keep one with changeSet.resolveConflict.")
             {
-                Culture = c.Culture,
-                Segment = c.Segment,
+                Variant = c.Variant,
             }));
             var structure = await entity.Definition.DescribeAsync(document.Subtype, cancellationToken);
             problems.AddRange(await StructureValidator.ValidateAsync(document, structure, itemTypes, (type, k) => ExistsAsync(set, type, k, cancellationToken)));
             problems.AddRange(await entity.Definition.ValidateAsync(document, cancellationToken));
 
             // The generic structure check and the product's own validation often find the same problem.
-            var distinct = problems.DistinctBy(p => (p.Path, p.Culture, p.Segment)).ToList();
+            var distinct = problems.DistinctBy(p => (p.Path, VariantId.From(p.Variant).Key)).ToList();
             if (distinct.Count > 0)
             {
                 result.Add(new EntityProblems(entity.Ref, distinct));
@@ -453,7 +452,7 @@ public sealed class ChangeSetService(
         {
             var permission = entity.Live is null ? EntityPermission.Create : EntityPermission.Update;
             var shape = (await entity.Definition.DescribeAsync(entity.Working!.Subtype, cancellationToken)).Shape;
-            var request = new EntityAccessRequest(context.UserKey, permission, entity.Key, entity.Working, EntityAccess.CulturesChanged(entity.Live, entity.Working, shape, itemTypes));
+            var request = new EntityAccessRequest(context.UserKey, permission, entity.Key, entity.Working, EntityAccess.VariantsChanged(entity.Live, entity.Working, shape, itemTypes));
             if (await EntityAccess.CheckAsync(entity.Definition, request, cancellationToken) is { } denied)
             {
                 denials.Add(new Problem($"{entity.EntityType}:{entity.Key}", denied));

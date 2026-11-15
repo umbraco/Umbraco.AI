@@ -58,7 +58,7 @@ internal sealed class CmsStructureMapper(
         {
             fields.Add(new FieldDefinition(NameField, "The document's name.", FieldType.String, Required: true)
             {
-                Variations = type.VariesByCulture() ? ContentVariation.Culture : ContentVariation.Nothing,
+                VariesBy = type.VariesByCulture() ? [VariationDimensions.Culture] : [],
             });
             fields.Add(new FieldDefinition(ParentField, "The parent document. Only used when creating; moving is a separate operation.", FieldType.EntityReference)
             {
@@ -86,7 +86,7 @@ internal sealed class CmsStructureMapper(
         PropertyMap AsField(FieldType type, bool many = false, string? references = null)
             => new(alias, editor, PropertyKind.Field, new FieldDefinition(alias, description, type, propertyType.Mandatory)
             {
-                Variations = varies,
+                VariesBy = CmsVariants.DimensionsOf(varies),
                 Many = many,
                 ReferencesEntityType = references,
             }, []);
@@ -139,7 +139,7 @@ internal sealed class CmsStructureMapper(
 
         return new PropertyMap(propertyType.Alias, editor, PropertyKind.Field, new FieldDefinition(propertyType.Alias, description, FieldType.Json, propertyType.Mandatory)
         {
-            Variations = varies,
+            VariesBy = CmsVariants.DimensionsOf(varies),
             Schema = schema,
         }, []);
     }
@@ -182,7 +182,7 @@ internal sealed class CmsStructureMapper(
 
             field = FieldDefinition.ItemsOf(propertyType.Alias, description, rootGroup) with
             {
-                Variations = varies,
+                VariesBy = CmsVariants.DimensionsOf(varies),
                 Min = config.ValidationLimit.Min ?? (propertyType.Mandatory ? 1 : null),
                 Max = config.ValidationLimit.Max,
             };
@@ -197,7 +197,7 @@ internal sealed class CmsStructureMapper(
 
             field = FieldDefinition.ItemsOf(propertyType.Alias, description, rootGroup) with
             {
-                Variations = varies,
+                VariesBy = CmsVariants.DimensionsOf(varies),
                 Min = config.ValidationLimit.Min ?? (propertyType.Mandatory ? 1 : null),
                 Max = config.ValidationLimit.Max,
             };

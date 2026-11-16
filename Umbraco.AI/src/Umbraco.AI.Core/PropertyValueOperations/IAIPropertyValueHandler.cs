@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+
 using Umbraco.Cms.Core.Composing;
 
 namespace Umbraco.AI.Core.PropertyValueOperations;
@@ -153,6 +154,23 @@ public interface IAIPropertyValueHandler : IDiscoverable
     AIValidationResult ValidateRemoveItem(
         JsonNode? value,
         Guid blockKey,
+        AIPropertyValueOperationContext context) => AIValidationResult.Valid;
+
+    /// <summary>
+    /// Performs handler-specific validation of a complete value passed to <c>set_value</c>, before it
+    /// replaces the property's value. Default implementation accepts all input.
+    /// </summary>
+    /// <remarks>
+    /// Lets a handler reject a value the property editor would accept but save as something else,
+    /// such as a link with no target, instead of the save silently losing data.
+    /// </remarks>
+    /// <param name="value">The current value of the property.</param>
+    /// <param name="newValue">The complete value to set.</param>
+    /// <param name="context">The operation context.</param>
+    /// <returns>A validation result; <see cref="AIValidationResult.Valid"/> when the value is acceptable.</returns>
+    AIValidationResult ValidateSetValue(
+        JsonNode? value,
+        JsonNode? newValue,
         AIPropertyValueOperationContext context) => AIValidationResult.Valid;
 }
 

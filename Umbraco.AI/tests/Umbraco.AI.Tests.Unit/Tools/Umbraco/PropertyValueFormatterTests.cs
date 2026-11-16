@@ -1,8 +1,12 @@
+using System.Text.Json;
+
 using Moq;
 
 using Shouldly;
 
+using Umbraco.AI.Core;
 using Umbraco.AI.Core.Tools.Umbraco;
+using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Cms.Core.Strings;
 
@@ -67,6 +71,59 @@ public class PropertyValueFormatterTests
         var properties = PropertyValueFormatter.ExtractProperties(content);
 
         properties.ShouldHaveSingleItem().Value.ShouldBe("Title Some text");
+    }
+
+    [Fact]
+    public void ExtractProperties_UnrecognisedValueHoldingPublishedElements_SerializesAsShortReferences()
+    {
+        // Mirrors Commerce variants: a converter model whose items hold published elements, and a
+        // content type whose property types point back to it. Passed through raw, it failed
+        // serialization for the AI provider with an object cycle.
+        var elementKey = Guid.NewGuid();
+        var contentType = new Mock<IPublishedContentType>();
+        var propertyType = new Mock<IPublishedPropertyType>();
+        propertyType.Setup(x => x.Alias).Returns("sku");
+        propertyType.Setup(x => x.ContentType).Returns(contentType.Object);
+        contentType.Setup(x => x.Alias).Returns("variant");
+        contentType.Setup(x => x.PropertyTypes).Returns([propertyType.Object]);
+        var element = new Mock<IPublishedElement>();
+        element.Setup(x => x.Key).Returns(elementKey);
+        element.Setup(x => x.ContentType).Returns(contentType.Object);
+        var content = BuildContent("variants", "Some.Package.Editor", new[] { new VariantItem(element.Object, "Red") });
+
+        var properties = PropertyValueFormatter.ExtractProperties(content);
+
+        var json = JsonSerializer.Serialize(properties, Constants.DefaultJsonSerializerOptions);
+        json.ShouldContain($"\"content\":{{\"key\":\"{elementKey}\",\"name\":null,\"contentType\":\"variant\"}}", Case.Sensitive);
+        json.ShouldContain("\"name\":\"Red\"", Case.Sensitive);
+        json.ShouldNotContain("propertyTypes");
+    }
+
+    [Fact]
+    public void ExtractProperties_UnrecognisedValues_KeepScalarsAndStructureAndFallBackToText()
+    {
+        var link = new Link { Name = "Home", Url = "/home", Type = LinkType.Content };
+
+        var linkValue = PropertyValueFormatter.ExtractProperties(BuildContent("link", "Umbraco.MultiUrlPicker", link))
+            .ShouldHaveSingleItem().Value.ShouldBeOfType<JsonElement>();
+        linkValue.GetProperty("url").GetString().ShouldBe("/home");
+        linkValue.GetProperty("type").GetString().ShouldBe("Content");
+
+        PropertyValueFormatter.ExtractProperties(BuildContent("count", "Umbraco.Integer", 42))
+            .ShouldHaveSingleItem().Value.ShouldBe(42);
+        PropertyValueFormatter.ExtractProperties(BuildContent("type", "Some.Editor", LinkType.Media))
+            .ShouldHaveSingleItem().Value.ShouldBe("Media");
+        PropertyValueFormatter.ExtractProperties(BuildContent("broken", "Some.Editor", new ThrowingValue()))
+            .ShouldHaveSingleItem().Value.ShouldBe("throwing value");
+    }
+
+    public sealed record VariantItem(IPublishedElement Content, string Name);
+
+    public sealed class ThrowingValue
+    {
+        public string Value => throw new InvalidCastException("getter failed");
+
+        public override string ToString() => "throwing value";
     }
 
     private static IPublishedContent BuildContent(string alias, string editorAlias, object? value)

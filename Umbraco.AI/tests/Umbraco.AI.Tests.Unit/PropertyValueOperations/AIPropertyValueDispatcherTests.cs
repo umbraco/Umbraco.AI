@@ -697,6 +697,160 @@ public class AIPropertyValueDispatcherTests
         IsVariant: true,
         IsSegmented: false);
 
+    [Fact]
+    public async Task DispatchAsync_AddItem_BlockWithSettingsType_CreatesSettingsOfTheConfiguredType()
+    {
+        // Arrange
+        var (dispatcher, elementTypeKey, settingsTypeKey) = BuildBlockListDispatcherWithSettings(hasSettingsType: true);
+
+        var request = new AIPropertyValueDispatchRequest(
+            Path: [AIPropertyPathSegment.ForProperty("blocks")],
+            Operation: AIPropertyOperation.AddItem,
+            Args: new JsonObject
+            {
+                ["elementType"] = elementTypeKey.ToString(),
+                ["values"] = new JsonObject { ["text"] = "Hello" },
+                ["settingsValues"] = new JsonObject { ["theme"] = "dark" },
+            },
+            RootValue: null,
+            DocumentMetadata: Metadata);
+
+        // Act
+        var result = await dispatcher.DispatchAsync(request);
+
+        // Assert
+        result.Success.ShouldBeTrue();
+        var settingsData = (JsonArray)result.NewRootValue!["settingsData"]!;
+        settingsData.Count.ShouldBe(1);
+        settingsData[0]!["contentTypeKey"]!.GetValue<Guid>().ShouldBe(settingsTypeKey);
+        settingsData[0]!["values"]![0]!["alias"]!.GetValue<string>().ShouldBe("theme");
+        settingsData[0]!["values"]![0]!["value"]!.GetValue<string>().ShouldBe("dark");
+
+        var layoutEntry = result.NewRootValue!["layout"]!["Umbraco.BlockList"]![0]!;
+        layoutEntry["settingsKey"]!.GetValue<Guid>().ShouldBe(settingsData[0]!["key"]!.GetValue<Guid>());
+    }
+
+    [Fact]
+    public async Task DispatchAsync_AddItem_BlockWithSettingsType_CreatesEmptySettingsWhenNoneGiven()
+    {
+        // Arrange
+        var (dispatcher, elementTypeKey, settingsTypeKey) = BuildBlockListDispatcherWithSettings(hasSettingsType: true);
+
+        var request = new AIPropertyValueDispatchRequest(
+            Path: [AIPropertyPathSegment.ForProperty("blocks")],
+            Operation: AIPropertyOperation.AddItem,
+            Args: new JsonObject { ["elementType"] = elementTypeKey.ToString() },
+            RootValue: null,
+            DocumentMetadata: Metadata);
+
+        // Act
+        var result = await dispatcher.DispatchAsync(request);
+
+        // Assert
+        result.Success.ShouldBeTrue();
+        var settingsData = (JsonArray)result.NewRootValue!["settingsData"]!;
+        settingsData.Count.ShouldBe(1);
+        settingsData[0]!["contentTypeKey"]!.GetValue<Guid>().ShouldBe(settingsTypeKey);
+        ((JsonArray)settingsData[0]!["values"]!).Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task DispatchAsync_AddItem_SettingsValuesForBlockWithoutSettingsType_Fails()
+    {
+        // Arrange
+        var (dispatcher, elementTypeKey, _) = BuildBlockListDispatcherWithSettings(hasSettingsType: false);
+
+        var request = new AIPropertyValueDispatchRequest(
+            Path: [AIPropertyPathSegment.ForProperty("blocks")],
+            Operation: AIPropertyOperation.AddItem,
+            Args: new JsonObject
+            {
+                ["elementType"] = elementTypeKey.ToString(),
+                ["settingsValues"] = new JsonObject { ["theme"] = "dark" },
+            },
+            RootValue: null,
+            DocumentMetadata: Metadata);
+
+        // Act
+        var result = await dispatcher.DispatchAsync(request);
+
+        // Assert
+        result.Success.ShouldBeFalse();
+        result.Error!.Code.ShouldBe(AIPropertyValueOperationError.Codes.SchemaMismatch);
+    }
+
+    [Fact]
+    public async Task DispatchAsync_SetValue_PathThroughSettingsKey_UpdatesTheBlockSettings()
+    {
+        // Arrange
+        var (dispatcher, elementTypeKey, settingsTypeKey) = BuildBlockListDispatcherWithSettings(hasSettingsType: true);
+        var blockKey = Guid.NewGuid();
+        var settingsKey = Guid.NewGuid();
+        var rootValue = BuildBlockListValue(blockKey, elementTypeKey, (null, "Hello"));
+        ((JsonObject)rootValue["layout"]!["Umbraco.BlockList"]![0]!)["settingsKey"] = settingsKey;
+        ((JsonArray)rootValue["settingsData"]!).Add(new JsonObject
+        {
+            ["key"] = settingsKey,
+            ["contentTypeKey"] = settingsTypeKey,
+            ["values"] = new JsonArray
+            {
+                new JsonObject { ["alias"] = "theme", ["culture"] = null, ["segment"] = null, ["value"] = "light" },
+            },
+        });
+
+        var request = new AIPropertyValueDispatchRequest(
+            Path:
+            [
+                AIPropertyPathSegment.ForProperty("blocks"),
+                AIPropertyPathSegment.ForBlock(settingsKey),
+                AIPropertyPathSegment.ForProperty("theme"),
+            ],
+            Operation: AIPropertyOperation.SetValue,
+            Args: new JsonObject { ["value"] = "dark" },
+            RootValue: rootValue,
+            DocumentMetadata: Metadata);
+
+        // Act
+        var result = await dispatcher.DispatchAsync(request);
+
+        // Assert
+        result.Success.ShouldBeTrue();
+        result.NewRootValue!["settingsData"]![0]!["values"]![0]!["value"]!.GetValue<string>().ShouldBe("dark");
+        ReadBlockTextValues(result.NewRootValue)[string.Empty].ShouldBe("Hello");
+    }
+
+    private static (AIPropertyValueDispatcher Dispatcher, Guid ElementTypeKey, Guid SettingsTypeKey) BuildBlockListDispatcherWithSettings(bool hasSettingsType)
+    {
+        var elementTypeKey = Guid.NewGuid();
+        var settingsTypeKey = Guid.NewGuid();
+        var contentTypeService = BuildContentTypeServiceWithPropertyTypes(
+            (RootContentTypeKey, [("blocks", "Umbraco.BlockList", ContentVariation.Nothing)]),
+            (elementTypeKey, [("text", "Umbraco.TextBox", ContentVariation.Nothing)]),
+            (settingsTypeKey, [("theme", "Umbraco.TextBox", ContentVariation.Nothing)]));
+
+        var dataType = new Mock<IDataType>();
+        dataType.Setup(d => d.ConfigurationObject).Returns(new BlockListConfiguration
+        {
+            Blocks =
+            [
+                new BlockListConfiguration.BlockConfiguration
+                {
+                    ContentElementTypeKey = elementTypeKey,
+                    SettingsElementTypeKey = hasSettingsType ? settingsTypeKey : null,
+                },
+            ],
+        });
+        var dataTypeService = new Mock<IDataTypeService>();
+        dataTypeService.Setup(s => s.GetAsync(It.IsAny<Guid>())).ReturnsAsync(dataType.Object);
+
+        var dispatcher = BuildDispatcher(
+            handlers: [new BlockListPropertyValueHandler(contentTypeService)],
+            contentTypeService: contentTypeService,
+            dataTypeService: dataTypeService.Object);
+
+        return (dispatcher, elementTypeKey, settingsTypeKey);
+    }
+
     private static (AIPropertyValueDispatcher Dispatcher, Guid ElementTypeKey) BuildBlockListDispatcher(ContentVariation textVariations)
     {
         var elementTypeKey = Guid.NewGuid();
@@ -742,7 +896,8 @@ public class AIPropertyValueDispatcherTests
     private static AIPropertyValueDispatcher BuildDispatcher(
         IEnumerable<IAIPropertyValueHandler> handlers,
         IReadOnlyDictionary<string, string>? rootProperties = null,
-        IContentTypeService? contentTypeService = null)
+        IContentTypeService? contentTypeService = null,
+        IDataTypeService? dataTypeService = null)
     {
         var collection = new AIPropertyValueHandlerCollection(() => handlers);
 
@@ -769,6 +924,7 @@ public class AIPropertyValueDispatcherTests
             schemaService.Object,
             contentTypeService,
             mediaTypeService,
+            dataTypeService ?? new Mock<IDataTypeService>().Object,
             defaultValueProvider.Object,
             NullLogger<AIPropertyValueDispatcher>.Instance);
     }

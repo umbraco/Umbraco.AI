@@ -226,7 +226,7 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
         }
 
         var rows = await _repository.GetMessagesAsync(conversationId, cancellationToken);
-        var readable = AIResentTurnMerger.DeserializeReadable(rows);
+        var readable = AIStoredMessageMapper.DeserializeReadable(rows);
         var remaining = DropDuplicatedTail(conversationId, readable, candidates);
 
         return await MergeResentTurnAsync(conversationId, rows, readable, remaining, cancellationToken);
@@ -357,8 +357,8 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
         }
 
         // Repair first so the model never sees an old chat's repeated turn; the repairer hands back the rows it loaded.
-        var rows = await _repeatedTurnRepairer.RepairRepeatedTurnsAsync(conversationId, cancellationToken);
-        var messages = DeserializeRows(rows);
+        var history = await _repeatedTurnRepairer.RepairRepeatedTurnsAsync(conversationId, cancellationToken);
+        var messages = history.Readable.Select(r => r.Message).ToList();
 
         var rehydrated = new List<ChatMessage>(messages.Count);
         foreach (var chatMessage in messages)

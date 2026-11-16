@@ -147,9 +147,10 @@ internal sealed class AIConversationService : IAIConversationService
     {
         await GetOwnedOrThrowAsync(conversationId, cancellationToken);
 
-        // A repeat can span pages, so the repair reads the whole chat; it writes nothing when there is no repeat.
-        await _repeatedTurnRepairer.RepairRepeatedTurnsAsync(conversationId, cancellationToken);
-        return await _repository.GetMessagesPagedAsync(conversationId, skip, take, cancellationToken);
+        // A repeat can span pages, so the repair reads the whole chat (it writes nothing when there is no repeat)
+        // and the page is cut from those rows, so a display read is one load.
+        var history = await _repeatedTurnRepairer.RepairRepeatedTurnsAsync(conversationId, cancellationToken);
+        return (history.Rows.Skip(skip).Take(take).ToList(), history.Rows.Count);
     }
 
     public async Task<string?> GetLastUserMessageTextAsync(Guid conversationId, CancellationToken cancellationToken = default)

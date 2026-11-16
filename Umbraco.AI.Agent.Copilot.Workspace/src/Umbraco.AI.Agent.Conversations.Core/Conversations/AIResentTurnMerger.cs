@@ -22,37 +22,10 @@ internal static class AIResentTurnMerger
 
     /// <summary>
     /// Merges the <paramref name="candidates"/> a plain run arrived with into the <paramref name="stored"/> rows.
+    /// <paramref name="readable"/> pairs each row that could be read (see <see cref="AIStoredMessageMapper.DeserializeReadable"/>)
+    /// with its index in <paramref name="stored"/>, so a caller that needs the messages for another pass reads the rows once.
     /// The anchor is the first candidate user message whose id equals the last stored user message's. Without an
     /// anchor the candidates come back untouched. A stored row that can't be read is skipped, never rewritten.
-    /// </summary>
-    internal static ResentTurnResult MergeResentTurn(
-        IReadOnlyList<AIMessage> stored,
-        IReadOnlyList<ChatMessage> candidates)
-        => MergeResentTurn(stored, DeserializeReadable(stored), candidates);
-
-    /// <summary>
-    /// Deserializes each stored row once, keeping the row index beside each message that could be read. A caller
-    /// that also needs the messages for another pass reads the rows once and hands the result to
-    /// <see cref="MergeResentTurn(IReadOnlyList{AIMessage}, IReadOnlyList{ValueTuple{int, ChatMessage}}, IReadOnlyList{ChatMessage})"/>.
-    /// </summary>
-    internal static List<(int Row, ChatMessage Message)> DeserializeReadable(IReadOnlyList<AIMessage> stored)
-    {
-        var readable = new List<(int Row, ChatMessage Message)>(stored.Count);
-        for (var i = 0; i < stored.Count; i++)
-        {
-            if (AIStoredMessageMapper.TryDeserialize(stored[i].ContentJson) is { } message)
-            {
-                readable.Add((i, message));
-            }
-        }
-
-        return readable;
-    }
-
-    /// <summary>
-    /// As <see cref="MergeResentTurn(IReadOnlyList{AIMessage}, IReadOnlyList{ChatMessage})"/>, for rows the caller
-    /// already deserialized with <see cref="DeserializeReadable"/> (<paramref name="readable"/> pairs each readable
-    /// message with its index in <paramref name="stored"/>).
     /// </summary>
     internal static ResentTurnResult MergeResentTurn(
         IReadOnlyList<AIMessage> stored,
@@ -101,16 +74,24 @@ internal static class AIResentTurnMerger
     /// <summary>
     /// Finds turns already stored twice (a user message whose id appeared earlier, followed by calls and results
     /// that appeared earlier) and returns the rows to update and the row ids to delete. A history with no repeat
-    /// gives an empty answer, so a repaired history is left alone on the next read.
+    /// gives an empty answer, so a repaired history is left alone on the next read. <paramref name="readable"/>
+    /// is the <paramref name="stored"/> rows already deserialized (see <see cref="AIStoredMessageMapper.DeserializeReadable"/>).
     /// </summary>
-    internal static RepeatedTurnRepair RepairRepeatedTurns(IReadOnlyList<AIMessage> stored)
+    internal static RepeatedTurnRepair RepairRepeatedTurns(
+        IReadOnlyList<AIMessage> stored,
+        IReadOnlyList<(int Row, ChatMessage Message)> readable)
     {
-        var messages = stored.Select(row => AIStoredMessageMapper.TryDeserialize(row.ContentJson)).ToList();
+        var messages = new ChatMessage?[stored.Count];
+        foreach (var (row, readableMessage) in readable)
+        {
+            messages[row] = readableMessage;
+        }
+
         var firstUserRowById = new Dictionary<string, int>(StringComparer.Ordinal);
         var deleted = new HashSet<int>();
         var updated = new Dictionary<int, ChatMessage>();
 
-        for (var j = 0; j < messages.Count; j++)
+        for (var j = 0; j < messages.Length; j++)
         {
             var message = messages[j];
             if (message is null || deleted.Contains(j) || message.Role != ChatRole.User || string.IsNullOrEmpty(message.MessageId))

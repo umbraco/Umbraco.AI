@@ -1,4 +1,7 @@
 using System.Net;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 using Microsoft.AspNetCore.Html;
@@ -26,6 +29,23 @@ internal static partial class PropertyValueFormatter
     /// metadata but a defensive cap keeps an unexpected new wrapper type from blowing the stack.
     /// </summary>
     private const int MaxElementDepth = 8;
+
+    /// <summary>
+    /// Options for copying an unrecognised property value to JSON: cycles are written as null and
+    /// deep graphs fail fast instead of producing a huge payload for the model.
+    /// </summary>
+    private static readonly JsonSerializerOptions SafeValueSerializerOptions = new(Constants.DefaultJsonSerializerOptions)
+    {
+        ReferenceHandler = ReferenceHandler.IgnoreCycles,
+        MaxDepth = 16,
+        Converters = { new PublishedModelReferenceConverter() },
+    };
+
+    /// <summary>
+    /// Caps the JSON copied from an unrecognised property value; anything longer is sent as
+    /// truncated text so one property can't flood the model's context.
+    /// </summary>
+    private const int MaxJsonLength = MaxStringLength * 4;
 
     /// <summary>
     /// Extracts properties from a published content item in an LLM-friendly format.
@@ -252,12 +272,99 @@ internal static partial class PropertyValueFormatter
 
     private static object? FormatDefault(object? value)
     {
-        if (value is string str)
+        switch (value)
         {
-            return Truncate(str);
+            case null:
+                return null;
+            case string str:
+                return Truncate(str);
+            case JsonElement or JsonNode:
+                return value;
+            case Enum:
+                return value.ToString();
         }
 
-        return value;
+        Type type = value.GetType();
+        if (type.IsPrimitive || value is decimal or DateTime or DateTimeOffset or DateOnly or TimeOnly or TimeSpan or Guid)
+        {
+            return value;
+        }
+
+        // Anything else is a property value converter's own model (a link, a colour, or a package's
+        // type such as Commerce variants). Some of those hold published model graphs that refer back
+        // to themselves, which fail serialization for the AI provider and take the whole tool call
+        // down. Copy it to JSON here: published elements and content types are written as short
+        // references, cycles are dropped, and depth and size are capped.
+        try
+        {
+            JsonElement json = JsonSerializer.SerializeToElement(value, type, SafeValueSerializerOptions);
+            var rawJson = json.GetRawText();
+            return rawJson.Length <= MaxJsonLength ? json : Truncate(rawJson);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // Deliberate: one value that can't be serialized (or whose getters throw) must not fail
+            // the whole tool call, so the model gets its text form instead.
+            return FormatFallbackText(value, type);
+        }
+    }
+
+    private static string FormatFallbackText(object value, Type type)
+    {
+        try
+        {
+            return Truncate(value.ToString() ?? type.Name);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            return type.Name;
+        }
+    }
+
+    /// <summary>
+    /// Writes published model types found inside an unrecognised value as short references. Their
+    /// full graphs (content type schema, property types, data type configuration) carry no
+    /// property values and would repeat for every item, so they only cost tokens.
+    /// </summary>
+    private sealed class PublishedModelReferenceConverter : JsonConverterFactory
+    {
+        public override bool CanConvert(Type typeToConvert) =>
+            typeof(IPublishedElement).IsAssignableFrom(typeToConvert)
+            || typeof(IPublishedContentType).IsAssignableFrom(typeToConvert)
+            || typeof(IPublishedPropertyType).IsAssignableFrom(typeToConvert);
+
+        public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options) =>
+            (JsonConverter)Activator.CreateInstance(typeof(Writer<>).MakeGenericType(typeToConvert))!;
+
+        private sealed class Writer<T> : JsonConverter<T>
+        {
+            public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
+                throw new NotSupportedException();
+
+            public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
+            {
+                switch (value)
+                {
+                    case IPublishedElement element:
+                        writer.WriteStartObject();
+                        writer.WriteString("key", element.Key);
+                        // Only content and media have a name on this CMS version; elements don't.
+                        writer.WriteString("name", (element as IPublishedContent)?.Name);
+                        writer.WriteString("contentType", element.ContentType.Alias);
+                        writer.WriteEndObject();
+                        break;
+                    case IPublishedContentType contentType:
+                        writer.WriteStringValue(contentType.Alias);
+                        break;
+                    case IPublishedPropertyType propertyType:
+                        writer.WriteStringValue(propertyType.Alias);
+                        break;
+                    default:
+                        writer.WriteNullValue();
+                        break;
+                }
+            }
+        }
     }
 
     private static string Truncate(string value)

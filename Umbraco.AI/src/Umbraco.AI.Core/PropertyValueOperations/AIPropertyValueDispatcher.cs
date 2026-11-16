@@ -1,6 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+
 using Microsoft.Extensions.Logging;
+
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Services;
 
@@ -228,6 +230,15 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher, IAIP
             case AIPropertyOperation.SetValue:
                 {
                     var newLeaf = ExtractValueArg(request.Args);
+                    if (_handlers.GetByEditorSchemaAlias(leafEditorSchemaAlias) is { } setHandler)
+                    {
+                        var setValidation = setHandler.ValidateSetValue(leafValue, newLeaf, context);
+                        if (!setValidation.IsValid)
+                        {
+                            return AIPropertyValueDispatchResult.Fail(setValidation.Error!);
+                        }
+                    }
+
                     return AIPropertyValueDispatchResult.Ok(newLeaf?.DeepClone());
                 }
 

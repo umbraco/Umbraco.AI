@@ -1,7 +1,10 @@
 using System.Text.Json;
 
 using Moq;
+
 using Shouldly;
+
+using Umbraco.AI.Core.PropertyValueOperations;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Tools.Umbraco;
 using Umbraco.Cms.Core;
@@ -18,6 +21,7 @@ public class CreateUmbracoContentToolTests
     private readonly Mock<IContentEditingService> _contentEditingServiceMock;
     private readonly Mock<IContentTypeService> _contentTypeServiceMock;
     private readonly Mock<IUmbracoWriteAuthorizer> _authorizerMock;
+    private readonly Mock<IAIPropertyValueDispatcher> _dispatcherMock;
     private readonly IAITool _tool;
 
     public CreateUmbracoContentToolTests()
@@ -25,10 +29,15 @@ public class CreateUmbracoContentToolTests
         _contentEditingServiceMock = new Mock<IContentEditingService>();
         _contentTypeServiceMock = new Mock<IContentTypeService>();
         _authorizerMock = new Mock<IUmbracoWriteAuthorizer>();
+        _dispatcherMock = new Mock<IAIPropertyValueDispatcher>();
+        _dispatcherMock
+            .Setup(x => x.DispatchAsync(It.IsAny<AIPropertyValueDispatchRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AIPropertyValueDispatchResult.Ok(null));
         _tool = new CreateUmbracoContentTool(
             _contentEditingServiceMock.Object,
             _contentTypeServiceMock.Object,
-            _authorizerMock.Object);
+            _authorizerMock.Object,
+            _dispatcherMock.Object);
     }
 
     private static Mock<IContent> CreateContentMock(Guid key, string name, string contentTypeAlias)
@@ -108,6 +117,34 @@ public class CreateUmbracoContentToolTests
         var typed = result.ShouldBeOfType<CreateUmbracoContentResult>();
         typed.Success.ShouldBeFalse();
         typed.Message.ShouldContain("not found");
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PropertyValueRejectedByItsHandler_ReturnsErrorWithoutCreating()
+    {
+        // umbraco/Umbraco.AI#767: values passed to create skipped the set_value check.
+        var args = new CreateUmbracoContentArgs(null, "blogPost", "Home", new Dictionary<string, JsonElement>
+        {
+            ["links"] = JsonDocument.Parse("""[{"type":"document","name":"Features"}]""").RootElement,
+        });
+        _authorizerMock
+            .Setup(x => x.AuthorizeContentAsync(ActionNew.ActionLetter, null, null))
+            .ReturnsAsync(UmbracoWriteAuthorizationResult.Allowed(Guid.NewGuid()));
+        var contentTypeMock = new Mock<IContentType>();
+        contentTypeMock.Setup(x => x.Key).Returns(Guid.NewGuid());
+        _contentTypeServiceMock.Setup(x => x.Get("blogPost")).Returns(contentTypeMock.Object);
+        _dispatcherMock
+            .Setup(x => x.DispatchAsync(It.IsAny<AIPropertyValueDispatchRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AIPropertyValueDispatchResult.Fail(new AIPropertyValueOperationError(
+                AIPropertyValueOperationError.Codes.SchemaMismatch, "Link 0 is a document link without 'unique'.")));
+
+        var result = await _tool.ExecuteAsync(args, CancellationToken.None);
+
+        var typed = result.ShouldBeOfType<CreateUmbracoContentResult>();
+        typed.Success.ShouldBeFalse();
+        typed.Message!.ShouldContain("'links'");
+        _contentEditingServiceMock.Verify(
+            x => x.CreateAsync(It.IsAny<ContentCreateModel>(), It.IsAny<Guid>()), Times.Never);
     }
 
     [Fact]

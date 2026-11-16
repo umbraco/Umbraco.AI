@@ -341,7 +341,8 @@ public class StreamConversationAutoSelectionTests
                 Mock.Of<IAIConversationRepository>(),
                 Mock.Of<IAIFileStore>(),
                 Mock.Of<IAIRuntimeContextAccessor>(),
-                NullLogger<ConversationChatHistoryProvider>.Instance);
+                NullLogger<ConversationChatHistoryProvider>.Instance,
+                Umbraco.AI.Agent.Copilot.Workspace.Tests.Unit.Conversations.ResentTurnFixtures.Repairer(Mock.Of<IAIConversationRepository>()));
 
             _controller = new StreamConversationAGUIController(
                 conversationService.Object,

@@ -24,4 +24,9 @@
         <PackageReference Include="Umbraco.Cms.Tests.Integration" />
     </ItemGroup>
 
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\Umbraco.AI.Agent.Conversations.Persistence\Umbraco.AI.Agent.Conversations.Persistence.csproj" />
+        <ProjectReference Include="..\..\src\Umbraco.AI.Agent.Conversations.Persistence.Sqlite\Umbraco.AI.Agent.Conversations.Persistence.Sqlite.csproj" />
+    </ItemGroup>
+
 </Project>

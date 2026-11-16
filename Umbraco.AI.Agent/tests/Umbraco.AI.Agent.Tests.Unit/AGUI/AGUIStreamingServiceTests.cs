@@ -910,6 +910,43 @@ public class AGUIStreamingServiceTests
         customEventIndex.ShouldBeLessThan(runFinishedIndex);
     }
 
+    /// <summary>
+    /// The resent-turn merge hangs off the same callback as the #375 drop, so an approval resume (AG-UI resume
+    /// entries) must never call it: the resume branch keeps its own handling.
+    /// </summary>
+    [Fact]
+    public async Task StreamAgentAsync_WithResume_DoesNotCallTheDropAlreadyPersistedCallback()
+    {
+        var agent = CreateMockAgent(AsyncEnumerable.Empty<ChatResponseUpdate>());
+        var request = new AGUIRunRequest
+        {
+            ThreadId = "thread-1",
+            RunId = "run-1",
+            Messages = [new() { Id = Guid.NewGuid().ToString(), Role = AGUIMessageRole.User, Content = "Hello" }],
+            Resume =
+            [
+                new()
+                {
+                    InterruptId = "call-1",
+                    Status = AGUIResumeStatus.Resolved,
+                    Payload = JsonSerializer.SerializeToElement(new { approved = true })
+                }
+            ]
+        };
+        var dropCalls = 0;
+        var persistenceSync = new AIConversationPersistenceSync(
+            DropAlreadyPersistedLeadingMessages: (messages, _) =>
+            {
+                dropCalls++;
+                return ValueTask.FromResult(messages);
+            },
+            ResolveLastPersistedMessageId: null);
+
+        await CollectEvents(agent, request, persistenceSync);
+
+        dropCalls.ShouldBe(0);
+    }
+
     [Fact]
     public async Task StreamAgentAsync_WhenNothingPersistedYet_EmitsNoCustomEvent()
     {

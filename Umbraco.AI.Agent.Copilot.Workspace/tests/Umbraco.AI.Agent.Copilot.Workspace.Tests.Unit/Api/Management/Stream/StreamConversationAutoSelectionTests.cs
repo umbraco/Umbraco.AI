@@ -236,6 +236,23 @@ public class StreamConversationAutoSelectionTests
         public void RunsTheSelectedAgentInstead() => _harness.StreamedAgentId.ShouldBe(AgentA.Id);
     }
 
+    public class GivenAClientThatSendsItsOwnThreadId
+    {
+        private readonly Harness _harness;
+
+        public GivenAClientThatSendsItsOwnThreadId()
+        {
+            _harness = new Harness(agentIdOrAlias: AgentA.Id.ToString(), selection: null, explicitAgent: AgentA);
+            _harness.StreamAsync(clientThreadId: Guid.NewGuid().ToString()).GetAwaiter().GetResult();
+        }
+
+        // #748: files are stored under the run's threadId but rehydrated, purged and kept alive by
+        // conversation id, so the run must use the conversation id whatever the client sends.
+        [Fact]
+        public void RunsUnderTheConversationIdAsThreadId()
+            => _harness.CapturedRequest!.ThreadId.ShouldBe(_harness.ConversationId.ToString());
+    }
+
     public class GivenAnAutoConversationAndNoAvailableAgents
     {
         private readonly IResult _result;
@@ -312,9 +329,10 @@ public class StreamConversationAutoSelectionTests
                     It.IsAny<Guid>(), It.IsAny<AGUIRunRequest>(), It.IsAny<IEnumerable<AIFrontendTool>?>(),
                     It.IsAny<AIAgentExecutionOptions>(), It.IsAny<CancellationToken>()))
                 .Callback<Guid, AGUIRunRequest, IEnumerable<AIFrontendTool>?, AIAgentExecutionOptions, CancellationToken>(
-                    (id, _, _, options, _) =>
+                    (id, request, _, options, _) =>
                     {
                         StreamedAgentId = id;
+                        CapturedRequest = request;
                         CapturedOptions = options;
                     })
                 .Returns(EmptyEventStream());
@@ -366,12 +384,16 @@ public class StreamConversationAutoSelectionTests
 
         public Guid? StreamedAgentId { get; private set; }
 
-        public Task<IResult> StreamAsync(bool withUserMessage = true)
+        public AGUIRunRequest? CapturedRequest { get; private set; }
+
+        public Guid ConversationId => _conversationId;
+
+        public Task<IResult> StreamAsync(bool withUserMessage = true, string? clientThreadId = null)
             => _controller.StreamAgentAGUI(
                 _conversationId,
                 new AGUIRunRequest
                 {
-                    ThreadId = _conversationId.ToString(),
+                    ThreadId = clientThreadId ?? _conversationId.ToString(),
                     RunId = "run",
                     Messages = withUserMessage
                         ? [new AGUIMessage { Id = "m1", Role = AGUIMessageRole.User, Content = "hello" }]

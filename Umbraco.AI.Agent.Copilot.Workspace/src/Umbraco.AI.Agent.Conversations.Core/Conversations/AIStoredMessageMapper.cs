@@ -30,6 +30,24 @@ internal static class AIStoredMessageMapper
         }
     }
 
+    /// <summary>
+    /// Deserializes each stored row once, keeping the row index beside each message that could be read (a row
+    /// that can't be read is left out). Callers that make several passes over the same rows share the result.
+    /// </summary>
+    internal static List<(int Row, ChatMessage Message)> DeserializeReadable(IReadOnlyList<AIMessage> stored)
+    {
+        var readable = new List<(int Row, ChatMessage Message)>(stored.Count);
+        for (var i = 0; i < stored.Count; i++)
+        {
+            if (TryDeserialize(stored[i].ContentJson) is { } message)
+            {
+                readable.Add((i, message));
+            }
+        }
+
+        return readable;
+    }
+
     /// <summary>A copy of <paramref name="row"/> that holds <paramref name="message"/> as its content.</summary>
     internal static AIMessage WithMessage(AIMessage row, ChatMessage message)
         => new()

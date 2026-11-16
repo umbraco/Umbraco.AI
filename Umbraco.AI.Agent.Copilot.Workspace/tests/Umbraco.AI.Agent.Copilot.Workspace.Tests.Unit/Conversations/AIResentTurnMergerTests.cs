@@ -34,7 +34,7 @@ public class AIResentTurnMergerTests
         var stored = Rows(User("u1"), Call("a1", "C"), Result("t1", ("C", "stored-real")));
         List<ChatMessage> incoming = [User("u1"), Call("b1", "C"), Result("b2", ("C", "other"))];
 
-        var result = AIResentTurnMerger.MergeResentTurn(stored, incoming);
+        var result = MergeResentTurn(stored, incoming);
 
         result.RowsToUpdate.ShouldBeEmpty();
     }
@@ -46,7 +46,7 @@ public class AIResentTurnMergerTests
         var stored = Rows(User("u1"), Call("a1", "C"), Result("t1", ("C", StandIn)));
         List<ChatMessage> incoming = [User("u1"), Call("b1", "C", "NEW")];
 
-        var result = AIResentTurnMerger.MergeResentTurn(stored, incoming);
+        var result = MergeResentTurn(stored, incoming);
 
         result.Candidates.Select(m => m.MessageId).ShouldBe(["b1"]);
     }
@@ -57,7 +57,7 @@ public class AIResentTurnMergerTests
     {
         var stored = Rows(User("u1"), Call("a1", "C"), Result("t1", ("C", StandIn)));
 
-        var result = AIResentTurnMerger.MergeResentTurn(stored, [User("u1"), Result("b1", ("C", "real"))]);
+        var result = MergeResentTurn(stored, [User("u1"), Result("b1", ("C", "real"))]);
 
         Updated(stored, result).ShouldBe([(2, "result:C=real")]);
     }
@@ -69,7 +69,7 @@ public class AIResentTurnMergerTests
         var stored = Rows(User("u1"), Call("a1", "C"), Result("t1", ("C", "real")));
         List<ChatMessage> incoming = [User("u1"), Call("b1", "C"), Result("b2", ("C", "real"))];
 
-        var result = AIResentTurnMerger.MergeResentTurn(stored, incoming);
+        var result = MergeResentTurn(stored, incoming);
 
         result.Candidates.ShouldBeEmpty();
     }
@@ -81,7 +81,7 @@ public class AIResentTurnMergerTests
         var stored = Rows(User("u1"), Call("a1", "C"), Result("t1", ("C", "real")));
         List<ChatMessage> incoming = [User("u1"), Result("b1", ("C", "real"), ("D", "fresh"))];
 
-        var result = AIResentTurnMerger.MergeResentTurn(stored, incoming);
+        var result = MergeResentTurn(stored, incoming);
 
         result.Candidates.Select(Describe).ShouldBe(["result:D=fresh"]);
     }
@@ -93,7 +93,7 @@ public class AIResentTurnMergerTests
         var stored = Rows(new ChatMessage(ChatRole.User, "Hello"), Call("a1", "C"));
         List<ChatMessage> incoming = [User("u1"), Call("b1", "C")];
 
-        var result = AIResentTurnMerger.MergeResentTurn(stored, incoming);
+        var result = MergeResentTurn(stored, incoming);
 
         result.Candidates.Select(m => m.MessageId).ShouldBe(["u1", "b1"]);
     }
@@ -105,7 +105,7 @@ public class AIResentTurnMergerTests
         var rows = Rows(User("u1"), Call("a1", "C"), Result("t1", ("C", StandIn)));
         rows.Insert(1, Unreadable(99));
 
-        var result = AIResentTurnMerger.MergeResentTurn(rows, [User("u1"), Result("b1", ("C", "real"))]);
+        var result = MergeResentTurn(rows, [User("u1"), Result("b1", ("C", "real"))]);
 
         Updated(rows, result).ShouldBe([(3, "result:C=real")]);
     }
@@ -116,7 +116,7 @@ public class AIResentTurnMergerTests
     {
         var rows = Rows(User("u1"), Call("a1", "C"), Result("t1", ("C", StandIn)), User("u1"), Call("a2", "C"), Result("t2", ("C", "real")));
 
-        var repair = AIResentTurnMerger.RepairRepeatedTurns(rows);
+        var repair = RepairRepeatedTurns(rows);
 
         // Row numbers, so the one assertion names which rows went and which was rewritten.
         var deleted = repair.IdsToDelete.Select(id => "delete:" + rows.FindIndex(r => r.Id == id));
@@ -134,7 +134,7 @@ public class AIResentTurnMergerTests
             User("u1"), Call("a2", "C"), Result("t2", ("C", "real")),
             new ChatMessage(ChatRole.Assistant, "Done") { MessageId = "a3" });
 
-        var remaining = Apply(rows, AIResentTurnMerger.RepairRepeatedTurns(rows));
+        var remaining = Apply(rows, RepairRepeatedTurns(rows));
 
         remaining.Select(Describe).ShouldBe(["user:u1", "call:C", "result:C=real", "assistant:a3"]);
     }
@@ -145,7 +145,7 @@ public class AIResentTurnMergerTests
     {
         var rows = Rows(User("u1"), Call("a1", "C"), Result("t1", ("C", "done")), User("u1"), Call("a2", "OTHER"), Result("t2", ("OTHER", "done")));
 
-        AIResentTurnMerger.RepairRepeatedTurns(rows).IsEmpty.ShouldBeTrue();
+        RepairRepeatedTurns(rows).IsEmpty.ShouldBeTrue();
     }
 
     // R6 - a turn stored three times is repaired down to one
@@ -157,7 +157,7 @@ public class AIResentTurnMergerTests
             User("u1"), Call("a2", "C"), Result("t2", ("C", StandIn)),
             User("u1"), Call("a3", "C"), Result("t3", ("C", "real")));
 
-        var remaining = Apply(rows, AIResentTurnMerger.RepairRepeatedTurns(rows));
+        var remaining = Apply(rows, RepairRepeatedTurns(rows));
 
         remaining.Select(Describe).ShouldBe(["user:u1", "call:C", "result:C=real"]);
     }
@@ -170,7 +170,7 @@ public class AIResentTurnMergerTests
         var bad = Unreadable(99);
         rows.Insert(2, bad);
 
-        var repair = AIResentTurnMerger.RepairRepeatedTurns(rows);
+        var repair = RepairRepeatedTurns(rows);
 
         repair.IdsToDelete.ShouldNotContain(bad.Id);
     }
@@ -181,6 +181,6 @@ public class AIResentTurnMergerTests
     {
         var rows = Rows(User("u1", "Hello"), new ChatMessage(ChatRole.Assistant, "Hi") { MessageId = "a1" }, User("u2", "Hello"));
 
-        AIResentTurnMerger.RepairRepeatedTurns(rows).IsEmpty.ShouldBeTrue();
+        RepairRepeatedTurns(rows).IsEmpty.ShouldBeTrue();
     }
 }

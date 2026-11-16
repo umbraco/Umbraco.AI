@@ -14,6 +14,16 @@ internal static class ResentTurnFixtures
     internal static AIRepeatedTurnRepairer Repairer(IAIConversationRepository repository)
         => new(repository, NullLogger<AIRepeatedTurnRepairer>.Instance);
 
+    /// <summary>Merges <paramref name="candidates"/> into <paramref name="stored"/>, reading the rows the way the history provider does.</summary>
+    internal static AIResentTurnMerger.ResentTurnResult MergeResentTurn(
+        IReadOnlyList<AIMessage> stored,
+        IReadOnlyList<ChatMessage> candidates)
+        => AIResentTurnMerger.MergeResentTurn(stored, AIStoredMessageMapper.DeserializeReadable(stored), candidates);
+
+    /// <summary>Finds the repeated turns in <paramref name="stored"/>, reading the rows the way the repairer does.</summary>
+    internal static AIResentTurnMerger.RepeatedTurnRepair RepairRepeatedTurns(IReadOnlyList<AIMessage> stored)
+        => AIResentTurnMerger.RepairRepeatedTurns(stored, AIStoredMessageMapper.DeserializeReadable(stored));
+
     internal const string StandIn = AIResentTurnMerger.StandInResultText;
 
     internal static ChatMessage User(string id, string text = "Hello")

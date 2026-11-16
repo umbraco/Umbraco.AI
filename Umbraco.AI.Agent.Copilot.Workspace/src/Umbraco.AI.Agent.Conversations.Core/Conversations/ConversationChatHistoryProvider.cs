@@ -206,8 +206,11 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
     /// <c>ChatHistoryProvider.InvokingCoreAsync</c> unconditionally concatenates
     /// <see cref="ProvideChatHistoryAsync"/>'s persisted copy ahead of whatever is passed to the run, so
     /// the model ends up seeing the same tool call (and result) twice — a real provider rejects that
-    /// outright (Anthropic: "tool_use ids must be unique") (umbraco/Umbraco.AI#375). Never throws: a
-    /// comparison that finds no overlap just returns <paramref name="candidates"/> untouched.
+    /// outright (Anthropic: "tool_use ids must be unique") (umbraco/Umbraco.AI#375). After that drop it
+    /// runs the resent-turn merge (<see cref="AIResentTurnMerger"/>) and writes the real tool results over the stored
+    /// stand-ins before returning. The stored rows are deserialized once for both steps. A comparison that finds no
+    /// overlap returns <paramref name="candidates"/> untouched. A failed rewrite propagates and fails the run: the
+    /// write is transactional, so the stored chat is left unchanged.
     /// </summary>
     internal async Task<IReadOnlyList<ChatMessage>> DropAlreadyPersistedLeadingMessagesAsync(
         Guid conversationId,
@@ -219,7 +222,19 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
             return candidates;
         }
 
-        var stored = await LoadDeserializedMessagesAsync(conversationId, cancellationToken);
+        var rows = await _repository.GetMessagesAsync(conversationId, cancellationToken);
+        var readable = AIResentTurnMerger.DeserializeReadable(rows);
+        var remaining = DropDuplicatedTail(conversationId, readable, candidates);
+
+        return await MergeResentTurnAsync(conversationId, rows, readable, remaining, cancellationToken);
+    }
+
+    /// <summary>The #375 drop: removes the leading run of <paramref name="candidates"/> that repeats the stored tail.</summary>
+    private IReadOnlyList<ChatMessage> DropDuplicatedTail(
+        Guid conversationId,
+        IReadOnlyList<(int Row, ChatMessage Message)> stored,
+        IReadOnlyList<ChatMessage> candidates)
+    {
         var maxOverlap = Math.Min(candidates.Count, stored.Count);
 
         for (var overlap = maxOverlap; overlap > 0; overlap--)
@@ -227,7 +242,7 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
             var isDuplicateTail = true;
             for (var i = 0; i < overlap; i++)
             {
-                if (!IsSameMessage(candidates[i], stored[stored.Count - overlap + i]))
+                if (!IsSameMessage(candidates[i], stored[stored.Count - overlap + i].Message))
                 {
                     isDuplicateTail = false;
                     break;
@@ -249,6 +264,44 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
         }
 
         return candidates;
+    }
+
+    /// <summary>
+    /// Merges a resent frontend-tool turn into the stored one (see <see cref="AIResentTurnMerger"/>) and writes
+    /// the real tool results over the stored stand-ins <em>before</em> returning, so the history
+    /// <see cref="ProvideChatHistoryAsync"/> loads next already holds them. No write and no log when nothing merged.
+    /// </summary>
+    private async Task<IReadOnlyList<ChatMessage>> MergeResentTurnAsync(
+        Guid conversationId,
+        IReadOnlyList<AIMessage> rows,
+        IReadOnlyList<(int Row, ChatMessage Message)> readable,
+        IReadOnlyList<ChatMessage> candidates,
+        CancellationToken cancellationToken)
+    {
+        if (candidates.Count == 0)
+        {
+            return candidates;
+        }
+
+        var merge = AIResentTurnMerger.MergeResentTurn(rows, readable, candidates);
+        if (merge.RowsToUpdate.Count == 0 && merge.Candidates.SequenceEqual(candidates))
+        {
+            return candidates;
+        }
+
+        if (merge.RowsToUpdate.Count > 0)
+        {
+            await _repository.RewriteMessagesAsync(conversationId, merge.RowsToUpdate, [], cancellationToken);
+        }
+
+        _logger.LogInformation(
+            "Conversation {ConversationId}: merged a resent frontend-tool turn: dropped {Dropped} resent message(s) " +
+            "and replaced {Replaced} stored tool result(s) with the real result.",
+            conversationId,
+            candidates.Count - merge.Candidates.Count,
+            merge.RowsToUpdate.Count);
+
+        return merge.Candidates;
     }
 
     /// <summary>
@@ -321,11 +374,15 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
     private async Task<IReadOnlyList<ChatMessage>> LoadDeserializedMessagesAsync(Guid conversationId, CancellationToken cancellationToken)
     {
         var stored = await _repository.GetMessagesAsync(conversationId, cancellationToken);
+        return DeserializeRows(stored);
+    }
 
-        var messages = new List<ChatMessage>(stored.Count);
-        foreach (var message in stored)
+    private static List<ChatMessage> DeserializeRows(IReadOnlyList<AIMessage> rows)
+    {
+        var messages = new List<ChatMessage>(rows.Count);
+        foreach (var row in rows)
         {
-            var chatMessage = AIStoredMessageMapper.TryDeserialize(message.ContentJson);
+            var chatMessage = AIStoredMessageMapper.TryDeserialize(row.ContentJson);
             if (chatMessage is not null)
             {
                 messages.Add(chatMessage);

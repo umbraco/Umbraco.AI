@@ -284,8 +284,8 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
 
         return candidate.Role == stored.Role &&
             string.Equals(
-                JsonSerializer.Serialize(candidate, AIJsonUtilities.DefaultOptions),
-                JsonSerializer.Serialize(stored, AIJsonUtilities.DefaultOptions),
+                AIStoredMessageMapper.Serialize(candidate),
+                AIStoredMessageMapper.Serialize(stored),
                 StringComparison.Ordinal);
     }
 
@@ -325,7 +325,7 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
         var messages = new List<ChatMessage>(stored.Count);
         foreach (var message in stored)
         {
-            var chatMessage = TryDeserialize(message.ContentJson);
+            var chatMessage = AIStoredMessageMapper.TryDeserialize(message.ContentJson);
             if (chatMessage is not null)
             {
                 messages.Add(chatMessage);
@@ -467,8 +467,8 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
     /// </summary>
     private static bool IsSameContent(AIMessage candidate, AIMessage stored)
     {
-        var candidateMessageId = TryDeserialize(candidate.ContentJson)?.MessageId;
-        var storedMessageId = TryDeserialize(stored.ContentJson)?.MessageId;
+        var candidateMessageId = AIStoredMessageMapper.TryDeserialize(candidate.ContentJson)?.MessageId;
+        var storedMessageId = AIStoredMessageMapper.TryDeserialize(stored.ContentJson)?.MessageId;
         if (!string.IsNullOrEmpty(candidateMessageId) && !string.IsNullOrEmpty(storedMessageId))
         {
             return string.Equals(candidateMessageId, storedMessageId, StringComparison.Ordinal);
@@ -517,7 +517,7 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
         return new AIMessage
         {
             Role = storable.Role.Value,
-            ContentJson = JsonSerializer.Serialize(storable, AIJsonUtilities.DefaultOptions),
+            ContentJson = AIStoredMessageMapper.Serialize(storable),
             ContentText = storable.Text,
             SchemaVersion = 2,
             AgentId = storable.Role == ChatRole.Assistant ? RunningAgentId : null,
@@ -583,25 +583,6 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
             return message;
         }
 
-        return new ChatMessage(message.Role, stripped)
-        {
-            AuthorName = message.AuthorName,
-            CreatedAt = message.CreatedAt,
-            MessageId = message.MessageId,
-            AdditionalProperties = message.AdditionalProperties,
-            RawRepresentation = message.RawRepresentation,
-        };
-    }
-
-    private static ChatMessage? TryDeserialize(string contentJson)
-    {
-        try
-        {
-            return JsonSerializer.Deserialize<ChatMessage>(contentJson, AIJsonUtilities.DefaultOptions);
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
+        return AIStoredMessageMapper.WithContents(message, stripped);
     }
 }

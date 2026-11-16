@@ -6,7 +6,7 @@ All paths are under `Umbraco.AI.Agent.Copilot.Workspace/`.
 
 ## Setup
 
-- [ ] **T0** - story: S1, S2, S3 (all criteria). Generate the pending executable specs from `STORIES.md` with `bdd-specs`, in the feature worktree:
+- [x] **T0** - story: S1, S2, S3 (all criteria). Generate the pending executable specs from `STORIES.md` with `bdd-specs`, in the feature worktree:
   - S1 and S2 go in `tests/Umbraco.AI.Agent.Copilot.Workspace.Tests.Unit/Conversations/`.
   - S3 goes in `tests/Umbraco.AI.Agent.Copilot.Workspace.Tests.Integration/`.
   - Use the existing xUnit + Shouldly + Moq style, as in `StreamConversationAutoSelectionTests.cs`.

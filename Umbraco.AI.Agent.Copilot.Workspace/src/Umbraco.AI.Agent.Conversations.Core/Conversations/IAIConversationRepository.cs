@@ -103,4 +103,20 @@ internal interface IAIConversationRepository
     /// client-side ids that were never persisted). A conversation with no user message is left untouched.
     /// </summary>
     Task<int> DeleteMessagesAfterLastUserMessageAsync(Guid conversationId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Rewrites stored messages in one transaction: each message in <paramref name="updates"/> has its
+    /// <see cref="AIMessage.ContentJson"/> and <see cref="AIMessage.ContentText"/> replaced (matched by
+    /// <see cref="AIMessage.Id"/>; <see cref="AIMessage.Sequence"/>, <see cref="AIMessage.DateCreated"/> and the
+    /// token counts are kept), and every id in <paramref name="deleteIds"/> is deleted. Ids that don't belong
+    /// to <paramref name="conversationId"/> are ignored, so a rewrite can never touch another conversation.
+    /// Deleting leaves gaps in <see cref="AIMessage.Sequence"/>, which is safe: callers only compare and order by it.
+    /// If any part fails, nothing is saved.
+    /// </summary>
+    /// <exception cref="ArgumentException"><paramref name="updates"/> holds the same message id more than once.</exception>
+    Task RewriteMessagesAsync(
+        Guid conversationId,
+        IReadOnlyList<AIMessage> updates,
+        IReadOnlyList<Guid> deleteIds,
+        CancellationToken cancellationToken = default);
 }

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 
 namespace Umbraco.AI.Agent.Conversations.Core.Conversations;
@@ -26,23 +27,25 @@ internal sealed class AIRepeatedTurnRepairer
 
     /// <summary>
     /// Merges any repeated turn in the conversation's stored rows and returns the rows as the store holds them
-    /// afterwards, so a caller that needs the rows doesn't load them again. When the repair fails, the stored rows
-    /// are unchanged (the write is transactional) and the unrepaired rows come back.
+    /// afterwards, with each readable row already deserialized, so a caller that needs the rows or their messages
+    /// doesn't load or read them again. When the repair fails, the stored rows are unchanged (the write is
+    /// transactional) and the unrepaired rows come back.
     /// </summary>
     /// <remarks>
     /// Loading the rows is the caller's own read, so a failure there propagates. A cancelled token propagates too:
     /// it is the caller giving up, not a failed repair.
     /// </remarks>
-    internal async Task<IReadOnlyList<AIMessage>> RepairRepeatedTurnsAsync(Guid conversationId, CancellationToken cancellationToken = default)
+    internal async Task<RepairedHistory> RepairRepeatedTurnsAsync(Guid conversationId, CancellationToken cancellationToken = default)
     {
         var rows = await _repository.GetMessagesAsync(conversationId, cancellationToken);
+        var readable = AIStoredMessageMapper.DeserializeReadable(rows);
 
         try
         {
-            var repair = AIResentTurnMerger.RepairRepeatedTurns(rows);
+            var repair = AIResentTurnMerger.RepairRepeatedTurns(rows, readable);
             if (repair.IsEmpty)
             {
-                return rows;
+                return new RepairedHistory(rows, readable);
             }
 
             await _repository.RewriteMessagesAsync(conversationId, repair.RowsToUpdate, repair.IdsToDelete, cancellationToken);
@@ -53,7 +56,9 @@ internal sealed class AIRepeatedTurnRepairer
                 repair.IdsToDelete.Count,
                 repair.RowsToUpdate.Count);
 
-            return Apply(rows, repair);
+            // A repeat is rare and fixed once, so the rows that are left are simply read again.
+            var repaired = Apply(rows, repair);
+            return new RepairedHistory(repaired, AIStoredMessageMapper.DeserializeReadable(repaired));
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -61,9 +66,17 @@ internal sealed class AIRepeatedTurnRepairer
                 ex,
                 "Conversation {ConversationId}: could not repair a repeated turn; the chat is left as it was.",
                 conversationId);
-            return rows;
+            return new RepairedHistory(rows, readable);
         }
     }
+
+    /// <summary>
+    /// The conversation's rows in sequence order, and the messages that could be read from them, each paired with
+    /// its index in <see cref="Rows"/>.
+    /// </summary>
+    internal sealed record RepairedHistory(
+        IReadOnlyList<AIMessage> Rows,
+        IReadOnlyList<(int Row, ChatMessage Message)> Readable);
 
     private static List<AIMessage> Apply(IReadOnlyList<AIMessage> rows, AIResentTurnMerger.RepeatedTurnRepair repair)
     {

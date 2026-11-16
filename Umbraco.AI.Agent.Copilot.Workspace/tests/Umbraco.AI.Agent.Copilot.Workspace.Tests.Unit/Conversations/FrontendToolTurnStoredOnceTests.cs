@@ -31,7 +31,7 @@ public class FrontendToolTurnStoredOnceTests
     private static List<ChatMessage> ResentTurn() => [User("u1"), Call("br-a", "C"), Result("br-t", ("C", "real"))];
 
     private static AIResentTurnMerger.ResentTurnResult Merge(List<AIMessage> stored, List<ChatMessage> incoming)
-        => AIResentTurnMerger.MergeResentTurn(stored, incoming);
+        => MergeResentTurn(stored, incoming);
 
     // Scenario: the browser resends a turn the store already holds (happy path)
     // Given (AC1-AC6): the store holds user message U, tool call C and the stand-in result for C;

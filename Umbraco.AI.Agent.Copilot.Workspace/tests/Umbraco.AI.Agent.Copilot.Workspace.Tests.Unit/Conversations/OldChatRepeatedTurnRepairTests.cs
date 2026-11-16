@@ -51,7 +51,7 @@ public class OldChatRepeatedTurnRepairTests
     {
         var rows = RepeatedRows();
 
-        var remaining = Apply(rows, AIResentTurnMerger.RepairRepeatedTurns(rows));
+        var remaining = Apply(rows, RepairRepeatedTurns(rows));
 
         remaining.Select(Describe).ShouldBe(RepairedHistory);
     }
@@ -106,9 +106,9 @@ public class OldChatRepeatedTurnRepairTests
     public void SecondRead_OfARepairedChat_WritesNothing()
     {
         var rows = RepeatedRows();
-        var repairedRows = ApplyRows(rows, AIResentTurnMerger.RepairRepeatedTurns(rows));
+        var repairedRows = ApplyRows(rows, RepairRepeatedTurns(rows));
 
-        AIResentTurnMerger.RepairRepeatedTurns(repairedRows).IsEmpty.ShouldBeTrue();
+        RepairRepeatedTurns(repairedRows).IsEmpty.ShouldBeTrue();
     }
 
     // AC4 (service level) - a second read of a repaired chat writes nothing more
@@ -129,7 +129,7 @@ public class OldChatRepeatedTurnRepairTests
     {
         var rows = Rows(User("u1"), Call("a1", "C"), Result("t1", ("C", "real")), User("u2"), Call("a2", "D"), Result("t2", ("D", "real")));
 
-        AIResentTurnMerger.RepairRepeatedTurns(rows).IsEmpty.ShouldBeTrue();
+        RepairRepeatedTurns(rows).IsEmpty.ShouldBeTrue();
     }
 
     // AC5 (service and provider level) - a chat with no repeat is not written to, at either call site

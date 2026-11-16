@@ -16,3 +16,4 @@ One line per file in this folder, newest relevant first. See `README.md` for the
 - [Inter-Product Ranges Stay Paired](inter-product-ranges-stay-paired.md) — `Directory.Packages.props` (.NET) and root `package.json`'s `peerDependencyVersions` (npm) are parallel structures; a version floor change outside `/release-prepare` must update both
 - [Consumers don't copy Core validation](consumers-dont-copy-core-validation.md) — add-ons map Core's ArgumentException instead of re-implementing its bounds
 - [EF atomicity test fails last statement](ef-atomicity-test-fail-last-statement.md) — EF sends deletes before updates; a rollback test must fail the statement sent last
+- [Workspace resent-turn merge](workspace-resent-turn-merge.md) — server merges a browser-resent frontend-tool turn by user msg id + tool call ids; old chats repaired on read

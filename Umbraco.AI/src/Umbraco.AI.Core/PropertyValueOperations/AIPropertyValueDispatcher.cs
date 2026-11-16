@@ -1,8 +1,10 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Services;
 
@@ -21,7 +23,8 @@ namespace Umbraco.AI.Core.PropertyValueOperations;
 /// <para>
 /// CMS dependencies are limited to <see cref="IPropertyEditorSchemaService"/> (schema lookups for
 /// validation), <see cref="IContentTypeService"/> (resolving editor schema aliases of properties
-/// nested inside blocks), and the default-value provider abstraction.
+/// nested inside blocks), <see cref="IDataTypeService"/> (loading the leaf property's data type so
+/// handlers can read its configuration), and the default-value provider abstraction.
 /// </para>
 /// </remarks>
 public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher, IAIPropertyValueReader
@@ -32,6 +35,7 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher, IAIP
     private readonly IPropertyEditorSchemaService _schemaService;
     private readonly IContentTypeService _contentTypeService;
     private readonly IMediaTypeService _mediaTypeService;
+    private readonly IDataTypeService _dataTypeService;
     private readonly IAIPropertyDefaultValueProvider _defaultValueProvider;
     private readonly ILogger<AIPropertyValueDispatcher> _logger;
 
@@ -43,6 +47,7 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher, IAIP
         IPropertyEditorSchemaService schemaService,
         IContentTypeService contentTypeService,
         IMediaTypeService mediaTypeService,
+        IDataTypeService dataTypeService,
         IAIPropertyDefaultValueProvider defaultValueProvider,
         ILogger<AIPropertyValueDispatcher> logger)
     {
@@ -50,8 +55,31 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher, IAIP
         _schemaService = schemaService;
         _contentTypeService = contentTypeService;
         _mediaTypeService = mediaTypeService;
+        _dataTypeService = dataTypeService;
         _defaultValueProvider = defaultValueProvider;
         _logger = logger;
+    }
+
+    /// <summary>
+    /// Initializes a new <see cref="AIPropertyValueDispatcher"/>.
+    /// </summary>
+    [Obsolete("Use the constructor that accepts an IDataTypeService. Will be removed in v20.")]
+    public AIPropertyValueDispatcher(
+        AIPropertyValueHandlerCollection handlers,
+        IPropertyEditorSchemaService schemaService,
+        IContentTypeService contentTypeService,
+        IMediaTypeService mediaTypeService,
+        IAIPropertyDefaultValueProvider defaultValueProvider,
+        ILogger<AIPropertyValueDispatcher> logger)
+        : this(
+            handlers,
+            schemaService,
+            contentTypeService,
+            mediaTypeService,
+            StaticServiceProvider.Instance.GetRequiredService<IDataTypeService>(),
+            defaultValueProvider,
+            logger)
+    {
     }
 
     /// <inheritdoc />
@@ -82,10 +110,11 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher, IAIP
         // during the descent walk. Frontend tools can't always read the alias from the workspace
         // (untouched properties aren't in `getValues()`), and future server-side tools would only
         // duplicate this lookup themselves. One source of truth.
-        var rootEditorSchemaAlias = TryResolvePropertyEditorAlias(
+        var rootPropertyType = TryResolvePropertyType(
             request.DocumentMetadata.ContentTypeKey, rootSegment.Alias);
+        var rootEditorSchemaAlias = rootPropertyType?.PropertyEditorAlias;
 
-        if (string.IsNullOrWhiteSpace(rootEditorSchemaAlias))
+        if (rootPropertyType is null || string.IsNullOrWhiteSpace(rootEditorSchemaAlias))
         {
             return AIPropertyValueDispatchResult.Fail(new AIPropertyValueOperationError(
                 AIPropertyValueOperationError.Codes.PropertyNotFound,
@@ -103,7 +132,7 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher, IAIP
                 Variant = request.Variant,
             };
 
-            return await DispatchInternalAsync(request, rootEditorSchemaAlias, context, cancellationToken).ConfigureAwait(false);
+            return await DispatchInternalAsync(request, rootPropertyType, context, cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
@@ -122,7 +151,7 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher, IAIP
 
     private async Task<AIPropertyValueDispatchResult> DispatchInternalAsync(
         AIPropertyValueDispatchRequest request,
-        string rootEditorSchemaAlias,
+        IPropertyType rootPropertyType,
         AIPropertyValueOperationContext context,
         CancellationToken cancellationToken)
     {
@@ -139,7 +168,8 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher, IAIP
         }
 
         var frames = new List<DescentFrame>();
-        var currentEditorSchemaAlias = rootEditorSchemaAlias;
+        var currentPropertyType = rootPropertyType;
+        var currentEditorSchemaAlias = rootPropertyType.PropertyEditorAlias;
         var currentValue = request.RootValue;
 
         for (var i = 0; i + 1 < path.Count; i += 2)
@@ -181,11 +211,17 @@ public sealed class AIPropertyValueDispatcher : IAIPropertyValueDispatcher, IAIP
             currentValue = handler.GetItemPropertyValue(
                 currentValue, blockKey, nextPropertyAlias, itemVariant, context);
 
+            currentPropertyType = nextPropertyType;
             currentEditorSchemaAlias = nextPropertyType.PropertyEditorAlias;
         }
 
+        // The leaf handler may need the property's editor configuration (e.g. a block's settings
+        // element type), so load its data type. Data types are cached by the CMS.
+        var leafDataType = await _dataTypeService.GetAsync(currentPropertyType.DataTypeKey).ConfigureAwait(false);
+        var leafContext = context.WithPropertyDataType(leafDataType);
+
         var leafResult = await ApplyLeafOperationAsync(
-            request, currentEditorSchemaAlias, currentValue, context, cancellationToken)
+            request, currentEditorSchemaAlias, currentValue, leafContext, cancellationToken)
             .ConfigureAwait(false);
 
         if (!leafResult.Success)

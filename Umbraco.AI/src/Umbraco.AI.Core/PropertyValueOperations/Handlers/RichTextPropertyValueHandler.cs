@@ -1,5 +1,7 @@
 using System.Text.Json.Nodes;
+
 using Umbraco.Cms.Core.Services;
+
 using CmsConstants = Umbraco.Cms.Core.Constants;
 
 namespace Umbraco.AI.Core.PropertyValueOperations.Handlers;
@@ -117,7 +119,7 @@ public sealed class RichTextPropertyValueHandler : IAIPropertyValueHandler
             return null;
         }
 
-        return BlockEnvelopeOps.FindContentTypeKey(blocks, blockKey);
+        return BlockEnvelopeOps.FindBlockContentTypeKey(blocks, blockKey);
     }
 
     /// <inheritdoc />
@@ -133,7 +135,7 @@ public sealed class RichTextPropertyValueHandler : IAIPropertyValueHandler
             return null;
         }
 
-        var entry = BlockEnvelopeOps.FindContentDataEntry(blocks, blockKey);
+        var entry = BlockEnvelopeOps.FindBlockDataEntry(blocks, blockKey);
         return entry is null ? null : BlockEnvelopeOps.GetPropertyValue(entry, propertyAlias, variantId);
     }
 
@@ -155,13 +157,13 @@ public sealed class RichTextPropertyValueHandler : IAIPropertyValueHandler
         var rteClone = (JsonObject)rte.DeepClone();
         var blocks = EnsureInnerBlocks(rteClone);
 
-        var entry = BlockEnvelopeOps.FindContentDataEntry(blocks, blockKey);
+        var entry = BlockEnvelopeOps.FindBlockDataEntry(blocks, blockKey);
         if (entry is null)
         {
             return Task.FromResult<JsonNode?>(rteClone);
         }
 
-        var contentTypeKey = BlockEnvelopeOps.FindContentTypeKey(blocks, blockKey);
+        var contentTypeKey = BlockEnvelopeOps.FindBlockContentTypeKey(blocks, blockKey);
         var editorAlias = contentTypeKey is null ? null : ResolvePropertyEditorAlias(contentTypeKey.Value, propertyAlias);
 
         BlockEnvelopeOps.SetPropertyValue(entry, propertyAlias, newPropertyValue, variantId, editorAlias);

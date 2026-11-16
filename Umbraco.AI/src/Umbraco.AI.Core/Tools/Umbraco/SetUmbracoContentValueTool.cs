@@ -20,7 +20,7 @@ public record SetUmbracoContentValueArgs(
     [property: Description("The unique key (GUID) of the content item to update.")]
     Guid Key,
 
-    [property: Description("Path identifying the property to set, potentially nested inside a block. An array alternating property-alias segments and block-key segments, e.g. [{\"alias\":\"heroImage\"}] for a root property, or [{\"alias\":\"contentBlocks\"},{\"blockKey\":\"<guid>\"},{\"alias\":\"innerText\"}] for a property inside a block. Must start and end with an alias segment.")]
+    [property: Description("Path identifying the property to set, potentially nested inside a block. An array alternating property-alias segments and block-key segments, e.g. [{\"alias\":\"heroImage\"}] for a root property, or [{\"alias\":\"contentBlocks\"},{\"blockKey\":\"<guid>\"},{\"alias\":\"innerText\"}] for a property inside a block. To set a block's settings property, use the block's settingsKey (from get_umbraco_content) as the block-key segment. Must start and end with an alias segment.")]
     IReadOnlyList<UmbracoPropertyPathSegmentArg> Path,
 
     [property: Description("The value to set, in the shape get_content_type_schema/get_property_value_schema describes for this property.")]

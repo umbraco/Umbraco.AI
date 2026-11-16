@@ -29,7 +29,7 @@ public record AddUmbracoContentItemArgs(
     [property: Description("Initial values for the new item's own properties, keyed by property alias. Call get_content_type_schema with the element type to see valid aliases and value shapes. Properties not supplied are left empty (there is currently no automatic default-value filling).")]
     Dictionary<string, JsonElement>? Values,
 
-    [property: Description("Initial values for the new item's settings element (Block List/Block Grid only), keyed by property alias.")]
+    [property: Description("Initial values for the new item's settings element (Block List/Block Grid only), keyed by property alias. Only allowed when the block has a settings element type configured on this property; omit it otherwise.")]
     Dictionary<string, JsonElement>? SettingsValues,
 
     [property: Description("Optional zero-based insertion position. Omit to append to the end of the collection.")]

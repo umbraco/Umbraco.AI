@@ -1,3 +1,4 @@
+using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Services;
 
 namespace Umbraco.AI.Core.PropertyValueOperations;
@@ -56,4 +57,22 @@ public sealed class AIPropertyValueOperationContext
 
     /// <summary>Gets the dispatcher for handlers that need to recurse into nested operations.</summary>
     public IAIPropertyValueDispatcher Dispatcher { get; }
+
+    /// <summary>
+    /// Gets the data type of the property the leaf operation runs against, when known. Handlers
+    /// read editor configuration from it, such as which settings element type a block uses.
+    /// </summary>
+    /// <remarks>
+    /// Set by the dispatcher before the leaf operation runs. <c>null</c> during the descent through
+    /// parent blocks, and when the data type couldn't be loaded.
+    /// </remarks>
+    public IDataType? PropertyDataType { get; init; }
+
+    /// <summary>Returns a copy of this context for an operation on a property with the given data type.</summary>
+    internal AIPropertyValueOperationContext WithPropertyDataType(IDataType? dataType)
+        => new(SchemaService, DefaultValueProvider, DocumentMetadata, Dispatcher)
+        {
+            Variant = _variant,
+            PropertyDataType = dataType,
+        };
 }

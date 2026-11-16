@@ -100,7 +100,7 @@ public class AIConversationServiceLastAssistantAgentTests
         var accessor = new Mock<IBackOfficeSecurityAccessor>();
         accessor.Setup(x => x.BackOfficeSecurity).Returns(security.Object);
 
-        var service = new AIConversationService(repository.Object, Mock.Of<IAIFileStore>(), accessor.Object, Mock.Of<IEventAggregator>());
+        var service = new AIConversationService(repository.Object, Mock.Of<IAIFileStore>(), accessor.Object, Mock.Of<IEventAggregator>(), ResentTurnFixtures.Repairer(repository.Object));
         return (service, repository);
     }
 }

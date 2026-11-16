@@ -1,5 +1,7 @@
 using System.Text.Json.Nodes;
+
 using Moq;
+
 using Umbraco.AI.Core.PropertyValueOperations;
 using Umbraco.AI.Core.PropertyValueOperations.Handlers;
 using Umbraco.Cms.Core;
@@ -53,6 +55,61 @@ public class BlockGridPropertyValueHandlerTests
         // Assert
         result.IsValid.ShouldBeFalse();
         result.Error!.Code.ShouldBe(AIPropertyValueOperationError.Codes.OperationNotSupported);
+    }
+
+    [Fact]
+    public void ValidateAddItem_RejectsSettingsValuesWhenConfigurationIsUnknown()
+    {
+        // Arrange
+        var handler = new BlockGridPropertyValueHandler(new Mock<IContentTypeService>().Object);
+        var args = new AIAddItemArgs(
+            ElementType: Guid.NewGuid().ToString(),
+            SettingsValues: new JsonObject { ["theme"] = "dark" });
+
+        // Act
+        var result = handler.ValidateAddItem(value: null, args, BuildContext());
+
+        // Assert
+        result.IsValid.ShouldBeFalse();
+        result.Error!.Code.ShouldBe(AIPropertyValueOperationError.Codes.OperationNotSupported);
+    }
+
+    [Fact]
+    public async Task AddItemAsync_UsesTheSettingsElementTypeFromTheBlockConfiguration()
+    {
+        // Arrange
+        var elementTypeKey = Guid.NewGuid();
+        var settingsTypeKey = Guid.NewGuid();
+        var handler = new BlockGridPropertyValueHandler(BuildContentTypeService(elementTypeKey));
+        var dataType = new Mock<IDataType>();
+        dataType.Setup(d => d.ConfigurationObject).Returns(new BlockGridConfiguration
+        {
+            Blocks =
+            [
+                new BlockGridConfiguration.BlockGridBlockConfiguration
+                {
+                    ContentElementTypeKey = elementTypeKey,
+                    SettingsElementTypeKey = settingsTypeKey,
+                },
+            ],
+        });
+        var context = BuildContext().WithPropertyDataType(dataType.Object);
+        var args = new AIAddItemArgs(
+            ElementType: elementTypeKey.ToString(),
+            SettingsValues: new JsonObject { ["theme"] = "dark" });
+
+        // Act
+        var validation = handler.ValidateAddItem(value: null, args, context);
+        var result = await handler.AddItemAsync(value: null, args, context);
+
+        // Assert
+        validation.IsValid.ShouldBeTrue();
+        var envelope = (JsonObject)result.Value!;
+        var settingsData = (JsonArray)envelope[BlockEnvelopeOps.SettingsDataPropertyName]!;
+        settingsData.Count.ShouldBe(1);
+        settingsData[0]!["contentTypeKey"]!.GetValue<Guid>().ShouldBe(settingsTypeKey);
+        var layout = (JsonArray)envelope[BlockEnvelopeOps.LayoutPropertyName]![LayoutKey]!;
+        layout[0]!["settingsKey"]!.GetValue<Guid>().ShouldBe(settingsData[0]!["key"]!.GetValue<Guid>());
     }
 
     [Fact]

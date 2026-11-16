@@ -28,7 +28,7 @@ public record UmbracoPropertyPathSegmentArg(
     [property: Description("Set this when the segment identifies a property by alias (e.g. 'contentBlocks'). Leave null when BlockKey is set instead.")]
     string? Alias,
 
-    [property: Description("Set this when the segment identifies a block within a collection property, by its key (from a prior add_umbraco_content_item call). Leave null when Alias is set instead.")]
+    [property: Description("Set this when the segment identifies a block within a collection property, by its key (a contentKey from get_umbraco_content or a prior add_umbraco_content_item call). Use the block's settingsKey instead to reach its settings properties. Leave null when Alias is set instead.")]
     Guid? BlockKey);
 
 /// <summary>

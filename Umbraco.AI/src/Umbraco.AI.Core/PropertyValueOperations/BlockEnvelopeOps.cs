@@ -318,26 +318,36 @@ internal static class BlockEnvelopeOps
         layoutObj[layoutKey] = rebuilt;
     }
 
-    /// <summary>Returns the contentTypeKey of the local block addressed by <paramref name="blockKey"/>, or <c>null</c> when it is missing or external.</summary>
-    public static Guid? FindContentTypeKey(JsonObject envelope, Guid blockKey)
-        => FindContentDataEntry(envelope, blockKey) is { } entry ? GetGuid(entry, "contentTypeKey") : null;
+    /// <summary>
+    /// Returns the contentTypeKey of the block data entry addressed by <paramref name="blockKey"/>:
+    /// a local block's contentData entry, or failing that a settingsData entry matched by
+    /// settingsKey. <c>null</c> when the block is missing or is external (Library) content.
+    /// </summary>
+    public static Guid? FindBlockContentTypeKey(JsonObject envelope, Guid blockKey)
+        => FindBlockDataEntry(envelope, blockKey) is { } entry ? GetGuid(entry, "contentTypeKey") : null;
 
     /// <summary>
-    /// Returns the contentData entry of the local block addressed by <paramref name="blockKey"/>
-    /// (layout key or content key; live reference into the envelope). <c>null</c> when the block is
-    /// missing or is external (Library) content.
+    /// Returns the block data entry addressed by <paramref name="blockKey"/> (live reference into
+    /// the envelope). Looks for the local block's contentData entry first (by layout key or content
+    /// key), then a settingsData entry (by settingsKey), so a path can address a block's settings
+    /// by its settingsKey. <c>null</c> when the block is missing or is external (Library) content.
     /// </summary>
-    public static JsonObject? FindContentDataEntry(JsonObject envelope, Guid blockKey)
+    public static JsonObject? FindBlockDataEntry(JsonObject envelope, Guid blockKey)
+        => (ResolveLocalContentKey(envelope, blockKey) is { } contentKey
+                ? FindEntryByKey(envelope, ContentDataPropertyName, contentKey)
+                : null)
+            ?? FindEntryByKey(envelope, SettingsDataPropertyName, blockKey);
+
+    private static JsonObject? FindEntryByKey(JsonObject envelope, string arrayPropertyName, Guid key)
     {
-        if (envelope[ContentDataPropertyName] is not JsonArray array
-            || ResolveLocalContentKey(envelope, blockKey) is not { } contentKey)
+        if (envelope[arrayPropertyName] is not JsonArray array)
         {
             return null;
         }
 
         foreach (var entry in array)
         {
-            if (entry is JsonObject obj && GetGuid(obj, "key") == contentKey)
+            if (entry is JsonObject obj && GetGuid(obj, "key") == key)
             {
                 return obj;
             }

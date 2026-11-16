@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+
 using Umbraco.AI.Core.PropertyValueOperations;
 
 namespace Umbraco.AI.Tests.Unit.PropertyValueOperations;
@@ -216,11 +217,15 @@ public class BlockEnvelopeOpsTests
         var envelope = BlockEnvelopeOps.Empty(LayoutKey);
         BlockEnvelopeOps.AddLayoutEntry(envelope, LayoutKey, new JsonObject
         {
-            ["key"] = layoutKeyA, ["contentKey"] = libraryKey, ["isExternalContent"] = true,
+            ["key"] = layoutKeyA,
+            ["contentKey"] = libraryKey,
+            ["isExternalContent"] = true,
         });
         BlockEnvelopeOps.AddLayoutEntry(envelope, LayoutKey, new JsonObject
         {
-            ["key"] = layoutKeyB, ["contentKey"] = libraryKey, ["isExternalContent"] = true,
+            ["key"] = layoutKeyB,
+            ["contentKey"] = libraryKey,
+            ["isExternalContent"] = true,
         });
         BlockEnvelopeOps.AddLayoutEntry(envelope, LayoutKey, new JsonObject { ["contentKey"] = localKey });
         BlockEnvelopeOps.AddContentDataEntry(envelope, Guid.NewGuid(), null, localKey);
@@ -282,18 +287,18 @@ public class BlockEnvelopeOpsTests
     }
 
     [Fact]
-    public void FindContentDataEntry_ExternalBlock_ReturnsNull()
+    public void FindBlockDataEntry_ExternalBlock_ReturnsNull()
     {
         var library = Guid.NewGuid();
         var keyA = Guid.NewGuid();
         var envelope = ReusableEnvelope(library, keyA, Guid.NewGuid(), Guid.NewGuid());
 
-        BlockEnvelopeOps.FindContentDataEntry(envelope, keyA).ShouldBeNull();
-        BlockEnvelopeOps.FindContentTypeKey(envelope, library).ShouldBeNull();
+        BlockEnvelopeOps.FindBlockDataEntry(envelope, keyA).ShouldBeNull();
+        BlockEnvelopeOps.FindBlockContentTypeKey(envelope, library).ShouldBeNull();
     }
 
     [Fact]
-    public void FindContentDataEntry_LayoutKeyDifferentFromContentKey_ResolvesLocalBlock()
+    public void FindBlockDataEntry_LayoutKeyDifferentFromContentKey_ResolvesLocalBlock()
     {
         var contentKey = Guid.NewGuid();
         var layoutKey = Guid.NewGuid();
@@ -301,8 +306,30 @@ public class BlockEnvelopeOpsTests
         BlockEnvelopeOps.AddLayoutEntry(envelope, LayoutKey, new JsonObject { ["key"] = layoutKey, ["contentKey"] = contentKey });
         BlockEnvelopeOps.AddContentDataEntry(envelope, Guid.NewGuid(), null, contentKey);
 
-        BlockEnvelopeOps.FindContentDataEntry(envelope, layoutKey).ShouldNotBeNull();
-        BlockEnvelopeOps.FindContentDataEntry(envelope, contentKey).ShouldNotBeNull();
+        BlockEnvelopeOps.FindBlockDataEntry(envelope, layoutKey).ShouldNotBeNull();
+        BlockEnvelopeOps.FindBlockDataEntry(envelope, contentKey).ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void FindBlockDataEntry_ExternalBlockWithLocalSettings_ReachesSettingsBySettingsKeyOnly()
+    {
+        var library = Guid.NewGuid();
+        var layoutKey = Guid.NewGuid();
+        var settingsKey = Guid.NewGuid();
+        var settingsTypeKey = Guid.NewGuid();
+        var envelope = BlockEnvelopeOps.Empty(LayoutKey);
+        BlockEnvelopeOps.AddLayoutEntry(envelope, LayoutKey, new JsonObject
+        {
+            ["key"] = layoutKey,
+            ["contentKey"] = library,
+            ["settingsKey"] = settingsKey,
+            ["isExternalContent"] = true,
+        });
+        BlockEnvelopeOps.AddSettingsDataEntry(envelope, settingsTypeKey, null, settingsKey);
+
+        BlockEnvelopeOps.FindBlockContentTypeKey(envelope, settingsKey).ShouldBe(settingsTypeKey);
+        BlockEnvelopeOps.FindBlockDataEntry(envelope, layoutKey).ShouldBeNull();
+        BlockEnvelopeOps.FindBlockDataEntry(envelope, library).ShouldBeNull();
     }
 
     [Fact]

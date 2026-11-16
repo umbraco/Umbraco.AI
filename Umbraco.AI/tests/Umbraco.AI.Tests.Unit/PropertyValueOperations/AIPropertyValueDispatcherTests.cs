@@ -1,6 +1,9 @@
 using System.Text.Json.Nodes;
+
 using Microsoft.Extensions.Logging.Abstractions;
+
 using Moq;
+
 using Umbraco.AI.Core.PropertyValueOperations;
 using Umbraco.AI.Core.PropertyValueOperations.Handlers;
 using Umbraco.Cms.Core;
@@ -369,6 +372,36 @@ public class AIPropertyValueDispatcherTests
         // Assert
         result.Success.ShouldBeTrue();
         result.NewRootValue?.GetValue<string>().ShouldBe("Replaced");
+    }
+
+    [Fact]
+    public async Task DispatchAsync_SetValue_HandlerRejectsValue_FailsWithoutChangingValue()
+    {
+        // Arrange: the shape a model sent in a live run, which the CMS saved as a link with no target.
+        var dispatcher = BuildDispatcher(
+            handlers: [new MultiUrlPickerPropertyValueHandler()],
+            rootProperties: new Dictionary<string, string> { ["links"] = "Umbraco.MultiUrlPicker" });
+
+        var request = new AIPropertyValueDispatchRequest(
+            Path: [AIPropertyPathSegment.ForProperty("links")],
+            Operation: AIPropertyOperation.SetValue,
+            Args: new JsonObject
+            {
+                ["value"] = new JsonArray
+                {
+                    new JsonObject { ["type"] = "internal", ["unique"] = null, ["url"] = "/features/", ["name"] = "Features" },
+                },
+            },
+            RootValue: new JsonArray(),
+            DocumentMetadata: Metadata);
+
+        // Act
+        var result = await dispatcher.DispatchAsync(request);
+
+        // Assert
+        result.Success.ShouldBeFalse();
+        result.Error!.Code.ShouldBe(AIPropertyValueOperationError.Codes.SchemaMismatch);
+        result.Error.Message.ShouldContain("unique", Case.Sensitive);
     }
 
     [Fact]

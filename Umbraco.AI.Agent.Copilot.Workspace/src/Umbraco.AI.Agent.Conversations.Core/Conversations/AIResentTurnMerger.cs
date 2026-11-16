@@ -28,6 +28,14 @@ internal static class AIResentTurnMerger
     internal static ResentTurnResult MergeResentTurn(
         IReadOnlyList<AIMessage> stored,
         IReadOnlyList<ChatMessage> candidates)
+        => MergeResentTurn(stored, DeserializeReadable(stored), candidates);
+
+    /// <summary>
+    /// Deserializes each stored row once, keeping the row index beside each message that could be read. A caller
+    /// that also needs the messages for another pass reads the rows once and hands the result to
+    /// <see cref="MergeResentTurn(IReadOnlyList{AIMessage}, IReadOnlyList{ValueTuple{int, ChatMessage}}, IReadOnlyList{ChatMessage})"/>.
+    /// </summary>
+    internal static List<(int Row, ChatMessage Message)> DeserializeReadable(IReadOnlyList<AIMessage> stored)
     {
         var readable = new List<(int Row, ChatMessage Message)>(stored.Count);
         for (var i = 0; i < stored.Count; i++)
@@ -38,6 +46,19 @@ internal static class AIResentTurnMerger
             }
         }
 
+        return readable;
+    }
+
+    /// <summary>
+    /// As <see cref="MergeResentTurn(IReadOnlyList{AIMessage}, IReadOnlyList{ChatMessage})"/>, for rows the caller
+    /// already deserialized with <see cref="DeserializeReadable"/> (<paramref name="readable"/> pairs each readable
+    /// message with its index in <paramref name="stored"/>).
+    /// </summary>
+    internal static ResentTurnResult MergeResentTurn(
+        IReadOnlyList<AIMessage> stored,
+        IReadOnlyList<(int Row, ChatMessage Message)> readable,
+        IReadOnlyList<ChatMessage> candidates)
+    {
         var storedUserIndex = LastUserIndexWithId(readable);
         if (storedUserIndex < 0)
         {

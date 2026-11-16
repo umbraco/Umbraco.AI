@@ -1,7 +1,11 @@
 using System.ComponentModel;
 using System.Text.Json;
 
+using Microsoft.Extensions.DependencyInjection;
+
+using Umbraco.AI.Core.PropertyValueOperations;
 using Umbraco.AI.Core.Tools.Scopes;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Models.ContentEditing;
 using Umbraco.Cms.Core.Services;
 
@@ -31,9 +35,26 @@ public record CreateUmbracoMediaArgs(
 public class CreateUmbracoMediaTool(
     IMediaEditingService mediaEditingService,
     IMediaTypeService mediaTypeService,
-    IUmbracoWriteAuthorizer authorizer)
+    IUmbracoWriteAuthorizer authorizer,
+    IAIPropertyValueDispatcher dispatcher)
     : AIToolBase<CreateUmbracoMediaArgs>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CreateUmbracoMediaTool"/> class.
+    /// </summary>
+    [Obsolete("Use the constructor that accepts an IAIPropertyValueDispatcher. Will be removed in v20")]
+    public CreateUmbracoMediaTool(
+        IMediaEditingService mediaEditingService,
+        IMediaTypeService mediaTypeService,
+        IUmbracoWriteAuthorizer authorizer)
+        : this(
+            mediaEditingService,
+            mediaTypeService,
+            authorizer,
+            StaticServiceProvider.Instance.GetRequiredService<IAIPropertyValueDispatcher>())
+    {
+    }
+
     /// <inheritdoc />
     public override string Description =>
         "Creates a new Umbraco media item (e.g. a folder). Returns the created item's key. Call " +
@@ -62,6 +83,13 @@ public class CreateUmbracoMediaTool(
         if (mediaType is null)
         {
             return new CreateUmbracoMediaResult(false, null, $"Media type '{args.MediaTypeAlias}' was not found.");
+        }
+
+        var validationError = await ContentPropertyValueOperationHelper.ValidatePropertyValuesAsync(
+            dispatcher, mediaType.Key, mediaType.Variations, culture: null, args.PropertyValues, cancellationToken);
+        if (validationError is not null)
+        {
+            return new CreateUmbracoMediaResult(false, null, validationError);
         }
 
         var properties = (args.PropertyValues ?? [])

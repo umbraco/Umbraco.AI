@@ -3,6 +3,7 @@ using System.Text.Json;
 
 using Microsoft.Extensions.DependencyInjection;
 
+using Umbraco.AI.Core.PropertyValueOperations;
 using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Models.ContentEditing;
@@ -33,10 +34,29 @@ public class UpdateUmbracoMediaTool(
     IMediaEditingService mediaEditingService,
     IUmbracoWriteAuthorizer authorizer,
     PropertyEditorCollection propertyEditors,
-    IJsonSerializer jsonSerializer)
+    IJsonSerializer jsonSerializer,
+    IAIPropertyValueDispatcher dispatcher)
     : AIToolBase<UpdateUmbracoMediaArgs>
 {
     private readonly ContentEditorValueReader _valueReader = new(propertyEditors, jsonSerializer);
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UpdateUmbracoMediaTool"/> class.
+    /// </summary>
+    [Obsolete("Use the constructor that accepts an IAIPropertyValueDispatcher. Will be removed in v20")]
+    public UpdateUmbracoMediaTool(
+        IMediaEditingService mediaEditingService,
+        IUmbracoWriteAuthorizer authorizer,
+        PropertyEditorCollection propertyEditors,
+        IJsonSerializer jsonSerializer)
+        : this(
+            mediaEditingService,
+            authorizer,
+            propertyEditors,
+            jsonSerializer,
+            StaticServiceProvider.Instance.GetRequiredService<IAIPropertyValueDispatcher>())
+    {
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UpdateUmbracoMediaTool"/> class.
@@ -76,6 +96,13 @@ public class UpdateUmbracoMediaTool(
         if (existing is null)
         {
             return new UpdateUmbracoMediaResult(false, null, $"Media with key '{args.Key}' was not found.");
+        }
+
+        var validationError = await ContentPropertyValueOperationHelper.ValidatePropertyValuesAsync(
+            dispatcher, existing.ContentType.Key, existing.ContentType.Variations, culture: null, args.PropertyValues, cancellationToken);
+        if (validationError is not null)
+        {
+            return new UpdateUmbracoMediaResult(false, null, validationError);
         }
 
         var properties = (args.PropertyValues ?? [])

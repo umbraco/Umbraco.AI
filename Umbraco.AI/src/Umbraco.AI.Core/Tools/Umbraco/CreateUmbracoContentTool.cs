@@ -1,8 +1,12 @@
 using System.ComponentModel;
 using System.Text.Json;
 
+using Microsoft.Extensions.DependencyInjection;
+
+using Umbraco.AI.Core.PropertyValueOperations;
 using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.Cms.Core.Actions;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Models.ContentEditing;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Extensions;
@@ -36,9 +40,26 @@ public record CreateUmbracoContentArgs(
 public class CreateUmbracoContentTool(
     IContentEditingService contentEditingService,
     IContentTypeService contentTypeService,
-    IUmbracoWriteAuthorizer authorizer)
+    IUmbracoWriteAuthorizer authorizer,
+    IAIPropertyValueDispatcher dispatcher)
     : AIToolBase<CreateUmbracoContentArgs>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CreateUmbracoContentTool"/> class.
+    /// </summary>
+    [Obsolete("Use the constructor that accepts an IAIPropertyValueDispatcher. Will be removed in v20")]
+    public CreateUmbracoContentTool(
+        IContentEditingService contentEditingService,
+        IContentTypeService contentTypeService,
+        IUmbracoWriteAuthorizer authorizer)
+        : this(
+            contentEditingService,
+            contentTypeService,
+            authorizer,
+            StaticServiceProvider.Instance.GetRequiredService<IAIPropertyValueDispatcher>())
+    {
+    }
+
     /// <inheritdoc />
     public override string Description =>
         "Creates a new Umbraco content item as a draft (not published). Returns the created item's key, " +
@@ -77,6 +98,13 @@ public class CreateUmbracoContentTool(
                 authResult, contentType.VariesByCulture(), contentType.CompositionPropertyTypes, (args.PropertyValues ?? []).Keys) is { } invariantDenial)
         {
             return new CreateUmbracoContentResult(false, null, invariantDenial);
+        }
+
+        var validationError = await ContentPropertyValueOperationHelper.ValidatePropertyValuesAsync(
+            dispatcher, contentType.Key, contentType.Variations, args.Culture, args.PropertyValues, cancellationToken);
+        if (validationError is not null)
+        {
+            return new CreateUmbracoContentResult(false, null, validationError);
         }
 
         var properties = (args.PropertyValues ?? [])

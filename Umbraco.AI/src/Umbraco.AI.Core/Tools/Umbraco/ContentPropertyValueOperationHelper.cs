@@ -295,6 +295,53 @@ internal static class ContentPropertyValueOperationHelper
     }
 
     /// <summary>
+    /// Checks whole property values the way <c>set_umbraco_content_value</c> does, for tools that save
+    /// them straight to <see cref="IContentEditingService"/>. Each value goes through the dispatcher as a
+    /// set_value, so the property's handler can reject a value the CMS would otherwise save broken
+    /// (e.g. a Multi URL Picker link with no target). An alias the content type doesn't have is left
+    /// for the CMS to report, as before. Handlers are given no current value (<c>null</c>): this checks
+    /// the new value on its own, as a whole-value replacement.
+    /// </summary>
+    /// <returns>The first problem found, or <c>null</c> when every value can be saved.</returns>
+    internal static async Task<string?> ValidatePropertyValuesAsync(
+        IAIPropertyValueDispatcher dispatcher,
+        Guid contentTypeKey,
+        ContentVariation contentTypeVariations,
+        string? culture,
+        IReadOnlyDictionary<string, JsonElement>? propertyValues,
+        CancellationToken cancellationToken)
+    {
+        if (propertyValues is null || propertyValues.Count == 0)
+        {
+            return null;
+        }
+
+        var documentMetadata = new AIDocumentMetadata(
+            contentTypeKey,
+            [culture is not null ? new AIVariantId(culture, null) : AIVariantId.Invariant],
+            contentTypeVariations.HasFlag(ContentVariation.Culture),
+            contentTypeVariations.HasFlag(ContentVariation.Segment));
+
+        foreach (var (alias, value) in propertyValues)
+        {
+            var request = new AIPropertyValueDispatchRequest(
+                [new AIPropertyPathSegment.PropertyAliasSegment(alias)],
+                AIPropertyOperation.SetValue,
+                new JsonObject { ["value"] = JsonSerializer.SerializeToNode(value) },
+                RootValue: null,
+                documentMetadata);
+
+            var result = await dispatcher.DispatchAsync(request, cancellationToken);
+            if (!result.Success && result.Error!.Code != AIPropertyValueOperationError.Codes.PropertyNotFound)
+            {
+                return $"The value for '{alias}' was not saved: {result.Error.Message}";
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Converts a <see cref="JsonElement"/> — the shape a tool's JSON arguments and a round-tripped
     /// current value both arrive as — into the same CLR shape the real backoffice save path produces,
     /// by reusing <see cref="JsonObjectConverter"/> (the converter the Management API registers for its

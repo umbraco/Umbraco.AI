@@ -1,6 +1,7 @@
 using System.Text.Json;
 
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging.Abstractions;
 
 using Umbraco.AI.Agent.Conversations.Core.Conversations;
 
@@ -9,6 +10,10 @@ namespace Umbraco.AI.Agent.Copilot.Workspace.Tests.Unit.Conversations;
 /// <summary>Builders shared by the specs that feed <see cref="AIResentTurnMerger"/>.</summary>
 internal static class ResentTurnFixtures
 {
+    /// <summary>The repairer over <paramref name="repository"/>, with a logger that discards.</summary>
+    internal static AIRepeatedTurnRepairer Repairer(IAIConversationRepository repository)
+        => new(repository, NullLogger<AIRepeatedTurnRepairer>.Instance);
+
     internal const string StandIn = AIResentTurnMerger.StandInResultText;
 
     internal static ChatMessage User(string id, string text = "Hello")

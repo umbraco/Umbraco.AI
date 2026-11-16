@@ -188,7 +188,8 @@ public class FrontendToolTurnStoredOnceThroughProviderTests
             repository.Object,
             Mock.Of<IAIFileStore>(),
             Mock.Of<IAIRuntimeContextAccessor>(),
-            NullLogger<ConversationChatHistoryProvider>.Instance);
+            NullLogger<ConversationChatHistoryProvider>.Instance,
+            Repairer(repository.Object));
 
         var passed = await provider.DropAlreadyPersistedLeadingMessagesAsync(ConversationId, candidates);
 

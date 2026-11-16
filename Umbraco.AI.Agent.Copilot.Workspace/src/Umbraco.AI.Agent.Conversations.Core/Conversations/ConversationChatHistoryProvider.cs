@@ -40,18 +40,21 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
     private readonly IAIFileStore _fileStore;
     private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
     private readonly ILogger<ConversationChatHistoryProvider> _logger;
+    private readonly AIRepeatedTurnRepairer _repeatedTurnRepairer;
     private readonly ProviderSessionState<ConversationSessionState> _sessionState;
 
     internal ConversationChatHistoryProvider(
         IAIConversationRepository repository,
         IAIFileStore fileStore,
         IAIRuntimeContextAccessor runtimeContextAccessor,
-        ILogger<ConversationChatHistoryProvider> logger)
+        ILogger<ConversationChatHistoryProvider> logger,
+        AIRepeatedTurnRepairer repeatedTurnRepairer)
     {
         _repository = repository;
         _fileStore = fileStore;
         _runtimeContextAccessor = runtimeContextAccessor;
         _logger = logger;
+        _repeatedTurnRepairer = repeatedTurnRepairer;
         _sessionState = new ProviderSessionState<ConversationSessionState>(
             stateInitializer: _ => new ConversationSessionState(),
             stateKey: typeof(ConversationChatHistoryProvider).FullName!,
@@ -353,7 +356,9 @@ public sealed class ConversationChatHistoryProvider : ChatHistoryProvider
             return [];
         }
 
-        var messages = await LoadDeserializedMessagesAsync(conversationId, cancellationToken);
+        // Repair first so the model never sees an old chat's repeated turn; the repairer hands back the rows it loaded.
+        var rows = await _repeatedTurnRepairer.RepairRepeatedTurnsAsync(conversationId, cancellationToken);
+        var messages = DeserializeRows(rows);
 
         var rehydrated = new List<ChatMessage>(messages.Count);
         foreach (var chatMessage in messages)

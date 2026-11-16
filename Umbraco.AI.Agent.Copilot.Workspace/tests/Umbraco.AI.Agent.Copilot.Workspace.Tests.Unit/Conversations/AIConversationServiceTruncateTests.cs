@@ -132,7 +132,7 @@ public class AIConversationServiceTruncateTests
         var accessor = new Mock<IBackOfficeSecurityAccessor>();
         accessor.Setup(x => x.BackOfficeSecurity).Returns(security.Object);
 
-        var service = new AIConversationService(repository.Object, fileStore.Object, accessor.Object, aggregator.Object);
+        var service = new AIConversationService(repository.Object, fileStore.Object, accessor.Object, aggregator.Object, ResentTurnFixtures.Repairer(repository.Object));
         return (service, repository, aggregator);
     }
 }

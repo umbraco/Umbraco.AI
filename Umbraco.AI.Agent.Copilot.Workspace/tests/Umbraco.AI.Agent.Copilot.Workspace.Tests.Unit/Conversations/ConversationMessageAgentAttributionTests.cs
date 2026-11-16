@@ -40,7 +40,8 @@ public class ConversationMessageAgentAttributionTests
             Mock.Of<IAIConversationRepository>(),
             Mock.Of<IAIFileStore>(),
             accessor.Object,
-            NullLogger<ConversationChatHistoryProvider>.Instance);
+            NullLogger<ConversationChatHistoryProvider>.Instance,
+            ResentTurnFixtures.Repairer(Mock.Of<IAIConversationRepository>()));
     }
 
     public class GivenARunByAgentA
@@ -112,7 +113,8 @@ public class ConversationMessageAgentAttributionTests
                 Mock.Of<IAIConversationRepository>(),
                 Mock.Of<IAIFileStore>(),
                 accessor.Object,
-                NullLogger<ConversationChatHistoryProvider>.Instance);
+                NullLogger<ConversationChatHistoryProvider>.Instance,
+                ResentTurnFixtures.Repairer(Mock.Of<IAIConversationRepository>()));
 
             ChatMessage[] request = [new(ChatRole.User, "Hello")];
             ChatMessage[] response = [new(ChatRole.Assistant, "Hi")];

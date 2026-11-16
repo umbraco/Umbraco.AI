@@ -405,6 +405,55 @@ internal sealed class EFCoreAIConversationRepository : IAIConversationRepository
         scope.Complete();
     }
 
+    public async Task RewriteMessagesAsync(
+        Guid conversationId,
+        IReadOnlyList<AIMessage> updates,
+        IReadOnlyList<Guid> deleteIds,
+        CancellationToken cancellationToken = default)
+    {
+        if (updates.Count == 0 && deleteIds.Count == 0)
+        {
+            return;
+        }
+
+        Guid? duplicateId = updates.GroupBy(u => u.Id).FirstOrDefault(g => g.Count() > 1)?.Key;
+        if (duplicateId is not null)
+        {
+            throw new ArgumentException($"The updates contain message id {duplicateId} more than once.", nameof(updates));
+        }
+
+        var updatesById = updates.ToDictionary(u => u.Id);
+        var deleteSet = deleteIds.ToHashSet();
+        var ids = updatesById.Keys.Concat(deleteSet).ToList();
+
+        using IEfCoreScope<UmbracoAIConversationsDbContext> scope = _scopeProvider.CreateScope();
+        await scope.ExecuteWithContextAsync(async db =>
+        {
+            // Scoped to the conversation: an id from another conversation is never loaded, so never touched.
+            var rows = await db.Messages
+                .Where(m => m.ConversationId == conversationId && ids.Contains(m.Id))
+                .ToListAsync(cancellationToken);
+
+            foreach (AIMessageEntity row in rows)
+            {
+                if (deleteSet.Contains(row.Id))
+                {
+                    db.Messages.Remove(row);
+                }
+                else
+                {
+                    AIMessage update = updatesById[row.Id];
+                    row.ContentJson = update.ContentJson;
+                    row.ContentText = update.ContentText;
+                }
+            }
+
+            // One SaveChanges is one database transaction, so the updates and deletes land together or not at all.
+            return await db.SaveChangesAsync(cancellationToken);
+        });
+        scope.Complete();
+    }
+
     public async Task<int> DeleteMessagesAfterLastUserMessageAsync(Guid conversationId, CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAIConversationsDbContext> scope = _scopeProvider.CreateScope();

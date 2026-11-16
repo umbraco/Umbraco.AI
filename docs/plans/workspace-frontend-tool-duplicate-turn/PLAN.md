@@ -51,7 +51,7 @@ All paths are under `Umbraco.AI.Agent.Copilot.Workspace/`.
 
 ## Wire
 
-- [ ] **T5** - **wire: the merge and repair into the Workspace stream endpoint and messages endpoint.** story: S1 (AC4), S2 (AC1, AC3). Smoke on the v18 demo site:
+- [x] **T5** - **wire: the merge and repair into the Workspace stream endpoint and messages endpoint.** story: S1 (AC4), S2 (AC1, AC3). Smoke on the v18 demo site:
   - **New turn:** run BRIEF's repro in a new chat, then read `umbracoAIConversationsMessage`. There should be one user message, one call and the real result.
   - **Old chat:** open an old chat that holds a repeated turn, such as `d419d8be…`, `2bb58a3c…` or `cc3f417f…` in the v18 demo DB, through the Workspace UI. Confirm the turn shows once and the repeated rows are gone from the table.
   - Send one more message in that old chat and confirm it gets a reply.

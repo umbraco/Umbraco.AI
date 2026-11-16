@@ -32,7 +32,7 @@ All paths are under `Umbraco.AI.Agent.Copilot.Workspace/`.
   Acceptance: S1 AC1-AC7 and S2 AC1, AC4, AC5 specs green against the merger directly.
   depends-on: T0. parallel-group: A
 
-- [ ] **T3** - story: S1 (AC1-AC6, AC8). Use the merger in `ConversationChatHistoryProvider.DropAlreadyPersistedLeadingMessagesAsync`:
+- [x] **T3** - story: S1 (AC1-AC6, AC8). Use the merger in `ConversationChatHistoryProvider.DropAlreadyPersistedLeadingMessagesAsync`:
   - First keep the existing #375 leading-run drop (R11).
   - Then apply the resent-turn merge.
   - Write the real results over the stand-ins through `RewriteMessagesAsync` before returning, so `ProvideChatHistoryAsync` hands the model the real result.

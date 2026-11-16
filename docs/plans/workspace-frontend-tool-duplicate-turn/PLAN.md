@@ -41,7 +41,7 @@ All paths are under `Umbraco.AI.Agent.Copilot.Workspace/`.
   Acceptance: S1 specs green through the provider, with a stubbed repository holding the stored turn. The existing `ConversationChatHistoryProvider` tests still pass.
   depends-on: T1, T2
 
-- [ ] **T4** - story: S2 (AC1-AC6). Repair old repeats when a chat is read:
+- [x] **T4** - story: S2 (AC1-AC6). Repair old repeats when a chat is read:
   - Add an internal `RepairRepeatedTurnsAsync(Guid conversationId, CancellationToken)` next to the merger. It loads stored rows, asks the merger for a repair, and applies it through `RewriteMessagesAsync`.
   - On failure it logs a warning and returns without throwing (R7).
   - Call it at the start of `ConversationChatHistoryProvider.ProvideChatHistoryAsync` (before a run) and of `AIConversationService.GetMessagesPagedAsync` (display), after the ownership check.

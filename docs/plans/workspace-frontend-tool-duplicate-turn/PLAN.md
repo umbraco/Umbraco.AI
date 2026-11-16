@@ -25,7 +25,7 @@ All paths are under `Umbraco.AI.Agent.Copilot.Workspace/`.
 
 ## Core
 
-- [ ] **T2** - story: S1 (AC1-AC7), S2 (AC1, AC4, AC5). Add the internal, pure `AIResentTurnMerger` in `src/Umbraco.AI.Agent.Conversations.Core/Conversations/AIResentTurnMerger.cs` (ARCHITECTURE "Decisions"). It has two entry points:
+- [x] **T2** - story: S1 (AC1-AC7), S2 (AC1, AC4, AC5). Add the internal, pure `AIResentTurnMerger` in `src/Umbraco.AI.Agent.Conversations.Core/Conversations/AIResentTurnMerger.cs` (ARCHITECTURE "Decisions"). It has two entry points:
   - **Resent turn** (R1-R5, R9). Input: the stored `ChatMessage`s and the incoming candidates. Output: the candidates to pass on, plus the stored result messages to update. The anchor is a candidate user message whose `MessageId` equals the last stored user message's. Assistant messages are dropped when every call id is already stored. A result replaces a stored stand-in (`"Success: Function completed."`) and is otherwise dropped.
   - **Repeated block in stored history** (R6, R8). Input: stored `AIMessage`s. Output: the rows to update and the row ids to delete. It reuses the same rules with the later block as the resent turn, and returns nothing for a history with no repeat.
   - Put the stand-in text in one named constant, with a comment saying it comes from Microsoft.Extensions.AI's empty-result text.

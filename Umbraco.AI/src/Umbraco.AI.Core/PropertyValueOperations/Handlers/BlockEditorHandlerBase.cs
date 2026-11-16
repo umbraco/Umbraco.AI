@@ -1,5 +1,7 @@
 using System.Text.Json.Nodes;
+
 using Umbraco.Cms.Core.Models;
+using Umbraco.Cms.Core.PropertyEditors;
 using Umbraco.Cms.Core.Services;
 
 namespace Umbraco.AI.Core.PropertyValueOperations.Handlers;
@@ -39,8 +41,45 @@ public abstract class BlockEditorHandlerBase : IAIPropertyValueHandler
     protected abstract JsonObject BuildLayoutEntry(Guid contentKey, Guid? settingsKey, AIAddItemArgs args);
 
     /// <inheritdoc />
+    /// <remarks>
+    /// Rejects <see cref="AIAddItemArgs.SettingsValues"/> when the block has no settings element type
+    /// on this property, or when the property's block configuration can't be read. Overrides should
+    /// call the base implementation.
+    /// </remarks>
     public virtual AIValidationResult ValidateAddItem(JsonNode? value, AIAddItemArgs args, AIPropertyValueOperationContext context)
-        => AIValidationResult.Valid;
+    {
+        if (args.SettingsValues is null || args.SettingsValues.Count == 0)
+        {
+            return AIValidationResult.Valid;
+        }
+
+        var blockConfigurations = GetBlockConfigurations(context);
+        if (blockConfigurations is null)
+        {
+            return AIValidationResult.Invalid(new AIPropertyValueOperationError(
+                AIPropertyValueOperationError.Codes.OperationNotSupported,
+                "Settings values can't be set because this property's block configuration could not be read. Add the item without settings values."));
+        }
+
+        var contentTypeKey = ResolveContentTypeKey(args.ElementType);
+        if (!blockConfigurations.Any(b => b.ContentElementTypeKey == contentTypeKey))
+        {
+            return AIValidationResult.Invalid(new AIPropertyValueOperationError(
+                AIPropertyValueOperationError.Codes.ElementTypeNotAllowed,
+                $"Element type '{args.ElementType}' is not an allowed block on this property.",
+                Details: new JsonObject { ["elementType"] = args.ElementType }));
+        }
+
+        if (FindSettingsElementTypeKey(blockConfigurations, contentTypeKey) is null)
+        {
+            return AIValidationResult.Invalid(new AIPropertyValueOperationError(
+                AIPropertyValueOperationError.Codes.SchemaMismatch,
+                $"Element type '{args.ElementType}' has no settings element type on this property, so settings values can't be set. Add the item without settings values.",
+                Details: new JsonObject { ["elementType"] = args.ElementType }));
+        }
+
+        return AIValidationResult.Valid;
+    }
 
     /// <inheritdoc />
     public virtual AIValidationResult ValidateRemoveItem(JsonNode? value, Guid blockKey, AIPropertyValueOperationContext context)
@@ -63,15 +102,19 @@ public abstract class BlockEditorHandlerBase : IAIPropertyValueHandler
             contentTypeKey,
             BuildValuesArray(args.Values, variant, elementType));
 
+        // Like the backoffice, a block whose configuration names a settings element type always
+        // gets a settings entry of that type, so its settings can be edited later by settingsKey.
         Guid? settingsKey = null;
-        if (args.SettingsValues is not null)
+        var settingsElementTypeKey = GetBlockConfigurations(context) is { } blockConfigurations
+            ? FindSettingsElementTypeKey(blockConfigurations, contentTypeKey)
+            : null;
+        if (settingsElementTypeKey is not null)
         {
-            // Settings element type isn't carried on AIAddItemArgs today; reuse the content type
-            // as a placeholder until we surface it explicitly.
+            var settingsElementType = _contentTypeService.Get(settingsElementTypeKey.Value);
             settingsKey = BlockEnvelopeOps.AddSettingsDataEntry(
                 envelope,
-                contentTypeKey,
-                BuildValuesArray(args.SettingsValues, variant, elementType));
+                settingsElementTypeKey.Value,
+                BuildValuesArray(args.SettingsValues, variant, settingsElementType));
         }
 
         BlockEnvelopeOps.AddLayoutEntry(envelope, LayoutKey, BuildLayoutEntry(contentKey, settingsKey, args), args.Position);
@@ -138,7 +181,7 @@ public abstract class BlockEditorHandlerBase : IAIPropertyValueHandler
 
     /// <inheritdoc />
     public Guid? GetItemContentTypeKey(JsonNode? value, Guid blockKey, AIPropertyValueOperationContext context)
-        => value is JsonObject obj ? BlockEnvelopeOps.FindContentTypeKey(obj, blockKey) : null;
+        => value is JsonObject obj ? BlockEnvelopeOps.FindBlockContentTypeKey(obj, blockKey) : null;
 
     /// <inheritdoc />
     public JsonNode? GetItemPropertyValue(
@@ -153,7 +196,7 @@ public abstract class BlockEditorHandlerBase : IAIPropertyValueHandler
             return null;
         }
 
-        var entry = BlockEnvelopeOps.FindContentDataEntry(obj, blockKey);
+        var entry = BlockEnvelopeOps.FindBlockDataEntry(obj, blockKey);
         return entry is null ? null : BlockEnvelopeOps.GetPropertyValue(entry, propertyAlias, variantId);
     }
 
@@ -173,18 +216,34 @@ public abstract class BlockEditorHandlerBase : IAIPropertyValueHandler
         }
 
         var envelope = (JsonObject)obj.DeepClone();
-        var entry = BlockEnvelopeOps.FindContentDataEntry(envelope, blockKey);
+        var entry = BlockEnvelopeOps.FindBlockDataEntry(envelope, blockKey);
         if (entry is null)
         {
             return Task.FromResult<JsonNode?>(envelope);
         }
 
-        var contentTypeKey = BlockEnvelopeOps.FindContentTypeKey(envelope, blockKey);
+        var contentTypeKey = BlockEnvelopeOps.FindBlockContentTypeKey(envelope, blockKey);
         var editorAlias = contentTypeKey is null ? null : ResolvePropertyEditorAlias(contentTypeKey.Value, propertyAlias);
 
         BlockEnvelopeOps.SetPropertyValue(entry, propertyAlias, newPropertyValue, variantId, editorAlias);
         return Task.FromResult<JsonNode?>(envelope);
     }
+
+    /// <summary>
+    /// Returns the block configurations of the property being edited, read from
+    /// <see cref="AIPropertyValueOperationContext.PropertyDataType"/>, or <c>null</c> when they can't
+    /// be read. Override for a custom block editor with its own configuration type.
+    /// </summary>
+    protected virtual IEnumerable<IBlockConfiguration>? GetBlockConfigurations(AIPropertyValueOperationContext context)
+        => context.PropertyDataType?.ConfigurationObject switch
+        {
+            BlockListConfiguration blockList => blockList.Blocks,
+            BlockGridConfiguration blockGrid => blockGrid.Blocks,
+            _ => null,
+        };
+
+    private static Guid? FindSettingsElementTypeKey(IEnumerable<IBlockConfiguration> blockConfigurations, Guid contentElementTypeKey)
+        => blockConfigurations.FirstOrDefault(b => b.ContentElementTypeKey == contentElementTypeKey)?.SettingsElementTypeKey;
 
     private Guid ResolveContentTypeKey(string? elementType)
     {

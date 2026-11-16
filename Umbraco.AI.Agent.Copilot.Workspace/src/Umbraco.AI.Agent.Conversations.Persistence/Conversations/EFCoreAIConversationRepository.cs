@@ -426,7 +426,7 @@ internal sealed class EFCoreAIConversationRepository : IAIConversationRepository
         var deleteSet = deleteIds.ToHashSet();
         var ids = updatesById.Keys.Concat(deleteSet).ToList();
 
-        using IEFCoreScope<UmbracoAIConversationsDbContext> scope = _scopeProvider.CreateScope();
+        using IEfCoreScope<UmbracoAIConversationsDbContext> scope = _scopeProvider.CreateScope();
         await scope.ExecuteWithContextAsync(async db =>
         {
             // Scoped to the conversation: an id from another conversation is never loaded, so never touched.

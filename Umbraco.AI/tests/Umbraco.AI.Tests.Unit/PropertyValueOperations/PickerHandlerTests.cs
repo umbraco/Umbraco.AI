@@ -134,6 +134,25 @@ public class PickerHandlerTests
         array.ShouldHaveSingleItem()!["name"]!.GetValue<string>().ShouldBe("Footer");
     }
 
+    [Theory]
+    [InlineData("""[{"type":"internal","unique":null,"url":"/features/","name":"Features"}]""", false)]
+    [InlineData("""[{"type":"document","name":"Features"}]""", false)]
+    [InlineData("""[{"type":"Document","unique":"a2807f32-ecd8-4110-9167-7dafeecd15c9"}]""", false)]
+    [InlineData("""[{"type":"external","name":"Example"}]""", false)]
+    [InlineData("""{"type":"external","url":"https://example.com"}""", false)]
+    [InlineData("""[{"type":"document","unique":"a2807f32-ecd8-4110-9167-7dafeecd15c9","name":"Features"},{"type":"external","url":"https://example.com"}]""", true)]
+    [InlineData("""[]""", true)]
+    [InlineData("""[{"type":"external","url":"","queryString":"#contact","name":"Contact"}]""", true)]
+    [InlineData("""[{"icon":"icon-document","name":"Features","published":true,"queryString":null,"target":null,"trashed":false,"type":"document","unique":"a2807f32-ecd8-4110-9167-7dafeecd15c9","url":"/features/","culture":null}]""", true)]
+    public void MultiUrlPicker_ValidateSetValue_RequiresATargetForEveryLink(string json, bool expectedValid)
+    {
+        var handler = new MultiUrlPickerPropertyValueHandler();
+
+        var result = handler.ValidateSetValue(null, JsonNode.Parse(json), BuildContext());
+
+        result.IsValid.ShouldBe(expectedValid);
+    }
+
     [Fact]
     public async Task MultiUrlPicker_SetItemPropertyValue_UpdatesEditableField()
     {

@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+
 using CmsConstants = Umbraco.Cms.Core.Constants;
 
 namespace Umbraco.AI.Core.PropertyValueOperations.Handlers;
@@ -82,6 +83,67 @@ public class MultiUrlPickerPropertyValueHandler : IAIPropertyValueHandler
 
         return AIValidationResult.Valid;
     }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// The CMS keeps a document or media link's target only from <c>unique</c> and the URL only for an
+    /// external link, so a link outside those rules is saved without a target and no error. It is
+    /// rejected here with the shape to use instead. <c>type</c> must be lowercase, as in the CMS value
+    /// schema, because the CMS builds the link's UDI from the type as sent. An external link may be
+    /// only an anchor (<c>queryString</c>), as the backoffice link picker allows.
+    /// </remarks>
+    public AIValidationResult ValidateSetValue(JsonNode? value, JsonNode? newValue, AIPropertyValueOperationContext context)
+    {
+        if (newValue is null)
+        {
+            return AIValidationResult.Valid;
+        }
+
+        if (newValue is not JsonArray links)
+        {
+            return InvalidLinks("The value must be an array of links.");
+        }
+
+        if (MaxItems is int maxItems && links.Count > maxItems)
+        {
+            return InvalidLinks($"{EditorAlias} holds at most {maxItems} link.");
+        }
+
+        for (var i = 0; i < links.Count; i++)
+        {
+            if (links[i] is not JsonObject link)
+            {
+                return InvalidLinks($"Link {i} must be an object.");
+            }
+
+            var type = link["type"] is JsonValue typeValue && typeValue.TryGetValue<string>(out var raw) ? raw : null;
+            if (type is not ("document" or "media" or "external"))
+            {
+                return InvalidLinks($"Link {i} has type '{type}', which isn't supported.");
+            }
+
+            if (IsContentLink(type) && BlockEnvelopeOps.GetGuid(link, TargetPropertyName) is null)
+            {
+                return InvalidLinks($"Link {i} is a {type} link without 'unique' set to the key of the linked {type}.");
+            }
+
+            if (type == "external" && !HasText(link, "url") && !HasText(link, "queryString"))
+            {
+                return InvalidLinks($"Link {i} is an external link without a 'url' or 'queryString'.");
+            }
+        }
+
+        return AIValidationResult.Valid;
+    }
+
+    private AIValidationResult InvalidLinks(string problem)
+        => AIValidationResult.Invalid(new AIPropertyValueOperationError(
+            AIPropertyValueOperationError.Codes.SchemaMismatch,
+            $"{problem} Each {EditorAlias} link needs 'type': 'document' or 'media' with 'unique' set to the linked item's key, " +
+            "or 'external' with a 'url' (or only a 'queryString' anchor). The link is not saved otherwise, so nothing was changed."));
+
+    private static bool HasText(JsonObject link, string propertyName)
+        => link[propertyName] is JsonValue value && value.TryGetValue<string>(out var text) && !string.IsNullOrWhiteSpace(text);
 
     /// <inheritdoc />
     public Task<AIAddItemHandlerResult> AddItemAsync(

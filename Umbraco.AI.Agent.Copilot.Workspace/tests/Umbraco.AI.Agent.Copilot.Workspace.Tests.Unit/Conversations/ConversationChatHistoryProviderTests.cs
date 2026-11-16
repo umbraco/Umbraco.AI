@@ -24,7 +24,8 @@ public class ConversationChatHistoryProviderTests
             Mock.Of<IAIConversationRepository>(),
             (fileStore ?? new Mock<IAIFileStore>()).Object,
             Mock.Of<IAIRuntimeContextAccessor>(),
-            NullLogger<ConversationChatHistoryProvider>.Instance);
+            NullLogger<ConversationChatHistoryProvider>.Instance,
+            ResentTurnFixtures.Repairer(Mock.Of<IAIConversationRepository>()));
 
     [Fact]
     public async Task ToStoredMessagesAsync_DropsTheInjectedSystemMessage()
@@ -255,7 +256,7 @@ public class ConversationChatHistoryProviderTests
         }
 
         private static ConversationChatHistoryProvider CreateProvider(Mock<IAIConversationRepository> repository)
-            => new(repository.Object, Mock.Of<IAIFileStore>(), Mock.Of<IAIRuntimeContextAccessor>(), NullLogger<ConversationChatHistoryProvider>.Instance);
+            => new(repository.Object, Mock.Of<IAIFileStore>(), Mock.Of<IAIRuntimeContextAccessor>(), NullLogger<ConversationChatHistoryProvider>.Instance, ResentTurnFixtures.Repairer(repository.Object));
 
         [Fact]
         public async Task GetDanglingApprovalRequestsAsync_RequestWithNoResponse_IsReturned()
@@ -357,7 +358,7 @@ public class ConversationChatHistoryProviderTests
         }
 
         private static ConversationChatHistoryProvider CreateProvider(Mock<IAIConversationRepository> repository)
-            => new(repository.Object, Mock.Of<IAIFileStore>(), Mock.Of<IAIRuntimeContextAccessor>(), NullLogger<ConversationChatHistoryProvider>.Instance);
+            => new(repository.Object, Mock.Of<IAIFileStore>(), Mock.Of<IAIRuntimeContextAccessor>(), NullLogger<ConversationChatHistoryProvider>.Instance, ResentTurnFixtures.Repairer(repository.Object));
 
         [Fact]
         public async Task NewConversation_NoStoredMessages_ReturnsCandidatesUnchanged()
@@ -499,7 +500,7 @@ public class ConversationChatHistoryProviderTests
         }
 
         private static ConversationChatHistoryProvider CreateProvider(Mock<IAIConversationRepository> repository)
-            => new(repository.Object, Mock.Of<IAIFileStore>(), Mock.Of<IAIRuntimeContextAccessor>(), NullLogger<ConversationChatHistoryProvider>.Instance);
+            => new(repository.Object, Mock.Of<IAIFileStore>(), Mock.Of<IAIRuntimeContextAccessor>(), NullLogger<ConversationChatHistoryProvider>.Instance, ResentTurnFixtures.Repairer(repository.Object));
 
         [Fact]
         public async Task NewConversation_NoStoredMessages_ReturnsCandidatesUnchanged()
@@ -643,7 +644,7 @@ public class ConversationChatHistoryProviderTests
         }
 
         private static ConversationChatHistoryProvider CreateProvider(Mock<IAIConversationRepository> repository)
-            => new(repository.Object, Mock.Of<IAIFileStore>(), Mock.Of<IAIRuntimeContextAccessor>(), NullLogger<ConversationChatHistoryProvider>.Instance);
+            => new(repository.Object, Mock.Of<IAIFileStore>(), Mock.Of<IAIRuntimeContextAccessor>(), NullLogger<ConversationChatHistoryProvider>.Instance, ResentTurnFixtures.Repairer(repository.Object));
 
         [Fact]
         public async Task NewConversation_NoStoredMessages_ReturnsNull()

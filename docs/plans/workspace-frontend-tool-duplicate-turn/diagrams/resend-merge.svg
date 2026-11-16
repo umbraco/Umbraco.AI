@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 330" font-family="system-ui, sans-serif" font-size="13">
+  <style>
+    .box{fill:#f6f8fa;stroke:#57606a;stroke-width:1}
+    .keep{fill:#dafbe1;stroke:#1a7f37}
+    .drop{fill:#ffebe9;stroke:#cf222e;stroke-dasharray:4 3}
+    .swap{fill:#fff8c5;stroke:#9a6700}
+    .h{font-weight:600}
+    .muted{fill:#57606a}
+    @media (prefers-color-scheme: dark){
+      .box{fill:#161b22;stroke:#8b949e}
+      .keep{fill:#0f2d1a;stroke:#3fb950}
+      .drop{fill:#3a1418;stroke:#f85149}
+      .swap{fill:#3a2e05;stroke:#d29922}
+      text{fill:#e6edf3}
+      .muted{fill:#8b949e}
+    }
+  </style>
+  <text x="20" y="24" class="h">Stored after run 1</text>
+  <text x="400" y="24" class="h">Resent by the browser in run 2</text>
+
+  <rect x="20" y="40" width="330" height="40" rx="6" class="keep"/>
+  <text x="32" y="65">user message (id U)</text>
+  <rect x="20" y="90" width="330" height="40" rx="6" class="keep"/>
+  <text x="32" y="115">tool call C (provider id, thinking)</text>
+  <rect x="20" y="140" width="330" height="40" rx="6" class="swap"/>
+  <text x="32" y="165">result C: "Success: Function completed."</text>
+
+  <rect x="400" y="40" width="340" height="40" rx="6" class="drop"/>
+  <text x="412" y="65">user message (id U) - same id, drop</text>
+  <rect x="400" y="90" width="340" height="40" rx="6" class="drop"/>
+  <text x="412" y="115">tool call C (client id) - same call id, drop</text>
+  <rect x="400" y="140" width="340" height="40" rx="6" class="box"/>
+  <text x="412" y="165">result C: real page info</text>
+
+  <path d="M400 160 L356 160" stroke="#9a6700" stroke-width="2" fill="none" marker-end="url(#a)"/>
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#9a6700"/></marker></defs>
+  <text x="250" y="210" class="muted">The real result replaces the stand-in in the store, before the model runs.</text>
+
+  <text x="20" y="250" class="h">What the model gets, and what is stored</text>
+  <rect x="20" y="265" width="720" height="44" rx="6" class="keep"/>
+  <text x="32" y="292">user message U  →  tool call C (server copy)  →  result C (real)  →  the model's reply</text>
+</svg>

@@ -1,4 +1,14 @@
-import { customElement, property, state, css, html, ref, createRef, nothing, repeat } from "@umbraco-cms/backoffice/external/lit";
+import {
+    customElement,
+    property,
+    state,
+    css,
+    html,
+    ref,
+    createRef,
+    nothing,
+    repeat,
+} from "@umbraco-cms/backoffice/external/lit";
 import type { PropertyValues } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTemporaryFileConfigRepository } from "@umbraco-cms/backoffice/temporary-file";
@@ -165,7 +175,7 @@ export class UaiChatInputElement extends UmbLitElement {
 
     #handleDragLeave(e: DragEvent) {
         // Only clear when the drag leaves the input-box entirely (not moving between children)
-        const box = (e.currentTarget as HTMLElement);
+        const box = e.currentTarget as HTMLElement;
         const related = e.relatedTarget as Node | null;
         if (!related || !box.contains(related)) {
             this._isDragging = false;
@@ -201,7 +211,10 @@ export class UaiChatInputElement extends UmbLitElement {
         // Validate size
         if (file.size > MAX_FILE_SIZE) {
             this.#notificationContext?.peek("warning", {
-                data: { headline: "File too large", message: `"${file.name}" exceeds maximum size of ${MAX_FILE_SIZE / 1024 / 1024}MB.` },
+                data: {
+                    headline: "File too large",
+                    message: `"${file.name}" exceeds maximum size of ${MAX_FILE_SIZE / 1024 / 1024}MB.`,
+                },
             });
             return;
         }
@@ -236,20 +249,55 @@ export class UaiChatInputElement extends UmbLitElement {
     async #send() {
         if ((!this._value.trim() && this._attachments.length === 0) || this.disabled) return;
 
-        let contentParts: UaiInputContent[] | undefined;
+        const text = this._value;
+        const contentParts = await this.#takeAttachmentContentParts(text);
 
-        if (this._attachments.length > 0) {
-            contentParts = [];
+        this.dispatchEvent(
+            new CustomEvent("send", {
+                detail: {
+                    text,
+                    contentParts,
+                },
+                bubbles: true,
+                composed: true,
+            }),
+        );
 
-            // Add text part if there's text
-            if (this._value.trim()) {
-                contentParts.push({ type: "text", text: this._value });
-            }
+        this._value = "";
+    }
 
-            // Read files as base64 in parallel; classify each by mime type into the
-            // corresponding AG-UI typed content variant (image / audio / video / document).
-            const mediaParts = await Promise.all(
-                this._attachments.map(async (attachment) => {
+    /**
+     * Takes the files waiting in the composer for a message sent another way (a starter prompt
+     * click), so they go with it instead of staying behind. Clears them, as sending does. Typed text
+     * stays in the composer.
+     * @param text - The text being sent with the files.
+     * @returns The message's content parts (the text, then one part per file), or `undefined` when
+     * no files are waiting.
+     */
+    takeAttachmentContentParts(text: string): Promise<UaiInputContent[] | undefined> {
+        return this.#takeAttachmentContentParts(text);
+    }
+
+    async #takeAttachmentContentParts(text: string): Promise<UaiInputContent[] | undefined> {
+        const attachments = this._attachments;
+        if (attachments.length === 0) return undefined;
+
+        // Clear first, so a second send while files are still being read can't send them twice.
+        this._attachments = [];
+
+        const contentParts: UaiInputContent[] = [];
+
+        // Add text part if there's text
+        if (text.trim()) {
+            contentParts.push({ type: "text", text });
+        }
+
+        // Read files as base64 in parallel; classify each by mime type into the
+        // corresponding AG-UI typed content variant (image / audio / video / document).
+        let mediaParts: UaiInputContent[];
+        try {
+            mediaParts = await Promise.all(
+                attachments.map(async (attachment) => {
                     const base64 = await this.#readFileAsBase64(attachment.file);
                     const mimeType = attachment.file.type || "application/octet-stream";
                     const kind = classifyContentKind(mimeType);
@@ -260,29 +308,21 @@ export class UaiChatInputElement extends UmbLitElement {
                     } as UaiInputContent;
                 }),
             );
-            contentParts.push(...mediaParts);
+        } catch (error) {
+            // Put the files back so the user can try again, rather than losing them.
+            this._attachments = [...attachments, ...this._attachments];
+            throw error;
         }
-
-        this.dispatchEvent(
-            new CustomEvent("send", {
-                detail: {
-                    text: this._value,
-                    contentParts,
-                },
-                bubbles: true,
-                composed: true,
-            }),
-        );
+        contentParts.push(...mediaParts);
 
         // Clean up preview URLs
-        for (const attachment of this._attachments) {
+        for (const attachment of attachments) {
             if (attachment.previewUrl) {
                 URL.revokeObjectURL(attachment.previewUrl);
             }
         }
 
-        this._value = "";
-        this._attachments = [];
+        return contentParts;
     }
 
     #readFileAsBase64(file: File): Promise<string> {
@@ -319,7 +359,11 @@ export class UaiChatInputElement extends UmbLitElement {
                             return html`
                                 <div class="attachment-item image-attachment">
                                     <img src=${attachment.previewUrl} alt=${attachment.file.name} />
-                                    <button class="remove-btn" @click=${() => this.#removeAttachment(index)} title="Remove">
+                                    <button
+                                        class="remove-btn"
+                                        @click=${() => this.#removeAttachment(index)}
+                                        title="Remove"
+                                    >
                                         <uui-icon name="icon-wrong"></uui-icon>
                                     </button>
                                 </div>
@@ -344,7 +388,8 @@ export class UaiChatInputElement extends UmbLitElement {
 
     override render() {
         const hasNoAgents = this._agents.length === 0;
-        const acceptTypes = this._allowedExtensions.length > 0 ? this._allowedExtensions.map((e) => `.${e}`).join(",") : "";
+        const acceptTypes =
+            this._allowedExtensions.length > 0 ? this._allowedExtensions.map((e) => `.${e}`).join(",") : "";
 
         return html`
             <div class="input-wrapper">

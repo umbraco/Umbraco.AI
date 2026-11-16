@@ -15,7 +15,7 @@ All paths are under `Umbraco.AI.Agent.Copilot.Workspace/`.
 
 ## Store
 
-- [ ] **T1** - story: S3 (AC1-AC3). Add `RewriteMessagesAsync(Guid conversationId, IReadOnlyList<AIMessage> updates, IReadOnlyList<Guid> deleteIds, CancellationToken)` to the internal `IAIConversationRepository`, and implement it in `src/Umbraco.AI.Agent.Conversations.Persistence/Conversations/EFCoreAIConversationRepository.cs`:
+- [x] **T1** - story: S3 (AC1-AC3). Add `RewriteMessagesAsync(Guid conversationId, IReadOnlyList<AIMessage> updates, IReadOnlyList<Guid> deleteIds, CancellationToken)` to the internal `IAIConversationRepository`, and implement it in `src/Umbraco.AI.Agent.Conversations.Persistence/Conversations/EFCoreAIConversationRepository.cs`:
   - Use one `IEFCoreScope`, following `DeleteMessagesFromAsync`.
   - An update sets only `ContentJson` and `ContentText` on the row with the matching `Id`. `Sequence`, `DateCreated` and the token columns stay as they are.
   - Deletes go by `Id`.

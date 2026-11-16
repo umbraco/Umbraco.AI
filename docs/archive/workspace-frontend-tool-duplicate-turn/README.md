@@ -1,5 +1,7 @@
 # Workspace frontend-tool turn stored once
 
+> **Status:** Shipped 16-11-2026, #755 into `v18/dev` (ported in #756 to `v17/dev` and #757 to `v19/dev`). Nothing left undone.
+
 | File | In one line | Needs you |
 |---|---|---|
 | ✅ [Brief](./BRIEF.md) | Frontend-tool turn stored twice, old chats too | |

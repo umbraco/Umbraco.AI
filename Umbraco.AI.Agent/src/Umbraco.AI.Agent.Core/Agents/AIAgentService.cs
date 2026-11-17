@@ -151,7 +151,7 @@ internal sealed class AIAgentService : IAIAgentService
         // Generate new ID if needed
         if (agent.Id == Guid.Empty)
         {
-            agent.Id = Guid.NewGuid();
+            agent.SetId(Guid.NewGuid());
         }
 
         // Check for alias uniqueness

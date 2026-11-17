@@ -45,6 +45,7 @@ public class GuardrailMapDefinition : IMapDefinition
     {
         return new AIGuardrailRule
         {
+            Id = source.Id,
             EvaluatorId = source.EvaluatorId,
             Name = source.Name
         };
@@ -65,11 +66,10 @@ public class GuardrailMapDefinition : IMapDefinition
         target.Rules = source.Rules.Select(r => context.Map<AIGuardrailRule>(r)!).ToList();
     }
 
-    // Umbraco.Code.MapAll -EvaluatorId -GuardrailName -GuardrailId
+    // Umbraco.Code.MapAll -Id -EvaluatorId -GuardrailName -GuardrailId
     private static void MapRuleFromModel(GuardrailRuleModel source, AIGuardrailRule target, MapperContext context)
     {
-        target.Id = source.Id;
-        // EvaluatorId is set in factory (init-only property)
+        // Id and EvaluatorId are set in factory (init-only properties)
         target.Name = source.Name;
         target.Phase = Enum.TryParse<AIGuardrailPhase>(source.Phase, true, out var phase)
             ? phase

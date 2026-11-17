@@ -1,8 +1,8 @@
 import { customElement, property, state, css, html } from "@umbraco-cms/backoffice/external/lit";
 import { unsafeHTML, repeat } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import { marked } from "@umbraco-cms/backoffice/external/marked";
 import { parseUaiFileUrl, resolveUaiFileObjectUrl } from "@umbraco-ai/agent";
+import { renderChatMarkdown, UAI_HIDDEN_IMAGE_SRC_ATTRIBUTE } from "../utils/markdown.js";
 import type {
     UaiChatMessage,
     UaiInputContent,
@@ -40,6 +40,20 @@ export class UaiChatMessageElement extends UmbLitElement {
 
     /** Server URLs already requested, so a re-render does not refetch. */
     #requestedUrls = new Set<string>();
+
+    /** Outside image URLs in the message text that the user chose to show. */
+    @state()
+    private _shownImageUrls: ReadonlySet<string> = new Set<string>();
+
+    #onMarkdownClick = (event: Event) => {
+        const button = (event.target as Element | null)?.closest(`[${UAI_HIDDEN_IMAGE_SRC_ATTRIBUTE}]`);
+        const src = button?.getAttribute(UAI_HIDDEN_IMAGE_SRC_ATTRIBUTE);
+        if (!src) {
+            return;
+        }
+
+        this._shownImageUrls = new Set([...this._shownImageUrls, src]);
+    };
 
     override disconnectedCallback() {
         super.disconnectedCallback();
@@ -110,8 +124,12 @@ export class UaiChatMessageElement extends UmbLitElement {
             return html`<p>${this.message.content}</p>`;
         }
 
-        const htmlContent = marked.parse(this.message.content) as string;
-        return html`<div class="markdown-content">${unsafeHTML(htmlContent)}</div>`;
+        const markdownHtml = renderChatMarkdown(this.message.content, {
+            shownImageUrls: this._shownImageUrls,
+            hiddenImageLabel: (host) =>
+                this.localize.termOrDefault("uaiChat_showImageFrom", `Show image from ${host}`, host),
+        });
+        return html`<div class="markdown-content" @click=${this.#onMarkdownClick}>${unsafeHTML(markdownHtml)}</div>`;
     }
 
     #renderMediaPart(part: UaiInputContent) {
@@ -272,6 +290,10 @@ export class UaiChatMessageElement extends UmbLitElement {
         .markdown-content img {
             max-width: 100%;
             height: auto;
+        }
+
+        .markdown-content [data-uai-image-src] {
+            margin: var(--uui-size-space-1) 0;
         }
 
         .markdown-content pre {

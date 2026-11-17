@@ -12,7 +12,7 @@ namespace Umbraco.AI.Search.Db.Notifications;
 /// Runs pending EF Core migrations for AI Search at application startup.
 /// </summary>
 internal sealed class RunAISearchMigrationNotificationHandler
-    : INotificationAsyncHandler<UmbracoApplicationStartedNotification>
+    : INotificationAsyncHandler<PostRuntimePremigrationsUpgradeNotification>
 {
     private readonly IConfiguration _configuration;
     private readonly ILogger<RunAISearchMigrationNotificationHandler> _logger;
@@ -27,7 +27,7 @@ internal sealed class RunAISearchMigrationNotificationHandler
 
     /// <inheritdoc />
     public async Task HandleAsync(
-        UmbracoApplicationStartedNotification notification,
+        PostRuntimePremigrationsUpgradeNotification notification,
         CancellationToken cancellationToken)
     {
         try
@@ -68,8 +68,9 @@ internal sealed class RunAISearchMigrationNotificationHandler
         }
         catch (Exception ex)
         {
+            // Log and keep serving: this runs during CMS boot, so rethrowing would stop the whole
+            // site from starting when only Umbraco.AI.Search is affected.
             _logger.LogError(ex, "Failed to run Umbraco.AI.Search database migrations.");
-            throw;
         }
     }
 }

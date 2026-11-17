@@ -166,8 +166,16 @@ describe("UaiStarterPromptsController — Auto mode aggregation", () => {
     });
 
     it("tags entries with their agent name once the merged list spans more than one agent", () => {
-        const agentOne: UaiStarterPromptAgentSource = { id: "a1", name: "Agent One", starterPrompts: [{ prompt: "P1" }] };
-        const agentTwo: UaiStarterPromptAgentSource = { id: "a2", name: "Agent Two", starterPrompts: [{ prompt: "P2" }] };
+        const agentOne: UaiStarterPromptAgentSource = {
+            id: "a1",
+            name: "Agent One",
+            starterPrompts: [{ prompt: "P1" }],
+        };
+        const agentTwo: UaiStarterPromptAgentSource = {
+            id: "a2",
+            name: "Agent Two",
+            starterPrompts: [{ prompt: "P2" }],
+        };
         const { controller } = createHarness(undefined, new BehaviorSubject([agentOne, agentTwo]));
 
         expect(firstValue(controller.starterPrompts$)).toEqual([
@@ -192,7 +200,7 @@ describe("UaiStarterPromptsController — Auto mode aggregation", () => {
         expect(selectAgent).toHaveBeenCalledTimes(1);
         expect(selectAgent).toHaveBeenCalledWith("a1");
         expect(sendUserMessage).toHaveBeenCalledTimes(1);
-        expect(sendUserMessage).toHaveBeenCalledWith("Do the thing");
+        expect(sendUserMessage).toHaveBeenCalledWith("Do the thing", undefined);
     });
 });
 
@@ -208,7 +216,10 @@ describe("starter-prompt pagination helpers", () => {
     });
 
     it("returns the whole list unpaged when it already fits in one page", () => {
-        const entries = [{ prompt: "a", display: "a" }, { prompt: "b", display: "b" }];
+        const entries = [
+            { prompt: "a", display: "a" },
+            { prompt: "b", display: "b" },
+        ];
         expect(getStarterPromptsPage(entries, 0)).toEqual(entries);
     });
 
@@ -234,7 +245,7 @@ describe("UaiStarterPromptsController — sending a starter prompt", () => {
         expect(selectAgent).toHaveBeenCalledTimes(1);
         expect(selectAgent).toHaveBeenCalledWith("a2");
         expect(sendUserMessage).toHaveBeenCalledTimes(1);
-        expect(sendUserMessage).toHaveBeenCalledWith("Do the thing");
+        expect(sendUserMessage).toHaveBeenCalledWith("Do the thing", undefined);
     });
 
     it("does not re-select the agent already selected", () => {
@@ -248,7 +259,27 @@ describe("UaiStarterPromptsController — sending a starter prompt", () => {
 
         expect(selectAgent).not.toHaveBeenCalled();
         expect(sendUserMessage).toHaveBeenCalledTimes(1);
-        expect(sendUserMessage).toHaveBeenCalledWith("Do the thing");
+        expect(sendUserMessage).toHaveBeenCalledWith("Do the thing", undefined);
+    });
+
+    it("sends files waiting in the composer with the prompt", () => {
+        // umbraco/Umbraco.AI#749: a starter click sent only its text, leaving the attached file behind.
+        const { controller, sendUserMessage } = createHarness(undefined);
+        const contentParts = [
+            { type: "text" as const, text: "Summarise the attached datasheet" },
+            {
+                type: "document" as const,
+                source: { type: "data" as const, value: "JVBERi0=", mimeType: "application/pdf" },
+                metadata: { filename: "datasheet.pdf" },
+            },
+        ];
+
+        controller.sendStarterPrompt(
+            { prompt: "Summarise the attached datasheet", display: "Summarise the attached datasheet" },
+            contentParts,
+        );
+
+        expect(sendUserMessage).toHaveBeenCalledWith("Summarise the attached datasheet", contentParts);
     });
 
     it("sends without selecting when the entry carries no agent", () => {
@@ -258,6 +289,6 @@ describe("UaiStarterPromptsController — sending a starter prompt", () => {
 
         expect(selectAgent).not.toHaveBeenCalled();
         expect(sendUserMessage).toHaveBeenCalledTimes(1);
-        expect(sendUserMessage).toHaveBeenCalledWith("Do the thing");
+        expect(sendUserMessage).toHaveBeenCalledWith("Do the thing", undefined);
     });
 });

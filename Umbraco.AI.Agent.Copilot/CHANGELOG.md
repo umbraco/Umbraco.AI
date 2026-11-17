@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Agent.Copilot will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.2.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@18.2.1...Umbraco.AI.Agent.Copilot@18.2.2) (2026-11-17)
+
+### fix
+
+* **agent-ui,copilot,copilot-workspace:** Send attached files with a clicked starter prompt ([e9acba7](https://github.com/umbraco/Umbraco.AI/commit/e9acba7dbf6dfeacbfb0deb0714f637bfe5e9a5c)), closes [#749](https://github.com/umbraco/Umbraco.AI/issues/749)
+
 ## [18.2.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot@18.2.0...Umbraco.AI.Agent.Copilot@18.2.1) (2026-11-11)
 
 ### fix

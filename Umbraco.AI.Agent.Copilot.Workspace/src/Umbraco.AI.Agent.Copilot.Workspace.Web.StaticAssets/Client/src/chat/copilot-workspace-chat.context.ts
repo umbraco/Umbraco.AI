@@ -117,8 +117,8 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
     get starterPrompts$() {
         return this.#starterPrompts.starterPrompts$;
     }
-    sendStarterPrompt(entry: UaiStarterPromptEntry): void {
-        this.#starterPrompts.sendStarterPrompt(entry);
+    sendStarterPrompt(entry: UaiStarterPromptEntry, contentParts?: UaiInputContent[]): void {
+        this.#starterPrompts.sendStarterPrompt(entry, contentParts);
     }
     get toolRendererManager(): UaiToolRendererManager {
         return this.#toolRendererManager;
@@ -137,8 +137,9 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
         this.#agentRepository = new UaiWorkspaceAgentRepository(host);
         this.#hitlContext = new UaiHitlContext(host);
         this.#toolRendererManager = new UaiToolRendererManager(host);
-        this.#strategy = new UaiServerPersistedConversationStrategy(this.#conversationRepository, () =>
-            new Map(this.#agents.getValue().map((agent) => [agent.id, agent.name])),
+        this.#strategy = new UaiServerPersistedConversationStrategy(
+            this.#conversationRepository,
+            () => new Map(this.#agents.getValue().map((agent) => [agent.id, agent.name])),
         );
         const frontendToolManager = new UaiFrontendToolManager(host);
 
@@ -156,7 +157,7 @@ export class UaiCopilotWorkspaceChatContext extends UmbControllerBase implements
             // selected" check and the Auto-mode merge source. No new availability logic.
             availableAgents$: this.#agentRepository.agentItems$,
             selectAgent: (agentId) => this.selectAgent(agentId),
-            sendUserMessage: (content) => this.sendUserMessage(content),
+            sendUserMessage: (content, contentParts) => this.sendUserMessage(content, contentParts),
         });
 
         // Maintain the picker's agent list (with an "Auto" option when >1 agent), keeping the current

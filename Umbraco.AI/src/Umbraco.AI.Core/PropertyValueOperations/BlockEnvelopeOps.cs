@@ -216,36 +216,32 @@ internal static class BlockEnvelopeOps
         layoutObj[layoutKey] = rebuilt;
     }
 
-    /// <summary>Returns the contentTypeKey of the contentData entry with the given key.</summary>
-    public static Guid? FindContentTypeKey(JsonObject envelope, Guid contentKey)
+    /// <summary>
+    /// Returns the contentTypeKey of the block data entry with the given key: a contentData entry
+    /// (matched by contentKey) or, failing that, a settingsData entry (matched by settingsKey).
+    /// </summary>
+    public static Guid? FindBlockContentTypeKey(JsonObject envelope, Guid key)
+        => FindBlockDataEntry(envelope, key) is { } entry ? GetGuid(entry, "contentTypeKey") : null;
+
+    /// <summary>
+    /// Returns the block data entry with the given key (live reference into the envelope). Looks in
+    /// contentData first (matched by contentKey), then settingsData (matched by settingsKey), so a
+    /// path can address a block's settings by its settingsKey.
+    /// </summary>
+    public static JsonObject? FindBlockDataEntry(JsonObject envelope, Guid key)
+        => FindEntryByKey(envelope, ContentDataPropertyName, key)
+            ?? FindEntryByKey(envelope, SettingsDataPropertyName, key);
+
+    private static JsonObject? FindEntryByKey(JsonObject envelope, string arrayPropertyName, Guid key)
     {
-        if (envelope[ContentDataPropertyName] is not JsonArray array)
+        if (envelope[arrayPropertyName] is not JsonArray array)
         {
             return null;
         }
 
         foreach (var entry in array)
         {
-            if (entry is JsonObject obj && GetGuid(obj, "key") == contentKey)
-            {
-                return GetGuid(obj, "contentTypeKey");
-            }
-        }
-
-        return null;
-    }
-
-    /// <summary>Returns the contentData entry with the given key (live reference into the envelope).</summary>
-    public static JsonObject? FindContentDataEntry(JsonObject envelope, Guid contentKey)
-    {
-        if (envelope[ContentDataPropertyName] is not JsonArray array)
-        {
-            return null;
-        }
-
-        foreach (var entry in array)
-        {
-            if (entry is JsonObject obj && GetGuid(obj, "key") == contentKey)
+            if (entry is JsonObject obj && GetGuid(obj, "key") == key)
             {
                 return obj;
             }

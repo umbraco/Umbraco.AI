@@ -11,7 +11,7 @@ namespace Umbraco.AI.Prompt.Persistence.Notifications;
 /// <summary>
 /// Notification handler that runs database migrations on application startup.
 /// </summary>
-internal sealed class RunPromptMigrationNotificationHandler : INotificationAsyncHandler<UmbracoApplicationStartedNotification>
+internal sealed class RunPromptMigrationNotificationHandler : INotificationAsyncHandler<PostRuntimePremigrationsUpgradeNotification>
 {
     private readonly IConfiguration _configuration;
     private readonly ILogger<RunPromptMigrationNotificationHandler> _logger;
@@ -25,7 +25,7 @@ internal sealed class RunPromptMigrationNotificationHandler : INotificationAsync
     }
 
     /// <inheritdoc />
-    public async Task HandleAsync(UmbracoApplicationStartedNotification notification, CancellationToken cancellationToken)
+    public async Task HandleAsync(PostRuntimePremigrationsUpgradeNotification notification, CancellationToken cancellationToken)
     {
         try
         {
@@ -73,8 +73,9 @@ internal sealed class RunPromptMigrationNotificationHandler : INotificationAsync
         }
         catch (Exception ex)
         {
+            // Log and keep serving: this runs during CMS boot, so rethrowing would stop the whole
+            // site from starting when only Umbraco.AI.Prompt is affected.
             _logger.LogError(ex, "Failed to run Umbraco.AI.Prompt database migrations.");
-            throw;
         }
     }
 }

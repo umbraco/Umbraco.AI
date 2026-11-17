@@ -261,7 +261,8 @@ internal sealed class AIAgentFactory : IAIAgentFactory
             // non-persisted surfaces (e.g. contextual Copilot) → MAF defaults, byte-for-byte unchanged.
             // Providers that can store history server-side must run statelessly when this is set (so the
             // service returns no conversation id) — see ContextKeys.ClientManagedChatHistory and the
-            // OpenAI provider. If one doesn't, MAF's default conflict guard surfaces a clear error.
+            // OpenAI and Microsoft Foundry providers. If one doesn't, MAF's default conflict guard
+            // surfaces a clear error.
             ChatHistoryProvider = chatHistoryProvider,
         });
     }

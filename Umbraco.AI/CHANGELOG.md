@@ -5,6 +5,18 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.8.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@18.8.0...Umbraco.AI@18.8.1) (2026-11-17)
+
+### fix
+
+* **core,prompt,agent,conversations,search:** Run database migrations before other packages start ([f51246d](https://github.com/umbraco/Umbraco.AI/commit/f51246dfa552658a06e37e5e2c5ca43eda08a077)), closes [#685](https://github.com/umbraco/Umbraco.AI/issues/685)
+* **core:** Check property values in content and media create/update tools ([9689789](https://github.com/umbraco/Umbraco.AI/commit/968978924fc3ab321b50313377b7c92e7f10cdf3)), closes [#767](https://github.com/umbraco/Umbraco.AI/issues/767)
+* **core:** Reject Multi URL Picker links without a target in set_value ([3fd9457](https://github.com/umbraco/Umbraco.AI/commit/3fd9457f0538e38416ef5879deab8b17e1c25a97)), closes [#746](https://github.com/umbraco/Umbraco.AI/issues/746)
+* **core:** Save AI-added Multi URL Picker links with their target ([7db8d7b](https://github.com/umbraco/Umbraco.AI/commit/7db8d7bc2eab7ea8ac3cb83250950990a28a2315)), closes [#746](https://github.com/umbraco/Umbraco.AI/issues/746)
+* **core:** Save block settings with the configured settings element type ([7200057](https://github.com/umbraco/Umbraco.AI/commit/720005743d793c6901f948eab2d6a04794d32f51)), closes [#747](https://github.com/umbraco/Umbraco.AI/issues/747)
+* **core:** Stop unrecognised property values failing content tools with an object cycle ([9b83576](https://github.com/umbraco/Umbraco.AI/commit/9b83576ed4dd22b7afdd82b9625389a17d4041fb)), closes [#754](https://github.com/umbraco/Umbraco.AI/issues/754)
+* **core:** Tell agents the search tool only finds published content ([62e9bb5](https://github.com/umbraco/Umbraco.AI/commit/62e9bb55fdcb9d399f73fc44df0eebd4d9a85c54))
+
 ## [18.8.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@18.7.0...Umbraco.AI@18.8.0) (2026-11-11)
 
 ### feat

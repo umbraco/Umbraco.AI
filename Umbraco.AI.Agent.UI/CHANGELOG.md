@@ -5,6 +5,17 @@ All notable changes to Umbraco.AI.Agent.UI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.4.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@18.3.1...Umbraco.AI.Agent.UI@18.4.0) (2026-11-17)
+
+### feat
+
+* **agent-ui:** Show images in chat messages with click to load for other sites ([32b2c6b](https://github.com/umbraco/Umbraco.AI/commit/32b2c6b6c82db3d2b9aec90a499404ec98c81dc3))
+
+### fix
+
+* **agent-ui,copilot,copilot-workspace:** Send attached files with a clicked starter prompt ([e9acba7](https://github.com/umbraco/Umbraco.AI/commit/e9acba7dbf6dfeacbfb0deb0714f637bfe5e9a5c)), closes [#749](https://github.com/umbraco/Umbraco.AI/issues/749)
+* **agent-ui:** Sanitize rendered markdown in chat messages ([0036101](https://github.com/umbraco/Umbraco.AI/commit/00361017318d35301c44f2f965b07d72c4158b0f))
+
 ## [18.3.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.UI@18.3.0...Umbraco.AI.Agent.UI@18.3.1) (2026-11-11)
 
 ### fix

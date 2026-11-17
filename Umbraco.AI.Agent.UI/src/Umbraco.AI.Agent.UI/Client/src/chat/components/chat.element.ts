@@ -10,7 +10,7 @@ import {
     createRef,
 } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
-import type { UaiChatMessage, UaiAgentState } from "../types/index.js";
+import type { UaiChatMessage, UaiAgentState, UaiInputContent } from "../types/index.js";
 import { UAI_CHAT_CONTEXT, type UaiChatContextApi, type UaiStarterPromptEntry } from "../context.js";
 import type { PendingApproval } from "../services/hitl.context.js";
 import { isNearBottom } from "../utils/scroll.js";
@@ -111,8 +111,13 @@ export class UaiChatElement extends UmbLitElement {
         });
     }
 
-    #handleStarterPromptSelect(e: CustomEvent<UaiStarterPromptEntry>) {
-        this.#chatContext?.sendStarterPrompt?.(e.detail);
+    async #handleStarterPromptSelect(e: CustomEvent<UaiStarterPromptEntry>) {
+        // Files waiting in the composer go with the starter, as they would with a typed message.
+        const input = this.shadowRoot?.querySelector("uai-chat-input") as
+            | (HTMLElement & { takeAttachmentContentParts?: (text: string) => Promise<UaiInputContent[] | undefined> })
+            | null;
+        const contentParts = await input?.takeAttachmentContentParts?.(e.detail.prompt);
+        this.#chatContext?.sendStarterPrompt?.(e.detail, contentParts);
     }
 
     #handleSendMessage(e: CustomEvent<{ text: string; contentParts?: import("../types/index.js").UaiInputContent[] }>) {

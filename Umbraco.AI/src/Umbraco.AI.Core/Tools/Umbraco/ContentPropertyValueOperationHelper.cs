@@ -28,7 +28,7 @@ public record UmbracoPropertyPathSegmentArg(
     [property: Description("Set this when the segment identifies a property by alias (e.g. 'contentBlocks'). Leave null when BlockKey is set instead.")]
     string? Alias,
 
-    [property: Description("Set this when the segment identifies a block within a collection property, by its key (from a prior add_umbraco_content_item call). Leave null when Alias is set instead.")]
+    [property: Description("Set this when the segment identifies a block within a collection property, by its key (a contentKey from get_umbraco_content or a prior add_umbraco_content_item call). Use the block's settingsKey instead to reach its settings properties. Leave null when Alias is set instead.")]
     Guid? BlockKey);
 
 /// <summary>
@@ -292,6 +292,53 @@ internal static class ContentPropertyValueOperationHelper
             default:
                 return JsonSerializer.SerializeToNode(value);
         }
+    }
+
+    /// <summary>
+    /// Checks whole property values the way <c>set_umbraco_content_value</c> does, for tools that save
+    /// them straight to <see cref="IContentEditingService"/>. Each value goes through the dispatcher as a
+    /// set_value, so the property's handler can reject a value the CMS would otherwise save broken
+    /// (e.g. a Multi URL Picker link with no target). An alias the content type doesn't have is left
+    /// for the CMS to report, as before. Handlers are given no current value (<c>null</c>): this checks
+    /// the new value on its own, as a whole-value replacement.
+    /// </summary>
+    /// <returns>The first problem found, or <c>null</c> when every value can be saved.</returns>
+    internal static async Task<string?> ValidatePropertyValuesAsync(
+        IAIPropertyValueDispatcher dispatcher,
+        Guid contentTypeKey,
+        ContentVariation contentTypeVariations,
+        string? culture,
+        IReadOnlyDictionary<string, JsonElement>? propertyValues,
+        CancellationToken cancellationToken)
+    {
+        if (propertyValues is null || propertyValues.Count == 0)
+        {
+            return null;
+        }
+
+        var documentMetadata = new AIDocumentMetadata(
+            contentTypeKey,
+            [culture is not null ? new AIVariantId(culture, null) : AIVariantId.Invariant],
+            contentTypeVariations.HasFlag(ContentVariation.Culture),
+            contentTypeVariations.HasFlag(ContentVariation.Segment));
+
+        foreach (var (alias, value) in propertyValues)
+        {
+            var request = new AIPropertyValueDispatchRequest(
+                [new AIPropertyPathSegment.PropertyAliasSegment(alias)],
+                AIPropertyOperation.SetValue,
+                new JsonObject { ["value"] = JsonSerializer.SerializeToNode(value) },
+                RootValue: null,
+                documentMetadata);
+
+            var result = await dispatcher.DispatchAsync(request, cancellationToken);
+            if (!result.Success && result.Error!.Code != AIPropertyValueOperationError.Codes.PropertyNotFound)
+            {
+                return $"The value for '{alias}' was not saved: {result.Error.Message}";
+            }
+        }
+
+        return null;
     }
 
     /// <summary>

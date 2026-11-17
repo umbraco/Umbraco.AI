@@ -1,6 +1,8 @@
 using System.Text.Json.Nodes;
+
 using Umbraco.AI.Core.PropertyValueOperations;
 using Umbraco.AI.Core.PropertyValueOperations.Handlers;
+
 using CmsConstants = Umbraco.Cms.Core.Constants;
 
 namespace Umbraco.AI.Tests.Unit.PropertyValueOperations;
@@ -127,5 +129,20 @@ public class SingleEditorHandlerTests
         await Should.ThrowAsync<InvalidOperationException>(async () =>
             await new SingleUrlPickerPropertyValueHandler().SetItemPropertyValueAsync(
                 existing, key, "type", JsonValue.Create("media"), variantId: null, null!));
+    }
+
+    [Fact]
+    public void SingleUrlPicker_ValidateSetValue_RejectsMoreThanOneLink()
+    {
+        var value = new JsonArray
+        {
+            new JsonObject { ["type"] = "external", ["url"] = "https://example.com" },
+            new JsonObject { ["type"] = "external", ["url"] = "https://example.org" },
+        };
+
+        var result = new SingleUrlPickerPropertyValueHandler().ValidateSetValue(null, value, null!);
+
+        result.IsValid.ShouldBeFalse();
+        result.Error!.Message.ShouldContain("at most 1 link", Case.Sensitive);
     }
 }

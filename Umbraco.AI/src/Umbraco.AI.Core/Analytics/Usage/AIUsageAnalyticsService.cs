@@ -21,6 +21,10 @@ internal sealed class AIUsageAnalyticsService : IAIUsageAnalyticsService
         => _reader.GetStatisticsAsync(from, to, granularity, filter, ct);
 
     /// <inheritdoc />
+    public async Task<AIUsageStatisticsCoverage?> GetStatisticsCoverageAsync(CancellationToken ct = default)
+        => await _reader.GetCoverageAsync(ct);
+
+    /// <inheritdoc />
     public async Task<AIUsageSummary> GetSummaryAsync(
         DateTime from,
         DateTime to,

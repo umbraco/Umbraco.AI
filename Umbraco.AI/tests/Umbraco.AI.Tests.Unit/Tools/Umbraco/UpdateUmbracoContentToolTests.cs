@@ -1,7 +1,10 @@
 using System.Text.Json;
 
 using Moq;
+
 using Shouldly;
+
+using Umbraco.AI.Core.PropertyValueOperations;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Tools.Umbraco;
 using Umbraco.Cms.Core;
@@ -21,6 +24,7 @@ public class UpdateUmbracoContentToolTests
     private readonly Mock<IContentEditingService> _contentEditingServiceMock;
     private readonly Mock<IUmbracoWriteAuthorizer> _authorizerMock;
     private readonly Mock<ITemplateService> _templateServiceMock;
+    private readonly Mock<IAIPropertyValueDispatcher> _dispatcherMock;
     private readonly IAITool _tool;
 
     public UpdateUmbracoContentToolTests()
@@ -28,7 +32,11 @@ public class UpdateUmbracoContentToolTests
         _contentEditingServiceMock = new Mock<IContentEditingService>();
         _authorizerMock = new Mock<IUmbracoWriteAuthorizer>();
         _templateServiceMock = new Mock<ITemplateService>();
-        _tool = new UpdateUmbracoContentTool(_contentEditingServiceMock.Object, _authorizerMock.Object, new PropertyEditorCollection(new DataEditorCollection(() => [])), Mock.Of<IJsonSerializer>(), _templateServiceMock.Object);
+        _dispatcherMock = new Mock<IAIPropertyValueDispatcher>();
+        _dispatcherMock
+            .Setup(x => x.DispatchAsync(It.IsAny<AIPropertyValueDispatchRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AIPropertyValueDispatchResult.Ok(null));
+        _tool = new UpdateUmbracoContentTool(_contentEditingServiceMock.Object, _authorizerMock.Object, new PropertyEditorCollection(new DataEditorCollection(() => [])), Mock.Of<IJsonSerializer>(), _templateServiceMock.Object, _dispatcherMock.Object);
     }
 
     private static Mock<IContent> CreateContentMock(Guid key, string name, string contentTypeAlias, IEnumerable<IProperty>? properties = null)
@@ -295,6 +303,70 @@ public class UpdateUmbracoContentToolTests
         var property = capturedModel!.Properties.Single(p => p.Alias == "excludeFromBreadcrumb");
         property.Value.ShouldBeOfType<bool>();
         property.Value.ShouldBe(true);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PropertyValueRejectedByItsHandler_ReturnsErrorWithoutSaving()
+    {
+        // umbraco/Umbraco.AI#767: a Multi URL Picker link with no target was saved pointing nowhere,
+        // because this tool skipped the set_value check set_umbraco_content_value runs.
+        var key = Guid.NewGuid();
+        var args = new UpdateUmbracoContentArgs(key, null, new Dictionary<string, JsonElement>
+        {
+            ["links"] = JsonDocument.Parse("""[{"type":"internal","url":"/features/"}]""").RootElement,
+        });
+
+        _authorizerMock
+            .Setup(x => x.AuthorizeContentAsync(ActionUpdate.ActionLetter, key, null))
+            .ReturnsAsync(UmbracoWriteAuthorizationResult.Allowed(Guid.NewGuid()));
+        _contentEditingServiceMock
+            .Setup(x => x.GetAsync(key))
+            .ReturnsAsync(CreateContentMock(key, "Existing Name", "page").Object);
+        _dispatcherMock
+            .Setup(x => x.DispatchAsync(
+                It.Is<AIPropertyValueDispatchRequest>(r => r.Operation == AIPropertyOperation.SetValue),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AIPropertyValueDispatchResult.Fail(new AIPropertyValueOperationError(
+                AIPropertyValueOperationError.Codes.SchemaMismatch, "Link 0 has type 'internal'.")));
+
+        var result = await _tool.ExecuteAsync(args, CancellationToken.None);
+
+        var typed = result.ShouldBeOfType<UpdateUmbracoContentResult>();
+        typed.Success.ShouldBeFalse();
+        typed.Message.ShouldBe("The value for 'links' was not saved: Link 0 has type 'internal'.");
+        _contentEditingServiceMock.Verify(
+            x => x.UpdateAsync(It.IsAny<Guid>(), It.IsAny<ContentUpdateModel>(), It.IsAny<Guid>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PropertyNotOnContentType_LeavesTheErrorToTheCms()
+    {
+        var userKey = Guid.NewGuid();
+        var key = Guid.NewGuid();
+        var args = new UpdateUmbracoContentArgs(key, null, new Dictionary<string, JsonElement>
+        {
+            ["noSuchProperty"] = JsonDocument.Parse("\"x\"").RootElement,
+        });
+
+        _authorizerMock
+            .Setup(x => x.AuthorizeContentAsync(ActionUpdate.ActionLetter, key, null))
+            .ReturnsAsync(UmbracoWriteAuthorizationResult.Allowed(userKey));
+        _contentEditingServiceMock
+            .Setup(x => x.GetAsync(key))
+            .ReturnsAsync(CreateContentMock(key, "Existing Name", "page").Object);
+        _dispatcherMock
+            .Setup(x => x.DispatchAsync(It.IsAny<AIPropertyValueDispatchRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AIPropertyValueDispatchResult.Fail(new AIPropertyValueOperationError(
+                AIPropertyValueOperationError.Codes.PropertyNotFound, "Could not resolve.")));
+        _contentEditingServiceMock
+            .Setup(x => x.UpdateAsync(key, It.IsAny<ContentUpdateModel>(), userKey))
+            .ReturnsAsync(Attempt<ContentUpdateResult, ContentEditingOperationStatus>.Fail(
+                ContentEditingOperationStatus.PropertyTypeNotFound, new ContentUpdateResult()));
+
+        var result = await _tool.ExecuteAsync(args, CancellationToken.None);
+
+        result.ShouldBeOfType<UpdateUmbracoContentResult>().Success.ShouldBeFalse();
+        _contentEditingServiceMock.Verify(x => x.UpdateAsync(key, It.IsAny<ContentUpdateModel>(), userKey), Times.Once);
     }
 
     [Fact]

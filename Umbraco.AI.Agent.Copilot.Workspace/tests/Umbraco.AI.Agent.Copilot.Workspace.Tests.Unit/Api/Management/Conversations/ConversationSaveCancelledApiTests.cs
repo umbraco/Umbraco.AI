@@ -142,7 +142,7 @@ public class ConversationSaveCancelledApiTests
             var accessor = new Mock<IBackOfficeSecurityAccessor>();
             accessor.Setup(x => x.BackOfficeSecurity).Returns(security.Object);
 
-            Service = new AIConversationService(repository.Object, Mock.Of<IAIFileStore>(), accessor.Object, aggregator.Object);
+            Service = new AIConversationService(repository.Object, Mock.Of<IAIFileStore>(), accessor.Object, aggregator.Object, Umbraco.AI.Agent.Copilot.Workspace.Tests.Unit.Conversations.ResentTurnFixtures.Repairer(repository.Object));
 
             Mapper = new UmbracoMapper(
                 new MapDefinitionCollection(() => new IMapDefinition[]

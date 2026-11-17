@@ -3,6 +3,7 @@ using System.Text.Json;
 
 using Microsoft.Extensions.DependencyInjection;
 
+using Umbraco.AI.Core.PropertyValueOperations;
 using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.Cms.Core.Actions;
 using Umbraco.Cms.Core.DependencyInjection;
@@ -41,10 +42,31 @@ public class UpdateUmbracoContentTool(
     IUmbracoWriteAuthorizer authorizer,
     PropertyEditorCollection propertyEditors,
     IJsonSerializer jsonSerializer,
-    ITemplateService templateService)
+    ITemplateService templateService,
+    IAIPropertyValueDispatcher dispatcher)
     : AIToolBase<UpdateUmbracoContentArgs>
 {
     private readonly ContentEditorValueReader _valueReader = new(propertyEditors, jsonSerializer);
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UpdateUmbracoContentTool"/> class.
+    /// </summary>
+    [Obsolete("Use the constructor that accepts an IAIPropertyValueDispatcher. Will be removed in v20")]
+    public UpdateUmbracoContentTool(
+        IContentEditingService contentEditingService,
+        IUmbracoWriteAuthorizer authorizer,
+        PropertyEditorCollection propertyEditors,
+        IJsonSerializer jsonSerializer,
+        ITemplateService templateService)
+        : this(
+            contentEditingService,
+            authorizer,
+            propertyEditors,
+            jsonSerializer,
+            templateService,
+            StaticServiceProvider.Instance.GetRequiredService<IAIPropertyValueDispatcher>())
+    {
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UpdateUmbracoContentTool"/> class.
@@ -112,6 +134,13 @@ public class UpdateUmbracoContentTool(
         if (!ContentPropertyValueOperationHelper.TryResolveCulture(existing, args.Culture, out var culture, out var cultureError))
         {
             return new UpdateUmbracoContentResult(false, null, cultureError);
+        }
+
+        var validationError = await ContentPropertyValueOperationHelper.ValidatePropertyValuesAsync(
+            dispatcher, existing.ContentType.Key, existing.ContentType.Variations, culture, args.PropertyValues, cancellationToken);
+        if (validationError is not null)
+        {
+            return new UpdateUmbracoContentResult(false, null, validationError);
         }
 
         var explicitAliases = (args.PropertyValues ?? []).Keys.ToHashSet();

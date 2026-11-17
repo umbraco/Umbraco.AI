@@ -19,6 +19,11 @@ internal interface IAIUsageStatisticsReader
         CancellationToken ct);
 
     /// <summary>
+    /// Gets where the aggregation jobs have got to: the one place the daily/hourly split line is worked out.
+    /// </summary>
+    Task<AIUsageStatisticsCoverage> GetCoverageAsync(CancellationToken ct);
+
+    /// <summary>
     /// Gets statistics for a range summed per hour (or per key of a dimension) at the finest resolution still
     /// held: hourly rows and raw records wherever they exist, and daily rows only for the older days whose
     /// hourly rows have been cleaned up. The summing happens in the database.
@@ -129,6 +134,15 @@ internal sealed class AIUsageStatisticsReader : IAIUsageStatisticsReader
     }
 
     /// <inheritdoc />
+    public async Task<AIUsageStatisticsCoverage> GetCoverageAsync(CancellationToken ct)
+        => new()
+        {
+            FirstHourlyPeriod = await _statisticsRepository.GetFirstAggregatedHourlyPeriodAsync(ct),
+            LastHourlyPeriod = await _statisticsRepository.GetLastAggregatedHourlyPeriodAsync(ct),
+            LastDailyPeriod = await _statisticsRepository.GetLastAggregatedDailyPeriodAsync(ct),
+        };
+
+    /// <inheritdoc />
     public async Task<AIUsageLayeredTotals> GetTotalsAsync(
         DateTime from,
         DateTime to,
@@ -136,23 +150,14 @@ internal sealed class AIUsageStatisticsReader : IAIUsageStatisticsReader
         bool hourlyOnly,
         CancellationToken ct)
     {
-        var firstHourlyPeriod = await _statisticsRepository.GetFirstAggregatedHourlyPeriodAsync(ct);
-        var lastHourlyPeriod = await _statisticsRepository.GetLastAggregatedHourlyPeriodAsync(ct);
-        var lastDailyPeriod = await _statisticsRepository.GetLastAggregatedDailyPeriodAsync(ct);
+        var coverage = await GetCoverageAsync(ct);
+        var lastHourlyPeriod = coverage.LastHourlyPeriod;
 
         // Daily rows serve only the days before the oldest retained hour (the day it falls in is rolled
         // up already, so is whole in its daily row) and only the days the rollup job has completed.
         // Hourly rows and raw records serve everything from there on.
         // When only hours are wanted there is no daily layer: every hour still held is served from its hourly row.
-        var dailyBoundary = DateTime.MinValue;
-        if (!hourlyOnly && lastDailyPeriod is { } lastDaily)
-        {
-            dailyBoundary = lastDaily.AddDays(1);
-            if (firstHourlyPeriod is { } firstHourly)
-            {
-                dailyBoundary = Earliest(dailyBoundary, CeilingToDay(firstHourly));
-            }
-        }
+        var dailyBoundary = (hourlyOnly ? null : coverage.DailyBoundary) ?? DateTime.MinValue;
 
         // A UTC day belongs to the range when its midday does.
         var daily = await GetDailyTotalsAsync(
@@ -324,11 +329,5 @@ internal sealed class AIUsageStatisticsReader : IAIUsageStatisticsReader
     {
         var hour = GetHourStart(timestamp);
         return hour < timestamp ? hour.AddHours(1) : hour;
-    }
-
-    private static DateTime CeilingToDay(DateTime timestamp)
-    {
-        var day = GetDayStart(timestamp);
-        return day < timestamp ? day.AddDays(1) : day;
     }
 }

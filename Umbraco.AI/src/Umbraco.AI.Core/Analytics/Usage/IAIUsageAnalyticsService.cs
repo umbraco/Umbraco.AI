@@ -95,6 +95,28 @@ public interface IAIUsageAnalyticsService
         DateTime to,
         AIUsagePeriod? requestedGranularity = null,
         CancellationToken ct = default);
+
+    /// <summary>
+    /// Gets where usage statistics switch from daily rows to hourly rows, so a caller can bucket usage into
+    /// days in its own time zone the same way the Usage tab does.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Umbraco.AI's own implementation always returns an instance. When no rows are aggregated yet, its
+    /// <see cref="AIUsageStatisticsCoverage.DailyBoundary"/> is null, meaning there is no daily layer: read
+    /// every day from hourly statistics.
+    /// </para>
+    /// <para>
+    /// This is a default interface member, so existing implementations keep compiling. The default returns
+    /// null, meaning the implementation does not report coverage, which is not the same as having no daily
+    /// layer. A caller must then fall back to its own approach. An implementation that stores daily rows
+    /// should override this member.
+    /// </para>
+    /// </remarks>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The coverage of the stored statistics, or null when the implementation does not report it.</returns>
+    Task<AIUsageStatisticsCoverage?> GetStatisticsCoverageAsync(CancellationToken ct = default)
+        => Task.FromResult<AIUsageStatisticsCoverage?>(null);
 }
 
 /// <summary>

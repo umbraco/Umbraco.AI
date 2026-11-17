@@ -19,6 +19,7 @@ import {
     UaiStarterPromptsController,
     type UaiChatContextApi,
     type UaiStarterPromptEntry,
+    type UaiInputContent,
 } from "@umbraco-ai/agent-ui";
 import { UaiCopilotAgentRepository } from "./repository";
 import type { UaiCopilotAgentItem } from "./types.js";
@@ -120,8 +121,8 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
         return this.#starterPrompts.starterPrompts$;
     }
 
-    sendStarterPrompt(entry: UaiStarterPromptEntry): void {
-        this.#starterPrompts.sendStarterPrompt(entry);
+    sendStarterPrompt(entry: UaiStarterPromptEntry, contentParts?: UaiInputContent[]): void {
+        this.#starterPrompts.sendStarterPrompt(entry, contentParts);
     }
 
     // ─── Tool Management ───────────────────────────────────────────────────────
@@ -210,7 +211,7 @@ export class UaiCopilotContext extends UmbControllerBase implements UaiChatConte
             // real agent selected" check and the Auto-mode merge source. No new availability logic.
             availableAgents$: this.#agentRepository.agentItems$,
             selectAgent: (agentId) => this.selectAgent(agentId),
-            sendUserMessage: (content) => this.sendUserMessage(content),
+            sendUserMessage: (content, contentParts) => this.sendUserMessage(content, contentParts),
         });
 
         this.observe(this.#agentRepository.agentItems$, (agents) => {

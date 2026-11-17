@@ -16,17 +16,20 @@ internal sealed class AIConversationService : IAIConversationService
     private readonly IAIFileStore _fileStore;
     private readonly IBackOfficeSecurityAccessor _backOfficeSecurityAccessor;
     private readonly IEventAggregator _eventAggregator;
+    private readonly AIRepeatedTurnRepairer _repeatedTurnRepairer;
 
     public AIConversationService(
         IAIConversationRepository repository,
         IAIFileStore fileStore,
         IBackOfficeSecurityAccessor backOfficeSecurityAccessor,
-        IEventAggregator eventAggregator)
+        IEventAggregator eventAggregator,
+        AIRepeatedTurnRepairer repeatedTurnRepairer)
     {
         _repository = repository;
         _fileStore = fileStore;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
         _eventAggregator = eventAggregator;
+        _repeatedTurnRepairer = repeatedTurnRepairer;
     }
 
     public async Task<AIConversation?> GetConversationAsync(Guid id, CancellationToken cancellationToken = default)
@@ -143,7 +146,11 @@ internal sealed class AIConversationService : IAIConversationService
         CancellationToken cancellationToken = default)
     {
         await GetOwnedOrThrowAsync(conversationId, cancellationToken);
-        return await _repository.GetMessagesPagedAsync(conversationId, skip, take, cancellationToken);
+
+        // A repeat can span pages, so the repair reads the whole chat (it writes nothing when there is no repeat)
+        // and the page is cut from those rows, so a display read is one load.
+        var history = await _repeatedTurnRepairer.RepairRepeatedTurnsAsync(conversationId, cancellationToken);
+        return (history.Rows.Skip(skip).Take(take).ToList(), history.Rows.Count);
     }
 
     public async Task<string?> GetLastUserMessageTextAsync(Guid conversationId, CancellationToken cancellationToken = default)

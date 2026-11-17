@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Prompt will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.4.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@17.4.1...Umbraco.AI.Prompt@17.4.2) (2026-11-17)
+
+### fix
+
+* **core,prompt,agent,conversations,search:** Run database migrations before other packages start ([56914bc](https://github.com/umbraco/Umbraco.AI/commit/56914bc9e93965d450b1046d1b283512ec54cd6d)), closes [#685](https://github.com/umbraco/Umbraco.AI/issues/685)
+
 ## [17.4.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Prompt@17.4.0...Umbraco.AI.Prompt@17.4.1) (2026-11-03)
 
 ### Internal

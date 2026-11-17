@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Search will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.0.7](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Search@17.0.6...Umbraco.AI.Search@17.0.7) (2026-11-17)
+
+### fix
+
+* **core,prompt,agent,conversations,search:** Run database migrations before other packages start ([56914bc](https://github.com/umbraco/Umbraco.AI/commit/56914bc9e93965d450b1046d1b283512ec54cd6d)), closes [#685](https://github.com/umbraco/Umbraco.AI/issues/685)
+
 ## [17.0.6](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Search@17.0.5...Umbraco.AI.Search@17.0.6) (2026-11-03)
 
 ### Internal

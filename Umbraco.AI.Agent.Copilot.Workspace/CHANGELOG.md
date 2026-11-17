@@ -5,6 +5,16 @@ All notable changes to Umbraco.AI.Agent.Copilot.Workspace will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.3.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot.Workspace@17.3.1...Umbraco.AI.Agent.Copilot.Workspace@17.3.2) (2026-11-17)
+
+### fix
+
+* **agent-ui,copilot,copilot-workspace:** Send attached files with a clicked starter prompt ([6fd3ebe](https://github.com/umbraco/Umbraco.AI/commit/6fd3ebedb78a23e026e4ed9cd77e591c5c8d6076)), closes [#769](https://github.com/umbraco/Umbraco.AI/issues/769) [#749](https://github.com/umbraco/Umbraco.AI/issues/749)
+* **conversations:** Repair a repeated frontend-tool turn in old chats ([ed4f970](https://github.com/umbraco/Umbraco.AI/commit/ed4f9702c6b8683f28142a8777e6f2eaa53160e8))
+* **conversations:** Store a resent frontend-tool turn once ([a0d5a42](https://github.com/umbraco/Umbraco.AI/commit/a0d5a42f830c273cdc2e674d10f6e6bb089f24e0)), closes [#375](https://github.com/umbraco/Umbraco.AI/issues/375)
+* **copilot-workspace:** Keep attachments on later turns by using the conversation id as thread id ([d1eb398](https://github.com/umbraco/Umbraco.AI/commit/d1eb39822bf99d148ef76455ec47248246f140ac)), closes [#750](https://github.com/umbraco/Umbraco.AI/issues/750) [#748](https://github.com/umbraco/Umbraco.AI/issues/748)
+* **core,prompt,agent,conversations,search:** Run database migrations before other packages start ([56914bc](https://github.com/umbraco/Umbraco.AI/commit/56914bc9e93965d450b1046d1b283512ec54cd6d)), closes [#685](https://github.com/umbraco/Umbraco.AI/issues/685)
+
 ## [17.3.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot.Workspace@17.3.0...Umbraco.AI.Agent.Copilot.Workspace@17.3.1) (2026-11-11)
 
 ### fix

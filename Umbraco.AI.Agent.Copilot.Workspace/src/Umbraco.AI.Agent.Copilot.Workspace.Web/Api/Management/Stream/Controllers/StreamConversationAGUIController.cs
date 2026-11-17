@@ -144,6 +144,12 @@ public class StreamConversationAGUIController : CopilotWorkspaceStreamController
             });
         }
 
+        // The conversation id is the AG-UI threadId (threadId := conversationId): uploaded files are
+        // stored under the run's threadId, while history rehydration, conversation delete and the file
+        // lifecycle provider all look them up by conversation id. The client sends its own random
+        // threadId, so pin it to the route id rather than trusting the client value (#748).
+        request.ThreadId = id.ToString();
+
         // Tool metadata travels inline via AGUITool.Metadata per AG-UI spec — computed once and reused
         // both for the (possible) auto-selection input and the eventual run.
         var frontendTools = _toolConverter.ConvertToFrontendTools(request.Tools);

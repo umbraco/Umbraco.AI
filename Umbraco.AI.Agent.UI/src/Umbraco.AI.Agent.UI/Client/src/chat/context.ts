@@ -60,7 +60,8 @@ export interface UaiChatContextApi extends UmbContextMinimal {
 
     /** Observable for the agent resolved in auto mode (contains agent info from agent_selected event). */
     readonly resolvedAgent$: Observable<
-        { agentId: string; agentName: string; agentAlias: string; selectorId?: string; reason?: string | null } | undefined
+        | { agentId: string; agentName: string; agentAlias: string; selectorId?: string; reason?: string | null }
+        | undefined
     >;
 
     /** Tool renderer manager for manifest/element lookup. */
@@ -93,8 +94,10 @@ export interface UaiChatContextApi extends UmbContextMinimal {
      * Optional handler for clicking a starter-prompt chip: pins the conversation to the entry's agent
      * (if any) via {@link selectAgent}, then sends its prompt via {@link sendUserMessage} -- the same
      * path as typing, so a server-persisted surface's pending-first-message flow stays intact.
+     * `contentParts` carries files waiting in the composer, shaped as for {@link sendUserMessage}. The
+     * composer has already handed them over, so pass them on or they are lost.
      */
-    sendStarterPrompt?(entry: UaiStarterPromptEntry): void;
+    sendStarterPrompt?(entry: UaiStarterPromptEntry, contentParts?: UaiInputContent[]): void;
 }
 
 /**

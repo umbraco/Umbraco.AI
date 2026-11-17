@@ -1,7 +1,10 @@
 using System.Text.Json;
 
 using Moq;
+
 using Shouldly;
+
+using Umbraco.AI.Core.PropertyValueOperations;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Tools.Umbraco;
 using Umbraco.Cms.Core;
@@ -17,6 +20,7 @@ public class CreateUmbracoMediaToolTests
     private readonly Mock<IMediaEditingService> _mediaEditingServiceMock;
     private readonly Mock<IMediaTypeService> _mediaTypeServiceMock;
     private readonly Mock<IUmbracoWriteAuthorizer> _authorizerMock;
+    private readonly Mock<IAIPropertyValueDispatcher> _dispatcherMock;
     private readonly IAITool _tool;
 
     public CreateUmbracoMediaToolTests()
@@ -24,7 +28,11 @@ public class CreateUmbracoMediaToolTests
         _mediaEditingServiceMock = new Mock<IMediaEditingService>();
         _mediaTypeServiceMock = new Mock<IMediaTypeService>();
         _authorizerMock = new Mock<IUmbracoWriteAuthorizer>();
-        _tool = new CreateUmbracoMediaTool(_mediaEditingServiceMock.Object, _mediaTypeServiceMock.Object, _authorizerMock.Object);
+        _dispatcherMock = new Mock<IAIPropertyValueDispatcher>();
+        _dispatcherMock
+            .Setup(x => x.DispatchAsync(It.IsAny<AIPropertyValueDispatchRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AIPropertyValueDispatchResult.Ok(null));
+        _tool = new CreateUmbracoMediaTool(_mediaEditingServiceMock.Object, _mediaTypeServiceMock.Object, _authorizerMock.Object, _dispatcherMock.Object);
     }
 
     private static Mock<IMedia> CreateMediaMock(Guid key, string name, string mediaTypeAlias)

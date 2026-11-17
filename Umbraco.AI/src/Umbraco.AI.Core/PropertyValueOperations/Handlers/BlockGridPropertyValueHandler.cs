@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+
 using Umbraco.Cms.Core.Services;
 
 namespace Umbraco.AI.Core.PropertyValueOperations.Handlers;
@@ -41,7 +42,7 @@ public sealed class BlockGridPropertyValueHandler : BlockEditorHandlerBase
                 Details: new JsonObject { ["unsupportedFields"] = new JsonArray(args.Extra.Select(kvp => (JsonNode?)kvp.Key).ToArray()) }));
         }
 
-        return AIValidationResult.Valid;
+        return base.ValidateAddItem(value, args, context);
     }
 
     /// <inheritdoc />

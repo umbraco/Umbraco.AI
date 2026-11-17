@@ -14,5 +14,7 @@ export default {
         // Plain-text twin of approvalConfirmPhraseLabel for the input's accessible name -- a screen
         // reader shouldn't hear literal "<strong>" tag text.
         approvalConfirmPhraseLabelPlain: "Type '%0%' to confirm",
+        // Button shown in place of an image from another site, until the user chooses to load it.
+        showImageFrom: "Show image from %0%",
     },
 } as UmbLocalizationDictionary;

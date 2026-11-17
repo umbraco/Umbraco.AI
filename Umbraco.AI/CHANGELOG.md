@@ -5,6 +5,18 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [17.8.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.8.0...Umbraco.AI@17.8.1) (2026-11-17)
+
+### fix
+
+* **core,prompt,agent,conversations,search:** Run database migrations before other packages start ([56914bc](https://github.com/umbraco/Umbraco.AI/commit/56914bc9e93965d450b1046d1b283512ec54cd6d)), closes [#685](https://github.com/umbraco/Umbraco.AI/issues/685)
+* **core:** Check property values in content and media create/update tools ([15b1b57](https://github.com/umbraco/Umbraco.AI/commit/15b1b5735fd92b70c24565051ee7d74b0971ae1d)), closes [#768](https://github.com/umbraco/Umbraco.AI/issues/768) [#767](https://github.com/umbraco/Umbraco.AI/issues/767)
+* **core:** Reject Multi URL Picker links without a target in set_value ([b885819](https://github.com/umbraco/Umbraco.AI/commit/b885819e26bc3845f24afb03bcba76224c8dd4c5)), closes [#763](https://github.com/umbraco/Umbraco.AI/issues/763) [#764](https://github.com/umbraco/Umbraco.AI/issues/764) [#746](https://github.com/umbraco/Umbraco.AI/issues/746)
+* **core:** Save AI-added Multi URL Picker links with their target ([0ac8e07](https://github.com/umbraco/Umbraco.AI/commit/0ac8e072a9e6dd7e092380efb1e11531f4f7065b)), closes [#746](https://github.com/umbraco/Umbraco.AI/issues/746)
+* **core:** Save block settings with the configured settings element type ([5997a27](https://github.com/umbraco/Umbraco.AI/commit/5997a2797e591178f412cfefbf76aa0a77c6e808)), closes [#774](https://github.com/umbraco/Umbraco.AI/issues/774) [#747](https://github.com/umbraco/Umbraco.AI/issues/747)
+* **core:** Stop unrecognised property values failing content tools with an object cycle ([35dd734](https://github.com/umbraco/Umbraco.AI/commit/35dd73431fc0561e41c1f3ad64a37ef1ffa335c7)), closes [#754](https://github.com/umbraco/Umbraco.AI/issues/754) [#760](https://github.com/umbraco/Umbraco.AI/issues/760)
+* **core:** Tell agents the search tool only finds published content ([a3414b8](https://github.com/umbraco/Umbraco.AI/commit/a3414b86bf92f99ddeaf3eb0fad451a61a2dd1e7))
+
 ## [17.8.0](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@17.7.0...Umbraco.AI@17.8.0) (2026-11-11)
 
 ### feat

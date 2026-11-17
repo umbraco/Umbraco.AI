@@ -1,7 +1,10 @@
 using System.Text.Json;
 
 using Moq;
+
 using Shouldly;
+
+using Umbraco.AI.Core.PropertyValueOperations;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Tools.Umbraco;
 using Umbraco.Cms.Core;
@@ -18,13 +21,18 @@ public class UpdateUmbracoMediaToolTests
 {
     private readonly Mock<IMediaEditingService> _mediaEditingServiceMock;
     private readonly Mock<IUmbracoWriteAuthorizer> _authorizerMock;
+    private readonly Mock<IAIPropertyValueDispatcher> _dispatcherMock;
     private readonly IAITool _tool;
 
     public UpdateUmbracoMediaToolTests()
     {
         _mediaEditingServiceMock = new Mock<IMediaEditingService>();
         _authorizerMock = new Mock<IUmbracoWriteAuthorizer>();
-        _tool = new UpdateUmbracoMediaTool(_mediaEditingServiceMock.Object, _authorizerMock.Object, new PropertyEditorCollection(new DataEditorCollection(() => [])), Mock.Of<IJsonSerializer>());
+        _dispatcherMock = new Mock<IAIPropertyValueDispatcher>();
+        _dispatcherMock
+            .Setup(x => x.DispatchAsync(It.IsAny<AIPropertyValueDispatchRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AIPropertyValueDispatchResult.Ok(null));
+        _tool = new UpdateUmbracoMediaTool(_mediaEditingServiceMock.Object, _authorizerMock.Object, new PropertyEditorCollection(new DataEditorCollection(() => [])), Mock.Of<IJsonSerializer>(), _dispatcherMock.Object);
     }
 
     private static Mock<IMedia> CreateMediaMock(Guid key, string name, string mediaTypeAlias, IEnumerable<IProperty>? properties = null)
@@ -107,6 +115,35 @@ public class UpdateUmbracoMediaToolTests
         _mediaEditingServiceMock.Verify(
             x => x.UpdateAsync(It.IsAny<Guid>(), It.IsAny<MediaUpdateModel>(), It.IsAny<Guid>()),
             Times.Never);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PropertyValueRejectedByItsHandler_ReturnsErrorWithoutSaving()
+    {
+        // umbraco/Umbraco.AI#767: media property values skipped the set_value check too.
+        var key = Guid.NewGuid();
+        var args = new UpdateUmbracoMediaArgs(key, null, new Dictionary<string, JsonElement>
+        {
+            ["links"] = JsonDocument.Parse("""[{"type":"media","name":"Logo"}]""").RootElement,
+        });
+        _authorizerMock
+            .Setup(x => x.AuthorizeMediaAsync(key))
+            .ReturnsAsync(UmbracoWriteAuthorizationResult.Allowed(Guid.NewGuid()));
+        _mediaEditingServiceMock
+            .Setup(x => x.GetAsync(key))
+            .ReturnsAsync(CreateMediaMock(key, "Logo", "Image").Object);
+        _dispatcherMock
+            .Setup(x => x.DispatchAsync(It.IsAny<AIPropertyValueDispatchRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AIPropertyValueDispatchResult.Fail(new AIPropertyValueOperationError(
+                AIPropertyValueOperationError.Codes.SchemaMismatch, "Link 0 is a media link without 'unique'.")));
+
+        var result = await _tool.ExecuteAsync(args, CancellationToken.None);
+
+        var typed = result.ShouldBeOfType<UpdateUmbracoMediaResult>();
+        typed.Success.ShouldBeFalse();
+        typed.Message!.ShouldContain("'links'");
+        _mediaEditingServiceMock.Verify(
+            x => x.UpdateAsync(It.IsAny<Guid>(), It.IsAny<MediaUpdateModel>(), It.IsAny<Guid>()), Times.Never);
     }
 
     [Fact]

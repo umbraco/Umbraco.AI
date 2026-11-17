@@ -3,6 +3,7 @@ import type { UmbControllerHost } from "@umbraco-cms/backoffice/controller-api";
 import { Observable, combineLatest, map } from "rxjs";
 import type { UaiStarterPrompt } from "@umbraco-ai/agent";
 import type { UaiStarterPromptEntry } from "../context.js";
+import type { UaiInputContent } from "../types/index.js";
 
 /**
  * Chip window size: how many entries {@link getStarterPromptsPage} returns per page, and (not
@@ -73,7 +74,7 @@ export interface UaiStarterPromptsControllerConfig {
     selectAgent(agentId: string): void;
 
     /** Sends the prompt through the same path as typing, so pending-first-message flows stay intact. */
-    sendUserMessage(content: string): void | Promise<void>;
+    sendUserMessage(content: string, contentParts?: UaiInputContent[]): void | Promise<void>;
 }
 
 /**
@@ -105,12 +106,14 @@ export class UaiStarterPromptsController extends UmbControllerBase {
     /**
      * Pins the entry's agent (if it differs from the one already selected) and sends its prompt --
      * mirroring the "click chip" flow: pin, then send via the exact same path as typing.
+     * @param entry - The clicked starter.
+     * @param contentParts - Files waiting in the composer, sent with the prompt.
      */
-    sendStarterPrompt(entry: UaiStarterPromptEntry): void {
+    sendStarterPrompt(entry: UaiStarterPromptEntry, contentParts?: UaiInputContent[]): void {
         if (entry.agentId && entry.agentId !== this.#currentAgentId) {
             this.#config.selectAgent(entry.agentId);
         }
-        void this.#config.sendUserMessage(entry.prompt);
+        void this.#config.sendUserMessage(entry.prompt, contentParts);
     }
 
     /**

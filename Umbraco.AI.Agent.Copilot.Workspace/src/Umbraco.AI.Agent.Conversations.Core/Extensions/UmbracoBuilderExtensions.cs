@@ -32,12 +32,14 @@ public static class UmbracoBuilderExtensions
         // the persistence layer) and file store (registered by Umbraco.AI.Agent) are resolved lazily.
         // Registered via a factory because the provider's constructor takes the internal
         // IAIConversationRepository.
+        builder.Services.AddSingleton<AIRepeatedTurnRepairer>();
         builder.Services.AddSingleton(sp =>
             new ConversationChatHistoryProvider(
                 sp.GetRequiredService<IAIConversationRepository>(),
                 sp.GetRequiredService<IAIFileStore>(),
                 sp.GetRequiredService<IAIRuntimeContextAccessor>(),
-                sp.GetRequiredService<ILogger<ConversationChatHistoryProvider>>()));
+                sp.GetRequiredService<ILogger<ConversationChatHistoryProvider>>(),
+                sp.GetRequiredService<AIRepeatedTurnRepairer>()));
 
         // Ownership-enforcing services over the internal repositories (repos registered by the
         // persistence layer). Controllers and the stream endpoint go through these, never the repos.

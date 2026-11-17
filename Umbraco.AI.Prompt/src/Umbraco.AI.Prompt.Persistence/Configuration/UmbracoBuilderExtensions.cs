@@ -35,7 +35,7 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<IAIPromptRepository, EFCoreAIPromptRepository>();
 
         // Register migration notification handler
-        builder.AddNotificationAsyncHandler<UmbracoApplicationStartedNotification, RunPromptMigrationNotificationHandler>();
+        builder.AddNotificationAsyncHandler<PostRuntimePremigrationsUpgradeNotification, RunPromptMigrationNotificationHandler>();
 
         return builder;
     }

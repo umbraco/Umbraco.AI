@@ -1,0 +1,13 @@
+{
+    "$schema": "https://raw.githubusercontent.com/umbraco/Umbraco.CMS.Backoffice/main/umbraco-package-schema.json",
+    "id": "Umbraco.AI.Prompt.Deploy",
+    "name": "Umbraco AI Prompt Deploy",
+    "extensions": [
+        {
+            "type": "backofficeEntryPoint",
+            "alias": "Umbraco.AI.Prompt.Deploy.EntryPoint",
+            "name": "Umbraco AI Prompt Deploy Entry Point",
+            "js": "/App_Plugins/UmbracoAIPromptDeploy/umbraco-ai-prompt-deploy.js"
+        }
+    ]
+}

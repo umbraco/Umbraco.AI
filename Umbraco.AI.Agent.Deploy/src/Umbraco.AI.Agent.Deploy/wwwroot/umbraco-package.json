@@ -1,0 +1,13 @@
+{
+    "$schema": "https://raw.githubusercontent.com/umbraco/Umbraco.CMS.Backoffice/main/umbraco-package-schema.json",
+    "id": "Umbraco.AI.Agent.Deploy",
+    "name": "Umbraco AI Agent Deploy",
+    "extensions": [
+        {
+            "type": "backofficeEntryPoint",
+            "alias": "Umbraco.AI.Agent.Deploy.EntryPoint",
+            "name": "Umbraco AI Agent Deploy Entry Point",
+            "js": "/App_Plugins/UmbracoAIAgentDeploy/umbraco-ai-agent-deploy.js"
+        }
+    ]
+}

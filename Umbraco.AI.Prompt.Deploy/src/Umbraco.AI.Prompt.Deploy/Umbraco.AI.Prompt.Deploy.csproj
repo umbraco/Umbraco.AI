@@ -1,9 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.Razor">
   <PropertyGroup>
     <TargetFramework>net11.0</TargetFramework>
     <Nullable>enable</Nullable>
     <Title>Umbraco AI Prompt Deploy</Title>
     <Description>Umbraco Deploy support for Umbraco.AI.Prompt</Description>
+    <StaticWebAssetBasePath>App_Plugins/UmbracoAIPromptDeploy</StaticWebAssetBasePath>
+    <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
   </PropertyGroup>
 
   <!-- Use project references for local dev, NuGet packages for CI -->

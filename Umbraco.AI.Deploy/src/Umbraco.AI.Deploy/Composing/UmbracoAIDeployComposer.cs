@@ -6,7 +6,6 @@ using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Deploy.Configuration;
 using Umbraco.AI.Deploy.NotificationHandlers;
-using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Deploy.Infrastructure;
@@ -14,7 +13,7 @@ using Umbraco.Deploy.Infrastructure;
 namespace Umbraco.AI.Deploy.Composing;
 
 /// <summary>
-/// Composer for Umbraco AI Deploy integration, responsible for registering services, UDI types, and notification handlers to manage AI-related artifacts during deployment.
+/// Composer for Umbraco AI Deploy integration, responsible for registering services, Deploy entity types, and notification handlers to manage AI-related artifacts during deployment.
 /// </summary>
 public class UmbracoAIDeployComposer : IComposer
 {
@@ -26,10 +25,6 @@ public class UmbracoAIDeployComposer : IComposer
             .Bind(builder.Config.GetSection("Umbraco:AI:Deploy"));
 
         builder.Services.AddSingleton<UmbracoAIDeploySettingsAccessor>();
-
-        // Register component for UDI type registration
-        builder.Components()
-            .Append<UmbracoAIDeployComponent>();
 
         // Disk entity types are serialized to UDA files
         builder.Services.Configure<DeployEntityTypesOptions>(options => options

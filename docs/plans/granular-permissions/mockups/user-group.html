@@ -1,0 +1,139 @@
+<!doctype html>
+<!--
+  User group editor (CMS screen, Users section) with the new "AI" permissions box.
+  Built from editor.html. The CMS draws this box itself from the package's
+  entityUserPermission manifests; the package adds no UI of its own here.
+  Layout copied from Umbraco-CMS release-18.3.2: user-group-details-workspace-view.element.ts
+  (grid 1fr 350px), user-group-entity-type-permission-groups.element.ts (one box per entity
+  type), input-entity-user-permission.element.ts (one property row per meta.group),
+  input-user-permission-verb.element.ts (toggle + bold name + small description).
+-->
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Mockup: User group with AI permissions</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@umbraco-ui/uui@2/dist/themes/light.css">
+	<link rel="stylesheet" href="_mockup.css">
+	<link rel="stylesheet" href="granular-permissions.css">
+	<script type="module" src="_mockup.js"></script>
+</head>
+<body class="uui-font uui-text">
+	<header class="app-header">
+		<span class="logo">Umbraco</span>
+		<uui-tab-group class="sections">
+			<uui-tab label="Content">Content</uui-tab>
+			<uui-tab label="Media">Media</uui-tab>
+			<uui-tab label="Settings">Settings</uui-tab>
+			<uui-tab label="AI">AI</uui-tab>
+			<uui-tab label="Users" active>Users</uui-tab>
+		</uui-tab-group>
+		<div class="apps">
+			<uui-button look="primary" compact label="Search"><uui-icon name="icon-search"></uui-icon></uui-button>
+			<uui-button look="primary" compact label="Help"><uui-icon name="icon-help-alt"></uui-icon></uui-button>
+			<uui-button look="primary" compact label="User"><uui-avatar name="Matt Brailsford"></uui-avatar></uui-button>
+		</div>
+	</header>
+
+	<div class="section">
+		<nav class="section-sidebar">
+			<h3>Users</h3> <!-- mockup-ok: editor.html starter section-sidebar heading -->
+			<uui-menu-item label="Users">
+				<uui-icon slot="icon" name="icon-user"></uui-icon>
+			</uui-menu-item>
+			<uui-menu-item label="User groups" active>
+				<uui-icon slot="icon" name="icon-users"></uui-icon>
+			</uui-menu-item>
+		</nav>
+
+		<main class="section-main">
+			<div class="body-layout">
+				<div class="header">
+					<div class="header-content workspace-header">
+						<uui-button compact class="back" label="Back"><uui-icon name="icon-arrow-left"></uui-icon></uui-button>
+						<uui-icon class="entity-icon" name="icon-users"></uui-icon>
+						<uui-input class="name" label="Name" value="AI content team"></uui-input>
+					</div>
+				</div>
+
+				<div class="main">
+					<!-- Replace from here -->
+					<div class="user-group-main">
+						<div class="stack">
+							<uui-box headline="Assign access">
+								<div class="property">
+									<div><uui-label>Sections</uui-label></div>
+									<div class="picker">
+										<uui-ref-list>
+											<uui-ref-node name="Content"><uui-icon slot="icon" name="icon-document"></uui-icon></uui-ref-node>
+											<uui-ref-node name="AI"><uui-icon slot="icon" name="icon-wand"></uui-icon></uui-ref-node>
+										</uui-ref-list>
+										<uui-button class="choose" look="placeholder" label="Choose">Choose</uui-button>
+									</div>
+								</div>
+							</uui-box>
+
+							<uui-box headline="AI">
+								<div class="property">
+									<div><uui-label>Configuration</uui-label></div>
+									<div>
+										<div class="permission-verb"><uui-toggle label="Manage connections"><div class="meta"><div class="name">Manage connections</div><small>Create, edit and delete connections to AI providers</small></div></uui-toggle></div>
+										<div class="permission-verb"><uui-toggle label="Manage profiles"><div class="meta"><div class="name">Manage profiles</div><small>Create, edit and delete profiles</small></div></uui-toggle></div>
+										<div class="permission-verb"><uui-toggle label="Manage contexts" checked><div class="meta"><div class="name">Manage contexts</div><small>Create, edit and delete contexts</small></div></uui-toggle></div>
+										<div class="permission-verb"><uui-toggle label="Manage knowledge sets" checked><div class="meta"><div class="name">Manage knowledge sets</div><small>Create, edit and delete knowledge sets</small></div></uui-toggle></div>
+										<div class="permission-verb"><uui-toggle label="Manage guardrails"><div class="meta"><div class="name">Manage guardrails</div><small>Create, edit and delete guardrails</small></div></uui-toggle></div>
+										<div class="permission-verb"><uui-toggle label="Manage settings"><div class="meta"><div class="name">Manage settings</div><small>Change the settings of the AI section</small></div></uui-toggle></div>
+									</div>
+								</div>
+								<div class="property">
+									<div><uui-label>Monitoring</uui-label></div>
+									<div>
+										<div class="permission-verb"><uui-toggle label="View logs"><div class="meta"><div class="name">View logs</div><small>See the AI audit log, including prompts and responses</small></div></uui-toggle></div>
+										<div class="permission-verb"><uui-toggle label="View analytics" checked><div class="meta"><div class="name">View analytics</div><small>See AI usage and token analytics</small></div></uui-toggle></div>
+										<div class="permission-verb"><uui-toggle label="Manage tests" checked><div class="meta"><div class="name">Manage tests</div><small>Create, edit, delete and run tests</small></div></uui-toggle></div>
+									</div>
+								</div>
+								<div class="property">
+									<div><uui-label>Add-ons</uui-label></div>
+									<div>
+										<div class="permission-verb"><uui-toggle label="Manage agents" checked><div class="meta"><div class="name">Manage agents</div><small>Create, edit and delete agents, including agents limited to other groups</small></div></uui-toggle></div>
+										<div class="permission-verb"><uui-toggle label="Manage prompts" checked><div class="meta"><div class="name">Manage prompts</div><small>Create, edit and delete prompts, including prompts limited to other groups</small></div></uui-toggle></div>
+									</div>
+								</div>
+							</uui-box>
+
+							<uui-box headline="Document">
+								<div class="property">
+									<div><uui-label>General</uui-label></div>
+									<div>
+										<div class="permission-verb"><uui-toggle label="Read" checked><div class="meta"><div class="name">Read</div><small>Allow access to read a Document</small></div></uui-toggle></div>
+										<div class="permission-verb"><uui-toggle label="Create" checked><div class="meta"><div class="name">Create</div><small>Allow access to create a Document</small></div></uui-toggle></div>
+									</div>
+								</div>
+							</uui-box>
+						</div>
+
+						<uui-box headline="Users">
+							<uui-ref-list>
+								<uui-ref-node name="Sofie Jensen" detail="sofie.jensen@example.dk"><uui-avatar slot="icon" name="Sofie Jensen"></uui-avatar></uui-ref-node>
+								<uui-ref-node name="Mikkel Andersen-Holmgaard" detail="mikkel.andersen-holmgaard@example.dk"><uui-avatar slot="icon" name="Mikkel Andersen-Holmgaard"></uui-avatar></uui-ref-node>
+							</uui-ref-list>
+							<uui-button class="choose" look="placeholder" label="Choose">Choose</uui-button>
+						</uui-box>
+					</div>
+					<!-- Replace to here -->
+				</div>
+
+				<div class="footer">
+					<uui-breadcrumbs>
+						<uui-breadcrumb-item href="#">User groups</uui-breadcrumb-item>
+						<uui-breadcrumb-item last-item>AI content team</uui-breadcrumb-item>
+					</uui-breadcrumbs>
+					<div class="actions">
+						<uui-button look="primary" color="positive" label="Save">Save</uui-button>
+					</div>
+				</div>
+			</div>
+		</main>
+	</div>
+</body>
+</html>

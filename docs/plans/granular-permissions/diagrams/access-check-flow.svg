@@ -1,0 +1,234 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="560" viewBox="0 0 960 560">
+  <style id="theme"><![CDATA[
+/* Diagram styles: the neutral theme (colour variables, light and dark), then the shapes that use them. */
+svg {
+  --font: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --stroke-width: 1px;
+  --bg: #ffffff; --text: #0f172a; --muted: #475569; --edge: #334155;
+  --zone-fill: none; --zone-stroke: #94a3b8;
+  --node-fill: #f8fafc; --node-stroke: #475569; --decision-fill: #f8fafc;
+  --store-fill: #eef2ff; --store-lid: #e0e7ff; --store-stroke: #4f46e5;
+  --ok-fill: #f0fdf4; --ok-stroke: #16a34a; --ok-text: #14532d;
+  --fail-fill: #fef2f2; --fail-stroke: #dc2626; --fail-text: #7f1d1d;
+  --new-fill: #fff7ed; --new-stroke: #ea580c; --new-text: #c2410c;
+  --table-head: #eef2ff; --table-head-text: #1e1b4b; --table-row-alt: #f8fafc;
+  --pk: #c2410c; --fk: #4f46e5;
+}
+@media (prefers-color-scheme: dark) {
+  svg {
+    /* GitHub's dark greys, so diagrams match the page they sit on */
+    --bg: #0d1117; --text: #e6edf3; --muted: #9198a1; --edge: #9198a1;
+    --zone-stroke: #3d444d;
+    --node-fill: #161b22; --node-stroke: #656c76; --decision-fill: #161b22;
+    --store-fill: #161d2e; --store-lid: #1f2840; --store-stroke: #8c95c9;
+    --ok-fill: #12261e; --ok-stroke: #4fb36b; --ok-text: #8fd9a5;
+    --fail-fill: #25171c; --fail-stroke: #e05d5d; --fail-text: #f0a0a0;
+    --new-fill: #161b22; --new-stroke: #f0883e; --new-text: #ffb77c;
+    --table-head: #21262d; --table-head-text: #e6edf3; --table-row-alt: #1c2128;
+    --pk: #ffb77c; --fk: #9fa8da;
+  }
+}
+
+svg { font-family: var(--font); font-size: 13px; }
+.bg { fill: var(--bg); }
+
+/* Regions: a dashed box grouping nodes by where they run */
+.zone { fill: var(--zone-fill); stroke: var(--zone-stroke); stroke-dasharray: 6 4; }
+.zone-title { fill: var(--muted); font-size: 12px; font-weight: 600; }
+.zone-note { fill: var(--muted); font-size: 11px; }
+
+/* Nodes: a g.node (plus .store, .decision, .ok, .fail or .new) holding a .shape and its texts */
+.node .shape { fill: var(--node-fill); stroke: var(--node-stroke); stroke-width: var(--stroke-width); }
+.node .title { fill: var(--text); font-weight: 600; text-anchor: middle; }
+.node .sub { fill: var(--muted); font-size: 12px; text-anchor: middle; }
+.node.store .shape { fill: var(--store-fill); stroke: var(--store-stroke); }
+.node.store .lid { fill: var(--store-lid); stroke: var(--store-stroke); stroke-width: var(--stroke-width); }
+.node.decision .shape { fill: var(--decision-fill); }
+.node.ok .shape { fill: var(--ok-fill); stroke: var(--ok-stroke); }
+.node.ok .title, .node.ok .sub { fill: var(--ok-text); }
+.node.fail .shape { fill: var(--fail-fill); stroke: var(--fail-stroke); }
+.node.fail .title, .node.fail .sub { fill: var(--fail-text); }
+.node.new .shape { fill: var(--new-fill); stroke: var(--new-stroke); stroke-width: calc(var(--stroke-width) + 1px); }
+.node.new .title, .node.new .sub, .node .new-text { fill: var(--new-text); }
+
+/* Tables (data models): a g.table holding .shape, .head, .row-alt, and .col/.type/.pk/.fk texts */
+.table .shape { fill: var(--node-fill); stroke: var(--node-stroke); stroke-width: var(--stroke-width); }
+.table .head { fill: var(--table-head); stroke: var(--node-stroke); stroke-width: var(--stroke-width); }
+.table .head-text { fill: var(--table-head-text); font-weight: 600; font-size: 14px; }
+.table .row-alt { fill: var(--table-row-alt); }
+.table .col { fill: var(--text); }
+.table .col.keycol { font-weight: 600; }
+.table .type { fill: var(--muted); font-size: 12px; text-anchor: end; }
+.table .pk { fill: var(--pk); font-size: 11px; font-weight: 700; }
+.table .fk { fill: var(--fk); font-size: 11px; font-weight: 700; }
+
+/* Connectors */
+.edge { fill: none; stroke: var(--edge); stroke-width: 1.5px; }
+.edge.new { stroke: var(--new-stroke); stroke-width: 2px; }
+.edge-label { fill: var(--muted); font-size: 11px; }
+.edge-label.new { fill: var(--new-text); font-weight: 600; }
+.arrowhead { fill: var(--edge); }
+.arrowhead.new { fill: var(--new-stroke); }
+
+/* Legend chip */
+.legend .shape { fill: var(--new-fill); stroke: var(--new-stroke); }
+.legend text { fill: var(--new-text); font-size: 11px; font-weight: 600; text-anchor: middle; }
+.footnote { fill: var(--muted); font-size: 11px; }
+
+
+/* Sequence diagrams: .actor boxes on top (use .node), .lifeline down from each, .activation bars */
+.lifeline { stroke: var(--zone-stroke); stroke-width: 1px; stroke-dasharray: 4 4; fill: none; }
+.activation { fill: var(--node-fill); stroke: var(--node-stroke); stroke-width: var(--stroke-width); }
+.edge.return, .edge.dashed { stroke-dasharray: 5 4; }
+
+/* State diagrams: states are .node with a large rx; .start is a filled dot, .end a ringed dot */
+.start { fill: var(--text); }
+.end { fill: var(--bg); stroke: var(--text); stroke-width: 1.5px; }
+.end-dot { fill: var(--text); }
+
+/* Layered architecture: .band is a solid row behind a layer's nodes, .band-title names it */
+.band { fill: var(--table-row-alt); stroke: var(--zone-stroke); stroke-width: 1px; }
+.band-title { fill: var(--muted); font-size: 12px; font-weight: 600; }
+
+/* Notes and section headings */
+.note .shape { fill: var(--table-row-alt); stroke: var(--zone-stroke); stroke-dasharray: 3 3; }
+.note text { fill: var(--muted); font-size: 11px; }
+.heading { fill: var(--text); font-size: 15px; font-weight: 700; }
+.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12px; }
+.edge-label.center { text-anchor: middle; }
+.edge-label.end { text-anchor: end; }
+
+/* Charts: axes, gridlines, bars (.before/.after or plain), line series and their points */
+.axis { stroke: var(--muted); stroke-width: 1px; fill: none; }
+.gridline { stroke: var(--zone-stroke); stroke-width: 1px; stroke-dasharray: 2 3; fill: none; }
+.axis-label { fill: var(--muted); font-size: 11px; }
+.axis-title { fill: var(--muted); font-size: 12px; font-weight: 600; }
+.value-label { fill: var(--text); font-size: 11px; font-weight: 600; }
+.bar { fill: var(--store-lid); stroke: var(--store-stroke); stroke-width: 1px; }
+.bar.before { fill: var(--zone-stroke); stroke: var(--node-stroke); }
+.bar.after { fill: var(--store-lid); stroke: var(--store-stroke); }
+.bar.new { fill: var(--new-fill); stroke: var(--new-stroke); }
+.series { fill: none; stroke: var(--store-stroke); stroke-width: 2px; }
+.series.alt { stroke: var(--new-stroke); }
+.series.muted { stroke: var(--node-stroke); stroke-dasharray: 5 4; }
+.point { fill: var(--bg); stroke: var(--store-stroke); stroke-width: 2px; }
+.point.alt { stroke: var(--new-stroke); }
+.threshold { stroke: var(--fail-stroke); stroke-width: 1.5px; stroke-dasharray: 6 4; fill: none; }
+.threshold-label { fill: var(--fail-text); font-size: 11px; font-weight: 600; }
+.swatch { stroke-width: 1px; }
+.point.muted { stroke: var(--node-stroke); }
+
+/* Highlight one path through the diagram. Not the same as .new, which means "new in this change". */
+.node.focus .shape { stroke: var(--store-stroke); stroke-width: calc(var(--stroke-width) + 1px); }
+.edge.focus { stroke: var(--store-stroke); stroke-width: 2.5px; }
+.edge-label.focus { fill: var(--store-stroke); font-weight: 600; }
+
+/* A part that exists but does nothing here: skipped on this server, unused by this screen */
+.node.inactive .shape { fill: none; stroke-dasharray: 4 3; }
+.node.inactive .title, .node.inactive .sub { fill: var(--muted); font-weight: 400; }
+
+/* Left-aligned text inside a node or note, for lists and trees */
+.node .left, .note .left { text-anchor: start; }
+
+/* Numbered badges that tie matching parts together (before/after, steps) */
+.badge { fill: var(--text); }
+.badge-text { fill: var(--bg); font-size: 10px; font-weight: 700; text-anchor: middle; }
+
+/* Divider between columns, legend labels, and sequence-diagram alt/opt frames */
+.divider { fill: none; stroke: var(--zone-stroke); stroke-width: 1px; stroke-dasharray: 4 4; }
+.legend-label { fill: var(--muted); font-size: 11px; }
+.frame { fill: none; stroke: var(--node-stroke); stroke-width: 1px; }
+.frame-tag { fill: var(--node-fill); stroke: var(--node-stroke); stroke-width: 1px; }
+.frame-tag-text { fill: var(--text); font-size: 11px; font-weight: 700; }
+.guard { fill: var(--muted); font-size: 11px; font-style: italic; }
+
+]]></style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path class="arrowhead" d="M0,0 L10,5 L0,10 z"/>
+    </marker>
+    <marker id="arrow-new" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path class="arrowhead new" d="M0,0 L10,5 L0,10 z"/>
+    </marker>
+  </defs>
+  <rect class="bg" width="960" height="560"/>
+
+  <g class="legend">
+    <rect class="shape" x="700" y="16" width="240" height="24" rx="12"/>
+    <text x="820" y="32">Highlighted = new or changed</text>
+  </g>
+
+  <!-- Row 1: who asks -->
+  <g class="node">
+    <rect class="shape" x="20" y="56" width="280" height="52" rx="6"/>
+    <text class="title" x="160" y="78">Management API change</text>
+    <text class="sub" x="160" y="96">create, update, delete in an AI area</text>
+  </g>
+  <g class="node">
+    <rect class="shape" x="340" y="56" width="280" height="52" rx="6"/>
+    <text class="title" x="480" y="78">List, pick or run</text>
+    <text class="sub" x="480" y="96">Copilot, pickers, agent run, prompt execute</text>
+  </g>
+  <g class="node">
+    <rect class="shape" x="660" y="56" width="280" height="52" rx="6"/>
+    <text class="title" x="800" y="78">Automate "Run agent" step</text>
+    <text class="sub" x="800" y="96">run, publish check, step picker</text>
+  </g>
+
+  <!-- Row 2: where it is checked -->
+  <g class="node new">
+    <rect class="shape" x="20" y="176" width="280" height="52" rx="6"/>
+    <text class="title" x="160" y="198">AIPermissionAuthorizationHandler</text>
+    <text class="sub" x="160" y="216">one policy per right</text>
+  </g>
+  <g class="node new">
+    <rect class="shape" x="340" y="176" width="280" height="52" rx="6"/>
+    <text class="title" x="480" y="198">IAIAgentService / IAIPromptService</text>
+    <text class="sub" x="480" y="216">filter lists, refuse runs</text>
+  </g>
+  <g class="node">
+    <rect class="shape" x="660" y="176" width="280" height="52" rx="6"/>
+    <text class="title" x="800" y="198">IWorkspaceServiceAccountResolver</text>
+    <text class="sub" x="800" y="216">Automate: the workspace's user</text>
+  </g>
+
+  <path class="edge" d="M160,108 V176" marker-end="url(#arrow)"/>
+  <text class="edge-label" x="168" y="146">policy</text>
+  <path class="edge" d="M480,108 V176" marker-end="url(#arrow)"/>
+  <text class="edge-label" x="488" y="146">current user</text>
+  <path class="edge" d="M800,108 V176" marker-end="url(#arrow)"/>
+  <text class="edge-label" x="808" y="146">workspace id</text>
+  <path class="edge new" d="M660,202 H620" marker-end="url(#arrow-new)"/>
+  <text class="edge-label center" x="640" y="150">service account's</text>
+  <text class="edge-label center" x="640" y="166">group keys</text>
+
+  <!-- Row 3: the one checker -->
+  <g class="node new">
+    <rect class="shape" x="100" y="300" width="440" height="70" rx="6"/>
+    <text class="title" x="320" y="322">AIPermissionService (internal, Umbraco.AI.Core)</text>
+    <text class="sub" x="320" y="342">HasPermission(user's groups, right)</text>
+    <text class="sub" x="320" y="359">CanUse(allowed group keys, user's group keys)</text>
+  </g>
+  <path class="edge new" d="M160,228 V300" marker-end="url(#arrow-new)"/>
+  <path class="edge new" d="M480,228 V300" marker-end="url(#arrow-new)"/>
+
+  <!-- Row 4: where the data lives -->
+  <g class="node store">
+    <path class="shape" d="M60,440 v52 a160,8 0 0 0 320,0 v-52"/>
+    <ellipse class="lid" cx="220" cy="440" rx="160" ry="8"/>
+    <text class="title" x="220" y="470">umbracoUserGroup2Permission</text>
+    <text class="sub" x="220" y="488">CMS: each group's rights</text>
+  </g>
+  <g class="node store new">
+    <path class="shape" d="M560,440 v52 a160,8 0 0 0 320,0 v-52"/>
+    <ellipse class="lid" cx="720" cy="440" rx="160" ry="8"/>
+    <text class="title" x="720" y="470">AllowedUserGroupIds</text>
+    <text class="sub" x="720" y="488">JSON column on agent and prompt</text>
+  </g>
+  <path class="edge" d="M220,370 V432" marker-end="url(#arrow)"/>
+  <text class="edge-label" x="228" y="406">read via IUser.Groups</text>
+  <path class="edge" d="M590,228 V438" marker-end="url(#arrow)"/>
+  <text class="edge-label" x="598" y="300">reads the item's groups</text>
+
+  <text class="footnote" x="20" y="540">Automate checks the agent itself before running, so the run log gets a clear reason; the service also refuses it.</text>
+</svg>

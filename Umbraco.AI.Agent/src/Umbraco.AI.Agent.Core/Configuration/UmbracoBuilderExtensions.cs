@@ -63,6 +63,12 @@ public static class UmbracoBuilderExtensions
         // Prevent deletion of profiles referenced by agents
         builder.AddNotificationAsyncHandler<AIProfileDeletingNotification, AIProfileDeletingAgentNotificationHandler>();
 
+        // PROOF OF CONCEPT ONLY: MCP client (shared-account sign-in + tool source).
+        builder.Services.Configure<McpPoc.McpPocOptions>(builder.Config.GetSection(McpPoc.McpPocOptions.SectionName));
+        builder.Services.AddHttpClient(McpPoc.McpPocConstants.HttpClientName);
+        builder.Services.AddSingleton<McpPoc.IMcpPocSignInService, McpPoc.McpPocSignInService>();
+        builder.Services.AddSingleton<McpPoc.IMcpPocToolSource, McpPoc.McpPocToolSource>();
+
         // Register agent factory (scoped - depends on scoped IAIChatService)
         builder.Services.AddSingleton<IAIAgentFactory, AIAgentFactory>();
 

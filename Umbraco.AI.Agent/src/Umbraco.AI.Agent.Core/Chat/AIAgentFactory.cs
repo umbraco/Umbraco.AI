@@ -36,6 +36,7 @@ internal sealed class AIAgentFactory : IAIAgentFactory
     private readonly AIAgentWorkflowCollection _workflowCollection;
     private readonly AIAgentSurfaceCollection _surfaceCollection;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
+    private readonly McpPoc.IMcpPocToolSource? _mcpPocToolSource;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIAgentFactory"/> class.
@@ -50,9 +51,11 @@ internal sealed class AIAgentFactory : IAIAgentFactory
         IAIFunctionFactory functionFactory,
         AIAgentWorkflowCollection workflowCollection,
         AIAgentSurfaceCollection surfaceCollection,
-        IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
+        IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null,
+        McpPoc.IMcpPocToolSource? mcpPocToolSource = null)
     {
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
+        _mcpPocToolSource = mcpPocToolSource;
         _runtimeContextScopeProvider = runtimeContextScopeProvider ?? throw new ArgumentNullException(nameof(runtimeContextScopeProvider));
         _contextContributors = contextContributors ?? throw new ArgumentNullException(nameof(contextContributors));
         _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
@@ -202,6 +205,14 @@ internal sealed class AIAgentFactory : IAIAgentFactory
                 AIApprovalPolicy.DenyApprovalRequired => new ApprovalDeniedAIFunction(fn),
                 _ => new ApprovalDeniedAIFunction(fn),
             });
+        }
+
+        // PROOF OF CONCEPT ONLY: tools from signed-in MCP servers. Added here, in the factory, so every
+        // route that builds an agent (chat, Workspace, Automate, programmatic) gets them. The POC only
+        // allowlists read tools, so no approval wrapping is applied.
+        if (_mcpPocToolSource is not null)
+        {
+            tools.AddRange(await _mcpPocToolSource.GetToolsAsync(agent.Alias, cancellationToken));
         }
 
         // STEP 4: Filter frontend tools by runtime context

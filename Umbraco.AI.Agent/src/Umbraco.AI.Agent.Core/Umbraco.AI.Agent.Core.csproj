@@ -19,6 +19,7 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.Agents.AI" />
         <PackageReference Include="Microsoft.Agents.AI.Workflows" />
+        <PackageReference Include="ModelContextProtocol.Core" />
         <PackageReference Include="Umbraco.Cms.Core" />
     </ItemGroup>
 

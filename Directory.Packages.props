@@ -72,6 +72,11 @@
     <PackageVersion Include="Microsoft.Agents.AI.Workflows" Version="[1.18.0, 1.999.999)" />
   </ItemGroup>
 
+  <!-- MCP client (POC only, throwaway branch) -->
+  <ItemGroup>
+    <PackageVersion Include="ModelContextProtocol.Core" Version="2.4.0" />
+  </ItemGroup>
+
   <!-- Provider packages -->
   <ItemGroup>
     <PackageVersion Include="Anthropic" Version="[12.29.1, 12.999.999)" />

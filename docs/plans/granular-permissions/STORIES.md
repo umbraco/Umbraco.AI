@@ -1,6 +1,6 @@
 # Stories: Granular permissions
 
-**17 stories, 86 criteria.** Story ids (`GP-n`) are used by `PLAN.md` and the spec files, so
+**18 stories, 95 criteria.** Story ids (`GP-n`) are used by `PLAN.md` and the spec files, so
 never renumber them.
 
 > [!IMPORTANT]
@@ -25,10 +25,11 @@ least one user group chosen.
 **Agent limits (Umbraco.AI.Agent, Copilot Workspace)**
 
 - [GP-7](#gp-7-choose-who-can-use-an-agent) Choose who can use an agent, 7 criteria
-- [GP-8](#gp-8-only-change-an-agents-groups-within-your-own) Only change an agent's groups within your own, 7 criteria
+- [GP-8](#gp-8-only-change-an-agents-groups-within-your-own) Only change an agent's groups within your own, 8 criteria
 - [GP-9](#gp-9-limited-agents-are-hidden-from-people-outside-them) Limited agents are hidden from people outside them, 7 criteria
 - [GP-10](#gp-10-limited-agents-refuse-to-run-for-people-outside-them) Limited agents refuse to run for people outside them, 4 criteria
 - [GP-11](#gp-11-copilot-workspace-chats-with-an-agent-you-lost) Copilot Workspace chats with an agent you lost, 2 criteria
+- [GP-18](#gp-18-only-change-tool-rules-for-your-own-groups) Only change tool rules for your own groups, 8 criteria
 
 **Prompt limits (Umbraco.AI.Prompt)**
 
@@ -371,6 +372,11 @@ so that nobody can give themselves an agent they can't use.
   Given a non-admin in "Editors" only
   When they call `PUT agents/{alias}` adding "Translators" and renaming the agent
   Then the agent keeps its old name and groups
+- AC8 — rollback is checked too (R23)
+  Given an agent saved with no groups, then limited to "Editors" by an admin, and a non-admin
+  manager in "Editors"
+  When they roll it back to the first version
+  Then the response is 403
 
 ---
 
@@ -655,3 +661,54 @@ so that a limit set on one site holds on the next.
   Given that failed import
   When the target site's agent is read
   Then it is unchanged
+
+---
+
+## GP-18: Only change tool rules for your own groups
+
+As a **site admin**,
+I want non-admins to change an agent's tool rules only for groups they belong to,
+so that a manager can't undo my choices for other groups or unlock tools for them.
+
+"Tool rules" are the existing per-group allow and deny lists on an agent's Governance view
+(`userGroupPermissions`). Story numbers after GP-17 were added on 19-11-2026, after the plan
+was first written.
+
+**Happy path**
+
+- AC1 — admins change any group's rules (R22)
+  Given an admin and an agent with tool rules for "Translators"
+  When they change the "Translators" rules and save
+  Then the save succeeds
+- AC2 — a member changes their own group's rules
+  Given a non-admin with `Uai.Agent.Manage` in "Editors"
+  When they change the "Editors" rules and save
+  Then the save succeeds
+- AC3 — picker shows only their groups
+  Given a non-admin with `Uai.Agent.Manage` in "Editors" and "Writers"
+  When they click Add on User Group Permissions
+  Then the picker lists only "Editors" and "Writers"
+- AC4 — other groups' rows are read-only
+  Given an agent with tool rules for "Translators" and a non-admin not in it
+  When they open the agent's Governance view
+  Then the "Translators" row has no edit or remove action
+
+**Sad path**
+
+- AC5 — can't change another group's rules
+  Given a non-admin in "Editors" only and an agent with tool rules for "Translators"
+  When they call `PUT agents/{alias}` with changed "Translators" rules
+  Then the response is 403
+- AC6 — can't remove another group's rules
+  Given the same non-admin and agent
+  When they call `PUT agents/{alias}` without the "Translators" entry
+  Then the response is 403
+- AC7 — a refused save changes nothing
+  Given the same non-admin and agent
+  When they save changed "Translators" rules and a new agent name
+  Then the agent keeps its old name
+- AC8 — rollback is checked too (R23)
+  Given "Translators" rules changed by an admin since an older version, and a non-admin not in
+  "Translators"
+  When they roll the agent back to that older version
+  Then the response is 403

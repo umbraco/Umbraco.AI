@@ -73,5 +73,14 @@ public class AgentUserGroupListRuleTests
         await Task.CompletedTask;
     }
 
+    [Fact(Skip = "Pending implementation: T46")]
+    public async Task Rollback_ChangingGroupList_ByNonAdmin_IsRefused()
+    {
+        // Given an agent saved with no groups, then limited to editors by an admin, and a non-admin manager in editors
+        // When  they roll it back to the first version
+        // Then  the rollback is refused (AC8, R23)
+        await Task.CompletedTask;
+    }
+
     #endregion
 }

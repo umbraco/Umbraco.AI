@@ -86,6 +86,8 @@ today stay open.
 **`POST agents`, `PUT agents/{idOrAlias}`** take `allowedUserGroupIds: string[]` (user group keys).
 Empty or missing means everyone.
 - **403** the change to `allowedUserGroupIds` breaks R12. Nothing is saved.
+- **403** the change to `userGroupPermissions` (tool rules per group) breaks R22. Nothing is
+  saved.
 
 **Agent run endpoints:** `POST agents/{idOrAlias}/run`, `…/stream`, `…/stream-agui`,
 `…/suggest-starters`, `GET …/suggest-starters/availability`, and Copilot Workspace's
@@ -144,6 +146,19 @@ same way as agents, with `includeRestricted` and `allowedUserGroupIds`. No `onBe
 - **R15** A Copilot Workspace conversation with an agent the user can no longer use stays
   readable. Sending a new message gets the 403.
 
+**Tool rules per group**
+
+An agent already has tool rules per user group (allow or deny tools and tool scopes, the
+"User Group Permissions" field on the agent's Governance view).
+
+- **R22** The same rule as R12 covers them. Someone who isn't an admin can only add, change or
+  remove the rules of groups they belong to. Rules of other groups stay as they are, and a save
+  that would change them is refused. Admins change all of them freely. This stops a manager
+  undoing an admin's choices for other groups, or unlocking tools for their own group's
+  neighbours.
+- **R23** Rollback saves through the same check. A non-admin's rollback that would change the
+  group list (R12) or another group's tool rules (R22) is refused, and nothing is restored.
+
 **Automate**
 
 - **R16** The "Run agent" step's picker lists only agents the workspace's service account can
@@ -198,6 +213,20 @@ Opens from AI > Agents > an agent > Availability.
 - Only users with Manage agents reach this screen (R2).
 - The tag uses `color="danger"`, since the deleted group locks out everyone who isn't in the
   other groups.
+
+## Agent editor: tool rules per group
+
+Opens from AI > Agents > an agent > Governance > User Group Permissions. The field exists today.
+Only who can change which row is new. No new mockup: a row the user can't change uses the
+list's existing read-only look, and the Add button opens the same CMS picker.
+
+| When | The screen |
+|---|---|
+| The user is an admin | Every row can be edited and removed. Add lists all groups |
+| A row is for a group the user is in | Edit and remove work as today |
+| A row is for a group the user isn't in | The row is read-only: no edit, no remove (R22) |
+| Add clicked by a non-admin | The picker lists only the user's own groups |
+| The save is refused (API called directly) | The editor's existing error toast |
 
 ## Prompt editor: Access
 

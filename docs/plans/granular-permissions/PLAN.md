@@ -1,6 +1,6 @@
 # Plan: Granular permissions
 
-**45 tasks in 11 areas.** Built on `v18/dev` first. The v17 and v19 ports come after, through
+**48 tasks in 11 areas.** Built on `v18/dev` first. The v17 and v19 ports come after, through
 `change-backport` (see the last area). Story ids are in [STORIES.md](./STORIES.md).
 
 > [!IMPORTANT]
@@ -33,7 +33,7 @@ frontend criteria use Vitest.
   groups (no extra database query, SPEC Targets); `CanUse(allowedUserGroupIds, userGroupKeys)`
   is true when the list is null or empty (R9) or shares a key (R10); a helper returns the current
   user's group keys and whether they're in the admin group. Register in the core Composer. Add
-  `InternalsVisibleTo` for `Umbraco.AI.Agent.Core`, `Umbraco.AI.Prompt.Core`,
+  Add internal `AIPermissionDeniedException` beside it. `InternalsVisibleTo` for `Umbraco.AI.Agent.Core`, `Umbraco.AI.Prompt.Core`,
   `Umbraco.AI.Agent.Copilot.Workspace.Core` and `Umbraco.AI.Automate` where not already there.
   Acceptance: `AIPermissionService` specs in `Umbraco.AI.Tests.Unit` green (any group holds the
   verb → true; none → false; no admin bypass, R1; empty list → usable; deleted key matches no one,
@@ -74,8 +74,9 @@ frontend criteria use Vitest.
 - [ ] **T6** - story: GP-3 (AC1-AC4). In `Versioning/Controllers/EntityVersionHistoryController.cs`,
   rollback checks the manage right of the area that owns `entityType`, through
   `IAuthorizationService` and the T2 policies. Map each core entity type, plus `agent` and
-  `prompt`, to its policy. An unmapped type gets 403 (PLAN guess 1). Version list and detail stay
-  as they are.
+  `prompt`, to its policy. An unmapped type gets 403 (PLAN guess 1). An
+  `AIPermissionDeniedException` thrown by an adapter's rollback (an add-on's save rule, T46) also
+  returns 403. Version list and detail stay as they are.
   Acceptance: `RollbackAuthorizationTests` green: profile rollback 200 with Manage profiles, 403 without, version
   unchanged after a 403, agent rollback 403 with only Manage profiles.
   depends-on: T2. parallel-group: A
@@ -128,6 +129,13 @@ frontend criteria use Vitest.
   Acceptance: Vitest specs; `npm run build:core`.
   depends-on: T10
 
+- [ ] **T47** - story: GP-18 (AC3, AC4). `core/components/user-group-settings-list/user-group-settings-list.element.ts`
+  gains an optional `editableUserGroupIds` property. When set, rows for other groups render in the
+  list's existing read-only look (no edit, no remove), and the Add picker lists only those groups.
+  When unset, it behaves as today. Its only other user is the agent tool rules field.
+  Acceptance: `npm run build:core`; Vitest spec of the row-editability helper.
+  depends-on: none. parallel-group: B
+
 - [ ] **T13** - **wire: AI rights and hidden areas into the backoffice.** story: GP-1, GP-4 (AC6),
   GP-5. Smoke test on the demo site.
   Acceptance: the user group screen shows the AI box with Configuration and Monitoring rights;
@@ -168,9 +176,20 @@ frontend criteria use Vitest.
   `AIAgentService.SaveAgentAsync`, copied from the CMS `UserGroupService` rule (18.3.2): admins
   change freely; a non-admin may change the list only on an agent they can use, may add or remove
   only groups they belong to, and may not leave it empty when it wasn't (spec guess 5). A refused
-  save saves nothing.
+  save throws `AIPermissionDeniedException` (core, internal) and saves nothing.
   Acceptance: unit specs for each criterion.
   depends-on: T16
+
+- [ ] **T46** - story: GP-18 (AC1, AC2, AC5-AC8), GP-8 (AC8). Extend the save rule from T17 in
+  `AIAgentService.SaveAgentAsync` to `AIStandardAgentConfig.UserGroupPermissions`: compare the
+  saved and incoming dictionaries; a non-admin may add, change or remove only entries keyed by
+  groups they belong to (SPEC R22). Same refusal as T17: both throw the core's internal `AIPermissionDeniedException`, and nothing
+  is saved. Rollback
+  (`AIAgentVersionableEntityAdapter.RollbackAsync` calls `SaveAgentAsync`) is covered by both
+  rules (R23): add the rollback specs, no adapter change expected.
+  Acceptance: `AgentToolRuleGroupRuleTests` and the rollback rows of `AgentUserGroupListRuleTests`
+  green.
+  depends-on: T17
 
 - [ ] **T18** - story: GP-9 (AC6). `Agents/Selection/AIAgentSelectionService.cs` drops agents the
   user can't use before selection runs.
@@ -190,22 +209,23 @@ frontend criteria use Vitest.
   Acceptance: unit specs: unknown kind → not handled; resolver refusals map to the right result.
   depends-on: T16. parallel-group: C
 
-- [ ] **T21** - story: GP-2 (agents), GP-7 (AC4), GP-8 (AC4), GP-9 (AC2-AC5), GP-10 (AC2),
-  GP-14 (AC3, AC4). In `Umbraco.AI.Agent.Web/Api/Management/Agent/`: `AllAgentController` takes
+- [ ] **T21** - story: GP-2 (agents), GP-7 (AC4), GP-8 (AC4, AC8), GP-9 (AC2-AC5), GP-10 (AC2),
+  GP-14 (AC3, AC4), GP-18 (AC5, AC6, AC8). In `Umbraco.AI.Agent.Web/Api/Management/Agent/`: `AllAgentController` takes
   `includeRestricted` and `onBehalfOf`; `ByIdOrAliasAgentController` returns 404 when not usable
   and takes `onBehalfOf`; Create, Update and Delete use the Manage agents policy; models and
   `AgentMapDefinition` carry `allowedUserGroupIds`; run, stream, stream-agui, suggest-starters and
-  its availability return 403 `ProblemDetails` "Agent not available"; a refused group-list change
-  returns 403; `onBehalfOf` errors return 403 or 400 as in SPEC.md.
+  its availability return 403 `ProblemDetails` "Agent not available"; a refused group-list or
+  tool-rule change returns 403, from both save and rollback; `onBehalfOf` errors return 403 or 400
+  as in SPEC.md.
   Acceptance: `Umbraco.AI.Agent.Tests.Integration` endpoint specs for each status.
-  depends-on: T2, T17, T20
+  depends-on: T2, T20, T46
 
 - [ ] **T22** - **wire: agent limits into the Management API.** story: GP-7, GP-8, GP-9, GP-10.
   On the demo site, limit one agent to "Editors".
   Acceptance: real requests: a user outside "Editors" doesn't see it in `GET agents`, gets 404 on
   its detail and 403 on `run`; a member sees and runs it; a manager outside "Editors" sees it with
-  `includeRestricted=true`; a non-admin adding "Translators" gets 403; the Agent migration grants
-  Manage agents on start.
+  `includeRestricted=true`; a non-admin adding "Translators" gets 403; a non-admin changing the
+  "Translators" tool rules gets 403; the Agent migration grants Manage agents on start.
   depends-on: T15, T18, T19, T21
 
 ## Agent: backoffice (Umbraco.AI.Agent)
@@ -231,6 +251,12 @@ frontend criteria use Vitest.
   Acceptance: `npm run build:agent`.
   depends-on: T23. parallel-group: D
 
+- [ ] **T48** - story: GP-18 (AC3, AC4). `agent-governance-workspace-view.element.ts` passes the
+  current user's group keys as `editableUserGroupIds` to `user-group-tool-permissions.element.ts`,
+  which forwards them to the list. Admins pass nothing, so every row stays editable.
+  Acceptance: `npm run build:agent`.
+  depends-on: T23, T47. parallel-group: D
+
 - [ ] **T26** - story: GP-14 (AC1, AC2). `property-editor-ui-agent-picker.element.ts` reads
   `workspaceId` from its config; `agent-picker.element.ts` passes
   `onBehalfOf=automate-workspace:<workspaceId>` when it's set, and asks as today when not.
@@ -238,13 +264,14 @@ frontend criteria use Vitest.
   depends-on: T23. parallel-group: D
 
 - [ ] **T27** - **wire: agent Access box and rights into the backoffice.** story: GP-1, GP-5,
-  GP-7, GP-8. Smoke test on the demo site.
+  GP-7, GP-8, GP-18. Smoke test on the demo site.
   Acceptance: Manage agents shows under Add-ons on the user group screen; an agent's Availability
   view shows the Access box, opens the CMS picker, saves and reopens "Editors"; a deleted group
   shows the danger tag; a non-admin outside the agent's groups sees the field read-only; a user
   without Manage agents has no Agents menu item; Copilot for a user outside "Editors" doesn't list
-  the limited agent.
-  depends-on: T24, T25
+  the limited agent; on Governance, a non-admin in "Editors" sees the "Translators" tool rules row
+  read-only and Add lists only their groups, while an admin can edit every row.
+  depends-on: T24, T25, T48
 
 ## Prompt (Umbraco.AI.Prompt)
 

@@ -101,6 +101,24 @@ public class AgentEndpointAccessTests
     }
 
     [Fact(Skip = "Pending implementation: T21")]
+    public async Task PutAgent_ChangingOtherGroupsToolRules_Returns403()
+    {
+        // Given a non-admin in editors only and an agent with tool rules for translators
+        // When  they PUT agents/{alias} with changed translators rules
+        // Then  the response is 403 (GP-18 AC5)
+        await Task.CompletedTask;
+    }
+
+    [Fact(Skip = "Pending implementation: T21")]
+    public async Task PutAgent_RemovingOtherGroupsToolRules_Returns403()
+    {
+        // Given the same non-admin and agent
+        // When  they PUT agents/{alias} without the translators entry
+        // Then  the response is 403 (GP-18 AC6)
+        await Task.CompletedTask;
+    }
+
+    [Fact(Skip = "Pending implementation: T21")]
     public async Task GetAgents_OnBehalfOfInaccessibleWorkspace_Returns403()
     {
         // Given a caller without access to workspace W

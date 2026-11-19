@@ -60,7 +60,9 @@ inside `IAIAgentService` and `IAIPromptService`.
 - **Changing an agent's or prompt's user group list follows the CMS's rule for assigning
   user groups** (`UserGroupService`, 18.3.2): a non-admin can only add or remove groups they
   belong to, and only on an item they can already use. The services check it on save, so the
-  API can't skip it. Rejected: leaving it to Manage agents alone, which let a manager give
+  API can't skip it. The agent's existing tool rules per group follow the same rule (SPEC R22):
+  a non-admin only changes the rows of their own groups. Rollback goes through
+  `SaveAgentAsync`, so it is checked too. Rejected: leaving it to Manage agents alone, which let a manager give
   themselves any agent. Rejected: limiting the field to the Users section, which still let a
   non-admin user manager add their own group.
 - **The limit is separate from Scope.** Scope is where an agent appears. The limit is who may
@@ -89,7 +91,8 @@ Umbraco.AI/src/
 │   ├── Security/
 │   │   ├── AIPermissions.cs                  # public verb constants, e.g. Uai.Connection.Manage
 │   │   ├── IAIPermissionService.cs           # internal: HasPermission, CanUse, current user's groups
-│   │   └── AIPermissionService.cs
+│   │   ├── AIPermissionService.cs
+│   │   └── AIPermissionDeniedException.cs    # internal: a service save refused by R12/R22; rollback maps it to 403
 │   └── Migrations/
 │       ├── UmbracoAIMigrationPlan.cs         # adds the grant step after MigrateAISectionAlias
 │       └── GrantAIPermissionsToSectionGroups.cs  # core verbs to groups with the AI section + admin
@@ -163,10 +166,13 @@ Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client/src/
 ├── <area>/entity-actions/manifests.ts        # same condition on create and delete
 ├── <area>/workspace/<area>/manifests.ts      # same condition on the workspace and its save action
 ├── <area>/collection/manifests.ts            # same condition on the collection (list) view
+├── core/components/user-group-settings-list/user-group-settings-list.element.ts  # rows read-only outside editableUserGroupIds; picker limited to them
 └── lang/*                                    # labels, descriptions, group headings
 Umbraco.AI.Agent/src/…/Client/src/
 ├── agent/permissions/manifests.ts            # Manage agents, same entity type, group "add-ons"
 ├── agent/workspace/agent/views/agent-availability-workspace-view.element.ts  # Access box
+├── agent/workspace/agent/views/agent-governance-workspace-view.element.ts  # passes the user's editable groups
+├── agent/components/user-group-tool-permissions/user-group-tool-permissions.element.ts  # forwards them
 ├── agent/components/agent-picker/agent-picker.element.ts  # passes onBehalfOf
 ├── property-editors/agent-picker/property-editor-ui-agent-picker.element.ts  # reads workspaceId config
 └── agent/menu|collection|entity-actions|workspace manifests  # same condition

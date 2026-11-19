@@ -56,6 +56,15 @@ public class RollbackAuthorizationTests
     }
 
     [Fact(Skip = "Pending implementation: T6")]
+    public async Task Rollback_WhenAdapterThrowsPermissionDenied_Returns403()
+    {
+        // Given an AI section user with Uai.Agent.Manage and an agent adapter whose rollback throws AIPermissionDeniedException
+        // When  they roll the agent back
+        // Then  the response is 403 (GP-8 AC8, GP-18 AC8)
+        await Task.CompletedTask;
+    }
+
+    [Fact(Skip = "Pending implementation: T6")]
     public async Task UnmappedEntityTypeRollback_Returns403()
     {
         // Given an AI section user with every AI right and an entity type with no mapped right

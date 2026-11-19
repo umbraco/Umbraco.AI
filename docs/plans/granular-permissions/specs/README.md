@@ -5,7 +5,7 @@ reason moves it into the real test project, fills in the body from its Given/Whe
 and makes it pass. The files can't live in the test projects yet: they name types that don't
 exist until their task builds them.
 
-**116 specs in 25 files**: 106 xUnit (`[Fact(Skip = "Pending implementation: T<n>")]`) and 10
+**132 specs in 27 files**: 117 xUnit (`[Fact(Skip = "Pending implementation: T<n>")]`) and 15
 Vitest (`it.skip`). The real entry point (bdd-specs rule 4) is
 `Umbraco.AI.Agent/tests/Umbraco.AI.Agent.Tests.Integration/Api/AgentEndpointAccessTests.cs`, through
 the test server.
@@ -20,5 +20,6 @@ Prompt frontends have no test runner):
 - GP-12 AC1, AC2, AC6 (prompt Access box): T34
 - GP-13 AC1 (property action offers the prompt to members): T34
 - GP-14 AC1, AC2 (picker in the Automate step, end to end): T39
+- GP-18 AC3, AC4 on the real Governance view (the list's logic has Vitest specs): T27
 
 When a task moves its last file out, delete the file here. When the folder is empty, delete it.

@@ -1,0 +1,29 @@
+/* Styling shared by every granular-permissions mockup. Copied from the CMS's own source
+   (Umbraco-CMS release-18.3.2), not invented. */
+
+.user-group-main { /* mockup-ok: user-group-details-workspace-view.element.ts #main */
+	display: grid;
+	grid-template-columns: 1fr 350px;
+	gap: var(--uui-size-layout-1);
+}
+
+.stack { /* mockup-ok: umb-stack, the left column of user-group-details-workspace-view */
+	display: flex;
+	flex-direction: column;
+	gap: var(--uui-size-layout-1);
+}
+
+.permission-verb { /* mockup-ok: input-user-permission-verb.element.ts #setting */
+	display: flex;
+	align-items: center;
+	padding: var(--uui-size-space-3) 0 var(--uui-size-space-4) 0;
+}
+
+.permission-verb .meta { /* mockup-ok: input-user-permission-verb.element.ts #meta */
+	margin-left: var(--uui-size-space-4);
+	line-height: 1.2em;
+}
+
+.permission-verb .name { /* mockup-ok: input-user-permission-verb.element.ts #name */
+	font-weight: bold;
+}

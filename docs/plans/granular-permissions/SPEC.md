@@ -156,6 +156,9 @@ An agent already has tool rules per user group (allow or deny tools and tool sco
   that would change them is refused. Admins change all of them freely. This stops a manager
   undoing an admin's choices for other groups, or unlocking tools for their own group's
   neighbours.
+  It doesn't stop a manager allowing extra tools for their own group, or adding tools to the
+  agent's main "Allowed Tools" list. Manage agents covers choosing an agent's tools. Umbraco's own
+  tools still check the user's CMS rights.
 - **R23** Rollback saves through the same check. A non-admin's rollback that would change the
   group list (R12) or another group's tool rules (R22) is refused, and nothing is restored.
 

@@ -242,7 +242,10 @@ export class UaiAgentClient {
                 break;
 
             case AGUIEventType.TOOL_CALL_RESULT:
-                this.#callbacks.onToolCallResult?.(event.toolCallId, event.content);
+                this.#callbacks.onToolCallResult?.(
+                    event.toolCallId,
+                    typeof event.content === "string" ? event.content : JSON.stringify(event.content),
+                );
                 break;
 
             case AGUIEventType.RUN_FINISHED:

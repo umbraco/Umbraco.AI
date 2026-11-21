@@ -191,7 +191,7 @@ public static partial class UmbracoBuilderExtensions
             var options = sp.GetRequiredService<IOptions<AIWebFetchOptions>>().Value;
             return new HttpClientHandler
             {
-                AllowAutoRedirect = true,
+                AllowAutoRedirect = false,
                 MaxAutomaticRedirections = options.MaxRedirects,
                 ServerCertificateCustomValidationCallback = null,
                 UseProxy = true,

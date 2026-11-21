@@ -110,6 +110,10 @@ public class UrlValidator : IUrlValidator
     /// </summary>
     private static bool IsPrivateOrLocalIpAddress(IPAddress address)
     {
+        // IPv4-mapped IPv6 spellings (::ffff:a.b.c.d) resolve as InterNetworkV6
+        if (address.IsIPv4MappedToIPv6)
+            address = address.MapToIPv4();
+
         // Loopback addresses
         if (IPAddress.IsLoopback(address))
             return true;
@@ -131,20 +135,44 @@ public class UrlValidator : IUrlValidator
         {
             var bytes = address.GetAddressBytes();
 
+            // 0.0.0.0/8 ("this network")
+            if (bytes[0] == 0)
+                return true;
+
+            // 127.0.0.0/8 (loopback, not just 127.0.0.1)
+            if (bytes[0] == 127)
+                return true;
+
             // 10.0.0.0/8
             if (bytes[0] == 10)
+                return true;
+
+            // 100.64.0.0/10 (CGNAT, hosts Alibaba Cloud metadata)
+            if (bytes[0] == 100 && bytes[1] >= 64 && bytes[1] <= 127)
                 return true;
 
             // 172.16.0.0/12
             if (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31)
                 return true;
 
+            // 192.0.0.0/24 (IETF protocol assignments, hosts Oracle Cloud metadata)
+            if (bytes[0] == 192 && bytes[1] == 0 && bytes[2] == 0)
+                return true;
+
             // 192.168.0.0/16
             if (bytes[0] == 192 && bytes[1] == 168)
                 return true;
 
+            // 198.18.0.0/15 (benchmarking)
+            if (bytes[0] == 198 && (bytes[1] == 18 || bytes[1] == 19))
+                return true;
+
             // 169.254.0.0/16 (link-local)
             if (bytes[0] == 169 && bytes[1] == 254)
+                return true;
+
+            // 240.0.0.0/4 (reserved, includes 255.255.255.255)
+            if (bytes[0] >= 240)
                 return true;
         }
 

@@ -105,6 +105,50 @@ public class AIContextServiceTests
 
     #endregion
 
+    #region GetContextsByIdsAsync
+
+    [Fact]
+    public async Task GetContextsByIdsAsync_LoadsFromRepositoryInOneCall()
+    {
+        // Arrange
+        var first = new AIContextBuilder().WithId(Guid.NewGuid()).WithAlias("first").Build();
+        var second = new AIContextBuilder().WithId(Guid.NewGuid()).WithAlias("second").Build();
+        Guid[] ids = [first.Id, second.Id];
+
+        _repositoryMock
+            .Setup(x => x.GetByIdsAsync(ids, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[] { first, second });
+
+        // Act
+        var result = (await _service.GetContextsByIdsAsync(ids)).ToList();
+
+        // Assert
+        result.Select(c => c.Id).ShouldBe(ids, ignoreOrder: true);
+        _repositoryMock.Verify(x => x.GetByIdsAsync(ids, It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetContextsByIdsAsync_DefaultInterfaceImplementation_FallsBackToPerIdLookup()
+    {
+        // Arrange: a third-party implementation that only implements the original members
+        var known = new AIContextBuilder().WithId(Guid.NewGuid()).WithAlias("known").Build();
+        var serviceMock = new Mock<IAIContextService> { CallBase = true };
+        serviceMock
+            .Setup(x => x.GetContextAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Guid id, CancellationToken _) => id == known.Id ? known : null);
+
+        // Act
+        var result = (await serviceMock.Object.GetContextsByIdsAsync([known.Id, Guid.NewGuid(), known.Id])).ToList();
+
+        // Assert: unknown ids skipped, duplicates looked up once
+        result.Count.ShouldBe(1);
+        result[0].Id.ShouldBe(known.Id);
+        serviceMock.Verify(x => x.GetContextAsync(known.Id, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    #endregion
+
     #region GetContextsAsync
 
     [Fact]

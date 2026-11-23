@@ -51,6 +51,27 @@ internal class EFCoreAIContextRepository : IAIContextRepository
     }
 
     /// <inheritdoc />
+    public async Task<IEnumerable<AIContext>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        Guid[] distinctIds = ids.Distinct().ToArray();
+        if (distinctIds.Length == 0)
+        {
+            return [];
+        }
+
+        using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();
+
+        List<AIContextEntity> entities = await scope.ExecuteWithContextAsync(async db =>
+            await db.Contexts
+                .Include(c => c.Resources)
+                .Where(c => distinctIds.Contains(c.Id))
+                .ToListAsync(cancellationToken));
+
+        scope.Complete();
+        return entities.Select(_factory.BuildDomain);
+    }
+
+    /// <inheritdoc />
     public async Task<IEnumerable<AIContext>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         using IEfCoreScope<UmbracoAIDbContext> scope = _scopeProvider.CreateScope();

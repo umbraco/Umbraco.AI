@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -104,8 +105,39 @@ public class WebContentFetcher : IWebContentFetcher
         {
             var httpClient = _httpClientFactory.CreateClient("WebFetchTool");
 
-            // Fetch headers first to check content-type and size
-            using var response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            // Fetch headers first to check content-type and size. Redirects are followed here, not by the
+            // handler, so every hop goes through the URL validator before it is fetched.
+            var currentUrl = url;
+            var response = await httpClient.GetAsync(currentUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            for (var redirects = 0; IsRedirect(response); redirects++)
+            {
+                using (response)
+                {
+                    if (redirects >= _options.MaxRedirects)
+                    {
+                        _logger.LogWarning("Too many redirects fetching URL: {Url}", url);
+                        return new FetchWebPageResult(false, null,
+                            $"Too many redirects (maximum {_options.MaxRedirects})");
+                    }
+
+                    // Location may be relative; resolve it against the URL that returned it.
+                    var redirectUrl = new Uri(new Uri(currentUrl), response.Headers.Location!).AbsoluteUri;
+                    var redirectValidation = await _urlValidator.ValidateAsync(redirectUrl, cancellationToken);
+                    if (!redirectValidation.IsValid)
+                    {
+                        _logger.LogWarning("Redirect target validation failed for {Url}: {Error}",
+                            redirectUrl, redirectValidation.ErrorMessage);
+                        return new FetchWebPageResult(false, null,
+                            $"Invalid redirect target: {redirectValidation.ErrorMessage}");
+                    }
+
+                    currentUrl = redirectValidation.NormalizedUrl!;
+                }
+
+                response = await httpClient.GetAsync(currentUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            }
+
+            using var _ = response;
 
             if (!response.IsSuccessStatusCode)
             {
@@ -143,7 +175,8 @@ public class WebContentFetcher : IWebContentFetcher
             var html = await reader.ReadToEndAsync(cancellationToken);
 
             // Extract content
-            var extracted = await _htmlExtractor.ExtractAsync(html, url);
+            // Resolve relative links against the page actually fetched, after any redirects.
+            var extracted = await _htmlExtractor.ExtractAsync(html, currentUrl);
 
             // Calculate word count
             var wordCount = CountWords(extracted.TextContent);
@@ -172,6 +205,14 @@ public class WebContentFetcher : IWebContentFetcher
             return new FetchWebPageResult(false, null, $"Failed to fetch URL: {ex.Message}");
         }
     }
+
+    private static bool IsRedirect(HttpResponseMessage response)
+        => response.Headers.Location is not null
+           && response.StatusCode is HttpStatusCode.MovedPermanently
+               or HttpStatusCode.Found
+               or HttpStatusCode.SeeOther
+               or HttpStatusCode.TemporaryRedirect
+               or HttpStatusCode.PermanentRedirect;
 
     /// <summary>
     /// Counts words in text content.

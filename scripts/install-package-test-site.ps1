@@ -90,9 +90,12 @@ dotnet new umbraco --force -n $SiteName --friendly-name "Administrator" --email 
 Pop-Location
 
 # Step 4: Install Clean starter kit
-Write-Host "Installing Clean starter kit..." -ForegroundColor Green
+# Clean's own major tracks the CMS major it targets, offset by 10 (Clean 7.x -> CMS 17,
+# Clean 8.x -> CMS 18), so pin it to this site's CMS major or it grabs its own latest major.
+$CleanMajor = [int]$VersionMajor - 10
+Write-Host "Installing Clean starter kit (Clean $CleanMajor.x for Umbraco v$VersionMajor)..." -ForegroundColor Green
 Push-Location "demos\v$VersionMajor\$SiteName"
-dotnet add package Clean
+dotnet add package Clean --version "$CleanMajor.*"
 Pop-Location
 
 # Step 5: Configure NuGet sources and PackageSourceMapping
@@ -159,16 +162,16 @@ Pop-Location
 Write-Host "Installing Umbraco.AI packages from $Feed feed..." -ForegroundColor Green
 Push-Location "demos\v$VersionMajor\$SiteName"
 
-# Build the base command arguments for dotnet add package
-# For nightly/prereleases, append --prerelease flag
+# Float to the highest version within this major, so a v17 checkout never installs v18+
+# packages. Nightly/prereleases feeds publish most packages as continuous prerelease builds
+# (e.g. "17.0.2--preview.N.gHASH"), so float through prerelease identifiers there; the
+# release feed only ever carries stable versions.
+$VersionFloat = if ($Feed -eq "release") { "$VersionMajor.*" } else { "$VersionMajor.*-*" }
+
 function Install-Package {
     param([string]$PackageName)
     Write-Host "  Installing $PackageName..." -ForegroundColor Gray
-    if ($Feed -eq "release") {
-        dotnet add package $PackageName
-    } else {
-        dotnet add package $PackageName --prerelease
-    }
+    dotnet add package $PackageName --version $VersionFloat
 }
 
 # Install Core first to establish the version baseline

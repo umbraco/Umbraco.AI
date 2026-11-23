@@ -43,6 +43,9 @@ internal static class CloudflareTestHost
     public static IAIExtractionCapability CreateCapability(HttpMessageHandler? handler = null, IMemoryCache? cache = null)
         => (IAIExtractionCapability)CreateProvider(handler, cache).GetCapability<CloudflareExtractionCapability>();
 
+    public static IAIChatCapability CreateChatCapability(HttpMessageHandler? handler = null, IMemoryCache? cache = null)
+        => (IAIChatCapability)CreateProvider(handler, cache).GetCapability<CloudflareChatCapability>();
+
     public static async Task<IAIExtractionClient> CreateClientAsync(HttpMessageHandler handler, string? modelId = ModelId)
         => await CreateCapability(handler).CreateClientAsync(Settings(), modelId, default);
 

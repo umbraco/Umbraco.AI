@@ -105,6 +105,32 @@ Built on Microsoft.Extensions.AI (M.E.AI), "thin wrapper" philosophy.
 - One `DemoSite` profile for everyone — each worktree gets its own stable port, assigned once by the `Umbraco.Community.WorktreeDevPort` NuGet package and stored in a `wdp-port` file in that worktree's own git dir (git never copies it into new worktrees). The main checkout gets the familiar `44355` when free; other worktrees get the next free port from the pool
 - Port lookup: `git wdp-port` (the package adds this git alias on first start; empty until the site has run in this worktree)
 
+### Testing provider: Anthropic
+
+When testing against a real AI provider (demo site smoke tests, live checks, Copilot/agent/prompt
+runs), default to **Anthropic** unless the task is about a different provider. OpenAI (the
+`openai-demo` connection, key `Umbraco:AI:Secrets:OpenAIApiKey`) is fine as a second provider to
+cross-check behavior, e.g. to tell a provider-specific bug from a general one, but Anthropic comes
+first.
+
+- API keys live only in .NET user secrets, under the demo site's fixed `UserSecretsId`
+  (`d4e8f2a1-6b3c-4e5f-9a8b-7c2d1e4f3a6b`, set by `scripts/install-demo-site.*`). Every demo site
+  and version line shares it, so one key works everywhere.
+- Connections point at the secret with a `$` reference, e.g.
+  `$Umbraco:AI:Secrets:AnthropicApiKey`. Never type, paste or commit a real key.
+- The seed data (`scripts/templates/UmbracoAISeedData.cs`) creates an `anthropic-demo` connection
+  on every start if it's missing. Fresh sites use it for the `default-chat` profile; older sites
+  get an `anthropic-chat` profile unless they already have a chat profile on that connection.
+  OpenAI stays for embeddings and speech to text.
+- **If Anthropic isn't set up**, check `dotnet user-secrets list --id d4e8f2a1-6b3c-4e5f-9a8b-7c2d1e4f3a6b`
+  (look at key names only, never print values). If `Umbraco:AI:Secrets:AnthropicApiKey` is
+  missing, ask the developer to run
+  `dotnet user-secrets set "Umbraco:AI:Secrets:AnthropicApiKey" "<key>" --id d4e8f2a1-6b3c-4e5f-9a8b-7c2d1e4f3a6b`.
+  If the connection is missing, restart the demo site so the seed adds it, or create it in the
+  backoffice with the `$` reference above.
+- Anything checked in (seed data, scripts, docs) holds only what is safe in an open source repo:
+  secret *names*, `$` references and the `UserSecretsId`. Never key values.
+
 ### Package Testing Site
 
 Test deployed packages from different feeds (vs demo site which uses project references):

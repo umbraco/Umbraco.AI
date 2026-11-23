@@ -25,6 +25,14 @@ internal interface IAIContextRepository
     Task<AIContext?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets the AI contexts with the given unique identifiers in a single query.
+    /// </summary>
+    /// <param name="ids">The context IDs. Duplicates are ignored.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The contexts that were found, each once, in no particular order. Unknown IDs are skipped.</returns>
+    Task<IEnumerable<AIContext>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets all AI contexts.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>

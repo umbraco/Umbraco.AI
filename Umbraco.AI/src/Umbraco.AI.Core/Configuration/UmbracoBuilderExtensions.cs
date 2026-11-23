@@ -185,17 +185,9 @@ public static partial class UmbracoBuilderExtensions
             client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);
             client.DefaultRequestHeaders.Add("User-Agent", "Umbraco.AI.WebFetchTool/1.0");
         })
-        .ConfigurePrimaryHttpMessageHandler((sp) =>
-        {
-            var options = sp.GetRequiredService<IOptions<AIWebFetchOptions>>().Value;
-            return new HttpClientHandler
-            {
-                AllowAutoRedirect = true,
-                MaxAutomaticRedirections = options.MaxRedirects,
-                ServerCertificateCustomValidationCallback = null,
-                UseProxy = true,
-            };
-        });
+        // Every connection is checked against private, local and reserved addresses, and redirects are
+        // followed by WebContentFetcher so each hop is validated.
+        .ConfigurePrimaryHttpMessageHandler(() => WebFetchConnector.CreatePrimaryHandler());
 
         // Configure web fetch options
         services.Configure<AIWebFetchOptions>(config.GetSection("Umbraco:AI:Tools:WebFetch"));

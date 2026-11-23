@@ -6,6 +6,6 @@
   <ItemGroup>
     <!-- 17.7.0 is the first Umbraco.AI release with the Extraction capability (AICapability.Extraction and
          AISettings.DefaultExtractionProfileId), which the settings connector carries. -->
-    <PackageVersion Update="Umbraco.AI.Startup" Version="[17.7.0, 17.999.999)" />
+    <PackageVersion Update="Umbraco.AI.Startup" Version="[17.8.2, 17.999.999)" />
   </ItemGroup>
 </Project>

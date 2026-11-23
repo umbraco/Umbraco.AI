@@ -4,10 +4,16 @@
 // It seeds demo data (connection, profiles, context, prompts, agents, guardrails, tests) on first startup.
 //
 // Prerequisites:
-// - Umbraco.AI, Umbraco.AI.OpenAI, Umbraco.AI.Prompt, Umbraco.AI.Agent packages installed
-// - OpenAI API key configured in connection settings
+// - Umbraco.AI, Umbraco.AI.Anthropic, Umbraco.AI.OpenAI, Umbraco.AI.Prompt, Umbraco.AI.Agent packages installed
+// - API keys in .NET user secrets (the demo site's fixed UserSecretsId), never in this file:
+//     dotnet user-secrets set "Umbraco:AI:Secrets:AnthropicApiKey" "<key>" --id d4e8f2a1-6b3c-4e5f-9a8b-7c2d1e4f3a6b
+//     dotnet user-secrets set "Umbraco:AI:Secrets:OpenAIApiKey" "<key>" --id d4e8f2a1-6b3c-4e5f-9a8b-7c2d1e4f3a6b
+//
+// Anthropic is the chat provider used for testing. OpenAI stays for embeddings and speech to
+// text, which Anthropic doesn't offer.
 //
 // The seeder is idempotent — it checks for existing data by alias and skips if already seeded.
+// The Anthropic connection and profile are also added to sites seeded before they existed.
 
 using System.Text.Json;
 using Umbraco.AI.Core.Connections;
@@ -19,6 +25,7 @@ using Umbraco.AI.Core.Settings;
 using Umbraco.AI.Core.Tests;
 using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Anthropic;
 using Umbraco.AI.OpenAI;
 using Umbraco.AI.Prompt.Core.Prompts;
 using Umbraco.Cms.Core;
@@ -49,11 +56,17 @@ public class UmbracoAISeedDataHandler(
 {
     private static readonly JsonSerializerOptions JsonOptions = AI.Core.Constants.DefaultJsonSerializerOptions;
 
+    private const string AnthropicChatModel = "claude-sonnet-4-5";
+
     public async Task HandleAsync(UmbracoApplicationStartedNotification notification, CancellationToken ct)
     {
+        // Anthropic is the testing provider, so make sure it exists even on sites seeded before it was added
+        var anthropicConnection = await EnsureAnthropicConnectionAsync(ct);
+
         // Skip if already seeded (check for our connection alias)
         if (await connectionService.GetConnectionByAliasAsync("openai-demo", ct) is not null)
         {
+            await EnsureAnthropicChatProfileAsync(anthropicConnection, ct);
             logger.LogInformation("Demo data already seeded, skipping.");
             return;
         }
@@ -88,8 +101,8 @@ public class UmbracoAISeedDataHandler(
             ]
         }, ct);
 
-        // 2. Connection (API key resolved from IConfiguration via $-prefix)
-        var connection = await connectionService.SaveConnectionAsync(new AIConnection
+        // 2. OpenAI connection, for embeddings and speech to text (API key resolved from IConfiguration via $-prefix)
+        var openAIConnection = await connectionService.SaveConnectionAsync(new AIConnection
         {
             Alias = "openai-demo",
             Name = "OpenAI",
@@ -186,14 +199,14 @@ public class UmbracoAISeedDataHandler(
             ]
         }, ct);
 
-        // 4. Profiles
+        // 4. Profiles (chat runs on Anthropic, the testing provider)
         var profile = await profileService.SaveProfileAsync(new AIProfile
         {
             Alias = "default-chat",
             Name = "Default Chat",
             Capability = AICapability.Chat,
-            ConnectionId = connection.Id,
-            Model = new AIModelRef("openai", "gpt-4o"),
+            ConnectionId = anthropicConnection.Id,
+            Model = new AIModelRef("anthropic", AnthropicChatModel),
             Settings = new AIChatProfileSettings
             {
                 Temperature = 0.7f,
@@ -207,7 +220,7 @@ public class UmbracoAISeedDataHandler(
             Alias = "default-embedding",
             Name = "Default Embedding",
             Capability = AICapability.Embedding,
-            ConnectionId = connection.Id,
+            ConnectionId = openAIConnection.Id,
             Model = new AIModelRef("openai", "text-embedding-3-small"),
             Settings = new AIEmbeddingProfileSettings()
         }, ct);
@@ -217,7 +230,7 @@ public class UmbracoAISeedDataHandler(
             Alias = "default-speech-to-text",
             Name = "Default Speech to Text",
             Capability = AICapability.SpeechToText,
-            ConnectionId = connection.Id,
+            ConnectionId = openAIConnection.Id,
             Model = new AIModelRef("openai", "gpt-4o-transcribe"),
             Settings = new AISpeechToTextProfileSettings { Language = "en" }
         }, ct);
@@ -611,6 +624,45 @@ public class UmbracoAISeedDataHandler(
         }, ct);
 
         logger.LogInformation("Umbraco.AI demo data seeded successfully.");
+    }
+
+    private async Task<AIConnection> EnsureAnthropicConnectionAsync(CancellationToken ct)
+    {
+        var existing = await connectionService.GetConnectionByAliasAsync("anthropic-demo", ct);
+        if (existing is not null)
+        {
+            return existing;
+        }
+
+        // API key resolved from IConfiguration (user secrets) via $-prefix
+        return await connectionService.SaveConnectionAsync(new AIConnection
+        {
+            Alias = "anthropic-demo",
+            Name = "Anthropic",
+            ProviderId = "anthropic",
+            Settings = new AnthropicProviderSettings { ApiKey = "$Umbraco:AI:Secrets:AnthropicApiKey" },
+            IsActive = true
+        }, ct);
+    }
+
+    private async Task EnsureAnthropicChatProfileAsync(AIConnection connection, CancellationToken ct)
+    {
+        // Any chat profile on the Anthropic connection will do (it may have been made by hand)
+        var chatProfiles = await profileService.GetProfilesAsync(AICapability.Chat, ct);
+        if (chatProfiles.Any(p => p.ConnectionId == connection.Id))
+        {
+            return;
+        }
+
+        await profileService.SaveProfileAsync(new AIProfile
+        {
+            Alias = "anthropic-chat",
+            Name = "Anthropic Chat",
+            Capability = AICapability.Chat,
+            ConnectionId = connection.Id,
+            Model = new AIModelRef("anthropic", AnthropicChatModel),
+            Settings = new AIChatProfileSettings()
+        }, ct);
     }
 
     private static JsonElement ToJsonElement(object value)

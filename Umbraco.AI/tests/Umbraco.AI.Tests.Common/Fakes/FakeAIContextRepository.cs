@@ -36,6 +36,16 @@ public class FakeAIContextRepository : IAIContextRepository
     }
 
     /// <inheritdoc />
+    public Task<IEnumerable<AIContext>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        var contexts = ids.Distinct()
+            .Where(_contexts.ContainsKey)
+            .Select(id => _contexts[id])
+            .ToList();
+        return Task.FromResult<IEnumerable<AIContext>>(contexts);
+    }
+
+    /// <inheritdoc />
     public Task<AIContext?> GetByAliasAsync(string alias, CancellationToken cancellationToken = default)
     {
         var context = _contexts.Values.FirstOrDefault(c =>

@@ -25,6 +25,34 @@ public interface IAIContextService
     Task<AIContext?> GetContextByAliasAsync(string alias, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets the contexts with the given unique identifiers.
+    /// </summary>
+    /// <remarks>
+    /// The built-in service loads all requested contexts in a single query. The default implementation
+    /// exists so that third-party implementations of this interface keep compiling; it falls back to
+    /// one <see cref="GetContextAsync"/> call per ID.
+    /// </remarks>
+    /// <param name="ids">The context IDs. Duplicates are ignored.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The contexts that were found, each once, in no particular order. Unknown IDs are skipped.</returns>
+    async Task<IEnumerable<AIContext>> GetContextsByIdsAsync(
+        IEnumerable<Guid> ids,
+        CancellationToken cancellationToken = default)
+    {
+        var contexts = new List<AIContext>();
+        foreach (Guid id in ids.Distinct())
+        {
+            AIContext? context = await GetContextAsync(id, cancellationToken);
+            if (context is not null)
+            {
+                contexts.Add(context);
+            }
+        }
+
+        return contexts;
+    }
+
+    /// <summary>
     /// Gets all contexts.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>

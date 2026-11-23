@@ -44,6 +44,12 @@ internal sealed class AIContextService : IAIContextService
         => _repository.GetByAliasAsync(alias, cancellationToken);
 
     /// <inheritdoc />
+    public Task<IEnumerable<AIContext>> GetContextsByIdsAsync(
+        IEnumerable<Guid> ids,
+        CancellationToken cancellationToken = default)
+        => _repository.GetByIdsAsync(ids, cancellationToken);
+
+    /// <inheritdoc />
     public Task<IEnumerable<AIContext>> GetContextsAsync(CancellationToken cancellationToken = default)
         => _repository.GetAllAsync(cancellationToken);
 

@@ -17,3 +17,4 @@ One line per file in this folder, newest relevant first. See `README.md` for the
 - [Consumers don't copy Core validation](consumers-dont-copy-core-validation.md) — add-ons map Core's ArgumentException instead of re-implementing its bounds
 - [EF atomicity test fails last statement](ef-atomicity-test-fail-last-statement.md) — EF sends deletes before updates; a rollback test must fail the statement sent last
 - [Workspace resent-turn merge](workspace-resent-turn-merge.md) — server merges a browser-resent frontend-tool turn by user msg id + tool call ids; old chats repaired on read
+- [Zod 3 Accepted Risk](zod-3-accepted-risk.md) — v17/v18 keep zod 3 (GHSA-mrhx-c7xc-m3w5): the fix needs the breaking AG-UI 1.x move, and exposure is one editor tab; revisit triggers listed

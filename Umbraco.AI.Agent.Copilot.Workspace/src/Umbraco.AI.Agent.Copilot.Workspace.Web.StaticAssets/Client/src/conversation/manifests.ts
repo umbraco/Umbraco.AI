@@ -70,7 +70,7 @@ export const conversationManifests: UmbExtensionManifest[] = [
         meta: {
             iconName: "icon-share",
             label: "#uaiCopilotWorkspace_sharedBadgeLabel",
-            iconColorAlias: "green",
+            iconColorAlias: "blue",
         },
     },
     {
@@ -87,7 +87,7 @@ export const conversationManifests: UmbExtensionManifest[] = [
         // it only matters as a harmless fallback if the api fails to load.
         meta: {
             iconName: "icon-share",
-            iconColorAlias: "green",
+            iconColorAlias: "blue",
             label: "",
         },
     },

@@ -81,7 +81,10 @@ public class UrlValidator : IUrlValidator
         // Resolve DNS and validate IP addresses
         try
         {
-            var addresses = await Dns.GetHostAddressesAsync(host, cancellationToken);
+            // DnsSafeHost drops the brackets around an IPv6 literal so it parses as an address.
+            var addresses = await Dns.GetHostAddressesAsync(uri.DnsSafeHost, cancellationToken);
+            if (addresses.Length == 0)
+                return new UrlValidationResult(false, $"Could not resolve hostname: {host}", null);
 
             foreach (var address in addresses)
             {
@@ -106,48 +109,8 @@ public class UrlValidator : IUrlValidator
     }
 
     /// <summary>
-    /// Checks if an IP address is private or local.
+    /// Checks if an IP address is private, local or reserved.
     /// </summary>
     private static bool IsPrivateOrLocalIpAddress(IPAddress address)
-    {
-        // Loopback addresses
-        if (IPAddress.IsLoopback(address))
-            return true;
-
-        // Link-local addresses
-        if (address.IsIPv6LinkLocal)
-            return true;
-
-        // IPv6 unique local addresses (fc00::/7)
-        if (address.AddressFamily == AddressFamily.InterNetworkV6)
-        {
-            var bytes = address.GetAddressBytes();
-            if ((bytes[0] & 0xFE) == 0xFC) // fc00::/7
-                return true;
-        }
-
-        // IPv4 private ranges
-        if (address.AddressFamily == AddressFamily.InterNetwork)
-        {
-            var bytes = address.GetAddressBytes();
-
-            // 10.0.0.0/8
-            if (bytes[0] == 10)
-                return true;
-
-            // 172.16.0.0/12
-            if (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31)
-                return true;
-
-            // 192.168.0.0/16
-            if (bytes[0] == 192 && bytes[1] == 168)
-                return true;
-
-            // 169.254.0.0/16 (link-local)
-            if (bytes[0] == 169 && bytes[1] == 254)
-                return true;
-        }
-
-        return false;
-    }
+        => PrivateAddressCheck.IsBlocked(address);
 }

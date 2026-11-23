@@ -122,14 +122,20 @@ public class AIContextPickerPropertyValueConverter : PropertyValueConverterBase
 
         var isMultiple = IsMultipleSelection(propertyType);
 
-        // Look up contexts synchronously (required by IPropertyValueConverter interface)
-        var contexts = new List<AIContext>();
+        // Look up all picked contexts in one query, synchronously (required by IPropertyValueConverter interface)
+        var contextsById = new Dictionary<Guid, AIContext>();
+        foreach (var context in _contextService.GetContextsByIdsAsync(ids).GetAwaiter().GetResult())
+        {
+            contextsById.TryAdd(context.Id, context);
+        }
+
+        // Keep the editor's selection order (and any duplicates), skipping contexts that no longer exist
+        var contexts = new List<AIContext>(ids.Length);
         foreach (var id in ids)
         {
-            var context = _contextService.GetContextAsync(id).GetAwaiter().GetResult();
-            if (context != null)
+            if (contextsById.TryGetValue(id, out var picked))
             {
-                contexts.Add(context);
+                contexts.Add(picked);
             }
         }
 

@@ -183,6 +183,84 @@ public class EFCoreAIContextRepositoryTests : IClassFixture<EFCoreTestFixture>
 
     #endregion
 
+    #region GetByIdsAsync
+
+    [Fact]
+    public async Task GetByIdsAsync_ReturnsOnlyRequestedContextsWithResources()
+    {
+        // Arrange
+        await using var context = _fixture.CreateContext();
+        var wantedId = Guid.NewGuid();
+        var otherWantedId = Guid.NewGuid();
+        var notWantedId = Guid.NewGuid();
+        context.Contexts.AddRange(
+            new AIContextEntity
+            {
+                Id = wantedId,
+                Alias = "batch-wanted",
+                Name = "Wanted",
+                DateCreated = DateTime.UtcNow,
+                DateModified = DateTime.UtcNow,
+                Resources = new List<AIContextResourceEntity>
+                {
+                    new()
+                    {
+                        Id = Guid.NewGuid(),
+                        ContextId = wantedId,
+                        ResourceTypeId = "brand-voice",
+                        Name = "Brand Voice",
+                        Settings = "{}",
+                        SortOrder = 0,
+                        InjectionMode = 0
+                    }
+                }
+            },
+            new AIContextEntity
+            {
+                Id = otherWantedId,
+                Alias = "batch-other-wanted",
+                Name = "Other Wanted",
+                DateCreated = DateTime.UtcNow,
+                DateModified = DateTime.UtcNow
+            },
+            new AIContextEntity
+            {
+                Id = notWantedId,
+                Alias = "batch-not-wanted",
+                Name = "Not Wanted",
+                DateCreated = DateTime.UtcNow,
+                DateModified = DateTime.UtcNow
+            });
+        await context.SaveChangesAsync();
+
+        var repository = CreateRepository(_fixture.CreateContext());
+
+        // Act: includes an unknown id and a duplicate
+        var result = (await repository.GetByIdsAsync([wantedId, Guid.NewGuid(), otherWantedId, wantedId])).ToList();
+
+        // Assert
+        result.Select(c => c.Id).ShouldBe([wantedId, otherWantedId], ignoreOrder: true);
+        var wanted = result.Single(c => c.Id == wantedId);
+        wanted.Resources.Count.ShouldBe(1);
+        wanted.Resources[0].Name.ShouldBe("Brand Voice");
+    }
+
+    [Fact]
+    public async Task GetByIdsAsync_WithNoIds_ReturnsEmpty()
+    {
+        // Arrange
+        await using var context = _fixture.CreateContext();
+        var repository = CreateRepository(context);
+
+        // Act
+        var result = await repository.GetByIdsAsync([]);
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
+
+    #endregion
+
     #region GetAllAsync
 
     [Fact]

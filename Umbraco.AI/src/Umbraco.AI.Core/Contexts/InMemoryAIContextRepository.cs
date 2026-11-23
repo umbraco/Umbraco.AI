@@ -26,6 +26,21 @@ internal sealed class InMemoryAIContextRepository : IAIContextRepository
     }
 
     /// <inheritdoc />
+    public Task<IEnumerable<AIContext>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        var contexts = new List<AIContext>();
+        foreach (var id in ids.Distinct())
+        {
+            if (_contexts.TryGetValue(id, out var context))
+            {
+                contexts.Add(context);
+            }
+        }
+
+        return Task.FromResult<IEnumerable<AIContext>>(contexts);
+    }
+
+    /// <inheritdoc />
     public Task<IEnumerable<AIContext>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return Task.FromResult<IEnumerable<AIContext>>(_contexts.Values.ToList());

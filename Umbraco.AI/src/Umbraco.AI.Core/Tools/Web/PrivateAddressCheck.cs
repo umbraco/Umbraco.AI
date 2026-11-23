@@ -25,6 +25,7 @@ internal static class PrivateAddressCheck
         (0xAC100000, 12), // 172.16.0.0/12   private
         (0xC0000000, 24), // 192.0.0.0/24    IETF protocol assignments
         (0xC0000200, 24), // 192.0.2.0/24    documentation
+        (0xC0586300, 24), // 192.88.99.0/24  deprecated 6to4 relay anycast
         (0xC0A80000, 16), // 192.168.0.0/16  private
         (0xC6120000, 15), // 198.18.0.0/15   benchmarking
         (0xC6336400, 24), // 198.51.100.0/24 documentation
@@ -119,6 +120,19 @@ internal static class PrivateAddressCheck
 
         // 100::/64 discard-only.
         if (first16 == 0x0100 && bytes[2..8].IndexOfAnyExcept((byte)0) < 0)
+        {
+            return true;
+        }
+
+        // ::ffff:0:0:0/96 IPv4-translated addresses (SIIT).
+        if (bytes[..8].IndexOfAnyExcept((byte)0) < 0 && bytes[8] == 0xFF && bytes[9] == 0xFF
+            && bytes[10] == 0 && bytes[11] == 0)
+        {
+            return true;
+        }
+
+        // 2001::/23 IETF protocol assignments, including Teredo (2001::/32).
+        if (first16 == 0x2001 && second16 <= 0x01FF)
         {
             return true;
         }

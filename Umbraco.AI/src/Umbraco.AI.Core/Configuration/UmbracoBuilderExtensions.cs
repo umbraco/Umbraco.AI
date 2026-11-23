@@ -188,7 +188,7 @@ public static partial class UmbracoBuilderExtensions
         })
         // Every connection is checked against private, local and reserved addresses, and redirects are
         // followed by WebContentFetcher so each hop is validated.
-        .ConfigurePrimaryHttpMessageHandler(WebFetchConnector.CreatePrimaryHandler);
+        .ConfigurePrimaryHttpMessageHandler(() => WebFetchConnector.CreatePrimaryHandler());
 
         // Configure web fetch options
         services.Configure<AIWebFetchOptions>(config.GetSection("Umbraco:AI:Tools:WebFetch"));

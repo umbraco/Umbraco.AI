@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.RegularExpressions;
+
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -46,10 +47,19 @@ public class WebContentFetcher : IWebContentFetcher
     /// <inheritdoc />
     public async Task<FetchWebPageResult> FetchAsync(string url, CancellationToken cancellationToken = default)
     {
+        // One timeout for the whole fetch: validation, every redirect hop and the body read.
+        using var timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        if (_options.TimeoutSeconds > 0)
+        {
+            timeoutSource.CancelAfter(TimeSpan.FromSeconds(_options.TimeoutSeconds));
+        }
+
+        var fetchToken = timeoutSource.Token;
+
         try
         {
             // Validate URL
-            var validationResult = await _urlValidator.ValidateAsync(url, cancellationToken);
+            var validationResult = await _urlValidator.ValidateAsync(url, fetchToken);
             if (!validationResult.IsValid)
             {
                 _logger.LogWarning("URL validation failed for {Url}: {Error}", url, validationResult.ErrorMessage);
@@ -69,7 +79,7 @@ public class WebContentFetcher : IWebContentFetcher
                 }
 
                 // Fetch and cache
-                var result = await FetchInternalAsync(normalizedUrl, cancellationToken);
+                var result = await FetchInternalAsync(normalizedUrl, fetchToken);
 
                 if (result.Success)
                 {
@@ -82,14 +92,15 @@ public class WebContentFetcher : IWebContentFetcher
             }
 
             // No caching
-            return await FetchInternalAsync(normalizedUrl, cancellationToken);
+            return await FetchInternalAsync(normalizedUrl, fetchToken);
         }
-        catch (TaskCanceledException)
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
+            // Cancelled by the timeout (or HttpClient.Timeout), not by the caller.
             _logger.LogWarning("Request timed out for URL: {Url}", url);
             return new FetchWebPageResult(false, null, "Request timed out");
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _logger.LogError(ex, "Unexpected error fetching URL: {Url}", url);
             return new FetchWebPageResult(false, null, "An unexpected error occurred");
@@ -121,7 +132,17 @@ public class WebContentFetcher : IWebContentFetcher
                     }
 
                     // Location may be relative; resolve it against the URL that returned it.
-                    var redirectUrl = new Uri(new Uri(currentUrl), response.Headers.Location!).AbsoluteUri;
+                    var currentUri = new Uri(currentUrl);
+                    var redirectUri = new Uri(currentUri, response.Headers.Location!);
+                    if (currentUri.Scheme == Uri.UriSchemeHttps && redirectUri.Scheme != Uri.UriSchemeHttps)
+                    {
+                        _logger.LogWarning("Refused redirect from HTTPS to {Scheme} fetching URL: {Url}",
+                            redirectUri.Scheme, url);
+                        return new FetchWebPageResult(false, null,
+                            "Invalid redirect target: redirects from HTTPS to HTTP are not followed");
+                    }
+
+                    var redirectUrl = redirectUri.AbsoluteUri;
                     var redirectValidation = await _urlValidator.ValidateAsync(redirectUrl, cancellationToken);
                     if (!redirectValidation.IsValid)
                     {

@@ -1,4 +1,5 @@
 using System.Net;
+
 using Umbraco.AI.Core.Tools.Web;
 
 namespace Umbraco.AI.Tests.Unit.Tools.Web;
@@ -19,6 +20,7 @@ public class PrivateAddressCheckTests
     [InlineData("172.31.255.254")]
     [InlineData("192.0.0.1")]
     [InlineData("192.0.2.1")]
+    [InlineData("192.88.99.1")]
     [InlineData("192.168.1.1")]
     [InlineData("198.18.0.1")]
     [InlineData("198.19.255.254")]
@@ -39,6 +41,10 @@ public class PrivateAddressCheckTests
     [InlineData("100::1")]
     [InlineData("2001:db8::1")]
     [InlineData("64:ff9b:1::1")]
+    [InlineData("2001::1")]
+    [InlineData("2001:0:4136:e378:8000:63bf:3fff:fdd2")]
+    [InlineData("2001:1ff::1")]
+    [InlineData("::ffff:0:808:808")]
     // IPv6 forms carrying a private IPv4 address
     [InlineData("::ffff:127.0.0.1")]
     [InlineData("::ffff:10.0.0.1")]
@@ -68,6 +74,8 @@ public class PrivateAddressCheckTests
     [InlineData("::ffff:8.8.8.8")]
     [InlineData("64:ff9b::8.8.8.8")]
     [InlineData("2002:0808:0808::1")]
+    [InlineData("2001:200::1")]
+    [InlineData("2001:4860:4860::8888")]
     public void IsBlocked_WithPublicAddress_ReturnsFalse(string address)
     {
         PrivateAddressCheck.IsBlocked(IPAddress.Parse(address)).ShouldBeFalse();

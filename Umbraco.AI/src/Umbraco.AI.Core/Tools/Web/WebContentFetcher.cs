@@ -1,4 +1,6 @@
+using System.Net;
 using System.Text.RegularExpressions;
+
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -45,10 +47,19 @@ public class WebContentFetcher : IWebContentFetcher
     /// <inheritdoc />
     public async Task<FetchWebPageResult> FetchAsync(string url, CancellationToken cancellationToken = default)
     {
+        // One timeout for the whole fetch: validation, every redirect hop and the body read.
+        using var timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        if (_options.TimeoutSeconds > 0)
+        {
+            timeoutSource.CancelAfter(TimeSpan.FromSeconds(_options.TimeoutSeconds));
+        }
+
+        var fetchToken = timeoutSource.Token;
+
         try
         {
             // Validate URL
-            var validationResult = await _urlValidator.ValidateAsync(url, cancellationToken);
+            var validationResult = await _urlValidator.ValidateAsync(url, fetchToken);
             if (!validationResult.IsValid)
             {
                 _logger.LogWarning("URL validation failed for {Url}: {Error}", url, validationResult.ErrorMessage);
@@ -68,7 +79,7 @@ public class WebContentFetcher : IWebContentFetcher
                 }
 
                 // Fetch and cache
-                var result = await FetchInternalAsync(normalizedUrl, cancellationToken);
+                var result = await FetchInternalAsync(normalizedUrl, fetchToken);
 
                 if (result.Success)
                 {
@@ -81,14 +92,15 @@ public class WebContentFetcher : IWebContentFetcher
             }
 
             // No caching
-            return await FetchInternalAsync(normalizedUrl, cancellationToken);
+            return await FetchInternalAsync(normalizedUrl, fetchToken);
         }
-        catch (TaskCanceledException)
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
+            // Cancelled by the timeout (or HttpClient.Timeout), not by the caller.
             _logger.LogWarning("Request timed out for URL: {Url}", url);
             return new FetchWebPageResult(false, null, "Request timed out");
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _logger.LogError(ex, "Unexpected error fetching URL: {Url}", url);
             return new FetchWebPageResult(false, null, "An unexpected error occurred");
@@ -104,8 +116,49 @@ public class WebContentFetcher : IWebContentFetcher
         {
             var httpClient = _httpClientFactory.CreateClient("WebFetchTool");
 
-            // Fetch headers first to check content-type and size
-            using var response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            // Fetch headers first to check content-type and size. Redirects are followed here, not by the
+            // handler, so every hop goes through the URL validator before it is fetched.
+            var currentUrl = url;
+            var response = await httpClient.GetAsync(currentUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            for (var redirects = 0; IsRedirect(response); redirects++)
+            {
+                using (response)
+                {
+                    if (redirects >= _options.MaxRedirects)
+                    {
+                        _logger.LogWarning("Too many redirects fetching URL: {Url}", url);
+                        return new FetchWebPageResult(false, null,
+                            $"Too many redirects (maximum {_options.MaxRedirects})");
+                    }
+
+                    // Location may be relative; resolve it against the URL that returned it.
+                    var currentUri = new Uri(currentUrl);
+                    var redirectUri = new Uri(currentUri, response.Headers.Location!);
+                    if (currentUri.Scheme == Uri.UriSchemeHttps && redirectUri.Scheme != Uri.UriSchemeHttps)
+                    {
+                        _logger.LogWarning("Refused redirect from HTTPS to {Scheme} fetching URL: {Url}",
+                            redirectUri.Scheme, url);
+                        return new FetchWebPageResult(false, null,
+                            "Invalid redirect target: redirects from HTTPS to HTTP are not followed");
+                    }
+
+                    var redirectUrl = redirectUri.AbsoluteUri;
+                    var redirectValidation = await _urlValidator.ValidateAsync(redirectUrl, cancellationToken);
+                    if (!redirectValidation.IsValid)
+                    {
+                        _logger.LogWarning("Redirect target validation failed for {Url}: {Error}",
+                            redirectUrl, redirectValidation.ErrorMessage);
+                        return new FetchWebPageResult(false, null,
+                            $"Invalid redirect target: {redirectValidation.ErrorMessage}");
+                    }
+
+                    currentUrl = redirectValidation.NormalizedUrl!;
+                }
+
+                response = await httpClient.GetAsync(currentUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            }
+
+            using var _ = response;
 
             if (!response.IsSuccessStatusCode)
             {
@@ -143,7 +196,8 @@ public class WebContentFetcher : IWebContentFetcher
             var html = await reader.ReadToEndAsync(cancellationToken);
 
             // Extract content
-            var extracted = await _htmlExtractor.ExtractAsync(html, url);
+            // Resolve relative links against the page actually fetched, after any redirects.
+            var extracted = await _htmlExtractor.ExtractAsync(html, currentUrl);
 
             // Calculate word count
             var wordCount = CountWords(extracted.TextContent);
@@ -172,6 +226,14 @@ public class WebContentFetcher : IWebContentFetcher
             return new FetchWebPageResult(false, null, $"Failed to fetch URL: {ex.Message}");
         }
     }
+
+    private static bool IsRedirect(HttpResponseMessage response)
+        => response.Headers.Location is not null
+           && response.StatusCode is HttpStatusCode.MovedPermanently
+               or HttpStatusCode.Found
+               or HttpStatusCode.SeeOther
+               or HttpStatusCode.TemporaryRedirect
+               or HttpStatusCode.PermanentRedirect;
 
     /// <summary>
     /// Counts words in text content.

@@ -27,7 +27,7 @@
         "@umbraco-ai/core": "*",
         "@umbraco-cms/backoffice": "^19.0.0-rc1",
         "rxjs": "^7.8.2",
-        "zod": "^3.25.76"
+        "zod": "^4.6.6"
     },
     "overrides": {
         "rxjs": "^7.8.2"

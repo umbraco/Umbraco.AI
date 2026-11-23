@@ -10,12 +10,15 @@ FEED="nightly"
 SKIP_TEMPLATE_INSTALL=false
 FORCE=false
 
-# Feed URLs
-declare -A FEED_URLS=(
-    ["nightly"]="https://www.myget.org/F/umbraconightly/api/v3/index.json"
-    ["prereleases"]="https://www.myget.org/F/umbracoprereleases/api/v3/index.json"
-    ["release"]="https://api.nuget.org/v3/index.json"
-)
+# Feed URLs (a case statement rather than an associative array, so the script runs on the
+# bash 3.2 that macOS ships)
+feed_url() {
+    case "$1" in
+        nightly) echo "https://www.myget.org/F/umbraconightly/api/v3/index.json" ;;
+        prereleases) echo "https://www.myget.org/F/umbracoprereleases/api/v3/index.json" ;;
+        release) echo "https://api.nuget.org/v3/index.json" ;;
+    esac
+}
 
 # Determine repository root (parent of scripts folder)
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &>/dev/null && pwd )"
@@ -31,13 +34,22 @@ while [[ $# -gt 0 ]]; do
             SITE_NAME="$2"
             shift 2
             ;;
-        --feed)
-            FEED="$2"
+        --name=*)
+            SITE_NAME="${1#*=}"
+            shift
+            ;;
+        --feed|--feed=*)
+            if [[ "$1" == --feed=* ]]; then
+                FEED="${1#*=}"
+                shift
+            else
+                FEED="$2"
+                shift 2
+            fi
             if [[ "$FEED" != "nightly" && "$FEED" != "prereleases" && "$FEED" != "release" ]]; then
                 echo "Error: --feed must be 'nightly', 'prereleases', or 'release'"
                 exit 1
             fi
-            shift 2
             ;;
         --skip-template-install|-s)
             SKIP_TEMPLATE_INSTALL=true
@@ -67,7 +79,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Set feed URL based on selection
-FEED_URL="${FEED_URLS[$FEED]}"
+FEED_URL="$(feed_url "$FEED")"
 
 # Detect major version from the Umbraco.Cms.Core lower bound in Directory.Packages.props
 PACKAGES_PROPS_PATH="$REPO_ROOT/Directory.Packages.props"
@@ -192,6 +204,8 @@ else
     </packageSource>
     <packageSource key="nuget.org">
       <package pattern="*" />
+      <package pattern="Umbraco.AI" />
+      <package pattern="Umbraco.AI.*" />
       <package pattern="Umbraco.Cms.Search.*" />
     </packageSource>
   </packageSourceMapping>
@@ -266,10 +280,10 @@ echo "  Installing Umbraco.AI.ZAI..."
 dotnet add package Umbraco.AI.ZAI --version "$VERSION_FLOAT"
 
 echo "  Installing Umbraco.AI.TypeSafe..."
-dotnet add package Umbraco.AI.TypeSafe $PRERELEASE_FLAG
+dotnet add package Umbraco.AI.TypeSafe --version "$VERSION_FLOAT"
 
 echo "  Installing Umbraco.AI.Cloudflare..."
-dotnet add package Umbraco.AI.Cloudflare $PRERELEASE_FLAG
+dotnet add package Umbraco.AI.Cloudflare --version "$VERSION_FLOAT"
 
 # Add-on packages (includes Startup + Web.StaticAssets)
 echo "  Installing Umbraco.AI.Prompt..."

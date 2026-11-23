@@ -123,12 +123,11 @@ artifact written by an older version can't carry a secret into another environme
 
 ### UDI Registration
 
-Deploy uses UDI (Umbraco Unique Identifier) for entity references:
+Deploy uses UDI (Umbraco Unique Identifier) for entity references. Deploy 19 registers the UDI type of every `[UdiDefinition]` on a public service connector at composition, so don't call `UdiParser.RegisterUdiType`:
 
 ```csharp
-UdiParser.RegisterUdiType(UmbracoAIConstants.UdiEntityType.Connection, UdiType.GuidUdi);
-UdiParser.RegisterUdiType(UmbracoAIConstants.UdiEntityType.Profile, UdiType.GuidUdi);
-UdiParser.RegisterUdiType(UmbracoAIConstants.UdiEntityType.Context, UdiType.GuidUdi);
+[UdiDefinition(UmbracoAIConstants.UdiEntityType.Connection, UdiType.GuidUdi)]
+public class UmbracoAIConnectionServiceConnector : ...
 ```
 
 ### Dependency Modes
@@ -231,8 +230,8 @@ Unit tests focus on:
 - Use `AddDiskEntityType`, not `AddTransferEntityType`
 - Register disk entity types once, in the package's composer, through Deploy 19's options:
   `builder.Services.Configure<DeployEntityTypesOptions>(o => o.AddDiskEntityType(...))`.
-  `IDiskEntityService.RegisterDiskEntityType` was removed in Deploy 19. UDI types are still
-  registered in the package's `IAsyncComponent` (e.g. `UmbracoAIDeployComponent`)
+  `IDiskEntityService.RegisterDiskEntityType` was removed in Deploy 19. UDI types come from the
+  connectors' `[UdiDefinition]` attributes
 - Configuration managed through backoffice, deployed through git
 
 **Why disk-based?**

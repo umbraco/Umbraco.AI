@@ -5,6 +5,18 @@ All notable changes to Umbraco.AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.8.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@18.8.1...Umbraco.AI@18.8.2) (2026-11-23)
+
+### fix
+
+* **core:** Check every address the web fetch tool connects to ([4bd0ccc](https://github.com/umbraco/Umbraco.AI/commit/4bd0ccc649b21b77f183f674e3637328a2284775)), closes [#792](https://github.com/umbraco/Umbraco.AI/issues/792) [#783](https://github.com/umbraco/Umbraco.AI/issues/783)
+* **core:** Don't fail get-content on pages with member pickers ([bf52784](https://github.com/umbraco/Umbraco.AI/commit/bf5278436df86935039cb5ddb98aa5e1cc23b6cf)), closes [#789](https://github.com/umbraco/Umbraco.AI/issues/789)
+* **core:** Require ImageSharp 3.2.0 or later to pick up its security fixes ([c7c458a](https://github.com/umbraco/Umbraco.AI/commit/c7c458aa9cdce4c0c68d86e3dbe864b9045ea22b)), closes [#795](https://github.com/umbraco/Umbraco.AI/issues/795)
+
+### perf
+
+* **core:** Load picked AI contexts in one query ([4da0a6f](https://github.com/umbraco/Umbraco.AI/commit/4da0a6f63d2a4c6cd9be97568cbf43266788ba1d)), closes [#797](https://github.com/umbraco/Umbraco.AI/issues/797)
+
 ## [18.8.1](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI@18.8.0...Umbraco.AI@18.8.1) (2026-11-17)
 
 ### fix

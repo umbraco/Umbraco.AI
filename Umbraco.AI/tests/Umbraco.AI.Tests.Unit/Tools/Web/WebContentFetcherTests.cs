@@ -1,8 +1,10 @@
 using System.Net;
 using System.Text;
+
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+
 using Umbraco.AI.Core.Tools.Web;
 
 namespace Umbraco.AI.Tests.Unit.Tools.Web;
@@ -101,6 +103,50 @@ public class WebContentFetcherTests
         result.Content!.TextContent.ShouldBe("done");
     }
 
+    [Fact]
+    public async Task FetchAsync_WhenRedirectedFromHttpsToHttp_Refuses()
+    {
+        const string secureUrl = "https://93.184.216.34/start";
+        _handler.Respond(secureUrl, Redirect("http://93.184.216.34/plain"));
+        _handler.Respond("http://93.184.216.34/plain", Page("plain"));
+
+        var result = await _fetcher.FetchAsync(secureUrl);
+
+        result.Success.ShouldBeFalse();
+        result.Error!.ShouldContain("HTTPS to HTTP");
+        _handler.Requested.ShouldBe([secureUrl]);
+    }
+
+    [Fact]
+    public async Task FetchAsync_WhenHopsTogetherExceedTimeout_TimesOut()
+    {
+        // Each hop is under the timeout on its own; together they exceed it.
+        _options.TimeoutSeconds = 1;
+        _handler.Delay = TimeSpan.FromMilliseconds(600);
+        _handler.Respond(PublicUrl, Redirect("/a"));
+        _handler.Respond("http://93.184.216.34/a", Page("late"));
+
+        var result = await _fetcher.FetchAsync(PublicUrl);
+
+        result.Success.ShouldBeFalse();
+        result.Error.ShouldBe("Request timed out");
+    }
+
+    [Fact]
+    public async Task FetchAsync_WhenCallerCancelsMidRedirect_ThrowsCancellation()
+    {
+        using var caller = new CancellationTokenSource();
+        _handler.Respond(PublicUrl, Redirect("/a"));
+        _handler.Respond("http://93.184.216.34/a", () =>
+        {
+            caller.Cancel();
+            return null;
+        });
+
+        await Should.ThrowAsync<OperationCanceledException>(() => _fetcher.FetchAsync(PublicUrl, caller.Token));
+        _handler.Requested.Count.ShouldBe(2);
+    }
+
     private static Func<HttpResponseMessage> Page(string text) => () => new HttpResponseMessage(HttpStatusCode.OK)
     {
         Content = new StringContent(text, Encoding.UTF8, "text/html"),
@@ -115,19 +161,33 @@ public class WebContentFetcherTests
 
     private sealed class StubHandler : HttpMessageHandler
     {
-        private readonly Dictionary<string, Func<HttpResponseMessage>> _responses = new();
+        private readonly Dictionary<string, Func<HttpResponseMessage?>> _responses = new();
+
+        public TimeSpan Delay { get; set; }
 
         public List<string> Requested { get; } = [];
 
-        public void Respond(string url, Func<HttpResponseMessage> response) => _responses[url] = response;
+        public void Respond(string url, Func<HttpResponseMessage?> response) => _responses[url] = response;
 
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var url = request.RequestUri!.AbsoluteUri;
             Requested.Add(url);
-            return Task.FromResult(_responses.TryGetValue(url, out var response)
-                ? response()
-                : new HttpResponseMessage(HttpStatusCode.NotFound));
+            if (Delay > TimeSpan.Zero)
+            {
+                await Task.Delay(Delay, cancellationToken);
+            }
+
+            var response = _responses.TryGetValue(url, out var respond)
+                ? respond()
+                : new HttpResponseMessage(HttpStatusCode.NotFound);
+            if (response is null)
+            {
+                // A null response means "hang until cancelled".
+                await Task.Delay(Timeout.Infinite, cancellationToken);
+            }
+
+            return response!;
         }
     }
 }

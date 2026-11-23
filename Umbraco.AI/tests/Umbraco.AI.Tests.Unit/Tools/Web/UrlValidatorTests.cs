@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Options;
+
 using Umbraco.AI.Core.Tools.Web;
 
 namespace Umbraco.AI.Tests.Unit.Tools.Web;

@@ -11,7 +11,8 @@ namespace Umbraco.AI.Core.Tools.Web;
 /// The URL validator resolves the host before the request, but the HTTP client resolves it again when it
 /// connects, and the second answer can differ. The connect callback here resolves the host itself, rejects
 /// any private, local or reserved address with <see cref="PrivateAddressCheck"/>, and connects only to an
-/// address it has checked.
+/// address it has checked. Connections to a configured proxy are not checked, and the proxy resolves the target
+/// itself, so behind a proxy a changed DNS answer is not caught at connect time.
 /// </remarks>
 internal static class WebFetchConnector
 {
@@ -21,19 +22,26 @@ internal static class WebFetchConnector
     /// <remarks>
     /// Redirects are not followed here. <see cref="WebContentFetcher"/> follows them itself so each hop is validated.
     /// </remarks>
-    public static SocketsHttpHandler CreatePrimaryHandler() => new()
+    public static SocketsHttpHandler CreatePrimaryHandler(IWebProxy? proxy = null)
     {
-        AllowAutoRedirect = false,
-        UseProxy = true,
-        ConnectCallback = ConnectAsync,
-    };
+        var handler = new SocketsHttpHandler
+        {
+            AllowAutoRedirect = false,
+            UseProxy = true,
+            Proxy = proxy,
+        };
 
-    private static ValueTask<Stream> ConnectAsync(SocketsHttpConnectionContext context, CancellationToken cancellationToken)
-    {
-        // With a proxy configured, the handler connects to the proxy rather than the target. The proxy is set by
-        // the site's own configuration, so it is trusted; the target was already checked by the URL validator.
-        var enforce = !IsProxyConnection(context.InitialRequestMessage.RequestUri, context.DnsEndPoint);
-        return ConnectAsync(context.DnsEndPoint, enforce, Dns.GetHostAddressesAsync, cancellationToken);
+        handler.ConnectCallback = (context, cancellationToken) =>
+        {
+            // When the handler goes through a proxy it connects to the proxy, not the target. The proxy comes
+            // from the site's own configuration, so it is trusted and not checked here. Behind a proxy the proxy
+            // resolves the target itself, so only the URL validator's check applies to the target.
+            var activeProxy = handler.UseProxy ? handler.Proxy ?? HttpClient.DefaultProxy : null;
+            var enforce = !IsProxyEndpoint(activeProxy, context.InitialRequestMessage, context.DnsEndPoint);
+            return ConnectAsync(context.DnsEndPoint, enforce, Dns.GetHostAddressesAsync, cancellationToken);
+        };
+
+        return handler;
     }
 
     /// <summary>
@@ -90,23 +98,47 @@ internal static class WebFetchConnector
     }
 
     /// <summary>
-    /// Returns <c>true</c> when the handler is connecting to somewhere other than the request's own host,
-    /// which only happens when it connects to a proxy.
+    /// Returns <c>true</c> only when <paramref name="endpoint"/> is the proxy that <paramref name="proxy"/> chooses
+    /// for the request's target. Every other connection is treated as a direct connection to the target.
     /// </summary>
-    /// <param name="requestUri">The request's URI.</param>
+    /// <param name="proxy">The proxy the handler uses, or <c>null</c> when it uses none.</param>
+    /// <param name="request">The request that opened the connection. For HTTPS through a proxy this is the
+    /// CONNECT request, whose Host header names the target.</param>
     /// <param name="endpoint">The endpoint the handler is connecting to.</param>
-    internal static bool IsProxyConnection(Uri? requestUri, DnsEndPoint endpoint)
+    internal static bool IsProxyEndpoint(IWebProxy? proxy, HttpRequestMessage request, DnsEndPoint endpoint)
     {
-        if (requestUri is null)
+        if (proxy is null || request.RequestUri is null)
         {
             return false;
         }
 
-        return !string.Equals(
-                   TrimBrackets(requestUri.IdnHost),
+        var target = request.RequestUri;
+        if (request.Method == HttpMethod.Connect)
+        {
+            // The CONNECT request is addressed to the proxy; its Host header carries the target authority.
+            if (string.IsNullOrEmpty(request.Headers.Host)
+                || !Uri.TryCreate($"https://{request.Headers.Host}/", UriKind.Absolute, out target))
+            {
+                return false;
+            }
+        }
+
+        if (proxy.IsBypassed(target))
+        {
+            return false;
+        }
+
+        var proxyUri = proxy.GetProxy(target);
+        if (proxyUri is null || !proxyUri.IsAbsoluteUri)
+        {
+            return false;
+        }
+
+        return string.Equals(
+                   TrimBrackets(proxyUri.IdnHost),
                    TrimBrackets(endpoint.Host),
                    StringComparison.OrdinalIgnoreCase)
-               || requestUri.Port != endpoint.Port;
+               && proxyUri.Port == endpoint.Port;
     }
 
     private static string TrimBrackets(string host)

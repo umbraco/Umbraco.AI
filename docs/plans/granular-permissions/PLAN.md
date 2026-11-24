@@ -199,7 +199,7 @@ frontend criteria use Vitest.
   Acceptance: unit spec: the best-matching agent limited to another group isn't picked.
   depends-on: T16. parallel-group: C
 
-- [ ] **T19** - story: GP-10 (AC4). Make sure agent test runs call the agent service with the
+- [x] **T19** - story: GP-10 (AC4). Make sure agent test runs call the agent service with the
   runner's groups (architecture guess 5). Add the spec; change the test-run path only if it
   passes a different user.
   Acceptance: spec: a test run by a user outside the agent's groups is refused.

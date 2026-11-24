@@ -254,7 +254,7 @@ frontend criteria use Vitest.
   Acceptance: `npm run build:agent`.
   depends-on: T23. parallel-group: D
 
-- [ ] **T48** - story: GP-18 (AC3, AC4). `agent-governance-workspace-view.element.ts` passes the
+- [x] **T48** - story: GP-18 (AC3, AC4). `agent-governance-workspace-view.element.ts` passes the
   current user's group keys as `editableUserGroupIds` to `user-group-tool-permissions.element.ts`,
   which forwards them to the list. Admins pass nothing, so every row stays editable.
   Acceptance: `npm run build:agent`.

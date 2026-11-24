@@ -7,6 +7,7 @@ import { tryExecute } from "@umbraco-cms/backoffice/resources";
 import { UAI_ITEM_PICKER_MODAL } from "@umbraco-ai/core";
 import type { UaiPickableItemModel } from "@umbraco-ai/core";
 import { AgentsService } from "../../../api/index.js";
+import { buildAutomateWorkspaceOnBehalfOf } from "./on-behalf-of.js";
 
 const elementName = "uai-agent-picker";
 const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
@@ -40,6 +41,13 @@ export class UaiAgentPickerElement extends UmbFormControlMixin<string | undefine
      */
     @property({ type: String, attribute: "surface-id" })
     public surfaceId?: string;
+
+    /**
+     * Optional Automate workspace ID. When set, the picker lists (and looks up) the agents the
+     * workspace's service account can use, instead of the current user's.
+     */
+    @property({ type: String, attribute: "workspace-id" })
+    public workspaceId?: string;
 
     override set value(val: string | undefined) {
         this.#setValue(val);
@@ -90,6 +98,7 @@ export class UaiAgentPickerElement extends UmbFormControlMixin<string | undefine
             this,
             AgentsService.getAgentByIdOrAlias({
                 path: { agentIdOrAlias: this._selectedId },
+                query: { onBehalfOf: buildAutomateWorkspaceOnBehalfOf(this.workspaceId) },
             }),
         );
 
@@ -142,6 +151,7 @@ export class UaiAgentPickerElement extends UmbFormControlMixin<string | undefine
                     take: 100,
                     surfaceId: this.surfaceId,
                     isActive: true,
+                    onBehalfOf: buildAutomateWorkspaceOnBehalfOf(this.workspaceId),
                 },
             }),
         );

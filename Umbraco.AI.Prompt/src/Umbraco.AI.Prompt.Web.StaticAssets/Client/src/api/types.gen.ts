@@ -15,6 +15,7 @@ export type CreatePromptRequestModel = {
     contextIds?: null | Array<string>;
     guardrailIds?: null | Array<string>;
     tags?: null | Array<string>;
+    allowedUserGroupIds?: null | Array<string>;
     displayMode: AiPromptDisplayModeModel;
     scope?: null | ScopeModel;
     includeEntityContext: boolean;
@@ -74,6 +75,7 @@ export type PromptResponseModel = {
     contextIds: Array<string>;
     guardrailIds: Array<string>;
     tags: Array<string>;
+    allowedUserGroupIds: Array<string>;
     isActive: boolean;
     displayMode: AiPromptDisplayModeModel;
     scope?: null | ScopeModel;
@@ -116,6 +118,7 @@ export type UpdatePromptRequestModel = {
     contextIds?: null | Array<string>;
     guardrailIds?: null | Array<string>;
     tags?: null | Array<string>;
+    allowedUserGroupIds?: null | Array<string>;
     isActive: boolean;
     displayMode: AiPromptDisplayModeModel;
     scope?: null | ScopeModel;
@@ -155,6 +158,7 @@ export type GetAllPromptsData = {
         take?: number;
         filter?: string;
         profileId?: string;
+        includeRestricted?: boolean;
     };
     url: '/umbraco/ai/management/api/v1/prompts';
 };
@@ -191,6 +195,10 @@ export type CreatePromptErrors = {
      * The resource is protected and requires an authentication token
      */
     401: unknown;
+    /**
+     * Forbidden
+     */
+    403: ProblemDetails;
     /**
      * Conflict
      */
@@ -314,6 +322,10 @@ export type UpdatePromptErrors = {
      */
     401: unknown;
     /**
+     * Forbidden
+     */
+    403: ProblemDetails;
+    /**
      * Not Found
      */
     404: ProblemDetails;
@@ -347,9 +359,25 @@ export type ExecutePromptErrors = {
      */
     401: unknown;
     /**
+     * Forbidden
+     */
+    403: ProblemDetails;
+    /**
      * Not Found
      */
     404: ProblemDetails;
+    /**
+     * Too Many Requests
+     */
+    429: ProblemDetails;
+    /**
+     * Bad Gateway
+     */
+    502: ProblemDetails;
+    /**
+     * Service Unavailable
+     */
+    503: ProblemDetails;
 };
 
 export type ExecutePromptError = ExecutePromptErrors[keyof ExecutePromptErrors];

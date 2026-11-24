@@ -7,10 +7,10 @@
 > **1 guess needs your OK.**
 >
 > 1. Rollback of an entity type with no known right (one added by a package we don't know) is
->    refused with 403 (T6). Core maps each AI entity type it knows, plus `agent` and
->    `prompt`, to their rights.\
->    *If not:* an unknown entity type only needs the AI section, as today. That leaves rollback
->    open for any future add-on until someone adds it to the map.
+>    refused with 403 (T6). Each versionable adapter names the right its rollback needs
+>    (`RollbackPermission`); one that names none can't be rolled back.\
+>    *If not:* an adapter that names no right only needs the AI section, as today. That leaves
+>    rollback open for any add-on that hasn't declared a right.
 
 How to read it: areas run top to bottom. Tasks with the same `parallel-group` letter share no
 file or migration and can be built at once. Every `wire:` task is proven through the running
@@ -71,10 +71,11 @@ frontend criteria use Vitest.
   Acceptance: `MonitoringAuthorizationTests` and the audit log row of `AreaWriteAuthorizationTests` green.
   depends-on: T2. parallel-group: A
 
-- [ ] **T6** - story: GP-3 (AC1-AC4). In `Versioning/Controllers/EntityVersionHistoryController.cs`,
+- [x] **T6** - story: GP-3 (AC1-AC4). In `Versioning/Controllers/EntityVersionHistoryController.cs`,
   rollback checks the manage right of the area that owns `entityType`, through
-  `IAuthorizationService` and the T2 policies. Map each core entity type, plus `agent` and
-  `prompt`, to its policy. An unmapped type gets 403 (PLAN guess 1). An
+  `IAuthorizationService` and the T2 requirements. Each `IAIVersionableEntityAdapter` declares
+  that right as `RollbackPermission` (default null); the core adapters, `agent` and `prompt`
+  set it. An adapter that declares none gets 403 (PLAN guess 1). An
   `AIPermissionDeniedException` thrown by an adapter's rollback (an add-on's save rule, T46) also
   returns 403. Version list and detail stay as they are.
   Acceptance: `RollbackAuthorizationTests` green: profile rollback 200 with Manage profiles, 403 without, version

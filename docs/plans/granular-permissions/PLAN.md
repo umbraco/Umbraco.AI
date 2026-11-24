@@ -341,7 +341,7 @@ frontend criteria use Vitest.
 
 ## Automate (Umbraco.AI.Automate)
 
-- [ ] **T37** - story: GP-14 (AC1-AC4). Add `Security/AutomateWorkspaceAgentUserGroupResolver.cs`
+- [x] **T37** - story: GP-14 (AC1-AC4). Add `Security/AutomateWorkspaceAgentUserGroupResolver.cs`
   (kind `automate-workspace`): checks the caller can access the workspace, then gets its service
   account through `IWorkspaceServiceAccountResolver` and returns that user's group keys. Register
   it in the Automate Composer. Raise the `Umbraco.Automate.Core` floor to `[18.5.0, 18.999.999)`

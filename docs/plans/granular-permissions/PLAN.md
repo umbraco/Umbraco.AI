@@ -183,7 +183,7 @@ frontend criteria use Vitest.
   Acceptance: unit specs for each criterion.
   depends-on: T16
 
-- [ ] **T46** - story: GP-18 (AC1, AC2, AC5-AC8), GP-8 (AC8). Extend the save rule from T17 in
+- [x] **T46** - story: GP-18 (AC1, AC2, AC5-AC8), GP-8 (AC8). Extend the save rule from T17 in
   `AIAgentService.SaveAgentAsync` to `AIStandardAgentConfig.UserGroupPermissions`: compare the
   saved and incoming dictionaries; a non-admin may add, change or remove only entries keyed by
   groups they belong to (SPEC R22). Same refusal as T17: both throw the core's internal `AIPermissionDeniedException`, and nothing

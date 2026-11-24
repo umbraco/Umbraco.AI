@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Agent.Web.Api.Management.Agent.Models;
+using Umbraco.AI.Core.Security;
 using Umbraco.AI.Web.Api.Common.Models;
 using Umbraco.AI.Web.Authorization;
 using Umbraco.Cms.Core.Mapping;
@@ -15,7 +16,7 @@ namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 /// Controller for updating Agents.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ManageAgentsAI)]
 public class UpdateAgentController : AgentControllerBase
 {
     private readonly IAIAgentService _AIAgentService;
@@ -40,6 +41,7 @@ public class UpdateAgentController : AgentControllerBase
     [HttpPut($"{{{nameof(agentIdOrAlias)}}}")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UpdateAgent(
@@ -47,7 +49,8 @@ public class UpdateAgentController : AgentControllerBase
         [FromBody] UpdateAgentRequestModel model,
         CancellationToken cancellationToken = default)
     {
-        AIAgent? existing = await _AIAgentService.GetAgentAsync(agentIdOrAlias, cancellationToken);
+        // Managed access: editing an agent doesn't need being able to use it (the group list rule still applies).
+        AIAgent? existing = await _AIAgentService.GetAgentAsync(agentIdOrAlias, includeRestricted: true, cancellationToken);
         if (existing is null)
         {
             return AgentNotFound();
@@ -55,7 +58,15 @@ public class UpdateAgentController : AgentControllerBase
 
         AIAgent agent = _umbracoMapper.Map(model, existing);
 
-        await _AIAgentService.SaveAgentAsync(agent, cancellationToken);
+        try
+        {
+            await _AIAgentService.SaveAgentAsync(agent, cancellationToken);
+        }
+        catch (AIPermissionDeniedException ex)
+        {
+            return Forbidden(ex.Message);
+        }
+
         return Ok();
     }
 }

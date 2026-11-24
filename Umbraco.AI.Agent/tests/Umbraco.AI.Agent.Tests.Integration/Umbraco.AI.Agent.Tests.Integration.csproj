@@ -16,6 +16,7 @@
     <ItemGroup>
         <PackageReference Include="coverlet.collector" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="Microsoft.AspNetCore.TestHost" />
         <PackageReference Include="Moq" />
         <PackageReference Include="Shouldly" />
         <PackageReference Include="Umbraco.Cms.Persistence.Sqlite" />
@@ -35,6 +36,7 @@
         <ProjectReference Include="..\..\src\Umbraco.AI.Agent.Core\Umbraco.AI.Agent.Core.csproj" />
         <ProjectReference Include="..\..\src\Umbraco.AI.Agent.Persistence\Umbraco.AI.Agent.Persistence.csproj" />
         <ProjectReference Include="..\..\src\Umbraco.AI.Agent.Persistence.Sqlite\Umbraco.AI.Agent.Persistence.Sqlite.csproj" />
+        <ProjectReference Include="..\..\src\Umbraco.AI.Agent.Web\Umbraco.AI.Agent.Web.csproj" />
     </ItemGroup>
 
 </Project>

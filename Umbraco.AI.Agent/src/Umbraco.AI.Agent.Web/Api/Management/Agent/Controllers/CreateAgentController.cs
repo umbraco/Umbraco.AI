@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Web.Api.Management.Agent.Models;
+using Umbraco.AI.Core.Security;
 using Umbraco.AI.Web.Authorization;
 using Umbraco.Cms.Core.Mapping;
 
@@ -13,7 +14,7 @@ namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 /// Controller for creating Agents.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ManageAgentsAI)]
 public class CreateAgentController : AgentControllerBase
 {
     private readonly IAIAgentService _AIAgentService;
@@ -37,6 +38,7 @@ public class CreateAgentController : AgentControllerBase
     [HttpPost]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(AgentResponseModel), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateAgent(
@@ -54,6 +56,10 @@ public class CreateAgentController : AgentControllerBase
                 "ByIdOrAliasAgent",
                 new { agentIdOrAlias = created.Id },
                 created.Id.ToString());
+        }
+        catch (AIPermissionDeniedException ex)
+        {
+            return Forbidden(ex.Message);
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("already exists"))
         {

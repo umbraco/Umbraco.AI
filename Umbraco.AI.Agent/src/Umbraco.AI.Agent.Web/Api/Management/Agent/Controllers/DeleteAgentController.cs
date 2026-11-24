@@ -13,7 +13,7 @@ namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 /// Controller for deleting Agents.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ManageAgentsAI)]
 public class DeleteAgentController : AgentControllerBase
 {
     private readonly IAIAgentService _AIAgentService;
@@ -40,7 +40,7 @@ public class DeleteAgentController : AgentControllerBase
         IdOrAlias agentIdOrAlias,
         CancellationToken cancellationToken = default)
     {
-        var agentId = await _AIAgentService.TryGetAgentIdAsync(agentIdOrAlias, cancellationToken);
+        var agentId = await _AIAgentService.TryGetAgentIdAsync(agentIdOrAlias, includeRestricted: true, cancellationToken);
         if (agentId is null)
         {
             return AgentNotFound();

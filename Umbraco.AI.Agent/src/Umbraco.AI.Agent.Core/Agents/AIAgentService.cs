@@ -115,6 +115,19 @@ internal sealed class AIAgentService : IAIAgentService, IAIAgentUnrestrictedRead
     }
 
     /// <inheritdoc />
+    public async Task<AIAgent?> GetAgentAsync(Guid id, IReadOnlyCollection<Guid> userGroupIds, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(userGroupIds);
+
+        var agent = await _repository.GetByIdAsync(id, cancellationToken);
+        return agent is not null && _permissionService.CanUse(agent.AllowedUserGroupIds, userGroupIds) ? agent : null;
+    }
+
+    /// <inheritdoc />
+    public async Task<AIAgent?> GetAgentForUseAsync(Guid id, CancellationToken cancellationToken = default)
+        => EnsureAvailableForCurrentUser(await _repository.GetByIdAsync(id, cancellationToken));
+
+    /// <inheritdoc />
     public Task<AIAgent?> GetAgentByAliasAsync(string alias, CancellationToken cancellationToken = default)
         => GetAgentByAliasAsync(alias, includeRestricted: false, cancellationToken);
 
@@ -124,6 +137,19 @@ internal sealed class AIAgentService : IAIAgentService, IAIAgentUnrestrictedRead
         var agent = await _repository.GetByAliasAsync(alias, cancellationToken);
         return agent is not null && IsVisible(agent, includeRestricted) ? agent : null;
     }
+
+    /// <inheritdoc />
+    public async Task<AIAgent?> GetAgentByAliasAsync(string alias, IReadOnlyCollection<Guid> userGroupIds, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(userGroupIds);
+
+        var agent = await _repository.GetByAliasAsync(alias, cancellationToken);
+        return agent is not null && _permissionService.CanUse(agent.AllowedUserGroupIds, userGroupIds) ? agent : null;
+    }
+
+    /// <inheritdoc />
+    public async Task<AIAgent?> GetAgentForUseByAliasAsync(string alias, CancellationToken cancellationToken = default)
+        => EnsureAvailableForCurrentUser(await _repository.GetByAliasAsync(alias, cancellationToken));
 
     /// <inheritdoc />
     public Task<IEnumerable<AIAgent>> GetAgentsAsync(CancellationToken cancellationToken = default)
@@ -155,6 +181,23 @@ internal sealed class AIAgentService : IAIAgentService, IAIAgentUnrestrictedRead
         => _repository.GetPagedAsync(
             skip, take, filter, profileId, surfaceId, isActive, agentType,
             GetUsableByGroupKeys(includeRestricted), cancellationToken);
+
+    /// <inheritdoc />
+    public Task<(IEnumerable<AIAgent> Items, int Total)> GetAgentsPagedAsync(
+        int skip,
+        int take,
+        string? filter,
+        Guid? profileId,
+        string? surfaceId,
+        bool? isActive,
+        AIAgentType? agentType,
+        IReadOnlyCollection<Guid> userGroupIds,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(userGroupIds);
+
+        return _repository.GetPagedAsync(skip, take, filter, profileId, surfaceId, isActive, agentType, userGroupIds, cancellationToken);
+    }
 
     /// <inheritdoc />
     public Task<IEnumerable<AIAgent>> GetAgentsBySurfaceAsync(string surfaceId, CancellationToken cancellationToken = default)
@@ -204,6 +247,16 @@ internal sealed class AIAgentService : IAIAgentService, IAIAgentUnrestrictedRead
         {
             throw new AIAgentNotAvailableException(agent.Id);
         }
+    }
+
+    private AIAgent? EnsureAvailableForCurrentUser(AIAgent? agent)
+    {
+        if (agent is not null)
+        {
+            EnsureAgentAvailable(agent, new AIAgentExecutionOptions());
+        }
+
+        return agent;
     }
 
     /// <inheritdoc />

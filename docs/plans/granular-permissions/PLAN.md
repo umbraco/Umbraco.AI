@@ -284,7 +284,7 @@ frontend criteria use Vitest.
   Acceptance: Prompt specs: save and reload keep the list; rollback restores it.
   depends-on: none. parallel-group: S
 
-- [ ] **T29** - story: GP-6 (AC4). New Prompt migration plan plus `GrantAIPromptPermissions`
+- [x] **T29** - story: GP-6 (AC4). New Prompt migration plan plus `GrantAIPromptPermissions`
   (`Uai.Prompt.Manage`), same rules as T8.
   Acceptance: spec: section groups get the verb once.
   depends-on: T1, T8

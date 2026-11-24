@@ -65,7 +65,7 @@ frontend criteria use Vitest.
   Acceptance: `AreaWriteAuthorizationTests` theory green for the test controllers: 403 without `Uai.Test.Manage`, success with it.
   depends-on: T2. parallel-group: A
 
-- [ ] **T5** - story: GP-4 (AC1-AC5), GP-2 (AC7). Audit log list and detail → View logs policy.
+- [x] **T5** - story: GP-4 (AC1-AC5), GP-2 (AC7). Audit log list and detail → View logs policy.
   Audit log delete and cleanup → Manage settings policy (spec guess 1). Usage summary, time
   series and breakdown → View analytics policy.
   Acceptance: `MonitoringAuthorizationTests` and the audit log row of `AreaWriteAuthorizationTests` green.

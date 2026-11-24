@@ -310,7 +310,7 @@ frontend criteria use Vitest.
   grants Manage prompts on start.
   depends-on: T29, T31
 
-- [ ] **T33** - story: GP-1, GP-5, GP-12 (AC1, AC2, AC6). Regenerate the Prompt client; add
+- [x] **T33** - story: GP-1, GP-5, GP-12 (AC1, AC2, AC6). Regenerate the Prompt client; add
   `prompt/permissions/manifests.ts` (Manage prompts, "Add-ons"); add the condition to prompt menu,
   collection, entity actions and workspace; AI section collection uses `includeRestricted=true`;
   Access box in `prompt-availability-workspace-view.element.ts` mirroring T25. Match
@@ -318,7 +318,7 @@ frontend criteria use Vitest.
   Acceptance: `npm run build:prompt`.
   depends-on: T10, T25, T32
 
-- [ ] **T34** - **wire: prompt Access box and limits into the backoffice.** story: GP-12, GP-13.
+- [x] **T34** - **wire: prompt Access box and limits into the backoffice.** story: GP-12, GP-13.
   Smoke test on the demo site.
   Acceptance: the Access box saves and reopens "Editors"; for a user outside "Editors" the prompt
   property action and toolbar don't offer the prompt; for a member they do.

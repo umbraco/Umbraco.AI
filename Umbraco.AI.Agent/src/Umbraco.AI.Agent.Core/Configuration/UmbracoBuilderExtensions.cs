@@ -144,6 +144,10 @@ public static class UmbracoBuilderExtensions
         builder.AIAgentSurfaces()
             .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIAgentSurface, AIAgentSurfaceAttribute>(cache: true));
 
+        // onBehalfOf resolvers: empty by default, add-ons (e.g. Automate) add one per kind.
+        builder.AIAgentUserGroupResolvers();
+        builder.Services.AddSingleton<IAIAgentUserGroupResolutionService, AIAgentUserGroupResolutionService>();
+
         // Register the agent selector collection. See AddDefaultAIAgentSelectors for the order.
         AddDefaultAIAgentSelectors(builder.AIAgentSelectors());
 

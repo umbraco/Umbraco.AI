@@ -60,7 +60,7 @@ frontend criteria use Vitest.
   the entity unchanged after a 403, `GET profiles` 200 without any AI right.
   depends-on: T2. parallel-group: A
 
-- [ ] **T4** - story: GP-2 (AC2). Test and TestRun controllers: create, update, delete, run, run
+- [x] **T4** - story: GP-2 (AC2). Test and TestRun controllers: create, update, delete, run, run
   batch, run by tags and test run delete → Manage tests policy.
   Acceptance: `AreaWriteAuthorizationTests` theory green for the test controllers: 403 without `Uai.Test.Manage`, success with it.
   depends-on: T2. parallel-group: A

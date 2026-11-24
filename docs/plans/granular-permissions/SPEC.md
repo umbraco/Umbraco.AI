@@ -58,7 +58,7 @@ Every endpoint below also needs the AI section, as today. A request without the 
 - **Manage profiles, contexts, guardrails:** the create, update and delete endpoints of each.
 - **Manage settings:** `PUT settings`. Also audit log delete and cleanup (guess 1).
 - **Manage tests:** test create, update, delete, run, run batch, run by tags, and test run
-  delete.
+  delete, and set baseline (`POST test-runs/baseline/{testId}/{testRunId}`).
 - **View logs:** audit log list and detail.
 - **View analytics:** usage summary, time series and breakdown.
 - **Manage agents:** `POST agents`, `PUT agents/{idOrAlias}`, `DELETE agents/{idOrAlias}`.

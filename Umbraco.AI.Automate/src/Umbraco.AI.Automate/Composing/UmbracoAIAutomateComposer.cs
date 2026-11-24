@@ -52,6 +52,9 @@ public class UmbracoAIAutomateComposer : IComposer
         // Extract Values reads the run date (UTC) from TimeProvider when no reference date is set.
         builder.Services.TryAddSingleton(TimeProvider.System);
 
+        // Decides whether a workspace's service account may use an agent, at publish and at run time.
+        builder.Services.TryAddSingleton<AgentAccessChecker>();
+
         // The Run AI Agent picker asks for the agents of a workspace's service account.
         builder.AIAgentUserGroupResolvers().Append<AutomateWorkspaceAgentUserGroupResolver>();
     }

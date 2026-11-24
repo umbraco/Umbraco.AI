@@ -1,19 +1,26 @@
 using System.Text.Json;
+
 using Json.Schema;
+
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Umbraco.AI.Agent.Core;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Automate.Helpers;
+using Umbraco.AI.Automate.Security;
 using Umbraco.AI.Automate.Triggers;
 using Umbraco.AI.Core.Media;
 using Umbraco.Automate.Core.Actions;
+using Umbraco.Automate.Core.Automations;
 using Umbraco.Automate.Core.Security;
+using Umbraco.Automate.Core.StepTypes;
 using Umbraco.Cms.Core.DependencyInjection;
+using Umbraco.Cms.Core.Models.Membership;
 using Umbraco.Cms.Core.Services;
-using AIAgent = Umbraco.AI.Agent.Core.Agents.AIAgent;
+
 using CoreConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Automate.Actions;
@@ -27,13 +34,14 @@ namespace Umbraco.AI.Automate.Actions;
     Description = "Executes an AI agent and returns its response.",
     Group = "AI",
     Icon = "icon-bot")]
-public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>
+public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>, IPublishValidatableStepType
 {
     private readonly IAIAgentService _agentService;
     private readonly IUserService _userService;
     private readonly IMediaService _mediaService;
     private readonly IAIUmbracoMediaResolver _mediaResolver;
     private readonly IAutomationActionAuthorizer _authorizer;
+    private readonly AgentAccessChecker _accessChecker;
     private readonly ILogger<RunAgentAction> _logger;
 
     /// <summary>
@@ -72,8 +80,31 @@ public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>
         IAIUmbracoMediaResolver mediaResolver,
         IAutomationActionAuthorizer authorizer,
         ILogger<RunAgentAction> logger)
+        : this(
+            infrastructure,
+            agentService,
+            userService,
+            mediaService,
+            mediaResolver,
+            authorizer,
+            StaticServiceProvider.Instance.GetRequiredService<AgentAccessChecker>(),
+            logger)
+    {
+    }
+
+    // The checker is internal, so it can't be a parameter of a public constructor; this one is for tests.
+    internal RunAgentAction(
+        ActionInfrastructure infrastructure,
+        IAIAgentService agentService,
+        IUserService userService,
+        IMediaService mediaService,
+        IAIUmbracoMediaResolver mediaResolver,
+        IAutomationActionAuthorizer authorizer,
+        AgentAccessChecker accessChecker,
+        ILogger<RunAgentAction> logger)
         : base(infrastructure)
     {
+        _accessChecker = accessChecker;
         _agentService = agentService;
         _userService = userService;
         _mediaService = mediaService;
@@ -95,7 +126,7 @@ public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>
             return null;
         }
 
-        return await AgentOutputSchemaHelper.GetOutputSchemaAsync(_agentService, settings.AgentId, cancellationToken);
+        return await AgentOutputSchemaHelper.GetOutputSchemaAsync(_accessChecker.MetadataReader, settings.AgentId, cancellationToken);
     }
 
     /// <summary>
@@ -154,20 +185,31 @@ public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>
             "Automation {AutomationId} / Run {RunId}: Executing AI agent {AgentId}",
             context.AutomationId, context.RunId, settings.AgentId);
 
+        AgentAccess? access = null;
+
         try
         {
-            AIAgent? agent = await _agentService.GetAgentAsync(settings.AgentId, cancellationToken);
-            if (agent is null)
+            // The service account's groups, not the ambient backoffice user's, decide whether the agent may run:
+            // an automation run has no backoffice user, or the wrong one. No service account means no groups, so
+            // a limited agent is refused and never runs. Automate's BackOfficeIdentityMiddleware already fails the
+            // step with Authentication when the workspace has no service account, so this branch is a second safety
+            // net (R19: an agent with a limit is never run without a known user).
+            var serviceAccount = await ResolveServiceAccountAsync(context);
+            access = await _accessChecker.CheckAsync(settings.AgentId, serviceAccount, cancellationToken);
+
+            if (access.Status == AgentAccessStatus.NotFound)
             {
                 return ActionResult.Failed(
                     new InvalidOperationException($"Agent '{settings.AgentId}' not found."),
                     StepRunErrorCategory.Validation);
             }
 
-            // Resolve the service account's user groups for agent tool permission resolution.
-            // In headless/automation context there is no backoffice user, so we must pass
-            // the workspace service account's groups explicitly via AIAgentExecutionOptions.
-            var userGroupIds = await ResolveServiceAccountGroupIdsAsync(context);
+            if (access.Status == AgentAccessStatus.Refused)
+            {
+                return RefusedFailure(access.RefusalReason);
+            }
+
+            var userGroupIds = serviceAccount?.Groups.Select(g => g.Key).ToList() ?? [];
 
             var (attachments, attachmentFailure) = await ResolveAttachmentsAsync(settings.Attachments, cancellationToken);
             if (attachmentFailure is not null)
@@ -207,7 +249,7 @@ public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>
             using var _ = AutomateAgentRunScope.Enter();
 
             AgentResponse response = await _agentService.RunAgentAsync(
-                agent.Id,
+                settings.AgentId,
                 messages,
                 options,
                 cancellationToken);
@@ -221,6 +263,11 @@ public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>
             var outputData = BuildOutputData(responseText);
 
             return Success(outputData);
+        }
+        catch (AIAgentNotAvailableException) when (access is not null)
+        {
+            // Access was checked up front; this is the agent service refusing too, if the limit changed since.
+            return RefusedFailure(access.RefusalReason);
         }
         catch (InvalidOperationException ex)
         {
@@ -355,16 +402,32 @@ public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>
         return (attachments, null);
     }
 
-    private async Task<IEnumerable<Guid>?> ResolveServiceAccountGroupIdsAsync(ActionContext context)
+    private async Task<IUser?> ResolveServiceAccountAsync(ActionContext context)
     {
         var serviceAccountKey = context.ExecutionContext?.ServiceAccountKey;
-        if (serviceAccountKey is null)
+        return serviceAccountKey is null || serviceAccountKey == Guid.Empty
+            ? null
+            : await _userService.GetAsync(serviceAccountKey.Value);
+    }
+
+    private static ActionResult RefusedFailure(string reason)
+        => ActionResult.Failed(new UnauthorizedAccessException(reason), StepRunErrorCategory.Authentication);
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<string>> ValidateSettingsForPublishAsync(
+        object? settings,
+        Automation automation,
+        CancellationToken cancellationToken = default)
+    {
+        if (settings is not RunAgentSettings { AgentId: var agentId } || agentId == Guid.Empty)
         {
-            return null;
+            return [];
         }
 
-        var user = await _userService.GetAsync(serviceAccountKey.Value);
-        return user?.Groups.Select(g => g.Key).ToList();
+        var access = await _accessChecker.CheckForWorkspaceAsync(agentId, automation.WorkspaceId, cancellationToken);
+
+        // The automation service prefixes the step name, so the message only adds the agent.
+        return access.Status == AgentAccessStatus.Refused ? [access.RefusalReason] : [];
     }
 
     /// <summary>

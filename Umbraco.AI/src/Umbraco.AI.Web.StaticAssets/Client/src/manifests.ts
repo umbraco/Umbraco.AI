@@ -33,6 +33,7 @@ import { settingsManifests } from "./settings/manifests.js";
 import { requestContextManifests } from "./request-context/manifests.js";
 import { testManifests } from "./test/manifests.js";
 import { guardrailManifests } from "./guardrail/manifests.js";
+import { permissionManifests } from "./permissions/manifests.js";
 
 // Aggregate all manifests into a single bundle
 // IMPORTANT: This should only include manifest arrays and nothing else
@@ -57,4 +58,5 @@ export const manifests: Array<UmbExtensionManifest | UmbExtensionManifestKind> =
     ...requestContextManifests,
     ...testManifests,
     ...guardrailManifests,
+    ...permissionManifests,
 ];

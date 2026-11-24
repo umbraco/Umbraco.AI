@@ -82,7 +82,7 @@ frontend criteria use Vitest.
   unchanged after a 403, agent rollback 403 with only Manage profiles.
   depends-on: T2. parallel-group: A
 
-- [ ] **T7** - **wire: area policies into the Management API.** story: GP-2, GP-3, GP-4. On the
+- [x] **T7** - **wire: area policies into the Management API.** story: GP-2, GP-3, GP-4. On the
   demo site, make a "Context managers" group with the AI section and only Manage contexts, and a
   user in it.
   Acceptance: as that user, real requests: `POST contexts` 201, `POST connections` 403,

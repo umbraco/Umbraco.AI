@@ -260,7 +260,7 @@ frontend criteria use Vitest.
   Acceptance: `npm run build:agent`.
   depends-on: T23, T47. parallel-group: D
 
-- [ ] **T26** - story: GP-14 (AC1, AC2). `property-editor-ui-agent-picker.element.ts` reads
+- [x] **T26** - story: GP-14 (AC1, AC2). `property-editor-ui-agent-picker.element.ts` reads
   `workspaceId` from its config; `agent-picker.element.ts` passes
   `onBehalfOf=automate-workspace:<workspaceId>` when it's set, and asks as today when not.
   Acceptance: `npm run build:agent`.

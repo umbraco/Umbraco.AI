@@ -2,11 +2,14 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 
 using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Web.Api.Management.Common.Models;
 using Umbraco.AI.Web.Authorization;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Mapping;
 
 namespace Umbraco.AI.Web.Api.Management.Versioning.Controllers;
@@ -25,18 +28,38 @@ public class EntityVersionHistoryController : VersioningControllerBase
     private readonly IAIEntityVersionService _versionService;
     private readonly AIVersionableEntityAdapterCollection _entityTypes;
     private readonly IUmbracoMapper _umbracoMapper;
+    private readonly IAuthorizationService _authorizationService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="EntityVersionHistoryController"/> class.
     /// </summary>
+    [Obsolete("Use the constructor that accepts an IAuthorizationService so rollback can check the owning area's right. Will be removed in v20.")]
     public EntityVersionHistoryController(
         IAIEntityVersionService versionService,
         AIVersionableEntityAdapterCollection entityTypes,
         IUmbracoMapper umbracoMapper)
+        : this(versionService, entityTypes, umbracoMapper, StaticServiceProvider.Instance.GetRequiredService<IAuthorizationService>())
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="EntityVersionHistoryController"/> class.
+    /// </summary>
+    /// <remarks>
+    /// Marked as the activation constructor so <c>ActivatorUtilities</c> does not find two applicable
+    /// constructors while the obsolete overload is kept for compatibility.
+    /// </remarks>
+    [ActivatorUtilitiesConstructor]
+    public EntityVersionHistoryController(
+        IAIEntityVersionService versionService,
+        AIVersionableEntityAdapterCollection entityTypes,
+        IUmbracoMapper umbracoMapper,
+        IAuthorizationService authorizationService)
     {
         _versionService = versionService;
         _entityTypes = entityTypes;
         _umbracoMapper = umbracoMapper;
+        _authorizationService = authorizationService;
     }
 
     /// <summary>
@@ -233,6 +256,7 @@ public class EntityVersionHistoryController : VersioningControllerBase
     [MapToApiVersion("1.0")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> RollbackToVersion(
         [FromRoute] string entityType,
@@ -247,16 +271,35 @@ public class EntityVersionHistoryController : VersioningControllerBase
             return UnknownEntityType(entityType);
         }
 
+        // Rollback is a write, so it needs the right the adapter declares for its entity type: the AI
+        // section plus that right, the same requirements the named policies on the other write endpoints
+        // use. An adapter that declares none is refused rather than left open.
+        var verb = handler.RollbackPermission;
+        if (verb is null || !(await _authorizationService.AuthorizeAsync(
+                User,
+                null,
+                [new AISectionRequirement(), new AIPermissionRequirement(verb)])).Succeeded)
+        {
+            return Forbidden($"You do not have permission to roll back a {handler.EntityTypeName}.");
+        }
+
         try
         {
             await handler.RollbackAsync(entityId, entityVersion, cancellationToken);
             return NoContent();
+        }
+        catch (AIPermissionDeniedException ex)
+        {
+            return Forbidden(ex.Message);
         }
         catch (InvalidOperationException ex)
         {
             return NotFound(CreateProblemDetails("Rollback failed", ex.Message));
         }
     }
+
+    private ObjectResult Forbidden(string detail)
+        => StatusCode(StatusCodes.Status403Forbidden, CreateProblemDetails("Forbidden", detail));
 
     private string? NormalizeEntityType(string entityType)
     {

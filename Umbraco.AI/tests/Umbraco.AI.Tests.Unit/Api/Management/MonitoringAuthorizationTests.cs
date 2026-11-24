@@ -4,7 +4,7 @@ using Umbraco.AI.Core.Security;
 using Umbraco.AI.Web.Api.Management.Analytics.Usage.Controllers;
 using Umbraco.AI.Web.Api.Management.AuditLog.Controllers;
 
-using static Umbraco.AI.Tests.Unit.Api.Management.AreaWriteAuthorizationTests;
+using static Umbraco.AI.Tests.Unit.Api.Management.AIAuthorizationTestHelper;
 
 namespace Umbraco.AI.Tests.Unit.Api.Management;
 

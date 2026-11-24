@@ -27,6 +27,16 @@ public interface IAIVersionableEntityAdapter
     string EntityTypeName { get; }
 
     /// <summary>
+    /// Gets the <see cref="Security.AIPermissions"/> verb a user needs to roll this entity type back.
+    /// </summary>
+    /// <remarks>
+    /// Rollback writes the entity, so it should need the same right as editing it. The default is
+    /// <c>null</c>, which means rollback is refused for this entity type, so an adapter that does not
+    /// declare a right cannot be rolled back by accident.
+    /// </remarks>
+    string? RollbackPermission => null;
+
+    /// <summary>
     /// Gets the CLR type of the entity this handler manages.
     /// </summary>
     Type EntityType { get; }

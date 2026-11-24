@@ -1,24 +1,17 @@
 // GP-2 (AC1-AC7)
 
 using System.Reflection;
-using System.Security.Claims;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
 
 using Umbraco.AI.Core.Security;
 using Umbraco.AI.Web.Api.Management.AuditLog.Controllers;
 using Umbraco.AI.Web.Api.Management.Connection.Controllers;
-using Umbraco.AI.Web.Api.Management.Context.Controllers;
-using Umbraco.AI.Web.Api.Management.Guardrail.Controllers;
 using Umbraco.AI.Web.Api.Management.Profile.Controllers;
-using Umbraco.AI.Web.Api.Management.Settings.Controllers;
-using Umbraco.AI.Web.Api.Management.Test.Controllers;
-using Umbraco.AI.Web.Api.Management.TestRun.Controllers;
 using Umbraco.AI.Web.Authorization;
-using Umbraco.Cms.Core.Models.Membership;
-using Umbraco.Cms.Core.Security.Authorization;
+
+using static Umbraco.AI.Tests.Unit.Api.Management.AIAuthorizationTestHelper;
 
 namespace Umbraco.AI.Tests.Unit.Api.Management;
 
@@ -29,48 +22,6 @@ namespace Umbraco.AI.Tests.Unit.Api.Management;
 /// </summary>
 public class AreaWriteAuthorizationTests
 {
-    // Each write endpoint with the policy it must carry. T5 adds its controllers here.
-    public static TheoryData<Type, string> WriteControllers => new()
-    {
-        { typeof(CreateConnectionController), AIAuthorizationPolicies.ManageConnectionsAI },
-        { typeof(UpdateConnectionController), AIAuthorizationPolicies.ManageConnectionsAI },
-        { typeof(DeleteConnectionController), AIAuthorizationPolicies.ManageConnectionsAI },
-        { typeof(TestConnectionController), AIAuthorizationPolicies.ManageConnectionsAI },
-        { typeof(CreateProfileController), AIAuthorizationPolicies.ManageProfilesAI },
-        { typeof(UpdateProfileController), AIAuthorizationPolicies.ManageProfilesAI },
-        { typeof(DeleteProfileController), AIAuthorizationPolicies.ManageProfilesAI },
-        { typeof(CreateContextController), AIAuthorizationPolicies.ManageContextsAI },
-        { typeof(UpdateContextController), AIAuthorizationPolicies.ManageContextsAI },
-        { typeof(DeleteContextController), AIAuthorizationPolicies.ManageContextsAI },
-        { typeof(CreateGuardrailController), AIAuthorizationPolicies.ManageGuardrailsAI },
-        { typeof(UpdateGuardrailController), AIAuthorizationPolicies.ManageGuardrailsAI },
-        { typeof(DeleteGuardrailController), AIAuthorizationPolicies.ManageGuardrailsAI },
-        { typeof(UpdateSettingsController), AIAuthorizationPolicies.ManageSettingsAI },
-        { typeof(CreateTestController), AIAuthorizationPolicies.ManageTestsAI },
-        { typeof(UpdateTestController), AIAuthorizationPolicies.ManageTestsAI },
-        { typeof(DeleteTestController), AIAuthorizationPolicies.ManageTestsAI },
-        { typeof(RunTestController), AIAuthorizationPolicies.ManageTestsAI },
-        { typeof(RunTestBatchController), AIAuthorizationPolicies.ManageTestsAI },
-        { typeof(RunTestsByTagsController), AIAuthorizationPolicies.ManageTestsAI },
-        { typeof(DeleteTestRunController), AIAuthorizationPolicies.ManageTestsAI },
-        { typeof(SetBaselineController), AIAuthorizationPolicies.ManageTestsAI },
-        { typeof(DeleteAuditLogController), AIAuthorizationPolicies.ManageSettingsAI },
-        { typeof(CleanupAuditLogsController), AIAuthorizationPolicies.ManageSettingsAI },
-    };
-
-    internal static readonly string[] AllVerbs =
-    [
-        AIPermissions.ManageConnections,
-        AIPermissions.ManageProfiles,
-        AIPermissions.ManageContexts,
-        AIPermissions.ManageKnowledgeSets,
-        AIPermissions.ManageGuardrails,
-        AIPermissions.ManageSettings,
-        AIPermissions.ViewAuditLogs,
-        AIPermissions.ViewAnalytics,
-        AIPermissions.ManageTests,
-    ];
-
     #region Happy path
 
     [Fact]
@@ -86,53 +37,95 @@ public class AreaWriteAuthorizationTests
         allowed.ShouldBeTrue();
     }
 
-    [Theory]
-    [MemberData(nameof(WriteControllers))]
-    public void EachWriteEndpoint_RequiresItsAreaPolicy(Type controllerType, string policy)
-    {
-        // Given each write endpoint listed in SPEC.md
-        // When  its authorization policies are read
-        var policies = GetPolicies(controllerType);
+    private const string ManagementNamespace = "Umbraco.AI.Web.Api.Management.";
 
-        // Then  they contain that area's policy (AC2)
-        policies.ShouldContain(policy);
+    // Controllers with a POST/PUT/PATCH/DELETE action that may carry only the section policy, each with why.
+    private static readonly Dictionary<string, string> WriteControllersWithSectionPolicyOnly = new()
+    {
+        ["CompareRunsController"] = "POST only because it takes a body; it computes a comparison and changes nothing.",
+        ["CompareVariationsController"] = "POST only because it takes a body; it computes a comparison and changes nothing.",
+        ["CompleteChatController"] = "Runs an AI call for the caller (a POST because it takes a body); SPEC leaves it open to every backoffice user.",
+        ["GenerateEmbeddingController"] = "Runs an AI call for the caller (a POST because it takes a body); SPEC leaves it open to every backoffice user.",
+        ["TranscribeSpeechToTextController"] = "Runs an AI call for the caller (a POST because it takes a body); SPEC leaves it open to every backoffice user.",
+        ["GenerateImageController"] = "Runs an AI call for the caller (a POST because it takes a body); SPEC leaves it open to every backoffice user.",
+        ["ExtractController"] = "Runs an AI call for the caller (a POST because it takes a body); SPEC leaves it open to every backoffice user.",
+        ["AskDecisionController"] = "Runs an AI call for the caller (a POST because it takes a body); SPEC leaves it open to every backoffice user.",
+        ["InvokePropertyValueOperationController"] = "Runs an AI call for the caller (a POST because it takes a body); SPEC leaves it open to every backoffice user.",
+        ["EntityVersionHistoryController"] = "Rollback is the only write; its right depends on the entity type, so the action checks it itself.",
+    };
+
+    // Areas whose write endpoints need another area's right. An area not listed must use its own.
+    private static readonly Dictionary<string, string> AreaVerbOverrides = new()
+    {
+        ["AuditLog"] = "Settings",
+        ["TestRun"] = "Test",
+    };
+
+    private static readonly Type[] WriteControllers = typeof(AIAuthorizationPolicies).Assembly.GetTypes()
+        .Where(t => t is { IsClass: true, IsAbstract: false }
+                    && typeof(ControllerBase).IsAssignableFrom(t)
+                    && t.Namespace?.StartsWith(ManagementNamespace, StringComparison.Ordinal) == true)
+        .Where(t => t.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+            .Any(m => m.GetCustomAttributes().Any(a => a is HttpPostAttribute or HttpPutAttribute or HttpPatchAttribute or HttpDeleteAttribute)))
+        .ToArray();
+
+    // The verb of the one right a policy asks for, read from the registered policy rather than a second table.
+    private static string? VerbOf(string? policyName)
+    {
+        if (!IsAIPolicy(policyName))
+        {
+            return null;
+        }
+
+        var options = new AuthorizationOptions();
+        AIAuthorizationPolicies.Register(options);
+        return options.GetPolicy(policyName!)!.Requirements.OfType<AIPermissionRequirement>().SingleOrDefault()?.Verb;
     }
 
-    // Controllers allowed to write while carrying only the section policy. Empty on purpose: add a name
-    // here only with a reason.
-    private static readonly string[] WriteControllersWithSectionPolicyOnly =
-    [
-        // POST only because they take a body; they compute a comparison and change nothing.
-        nameof(CompareRunsController),
-        nameof(CompareVariationsController),
-    ];
-
-    private static readonly string[] AreaNamespaces = ["Connection", "Profile", "Context", "Guardrail", "Settings", "Test", "TestRun", "AuditLog"];
+    private static string AreaOf(Type controllerType)
+        => controllerType.Namespace![ManagementNamespace.Length..].Split('.')[0];
 
     [Fact]
-    public void EveryWriteController_InAnArea_CarriesAnAreaPolicy()
+    public void EachWriteEndpoint_RequiresItsAreaPolicy()
     {
-        // Given every controller in the Connection, Profile, Context, Guardrail, Settings, Test, TestRun and AuditLog areas
-        var writeControllers = typeof(AIAuthorizationPolicies).Assembly.GetTypes()
-            .Where(t => t is { IsClass: true, IsAbstract: false } && typeof(ControllerBase).IsAssignableFrom(t))
-            .Where(t => AreaNamespaces.Any(a => t.Namespace == $"Umbraco.AI.Web.Api.Management.{a}.Controllers"))
-            .Where(t => t.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
-                .Any(m => m.GetCustomAttributes().Any(IsWriteVerb)))
+        // Given each controller with a write action
+        // When  its authorization policies are read and the right they ask for is looked up on the registered policy
+        var wrongArea = WriteControllers
+            .Where(t => !WriteControllersWithSectionPolicyOnly.ContainsKey(t.Name))
+            .Select(t => (Controller: t.Name, Area: AreaOf(t), Verbs: GetPolicies(t).Select(VerbOf).OfType<string>().ToList()))
+            .Where(c => !c.Verbs.Any(v => v.Split('.')[1] == AreaVerbOverrides.GetValueOrDefault(c.Area, c.Area)))
+            .Select(c => $"{c.Controller} ({c.Area}) has {string.Join(", ", c.Verbs.DefaultIfEmpty("no AI right"))}")
             .ToList();
 
-        // When  the ones that write are checked for a policy other than plain section access
-        var sectionOnly = writeControllers
+        // Then  it carries a right from its own area (or the area the override map names) (AC2)
+        WriteControllers.ShouldNotBeEmpty();
+        wrongArea.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void EveryWriteController_CarriesAnAreaPolicy()
+    {
+        // Given every controller under the Management API with a write action
+        // When  the ones not listed as exceptions are checked for a policy other than plain section access
+        var sectionOnly = WriteControllers
             .Where(t => !GetPolicies(t).Any(p => IsAIPolicy(p) && p != AIAuthorizationPolicies.SectionAccessAI))
             .Select(t => t.Name)
-            .Except(WriteControllersWithSectionPolicyOnly)
+            .Except(WriteControllersWithSectionPolicyOnly.Keys)
             .ToList();
 
         // Then  none is left on the section policy alone, so a new write endpoint cannot skip its area right
-        writeControllers.ShouldNotBeEmpty();
         sectionOnly.ShouldBeEmpty();
+    }
 
-        static bool IsWriteVerb(Attribute a)
-            => a is HttpPostAttribute or HttpPutAttribute or HttpPatchAttribute or HttpDeleteAttribute;
+    [Fact]
+    public void SectionOnlyExceptions_AreStillWriteControllers()
+    {
+        // Given the exceptions list
+        // When  it is compared with the controllers that write
+        var stale = WriteControllersWithSectionPolicyOnly.Keys.Except(WriteControllers.Select(t => t.Name)).ToList();
+
+        // Then  nothing listed has stopped writing, so the list cannot rot
+        stale.ShouldBeEmpty();
     }
 
     [Fact]
@@ -205,59 +198,4 @@ public class AreaWriteAuthorizationTests
     }
 
     #endregion
-
-    // Every policy name declared on AIAuthorizationPolicies.
-    private static readonly HashSet<string> AIPolicyNames = typeof(AIAuthorizationPolicies)
-        .GetFields(BindingFlags.Public | BindingFlags.Static)
-        .Where(f => f.IsLiteral && f.FieldType == typeof(string))
-        .Select(f => (string)f.GetRawConstantValue()!)
-        .ToHashSet(StringComparer.Ordinal);
-
-    internal static bool IsAIPolicy(string? policy)
-        => policy is not null && AIPolicyNames.Contains(policy);
-
-    // Every [Authorize(Policy)] on the controller and its bases must pass, as in ASP.NET Core.
-    internal static List<string?> GetPolicies(Type controllerType)
-        => controllerType
-            .GetCustomAttributes<AuthorizeAttribute>(inherit: true)
-            .Select(a => a.Policy)
-            .ToList();
-
-    internal static async Task<bool> IsAllowedAsync(IAuthorizationService authorizationService, Type controllerType)
-    {
-        // The CMS base policy needs a real backoffice login, so only the AI policies are evaluated here.
-        foreach (var policy in GetPolicies(controllerType).Where(IsAIPolicy))
-        {
-            var result = await authorizationService.AuthorizeAsync(new ClaimsPrincipal(), policy!);
-            if (!result.Succeeded)
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    internal static IAuthorizationService CreateAuthorizationService(bool hasSection, string[] verbs)
-    {
-        var user = new Mock<IUser>();
-        user.SetupGet(u => u.AllowedSections).Returns(hasSection ? [Core.Constants.Sections.AI] : []);
-
-        IUser? outUser = user.Object;
-        var helper = new Mock<IAuthorizationHelper>();
-        helper.Setup(h => h.TryGetUmbracoUser(It.IsAny<ClaimsPrincipal>(), out outUser)).Returns(true);
-
-        var permissions = new Mock<IAIPermissionService>();
-        permissions.Setup(p => p.HasPermission(It.IsAny<string>())).Returns<string>(verbs.Contains);
-
-        var services = new ServiceCollection();
-        services.AddLogging();
-        services.AddSingleton(helper.Object);
-        services.AddSingleton(permissions.Object);
-        services.AddSingleton<IAuthorizationHandler, AISectionAuthorizationHandler>();
-        services.AddSingleton<IAuthorizationHandler, AIPermissionAuthorizationHandler>();
-        services.AddAuthorization(AIAuthorizationPolicies.Register);
-
-        return services.BuildServiceProvider().GetRequiredService<IAuthorizationService>();
-    }
 }

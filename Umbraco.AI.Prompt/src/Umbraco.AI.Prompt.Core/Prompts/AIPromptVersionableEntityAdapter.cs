@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.Versioning;
 
 using CoreConstants = Umbraco.AI.Core.Constants;
@@ -23,6 +24,9 @@ internal sealed class AIPromptVersionableEntityAdapter : AIVersionableEntityAdap
         _promptService = promptService;
         _versionService = versionService;
     }
+
+    /// <inheritdoc />
+    public override string? RollbackPermission => AIPermissions.ManagePrompts;
 
     /// <inheritdoc />
     protected override string CreateSnapshot(AIPrompt entity)

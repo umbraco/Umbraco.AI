@@ -37,6 +37,13 @@ public abstract class AIVersionableEntityAdapterBase<TEntity> : IAIVersionableEn
     public Type EntityType => typeof(TEntity);
 
     /// <inheritdoc />
+    /// <remarks>
+    /// Defaults to <c>null</c> (rollback refused). Override it with the manage right of the area that
+    /// owns the entity.
+    /// </remarks>
+    public virtual string? RollbackPermission => null;
+
+    /// <inheritdoc />
     string IAIVersionableEntityAdapter.CreateSnapshot(object entity)
     {
         ArgumentNullException.ThrowIfNull(entity);

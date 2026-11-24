@@ -1,4 +1,5 @@
 using System.Text.Json;
+
 using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.Versioning;
 
@@ -229,9 +230,12 @@ internal sealed class AIPromptVersionableEntityAdapter : AIVersionableEntityAdap
         await _promptService.SavePromptAsync(snapshot, cancellationToken);
     }
 
+    /// <remarks>
+    /// Asks for managed access: version history and rollback belong to the Manage prompts area, which sees limited prompts too.
+    /// </remarks>
     /// <inheritdoc />
     protected override Task<AIPrompt?> GetEntityAsync(Guid entityId, CancellationToken cancellationToken)
-        => _promptService.GetPromptAsync(entityId, cancellationToken);
+        => _promptService.GetPromptAsync(entityId, includeRestricted: true, cancellationToken);
 
     private static string SerializeScope(AIPromptScope scope)
     {

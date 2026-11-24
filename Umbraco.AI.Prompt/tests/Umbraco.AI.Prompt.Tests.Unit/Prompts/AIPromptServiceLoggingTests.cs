@@ -1,15 +1,21 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Moq;
+
 using Shouldly;
+
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.EntityAdapter;
+using Umbraco.AI.Core.PropertyValueOperations;
 using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Versioning;
-using Umbraco.AI.Core.PropertyValueOperations;
 using Umbraco.AI.Prompt.Core.Prompts;
 using Umbraco.Cms.Core.Events;
+using Umbraco.Cms.Core.Security;
+
 using Xunit;
 
 namespace Umbraco.AI.Prompt.Tests.Unit.Prompts;
@@ -33,7 +39,8 @@ public class AIPromptServiceLoggingTests
         Mock.Of<IEventAggregator>(),
         Mock.Of<IAIPromptPropertyValueSchemaResolver>(),
         new AISimplifiedPropertyValueTransformerCollection(() => []),
-        _logger.Object);
+        _logger.Object,
+        new AIPermissionService(Mock.Of<IBackOfficeSecurityAccessor>()));
 
     private static readonly AIPromptExecutionRequest Request = new()
     {

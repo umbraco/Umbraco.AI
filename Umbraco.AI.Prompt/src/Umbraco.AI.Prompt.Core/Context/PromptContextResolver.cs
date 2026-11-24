@@ -2,6 +2,7 @@ using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Core.Contexts.Resolvers;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Prompt.Core.Prompts;
+
 using CoreConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Prompt.Core.Context;
@@ -17,18 +18,18 @@ internal sealed class PromptContextResolver : IAIContextResolver
 {
     private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAIContextService _contextService;
-    private readonly IAIPromptService _promptService;
+    private readonly IAIPromptUnrestrictedReader _promptService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PromptContextResolver"/> class.
     /// </summary>
     /// <param name="runtimeContextAccessor"></param>
     /// <param name="contextService">The context service.</param>
-    /// <param name="promptService">The prompt service.</param>
+    /// <param name="promptService">Reads the prompt without the per-user limit: the execution was already authorized.</param>
     public PromptContextResolver(
         IAIRuntimeContextAccessor runtimeContextAccessor,
         IAIContextService contextService,
-        IAIPromptService promptService)
+        IAIPromptUnrestrictedReader promptService)
     {
         _runtimeContextAccessor = runtimeContextAccessor;
         _contextService = contextService;
@@ -51,7 +52,7 @@ internal sealed class PromptContextResolver : IAIContextResolver
             return AIContextResolverResult.Empty;
         }
 
-        var prompt = await _promptService.GetPromptAsync(promptId.Value, cancellationToken);
+        var prompt = await _promptService.GetPromptUnrestrictedAsync(promptId.Value, cancellationToken);
 
         if (prompt is null || prompt.ContextIds.Count == 0)
         {

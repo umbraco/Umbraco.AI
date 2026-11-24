@@ -12,22 +12,63 @@ public interface IAIPromptService
     /// </summary>
     /// <param name="id">The prompt ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The prompt if found, null otherwise.</returns>
+    /// <returns>The prompt if found and the current user may use it, null otherwise.</returns>
+    /// <remarks>
+    /// A prompt limited to user groups the current user is not in is treated as not found.
+    /// Use <see cref="GetPromptAsync(Guid, bool, CancellationToken)"/> to manage prompts the user can't use.
+    /// </remarks>
     Task<AIPrompt?> GetPromptAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a prompt by its unique identifier, optionally including prompts the current user may not use.
+    /// </summary>
+    /// <param name="id">The prompt ID.</param>
+    /// <param name="includeRestricted">
+    /// Ask for managed access: return the prompt even when it is limited to other user groups. Only honoured
+    /// when the current user has the Manage prompts right; otherwise it is ignored.
+    /// </param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The prompt if found and visible to the caller, null otherwise.</returns>
+    /// <remarks>
+    /// The default implementation exists so that third-party implementations of this interface keep compiling;
+    /// it ignores <paramref name="includeRestricted"/> and returns what <see cref="GetPromptAsync(Guid, CancellationToken)"/> does.
+    /// </remarks>
+    Task<AIPrompt?> GetPromptAsync(Guid id, bool includeRestricted, CancellationToken cancellationToken = default)
+        => GetPromptAsync(id, cancellationToken);
 
     /// <summary>
     /// Gets a prompt by its alias.
     /// </summary>
     /// <param name="alias">The prompt alias.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The prompt if found, null otherwise.</returns>
+    /// <returns>The prompt if found and the current user may use it, null otherwise.</returns>
+    /// <remarks>
+    /// A prompt limited to user groups the current user is not in is treated as not found.
+    /// </remarks>
     Task<AIPrompt?> GetPromptByAliasAsync(string alias, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a prompt by its alias, optionally including prompts the current user may not use.
+    /// </summary>
+    /// <param name="alias">The prompt alias.</param>
+    /// <param name="includeRestricted">
+    /// Ask for managed access: return the prompt even when it is limited to other user groups. Only honoured
+    /// when the current user has the Manage prompts right; otherwise it is ignored.
+    /// </param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The prompt if found and visible to the caller, null otherwise.</returns>
+    /// <remarks>
+    /// The default implementation exists so that third-party implementations of this interface keep compiling;
+    /// it ignores <paramref name="includeRestricted"/> and returns what <see cref="GetPromptByAliasAsync(string, CancellationToken)"/> does.
+    /// </remarks>
+    Task<AIPrompt?> GetPromptByAliasAsync(string alias, bool includeRestricted, CancellationToken cancellationToken = default)
+        => GetPromptByAliasAsync(alias, cancellationToken);
 
     /// <summary>
     /// Gets all prompts.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>All prompts.</returns>
+    /// <returns>The prompts the current user may use.</returns>
     Task<IEnumerable<AIPrompt>> GetPromptsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -38,13 +79,39 @@ public interface IAIPromptService
     /// <param name="filter">Optional filter string for name/alias.</param>
     /// <param name="profileId">Optional profile ID filter.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A tuple containing the filtered/paginated prompts and the total count.</returns>
+    /// <returns>A tuple containing the filtered/paginated prompts and the total count, limited to the prompts the current user may use.</returns>
     Task<(IEnumerable<AIPrompt> Items, int Total)> GetPromptsPagedAsync(
         int skip,
         int take,
         string? filter = null,
         Guid? profileId = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a paged list of prompts with optional filtering, optionally including prompts the current user may not use.
+    /// </summary>
+    /// <param name="skip">Number of items to skip.</param>
+    /// <param name="take">Number of items to take.</param>
+    /// <param name="filter">Optional filter string for name/alias.</param>
+    /// <param name="profileId">Optional profile ID filter.</param>
+    /// <param name="includeRestricted">
+    /// Ask for managed access: return every prompt, limited or not. Only honoured when the current user has
+    /// the Manage prompts right; otherwise it is ignored.
+    /// </param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A tuple containing the filtered/paginated prompts and the total count.</returns>
+    /// <remarks>
+    /// The default implementation exists so that third-party implementations of this interface keep compiling;
+    /// it ignores <paramref name="includeRestricted"/> and returns what the overload without it does.
+    /// </remarks>
+    Task<(IEnumerable<AIPrompt> Items, int Total)> GetPromptsPagedAsync(
+        int skip,
+        int take,
+        string? filter,
+        Guid? profileId,
+        bool includeRestricted,
+        CancellationToken cancellationToken = default)
+        => GetPromptsPagedAsync(skip, take, filter, profileId, cancellationToken);
 
     /// <summary>
     /// Save a prompt (insert if new, update if exists) with validation.
@@ -87,6 +154,7 @@ public interface IAIPromptService
     /// <param name="request">The execution request containing context.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The execution result containing the AI response.</returns>
+    /// <exception cref="AIPromptNotAvailableException">Thrown if the prompt is limited to user groups the caller is not in.</exception>
     Task<AIPromptExecutionResult> ExecutePromptAsync(
         Guid promptId,
         AIPromptExecutionRequest request,
@@ -100,6 +168,7 @@ public interface IAIPromptService
     /// <param name="options">Options controlling scope validation, profile, and context overrides.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The execution result containing the AI response.</returns>
+    /// <exception cref="AIPromptNotAvailableException">Thrown if the prompt is limited to user groups the caller is not in.</exception>
     Task<AIPromptExecutionResult> ExecutePromptAsync(
         Guid promptId,
         AIPromptExecutionRequest request,

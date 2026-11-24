@@ -1,12 +1,16 @@
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+
+using Microsoft.Extensions.DependencyInjection;
+
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Deploy;
 using Umbraco.AI.Deploy.Configuration;
 using Umbraco.AI.Deploy.Connectors.ServiceConnectors;
-using Umbraco.AI.Prompt.Deploy.Artifacts;
 using Umbraco.AI.Prompt.Core.Prompts;
+using Umbraco.AI.Prompt.Deploy.Artifacts;
 using Umbraco.Cms.Core;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Deploy;
 
 namespace Umbraco.AI.Prompt.Deploy.Connectors.ServiceConnectors;
@@ -15,14 +19,41 @@ namespace Umbraco.AI.Prompt.Deploy.Connectors.ServiceConnectors;
 /// Service connector for Umbraco AI Prompts, responsible for connecting the deployment process to the IAIPromptService to retrieve and save prompts during deployment.
 /// </summary>
 [UdiDefinition(UmbracoAIPromptConstants.UdiEntityType.Prompt, UdiType.GuidUdi)]
-public class UmbracoAIPromptServiceConnector(
-    IAIPromptService promptService,
-    IAIProfileService profileService,
-    UmbracoAIDeploySettingsAccessor settingsAccessor)
-    : UmbracoAIProfileDependentEntityServiceConnectorBase<AIPromptArtifact, AIPrompt>(
-        profileService,
-        settingsAccessor)
+public class UmbracoAIPromptServiceConnector
+    : UmbracoAIProfileDependentEntityServiceConnectorBase<AIPromptArtifact, AIPrompt>
 {
+    private readonly IAIPromptService _promptService;
+    private readonly IAIPromptUnrestrictedReader _promptReader;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UmbracoAIPromptServiceConnector"/> class.
+    /// </summary>
+    public UmbracoAIPromptServiceConnector(
+        IAIPromptService promptService,
+        IAIProfileService profileService,
+        UmbracoAIDeploySettingsAccessor settingsAccessor)
+        : this(
+            promptService,
+            profileService,
+            settingsAccessor,
+            StaticServiceProvider.Instance.GetRequiredService<IAIPromptUnrestrictedReader>())
+    {
+    }
+
+    // Deploy runs with no signed-in user, so export and import read prompts through the unrestricted
+    // reader: the per-user filter on IAIPromptService would hide limited prompts. The reader is internal,
+    // so the public constructor above resolves it rather than taking it.
+    internal UmbracoAIPromptServiceConnector(
+        IAIPromptService promptService,
+        IAIProfileService profileService,
+        UmbracoAIDeploySettingsAccessor settingsAccessor,
+        IAIPromptUnrestrictedReader promptReader)
+        : base(profileService, settingsAccessor)
+    {
+        _promptService = promptService;
+        _promptReader = promptReader;
+    }
+
     /// <inheritdoc />
     protected override string[] ValidOpenSelectors => ["this", "this-and-descendants", "descendants"];
 
@@ -34,12 +65,12 @@ public class UmbracoAIPromptServiceConnector(
 
     /// <inheritdoc />
     public override Task<AIPrompt?> GetEntityAsync(Guid id, CancellationToken cancellationToken = default)
-        => promptService.GetPromptAsync(id, cancellationToken);
+        => _promptReader.GetPromptUnrestrictedAsync(id, cancellationToken);
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<AIPrompt> GetEntitiesAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var prompts = await promptService.GetPromptsAsync(cancellationToken);
+        var prompts = await _promptReader.GetPromptsUnrestrictedAsync(cancellationToken);
         foreach (var prompt in prompts)
         {
             yield return prompt;
@@ -153,6 +184,6 @@ public class UmbracoAIPromptServiceConnector(
         prompt.OptionCount = artifact.OptionCount;
         prompt.Scope = scope;
 
-        state.Entity = await promptService.SavePromptAsync(prompt, cancellationToken);
+        state.Entity = await _promptService.SavePromptAsync(prompt, cancellationToken);
     }
 }

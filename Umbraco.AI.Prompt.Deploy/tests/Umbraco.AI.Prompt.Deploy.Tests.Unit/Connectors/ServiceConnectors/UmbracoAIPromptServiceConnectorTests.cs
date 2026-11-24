@@ -4,13 +4,17 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Moq;
+
 using Shouldly;
-using Umbraco.AI.Deploy.Configuration;
-using Umbraco.AI.Prompt.Deploy.Connectors.ServiceConnectors;
-using Umbraco.AI.Prompt.Core.Prompts;
+
 using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Deploy.Configuration;
+using Umbraco.AI.Prompt.Core.Prompts;
+using Umbraco.AI.Prompt.Deploy.Connectors.ServiceConnectors;
 using Umbraco.Cms.Core;
+
 using Xunit;
 
 namespace Umbraco.AI.Prompt.Deploy.Tests.Unit.Connectors.ServiceConnectors;
@@ -18,6 +22,7 @@ namespace Umbraco.AI.Prompt.Deploy.Tests.Unit.Connectors.ServiceConnectors;
 public class UmbracoAIPromptServiceConnectorTests
 {
     private readonly Mock<IAIPromptService> _promptServiceMock;
+    private readonly Mock<IAIPromptUnrestrictedReader> _promptReaderMock;
     private readonly Mock<IAIProfileService> _profileServiceMock;
     private readonly Mock<UmbracoAIDeploySettingsAccessor> _settingsAccessorMock;
     private readonly UmbracoAIPromptServiceConnector _connector;
@@ -25,6 +30,7 @@ public class UmbracoAIPromptServiceConnectorTests
     public UmbracoAIPromptServiceConnectorTests()
     {
         _promptServiceMock = new Mock<IAIPromptService>();
+        _promptReaderMock = new Mock<IAIPromptUnrestrictedReader>();
         _profileServiceMock = new Mock<IAIProfileService>();
         _settingsAccessorMock = new Mock<UmbracoAIDeploySettingsAccessor>(MockBehavior.Strict, null!);
 
@@ -33,7 +39,8 @@ public class UmbracoAIPromptServiceConnectorTests
         _connector = new UmbracoAIPromptServiceConnector(
             _promptServiceMock.Object,
             _profileServiceMock.Object,
-            _settingsAccessorMock.Object);
+            _settingsAccessorMock.Object,
+            _promptReaderMock.Object);
     }
 
     [Fact]
@@ -183,8 +190,8 @@ public class UmbracoAIPromptServiceConnectorTests
             ProfileId = null
         };
 
-        _promptServiceMock
-            .Setup(x => x.GetPromptAsync(promptId, It.IsAny<CancellationToken>()))
+        _promptReaderMock
+            .Setup(x => x.GetPromptUnrestrictedAsync(promptId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(prompt);
 
         // Act
@@ -192,6 +199,32 @@ public class UmbracoAIPromptServiceConnectorTests
 
         // Assert
         result.ShouldBe(prompt);
+    }
+
+    [Fact]
+    public async Task GetEntitiesAsync_ReadsThroughTheUnrestrictedReader_SoALimitedPromptIsStillExported()
+    {
+        // Arrange: Deploy has no signed-in user, so IAIPromptService would hide a limited prompt
+        var limited = new AIPrompt
+        {
+            Alias = "limited",
+            Name = "Limited",
+            Instructions = "Test instructions",
+            AllowedUserGroupIds = [Guid.NewGuid()]
+        };
+        _promptReaderMock
+            .Setup(x => x.GetPromptsUnrestrictedAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync([limited]);
+
+        // Act
+        var exported = new List<AIPrompt>();
+        await foreach (var prompt in _connector.GetEntitiesAsync())
+        {
+            exported.Add(prompt);
+        }
+
+        // Assert
+        exported.ShouldBe([limited]);
     }
 
     [Fact]

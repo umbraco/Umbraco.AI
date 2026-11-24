@@ -3,26 +3,32 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging.Abstractions;
+
 using Moq;
+
 using Shouldly;
+
 using Umbraco.AI.Agent.Conversations.Core.Conversations;
 using Umbraco.AI.Agent.Conversations.Core.Projects;
 using Umbraco.AI.Agent.Copilot.Workspace.Core.Surfaces;
 using Umbraco.AI.Agent.Copilot.Workspace.Web.Api.Management.Stream.Controllers;
-using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Core.Agents.Selection;
+using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.FileStore;
 using Umbraco.AI.Agent.Core.Surfaces;
 using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.Core.RuntimeContext;
+
 using Xunit;
+
 using UmbracoAIAgent = Umbraco.AI.Agent.Core.Agents.AIAgent;
 
 namespace Umbraco.AI.Agent.Copilot.Workspace.Tests.Unit.Api.Management.Stream;
@@ -253,6 +259,61 @@ public class StreamConversationAutoSelectionTests
             => _harness.CapturedRequest!.ThreadId.ShouldBe(_harness.ConversationId.ToString());
     }
 
+    // GP-11 AC2
+    public class GivenANamedAgentTheUserCanNoLongerUse
+    {
+        private static readonly UmbracoAIAgent Limited = CreateAgent("eeeeeeee-0000-0000-0000-000000000005", "agent-e");
+
+        private readonly Harness _harness;
+        private readonly IResult _result;
+
+        public GivenANamedAgentTheUserCanNoLongerUse()
+        {
+            _harness = new Harness(
+                agentIdOrAlias: Limited.Id.ToString(),
+                selection: new AIAgentSelectionResult(AgentA, AIAgentSelectorIds.Llm, null),
+                limitedAgent: Limited);
+            _result = _harness.StreamAsync().GetAwaiter().GetResult();
+        }
+
+        [Fact]
+        public void Returns403() => _result.ShouldBeOfType<ProblemHttpResult>().StatusCode.ShouldBe(StatusCodes.Status403Forbidden);
+
+        [Fact]
+        public void TitlesTheProblemAgentNotAvailable()
+            => _result.ShouldBeOfType<ProblemHttpResult>().ProblemDetails.Title.ShouldBe("Agent not available");
+
+        [Fact]
+        public void StartsNoRun() => _harness.StreamedAgentId.ShouldBeNull();
+
+        [Fact]
+        public void DoesNotQuietlySwitchToAnotherAgent()
+            => _harness.SelectionService.Verify(
+                x => x.SelectAgentAsync(It.IsAny<AIAgentSelectionInput>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+    }
+
+    // GP-11 AC1: opening a conversation never asks the agent service whether the user may use the agent.
+    public class GivenTheConversationReadEndpoints
+    {
+        [Fact]
+        public void DependOnNoAgentService()
+        {
+            var readControllers = typeof(Umbraco.AI.Agent.Conversations.Web.Api.Management.Conversations.Controllers.ConversationControllerBase)
+                .Assembly.GetTypes()
+                .Where(t => t is { IsAbstract: false, IsClass: true }
+                    && t.Namespace == "Umbraco.AI.Agent.Conversations.Web.Api.Management.Conversations.Controllers"
+                    && typeof(ControllerBase).IsAssignableFrom(t))
+                .ToList();
+
+            readControllers.ShouldNotBeEmpty();
+            readControllers
+                .SelectMany(t => t.GetConstructors().SelectMany(c => c.GetParameters()))
+                .Where(p => p.ParameterType == typeof(IAIAgentService))
+                .ShouldBeEmpty();
+        }
+    }
+
     public class GivenAnAutoConversationAndNoAvailableAgents
     {
         private readonly IResult _result;
@@ -304,7 +365,8 @@ public class StreamConversationAutoSelectionTests
             AIAgentSelectionResult? selection,
             UmbracoAIAgent? explicitAgent = null,
             Guid? lastAssistantAgentId = null,
-            string? lastUserMessageText = null)
+            string? lastUserMessageText = null,
+            UmbracoAIAgent? limitedAgent = null)
         {
             var conversationService = new Mock<IAIConversationService>();
             conversationService
@@ -322,6 +384,17 @@ public class StreamConversationAutoSelectionTests
                 AgentService
                     .Setup(x => x.GetAgentAsync(explicitAgent.Id, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(explicitAgent);
+                AgentService
+                    .Setup(x => x.GetAgentForUseAsync(explicitAgent.Id, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(explicitAgent);
+            }
+
+            if (limitedAgent is not null)
+            {
+                // The service refuses a limited agent for use; the plain read would just call it missing.
+                AgentService
+                    .Setup(x => x.GetAgentForUseAsync(limitedAgent.Id, It.IsAny<CancellationToken>()))
+                    .ThrowsAsync(new AIAgentNotAvailableException(limitedAgent.Id));
             }
 
             AgentService

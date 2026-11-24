@@ -244,6 +244,18 @@ internal sealed class AIAgentService : IAIAgentService, IAIAgentUnrestrictedRead
 
         var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
 
+        var existing = await _repository.GetByIdAsync(agent.Id, cancellationToken);
+
+        // Group list rule. Like the CMS, a save with no current user (Deploy import, startup) is not checked.
+        if (userId is not null)
+        {
+            AIUserGroupChangeRule.EnsureCanChangeList(
+                _permissionService,
+                existing?.AllowedUserGroupIds ?? [],
+                agent.AllowedUserGroupIds,
+                $"agent '{agent.Alias}'");
+        }
+
         // Publish saving notification (before save)
         var messages = new EventMessages();
         var savingNotification = new AIAgentSavingNotification(agent, messages);
@@ -257,8 +269,6 @@ internal sealed class AIAgentService : IAIAgentService, IAIAgentUnrestrictedRead
         }
 
         // Save version snapshot of existing entity before update
-        var existing = await _repository.GetByIdAsync(agent.Id, cancellationToken);
-
         // Enforce type immutability
         if (existing is not null && existing.AgentType != agent.AgentType)
         {

@@ -13,8 +13,8 @@ import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import type { UmbModalToken } from "@umbraco-cms/backoffice/modal";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
-import { UMB_USER_GROUP_PICKER_MODAL, UmbUserGroupItemRepository } from "@umbraco-cms/backoffice/user-group";
-import { UAI_ITEM_PICKER_MODAL } from "../../modals/item-picker/item-picker-modal.token.js";
+import { UmbUserGroupItemRepository } from "@umbraco-cms/backoffice/user-group";
+import { pickUserGroups } from "../user-group-access-input/user-group-picker.js";
 import { isUserGroupEditable } from "./user-group-settings-list.utils.js";
 
 /**
@@ -196,7 +196,7 @@ export class UaiUserGroupSettingsListElement<TSettings> extends UmbLitElement {
         if (!modalManager) return;
 
         // 1. Open user group picker
-        const userGroupId = await this._pickUserGroup(modalManager);
+        const userGroupId = await this._pickUserGroup();
         if (!userGroupId) return;
 
         // Check if already configured
@@ -229,33 +229,12 @@ export class UaiUserGroupSettingsListElement<TSettings> extends UmbLitElement {
      * Let the user pick a group. The CMS picker can't be limited to some groups,
      * so when editable groups are set a generic item picker lists just those.
      */
-    private async _pickUserGroup(modalManager: typeof UMB_MODAL_MANAGER_CONTEXT.TYPE): Promise<string | undefined> {
-        const editableIds = this.editableUserGroupIds;
-        if (!editableIds) {
-            const pickerResult = modalManager.open(this, UMB_USER_GROUP_PICKER_MODAL, {
-                data: { multiple: false },
-            });
-            const pickerValue = await pickerResult.onSubmit();
-            return pickerValue?.selection?.[0] ?? undefined;
-        }
-
-        const modal = modalManager.open(this, UAI_ITEM_PICKER_MODAL, {
-            data: {
-                fetchItems: async () => {
-                    if (editableIds.length === 0) return [];
-                    const { data } = await this.#userGroupRepository.requestItems(editableIds);
-                    return (data ?? []).map((group) => ({
-                        value: group.unique,
-                        label: group.name,
-                        icon: group.icon ?? "icon-users",
-                    }));
-                },
-                selectionMode: "single",
-                title: this.localize.term("user_chooseUserGroup", false),
-            },
+    private async _pickUserGroup(): Promise<string | undefined> {
+        const picked = await pickUserGroups(this, this.#userGroupRepository, {
+            multiple: false,
+            restrictToIds: this.editableUserGroupIds,
         });
-        const result = await modal.onSubmit();
-        return result?.selection?.[0]?.value;
+        return picked[0];
     }
 
     /**

@@ -101,6 +101,8 @@ export interface UaiAgentDetailModel extends UmbEntityModel {
     agentType: UaiAgentType;
     profileId: string | null;
     surfaceIds: string[];
+    /** User groups that can use the agent. Empty means every backoffice user can. */
+    allowedUserGroupIds: string[];
     scope: UaiAgentScope | null;
     config: UaiAgentConfig;
     guardrailIds: string[];

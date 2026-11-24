@@ -319,6 +319,14 @@ export default {
     uaiUserGroupPermissions: {
         headline: "User Group Permissions",
     },
+    uaiUserGroupAccess: {
+        headline: "Access",
+        description: "Only members of these groups can use this. Leave empty to let every backoffice user use it.",
+        readonlyDescription:
+            "Only members of these groups can use this. You aren't in any of them, so you can't change this list.",
+        deletedUserGroup: "Deleted user group",
+        deletedUserGroupDetail: "This group was deleted, so it matches no one.",
+    },
     uaiTest: {
         graderInput: "Input",
         testConfiguration: "Test Configuration",

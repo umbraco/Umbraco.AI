@@ -37,6 +37,17 @@ export class UaiAgentAvailabilityWorkspaceViewElement extends UmbLitElement {
         );
     }
 
+    #onAllowedUserGroupIdsChange(event: UmbChangeEvent) {
+        event.stopPropagation();
+        const input = event.target as HTMLElement & { value: string[] };
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiAgentDetailModel>(
+                { allowedUserGroupIds: input.value },
+                "allowedUserGroupIds",
+            ),
+        );
+    }
+
     #onAllowRulesChange(event: CustomEvent<UaiAgentScopeRule[]>) {
         event.stopPropagation();
         const allowRules = event.detail;
@@ -86,7 +97,6 @@ export class UaiAgentAvailabilityWorkspaceViewElement extends UmbLitElement {
             </uui-box>
 
             <uui-box headline="Scope">
-
                 <umb-property-layout
                     label="Allow Rules"
                     description="Agent appears where ANY rule matches (OR logic between rules)"
@@ -110,6 +120,13 @@ export class UaiAgentAvailabilityWorkspaceViewElement extends UmbLitElement {
                         @rules-change=${this.#onDenyRulesChange}
                     ></uai-agent-scope-rules-editor>
                 </umb-property-layout>
+            </uui-box>
+
+            <uui-box headline=${this.localize.term("uaiUserGroupAccess_headline")}>
+                <uai-user-group-access-input
+                    .value=${this._model.allowedUserGroupIds}
+                    @change=${this.#onAllowedUserGroupIdsChange}
+                ></uai-user-group-access-input>
             </uui-box>
         `;
     }

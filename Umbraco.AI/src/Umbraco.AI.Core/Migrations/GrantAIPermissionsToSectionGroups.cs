@@ -26,11 +26,6 @@ namespace Umbraco.AI.Core.Migrations;
 /// </remarks>
 public class GrantAIPermissionsToSectionGroups : AsyncMigrationBase
 {
-    private const string UserGroupTable = Cms.Core.Constants.DatabaseSchema.Tables.UserGroup;
-    private const string UserGroup2AppTable = Cms.Core.Constants.DatabaseSchema.Tables.UserGroup2App;
-    private const string UserGroup2PermissionTable = Cms.Core.Constants.DatabaseSchema.Tables.UserGroup2Permission;
-    private const string KeyColumn = Cms.Core.Constants.DatabaseSchema.Columns.PrimaryKeyNameKey;
-
     private readonly AppCaches _appCaches;
 
     // A migration is a snapshot of one release. This list stays as it is when later verbs are added to
@@ -61,38 +56,11 @@ public class GrantAIPermissionsToSectionGroups : AsyncMigrationBase
     /// <inheritdoc/>
     protected override Task MigrateAsync()
     {
-        var quotedGroupTable = SqlSyntax.GetQuotedTableName(UserGroupTable);
-        var quotedAppTable = SqlSyntax.GetQuotedTableName(UserGroup2AppTable);
-        var quotedPermissionTable = SqlSyntax.GetQuotedTableName(UserGroup2PermissionTable);
-        var quotedKey = SqlSyntax.GetQuotedColumnName(KeyColumn);
-
-        // Parameters: @0 admin group key, @1 AI section alias, @2..@10 the verbs.
-        var verbParameters = Enumerable.Range(2, CoreVerbs.Length).Select(i => $"@{i}").ToArray();
-        var verbRows = string.Join(" UNION ALL ", verbParameters.Select(p => $"SELECT {p} AS permission"));
-        var verbList = string.Join(", ", verbParameters);
-
-        object[] parameters = [Cms.Core.Constants.Security.AdminGroupKey, Constants.Sections.AI, .. CoreVerbs];
-
-        var inserted = Database.Execute(
-            Sql(
-                $"""
-                INSERT INTO {quotedPermissionTable} (userGroupKey, permission)
-                SELECT g.{quotedKey}, v.permission
-                FROM {quotedGroupTable} g
-                CROSS JOIN ({verbRows}) v
-                WHERE (g.{quotedKey} = @0 OR g.id IN (SELECT userGroupId FROM {quotedAppTable} WHERE app = @1))
-                AND NOT EXISTS (
-                    SELECT 1 FROM {quotedPermissionTable} p
-                    WHERE p.userGroupKey = g.{quotedKey} AND p.permission IN ({verbList}))
-                """,
-                parameters));
+        var inserted = AIPermissionGrant.GrantToSectionGroups(Database, CoreVerbs);
 
         Logger.LogInformation("Granted the core Umbraco AI permissions to user groups ({Count} permission row(s) added)", inserted);
 
-        // Clear only the cached user groups, and the cached users that carry a copy of their groups, so the new
-        // rights show without a restart. RebuildCache is avoided as it also rebuilds the published content cache.
-        _appCaches.IsolatedCaches.ClearCache<IUserGroup>();
-        _appCaches.IsolatedCaches.ClearCache<IUser>();
+        AIPermissionGrant.ClearCachedUserGroups(_appCaches);
 
         return Task.CompletedTask;
     }

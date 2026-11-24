@@ -158,7 +158,7 @@ frontend criteria use Vitest.
   rows read as empty; rollback restores an empty list.
   depends-on: none. parallel-group: S
 
-- [ ] **T15** - story: GP-6 (AC3). Add `Migrations/UmbracoAIAgentMigrationPlan.cs` (new package
+- [x] **T15** - story: GP-6 (AC3). Add `Migrations/UmbracoAIAgentMigrationPlan.cs` (new package
   migration plan) and `GrantAIAgentPermissions.cs`: `Uai.Agent.Manage` to every AI section group
   and the admin group, same rules as T8.
   Acceptance: integration spec: groups with the section get the verb once; re-run adds nothing.

@@ -91,11 +91,12 @@ frontend criteria use Vitest.
 
 ## Core: upgrade (Umbraco.AI)
 
-- [ ] **T8** - story: GP-6 (AC1, AC2, AC5, AC6, AC7). Add `Migrations/GrantAIPermissionsToSectionGroups.cs`
+- [x] **T8** - story: GP-6 (AC1, AC2, AC5, AC6, AC7). Add `Migrations/GrantAIPermissionsToSectionGroups.cs`
   and add it to `UmbracoAIMigrationPlan.cs` after `MigrateAISectionAlias` and
   `AddAISectionToAdminGroup`. Raw SQL like `AddAISectionToAdminGroup`: for each group with the AI
   section, and the admin group, insert each of the 9 core verbs into the CMS's fallback permission
-  table when the row isn't there. `RebuildCache = true`. Never deletes.
+  table, skipping a group that already holds any of them. Clears the cached user groups and
+  users (`AppCaches`) instead of `RebuildCache`. Never deletes.
   Acceptance: `Umbraco.AI.Tests.Integration` migration specs green on SQLite: section groups and
   admin get 9 verbs; a turned-off verb stays off on re-run; no duplicate rows; a group given the
   section afterwards has none.

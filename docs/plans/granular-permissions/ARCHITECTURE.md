@@ -74,8 +74,10 @@ inside `IAIAgentService` and `IAIPromptService`.
   `umbracoUserGroup2GranularPermission` has a foreign key to `umbracoNode`, so it can't hold an
   agent's or prompt's key. Per-item rights later would need our own table either way.
 - **Upgrade grants by raw SQL in package migrations,** as `AddAISectionToAdminGroup` does, with
-  `RebuildCache = true` so the CMS's cached groups reload. Each product grants its own verbs.
-  Each step checks for a row before inserting, so it is safe to run again.
+  clearing the CMS's cached user groups and users (`AppCaches`) so the new rights show at once,
+  without `RebuildCache`'s full content cache rebuild. Each product grants its own verbs. Each
+  step skips a group that already holds any of its verbs, as the CMS's own
+  `AddElementContainerPermissions` does, so a re-run neither duplicates nor turns rights back on.
 - **A deleted user group stays in a saved limit and matches no one.** Removing it on delete
   would turn a limit of one group into "everyone".
 - **The access field uses the CMS user group picker (`umb-user-group-input`)**, the same
@@ -182,8 +184,8 @@ Umbraco.AI.Prompt/src/…/Client/src/
 └── prompt/menu|collection|entity-actions|workspace manifests  # same condition
 ```
 
-- **Cache:** the grant steps set `RebuildCache = true`. Lists aren't cached today, so nothing
-  new to clear.
+- **Cache:** the grant steps clear the cached user groups and users only (not `RebuildCache`).
+  Lists aren't cached today, so nothing new to clear.
 - **Version history:** the agent and prompt snapshots include `AllowedUserGroupIds`, so a
   rollback restores it.
 - **Events:** none added. `AIAgentSavingNotification` and `AIPromptSavingNotification` carry

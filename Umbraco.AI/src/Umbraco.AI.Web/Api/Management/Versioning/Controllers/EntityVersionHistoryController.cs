@@ -256,8 +256,8 @@ public class EntityVersionHistoryController : VersioningControllerBase
     [MapToApiVersion("1.0")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    // No explicit 403: the CMS adds it itself because this controller injects IAuthorizationService.
     public async Task<IActionResult> RollbackToVersion(
         [FromRoute] string entityType,
         [FromRoute] Guid entityId,

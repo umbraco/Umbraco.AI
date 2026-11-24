@@ -3674,6 +3674,10 @@ export type GetVersionHistoryErrors = {
      */
     401: unknown;
     /**
+     * The authenticated user does not have access to this resource
+     */
+    403: unknown;
+    /**
      * Not Found
      */
     404: ProblemDetails;
@@ -3710,6 +3714,10 @@ export type GetVersionErrors = {
      * The resource is protected and requires an authentication token
      */
     401: unknown;
+    /**
+     * The authenticated user does not have access to this resource
+     */
+    403: unknown;
     /**
      * Not Found
      */
@@ -3748,6 +3756,10 @@ export type RollbackToVersionErrors = {
      */
     401: unknown;
     /**
+     * The authenticated user does not have access to this resource
+     */
+    403: unknown;
+    /**
      * Not Found
      */
     404: ProblemDetails;
@@ -3784,6 +3796,10 @@ export type CompareVersionsErrors = {
      */
     401: unknown;
     /**
+     * The authenticated user does not have access to this resource
+     */
+    403: unknown;
+    /**
      * Not Found
      */
     404: ProblemDetails;
@@ -3812,6 +3828,10 @@ export type GetSupportedEntityTypesErrors = {
      * The resource is protected and requires an authentication token
      */
     401: unknown;
+    /**
+     * The authenticated user does not have access to this resource
+     */
+    403: unknown;
 };
 
 export type GetSupportedEntityTypesResponses = {

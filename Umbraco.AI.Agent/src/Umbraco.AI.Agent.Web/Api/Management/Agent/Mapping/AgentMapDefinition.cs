@@ -47,7 +47,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         };
     }
 
-    // Umbraco.Code.MapAll -Id -AgentType -DateCreated -DateModified -Version -CreatedByUserId -ModifiedByUserId
+    // Umbraco.Code.MapAll -Id -AgentType -DateCreated -DateModified -Version -CreatedByUserId -ModifiedByUserId -AllowedUserGroupIds
     private static void MapFromCreateRequest(CreateAgentRequestModel source, AIAgent target, MapperContext context)
     {
         target.Alias = source.Alias;
@@ -62,7 +62,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.IsActive = true;
     }
 
-    // Umbraco.Code.MapAll -Id -AgentType -DateCreated -DateModified -Version -CreatedByUserId -ModifiedByUserId
+    // Umbraco.Code.MapAll -Id -AgentType -DateCreated -DateModified -Version -CreatedByUserId -ModifiedByUserId -AllowedUserGroupIds
     private static void MapFromUpdateRequest(UpdateAgentRequestModel source, AIAgent target, MapperContext context)
     {
         target.Alias = source.Alias;

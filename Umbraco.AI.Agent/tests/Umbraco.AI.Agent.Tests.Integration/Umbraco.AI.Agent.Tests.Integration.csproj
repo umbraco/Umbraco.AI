@@ -32,6 +32,8 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\Umbraco.AI.Agent.Core\Umbraco.AI.Agent.Core.csproj" />
+        <ProjectReference Include="..\..\src\Umbraco.AI.Agent.Persistence\Umbraco.AI.Agent.Persistence.csproj" />
+        <ProjectReference Include="..\..\src\Umbraco.AI.Agent.Persistence.Sqlite\Umbraco.AI.Agent.Persistence.Sqlite.csproj" />
     </ItemGroup>
 
 </Project>

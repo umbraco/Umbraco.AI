@@ -40,6 +40,7 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
             entity.AgentType,
             entity.ProfileId,
             entity.GuardrailIds,
+            entity.AllowedUserGroupIds,
             SurfaceIds = entity.SurfaceIds.Count > 0 ? string.Join(',', entity.SurfaceIds) : null,
             entity.Scope,
             Config = AIAgentConfigSerializer.Serialize(entity.Config),
@@ -106,6 +107,14 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
                     ?? Array.Empty<Guid>();
             }
 
+            IReadOnlyList<Guid> allowedUserGroupIds = Array.Empty<Guid>();
+            if (root.TryGetProperty("allowedUserGroupIds", out var allowedUserGroupIdsElement) &&
+                allowedUserGroupIdsElement.ValueKind == JsonValueKind.Array)
+            {
+                allowedUserGroupIds = allowedUserGroupIdsElement.Deserialize<IReadOnlyList<Guid>>(CoreConstants.DefaultJsonSerializerOptions)
+                    ?? Array.Empty<Guid>();
+            }
+
             AIAgentScope? scope = root.TryGetProperty("scope", out var scopeElement) && scopeElement.ValueKind == JsonValueKind.Object
                 ? scopeElement.Deserialize<AIAgentScope>(CoreConstants.DefaultJsonSerializerOptions)
                 : null;
@@ -129,6 +138,7 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
                 ProfileId = root.GetProperty("profileId").GetGuid(),
                 GuardrailIds = guardrailIds,
                 SurfaceIds = surfaceIds,
+                AllowedUserGroupIds = allowedUserGroupIds,
                 Scope = scope,
                 Config = AIAgentConfigSerializer.Deserialize(agentType, configJson),
                 StarterPrompts = starterPrompts,
@@ -188,6 +198,13 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
         if (fromGuardrailIds != toGuardrailIds)
         {
             changes.Add(new AIValueChange("GuardrailIds", fromGuardrailIds.Length > 0 ? fromGuardrailIds : "(none)", toGuardrailIds.Length > 0 ? toGuardrailIds : "(none)"));
+        }
+
+        var fromAllowedUserGroupIds = string.Join(",", from.AllowedUserGroupIds);
+        var toAllowedUserGroupIds = string.Join(",", to.AllowedUserGroupIds);
+        if (fromAllowedUserGroupIds != toAllowedUserGroupIds)
+        {
+            changes.Add(new AIValueChange("AllowedUserGroupIds", fromAllowedUserGroupIds.Length > 0 ? fromAllowedUserGroupIds : "(everyone)", toAllowedUserGroupIds.Length > 0 ? toAllowedUserGroupIds : "(everyone)"));
         }
 
         // Compare scope (serialized for a stable, order-sensitive comparison of allow/deny rules)

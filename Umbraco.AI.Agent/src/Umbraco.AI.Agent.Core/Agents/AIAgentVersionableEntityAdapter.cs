@@ -1,4 +1,5 @@
 using System.Text.Json;
+
 using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.Versioning;
 
@@ -258,6 +259,9 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// Asks for managed access: version history and rollback belong to the Manage agents area, which sees limited agents too.
+    /// </remarks>
     protected override Task<AIAgent?> GetEntityAsync(Guid entityId, CancellationToken cancellationToken)
-        => _agentService.GetAgentAsync(entityId, cancellationToken);
+        => _agentService.GetAgentAsync(entityId, includeRestricted: true, cancellationToken);
 }

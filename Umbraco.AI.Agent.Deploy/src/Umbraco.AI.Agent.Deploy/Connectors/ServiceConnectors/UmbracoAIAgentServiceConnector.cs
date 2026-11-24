@@ -1,10 +1,12 @@
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Umbraco.AI.Agent.Core.Agents;
-using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Agent.Deploy.Artifacts;
+using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Deploy;
 using Umbraco.AI.Deploy.Configuration;
 using Umbraco.AI.Deploy.Connectors.ServiceConnectors;
@@ -30,6 +32,7 @@ public class UmbracoAIAgentServiceConnector
     private const string UserGroupPermissionsProperty = "userGroupPermissions";
 
     private readonly IAIAgentService _agentService;
+    private readonly IAIAgentUnrestrictedReader _agentReader;
     private readonly IUserGroupService _userGroupService;
 
     /// <summary>
@@ -56,11 +59,31 @@ public class UmbracoAIAgentServiceConnector
         IAIProfileService profileService,
         UmbracoAIDeploySettingsAccessor settingsAccessor,
         IUserGroupService userGroupService)
+        : this(
+            agentService,
+            profileService,
+            settingsAccessor,
+            userGroupService,
+            StaticServiceProvider.Instance.GetRequiredService<IAIAgentUnrestrictedReader>())
+    {
+    }
+
+    // Deploy runs with no signed-in user, so export and import read agents through the unrestricted
+    // reader: the per-user filter on IAIAgentService would hide limited agents. The reader is internal,
+    // so the public constructor above resolves it rather than taking it.
+    internal UmbracoAIAgentServiceConnector(
+        IAIAgentService agentService,
+        IAIProfileService profileService,
+        UmbracoAIDeploySettingsAccessor settingsAccessor,
+        IUserGroupService userGroupService,
+        IAIAgentUnrestrictedReader agentReader)
         : base(profileService, settingsAccessor)
     {
         _agentService = agentService;
         _userGroupService = userGroupService;
+        _agentReader = agentReader;
     }
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -91,12 +114,12 @@ public class UmbracoAIAgentServiceConnector
 
     /// <inheritdoc />
     public override Task<AIAgent?> GetEntityAsync(Guid id, CancellationToken cancellationToken = default)
-        => _agentService.GetAgentAsync(id, cancellationToken);
+        => _agentReader.GetAgentUnrestrictedAsync(id, cancellationToken);
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<AIAgent> GetEntitiesAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var agents = await _agentService.GetAgentsAsync(cancellationToken);
+        var agents = await _agentReader.GetAgentsUnrestrictedAsync(cancellationToken);
         foreach (var agent in agents)
         {
             yield return agent;

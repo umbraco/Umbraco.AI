@@ -18,6 +18,7 @@
         "watch": "tsc && vite build --watch",
         "build": "npm run build:api && npm run build:app",
         "build:app": "tsc -p tsconfig.json && vite build",
+        "test": "vitest run",
         "build:api": "tsc -p tsconfig.api.json && (api-extractor run -c api-extractor.json --verbose || exit 0)",
         "generate-client": "node --no-warnings ../../../../scripts/build/generate-openapi.js ai-agent-management"
     },
@@ -36,8 +37,10 @@
         "@umbraco-ui/uui": "^2.0.0-rc.2",
         "chalk": "^5.6.0",
         "cross-env": "^10.0.0",
+        "happy-dom": "^20.10.6",
         "typescript": "^5.9.2",
         "vite": "^8.0.16",
+        "vitest": "^4.1.10",
         "worktree-dev-port": "^0.4.0"
     }
 }

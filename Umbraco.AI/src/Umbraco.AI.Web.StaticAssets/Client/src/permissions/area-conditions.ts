@@ -1,4 +1,5 @@
 import { UMB_FALLBACK_USER_PERMISSION_CONDITION_ALIAS } from "@umbraco-cms/backoffice/user-permission";
+import { UAI_REGISTERED_GROUP_PERMISSION_CONDITION_ALIAS } from "./constants.js";
 import { verbsInGroup } from "./manifests.js";
 
 /**
@@ -29,6 +30,14 @@ export function createGroupPermissionCondition(group: string) {
     // The CMS skips an empty oneOf, which would show the extension to everyone.
     if (verbs.length === 0) throw new Error(`Permission group "${group}" has no verbs to condition on.`);
     return { alias: UMB_FALLBACK_USER_PERMISSION_CONDITION_ALIAS, oneOf: verbs };
+}
+
+/**
+ * The condition that shows an extension to users who hold any right registered in a group, wherever
+ * it was registered from. Use it for a group core keeps no list of, like Add-ons.
+ */
+export function createRegisteredGroupPermissionCondition(group: string) {
+    return { alias: UAI_REGISTERED_GROUP_PERMISSION_CONDITION_ALIAS, group };
 }
 
 /**

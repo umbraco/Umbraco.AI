@@ -26,6 +26,9 @@ export class UaiAgentCollectionServerDataSource implements UmbCollectionDataSour
                     filter: filter.filter,
                     skip: filter.skip ?? 0,
                     take: filter.take ?? 100,
+                    // This is the AI section's management list, so it shows agents the user's groups
+                    // can't use too. The server honours it only for users who manage agents.
+                    includeRestricted: true,
                 },
             }),
         );

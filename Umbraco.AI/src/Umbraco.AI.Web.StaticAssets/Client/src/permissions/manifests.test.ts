@@ -96,4 +96,13 @@ describe("Feature: AI rights on the user group screen", () => {
             expect(manifestFor("Uai.Agent.Manage")).toEqual([]);
         });
     });
+
+    describe("Scenario: add-ons sort after the core rights", () => {
+        it("starts the add-on weights below the lowest core weight", () => {
+            const lowestCore = Math.min(
+                ...(permissionManifests as unknown as Array<{ weight: number }>).map((m) => m.weight),
+            );
+            expect(constants.UAI_PERMISSION_WEIGHT_ADD_ON_START).toBeLessThan(lowestCore);
+        });
+    });
 });

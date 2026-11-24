@@ -11,6 +11,7 @@ import {
     UAI_PERMISSION_VERB_MANAGE_TESTS,
     UAI_PERMISSION_VERB_VIEW_ANALYTICS,
     UAI_PERMISSION_VERB_VIEW_AUDIT_LOGS,
+    UAI_PERMISSION_WEIGHT_CORE_START,
 } from "./constants.js";
 
 /**
@@ -45,16 +46,13 @@ export function getPermissionLocalizationKey(verb: string): string {
     return first.charAt(0).toLowerCase() + first.slice(1) + rest.join("");
 }
 
-// Weights keep the rights in table order; add-ons use lower weights so their group lands last.
-const WEIGHT_START = 1000;
-
 export const permissionManifests: Array<UmbExtensionManifest> = UAI_CORE_PERMISSIONS.map(({ verb, group }, index) => {
     const key = getPermissionLocalizationKey(verb);
     return {
         type: "entityUserPermission",
         alias: `Uai.EntityUserPermission.${verbParts(verb).join(".")}`,
         name: `AI Permission ${verbParts(verb).join(" ")}`,
-        weight: WEIGHT_START - index,
+        weight: UAI_PERMISSION_WEIGHT_CORE_START - index,
         forEntityTypes: [UAI_PERMISSION_ENTITY_TYPE],
         meta: {
             verbs: [verb],

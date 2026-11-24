@@ -1,6 +1,13 @@
 import type { ManifestSectionSidebarApp } from "@umbraco-cms/backoffice/section";
-import { createGroupPermissionCondition } from "../../permissions/area-conditions.js";
-import { UAI_PERMISSION_GROUP_CONFIGURATION, UAI_PERMISSION_GROUP_MONITORING } from "../../permissions/constants.js";
+import {
+    createGroupPermissionCondition,
+    createRegisteredGroupPermissionCondition,
+} from "../../permissions/area-conditions.js";
+import {
+    UAI_PERMISSION_GROUP_ADD_ONS,
+    UAI_PERMISSION_GROUP_CONFIGURATION,
+    UAI_PERMISSION_GROUP_MONITORING,
+} from "../../permissions/constants.js";
 import {
     UAI_ADDONS_MENU_ALIAS,
     UAI_SECTION_ALIAS,
@@ -60,6 +67,7 @@ export const sectionSidebarManifests: ManifestSectionSidebarApp[] = [
                 alias: "Umb.Condition.SectionAlias",
                 match: UAI_SECTION_ALIAS,
             },
+            createRegisteredGroupPermissionCondition(UAI_PERMISSION_GROUP_ADD_ONS),
         ],
     },
 ];

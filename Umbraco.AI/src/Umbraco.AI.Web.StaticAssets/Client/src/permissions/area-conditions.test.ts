@@ -9,10 +9,12 @@ import { knowledgeSetManifests } from "../knowledge-set/manifests.js";
 import { profileManifests } from "../profile/manifests.js";
 import { settingsManifests } from "../settings/manifests.js";
 import { testManifests } from "../test/manifests.js";
+import { sectionSidebarManifests } from "../section/sidebar/manifests.js";
 import {
     UAI_AREA_GATED_MANIFEST_TYPES,
     createAreaPermissionCondition,
     createGroupPermissionCondition,
+    createRegisteredGroupPermissionCondition,
 } from "./area-conditions.js";
 import {
     UAI_PERMISSION_VERB_MANAGE_CONNECTIONS,
@@ -162,5 +164,14 @@ describe("Feature: areas need their right in the backoffice", () => {
         it("refuses a group with no verbs, since the CMS would let everyone through an empty oneOf", () => {
             expect(() => createGroupPermissionCondition("No.Such.Group")).toThrow(/no verbs/);
         });
+    });
+});
+
+describe("Feature: the Add-ons sidebar heading follows the registered add-on rights", () => {
+    it("conditions the Add-ons sidebar app on the registered Add-ons group", () => {
+        const addOns = (sectionSidebarManifests as unknown as Array<AnyManifest & { conditions: object[] }>).find(
+            (m) => m.alias === "UmbracoAI.SectionSidebarApp.AIAddonsMenu",
+        );
+        expect(addOns?.conditions).toContainEqual(createRegisteredGroupPermissionCondition("uaiAddOns"));
     });
 });

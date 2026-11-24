@@ -25,3 +25,14 @@ export const UAI_PERMISSION_ENTITY_TYPE = "uai-permission";
 export const UAI_PERMISSION_GROUP_CONFIGURATION = "uaiConfiguration";
 export const UAI_PERMISSION_GROUP_MONITORING = "uaiMonitoring";
 export const UAI_PERMISSION_GROUP_ADD_ONS = "uaiAddOns";
+
+/** Alias of the condition that is met when the user holds any registered right in a group. */
+export const UAI_REGISTERED_GROUP_PERMISSION_CONDITION_ALIAS = "Uai.Condition.PermissionGroup";
+
+/**
+ * Where the weights of the rights start. Core rights count down from `UAI_PERMISSION_WEIGHT_CORE_START`,
+ * one per row of the core table. Add-ons start at `UAI_PERMISSION_WEIGHT_ADD_ON_START` and count down,
+ * which sits below every core right so the Add-ons group lands last on the user group screen.
+ */
+export const UAI_PERMISSION_WEIGHT_CORE_START = 1000;
+export const UAI_PERMISSION_WEIGHT_ADD_ON_START = 900;

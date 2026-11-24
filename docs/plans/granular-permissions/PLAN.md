@@ -164,7 +164,7 @@ frontend criteria use Vitest.
   Acceptance: integration spec: groups with the section get the verb once; re-run adds nothing.
   depends-on: T1, T8
 
-- [ ] **T16** - story: GP-9 (AC1, AC3, AC5, AC7), GP-10 (AC1-AC3), GP-7 (AC7). In
+- [x] **T16** - story: GP-9 (AC1, AC3, AC5, AC7), GP-10 (AC1-AC3), GP-7 (AC7). In
   `AIAgentService`: list methods filter in the repository query, one `LIKE '%"<key>"%'` per user
   group ORed, plus empty or null (SPEC Targets, no per-row load). Get-by-id and alias return null
   for an agent the user can't use, unless the caller asked for managed access and has Manage

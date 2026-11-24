@@ -26,7 +26,7 @@ frontend criteria use Vitest.
 
 ## Core: permission service (Umbraco.AI)
 
-- [ ] **T1** - story: GP-1 (AC3), GP-2 (AC1, AC4). Add `Umbraco.AI.Core/Security/AIPermissions.cs`
+- [x] **T1** - story: GP-1 (AC3), GP-2 (AC1, AC4). Add `Umbraco.AI.Core/Security/AIPermissions.cs`
   with public string constants for all 11 verbs in SPEC.md "Rights" (`Uai.Connection.Manage` …
   `Uai.Prompt.Manage`). Add internal `IAIPermissionService` and `AIPermissionService`:
   `HasPermission(verb)` reads `IReadOnlyUserGroup.Permissions` of the current backoffice user's

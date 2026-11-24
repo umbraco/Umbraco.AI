@@ -11,7 +11,7 @@ namespace Umbraco.AI.Web.Api.Management.TestRun.Controllers;
 /// Controller to set a test run as the baseline for comparisons.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ManageTestsAI)]
 public class SetBaselineController : TestRunControllerBase
 {
     private readonly IAITestRunService _runService;

@@ -13,7 +13,7 @@ namespace Umbraco.AI.Web.Api.Management.Test.Controllers;
 /// Controller to execute tests filtered by tags.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ManageTestsAI)]
 public class RunTestsByTagsController : TestControllerBase
 {
     private readonly IAITestService _testService;

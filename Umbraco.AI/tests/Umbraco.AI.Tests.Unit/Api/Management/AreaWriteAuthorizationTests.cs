@@ -13,6 +13,8 @@ using Umbraco.AI.Web.Api.Management.Context.Controllers;
 using Umbraco.AI.Web.Api.Management.Guardrail.Controllers;
 using Umbraco.AI.Web.Api.Management.Profile.Controllers;
 using Umbraco.AI.Web.Api.Management.Settings.Controllers;
+using Umbraco.AI.Web.Api.Management.Test.Controllers;
+using Umbraco.AI.Web.Api.Management.TestRun.Controllers;
 using Umbraco.AI.Web.Authorization;
 using Umbraco.Cms.Core.Models.Membership;
 using Umbraco.Cms.Core.Security.Authorization;
@@ -26,7 +28,7 @@ namespace Umbraco.AI.Tests.Unit.Api.Management;
 /// </summary>
 public class AreaWriteAuthorizationTests
 {
-    // Each write endpoint with the policy it must carry. T4 and T5 add their controllers here.
+    // Each write endpoint with the policy it must carry. T5 adds its controllers here.
     public static TheoryData<Type, string> WriteControllers => new()
     {
         { typeof(CreateConnectionController), AIAuthorizationPolicies.ManageConnectionsAI },
@@ -43,6 +45,14 @@ public class AreaWriteAuthorizationTests
         { typeof(UpdateGuardrailController), AIAuthorizationPolicies.ManageGuardrailsAI },
         { typeof(DeleteGuardrailController), AIAuthorizationPolicies.ManageGuardrailsAI },
         { typeof(UpdateSettingsController), AIAuthorizationPolicies.ManageSettingsAI },
+        { typeof(CreateTestController), AIAuthorizationPolicies.ManageTestsAI },
+        { typeof(UpdateTestController), AIAuthorizationPolicies.ManageTestsAI },
+        { typeof(DeleteTestController), AIAuthorizationPolicies.ManageTestsAI },
+        { typeof(RunTestController), AIAuthorizationPolicies.ManageTestsAI },
+        { typeof(RunTestBatchController), AIAuthorizationPolicies.ManageTestsAI },
+        { typeof(RunTestsByTagsController), AIAuthorizationPolicies.ManageTestsAI },
+        { typeof(DeleteTestRunController), AIAuthorizationPolicies.ManageTestsAI },
+        { typeof(SetBaselineController), AIAuthorizationPolicies.ManageTestsAI },
     };
 
     private static readonly string[] AllVerbs =
@@ -87,14 +97,19 @@ public class AreaWriteAuthorizationTests
 
     // Controllers allowed to write while carrying only the section policy. Empty on purpose: add a name
     // here only with a reason.
-    private static readonly string[] WriteControllersWithSectionPolicyOnly = [];
+    private static readonly string[] WriteControllersWithSectionPolicyOnly =
+    [
+        // POST only because they take a body; they compute a comparison and change nothing.
+        nameof(CompareRunsController),
+        nameof(CompareVariationsController),
+    ];
 
-    private static readonly string[] AreaNamespaces = ["Connection", "Profile", "Context", "Guardrail", "Settings"];
+    private static readonly string[] AreaNamespaces = ["Connection", "Profile", "Context", "Guardrail", "Settings", "Test", "TestRun"];
 
     [Fact]
     public void EveryWriteController_InAnArea_CarriesAnAreaPolicy()
     {
-        // Given every controller in the Connection, Profile, Context, Guardrail and Settings areas
+        // Given every controller in the Connection, Profile, Context, Guardrail, Settings, Test and TestRun areas
         var writeControllers = typeof(AIAuthorizationPolicies).Assembly.GetTypes()
             .Where(t => t is { IsClass: true, IsAbstract: false } && typeof(ControllerBase).IsAssignableFrom(t))
             .Where(t => AreaNamespaces.Any(a => t.Namespace == $"Umbraco.AI.Web.Api.Management.{a}.Controllers"))

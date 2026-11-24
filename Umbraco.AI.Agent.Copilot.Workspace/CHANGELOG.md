@@ -5,6 +5,12 @@ All notable changes to Umbraco.AI.Agent.Copilot.Workspace will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [18.3.3](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot.Workspace@18.3.2...Umbraco.AI.Agent.Copilot.Workspace@18.3.3) (2026-11-23)
+
+### fix
+
+* **copilot-workspace:** Show shared conversation badges in Umbraco blue ([0f8ebc5](https://github.com/umbraco/Umbraco.AI/commit/0f8ebc5b6f15b08ce43fbe8b8a9c2ead728bb9fb))
+
 ## [18.3.2](https://github.com/umbraco/Umbraco.AI/compare/Umbraco.AI.Agent.Copilot.Workspace@18.3.1...Umbraco.AI.Agent.Copilot.Workspace@18.3.2) (2026-11-17)
 
 ### fix

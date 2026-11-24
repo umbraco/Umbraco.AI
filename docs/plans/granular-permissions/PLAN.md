@@ -289,7 +289,7 @@ frontend criteria use Vitest.
   Acceptance: spec: section groups get the verb once.
   depends-on: T1, T8
 
-- [ ] **T30** - story: GP-13 (AC2, AC3, AC5), GP-12 (AC4, AC5). `AIPromptService`: list filter in
+- [x] **T30** - story: GP-13 (AC2, AC3, AC5), GP-12 (AC4, AC5). `AIPromptService`: list filter in
   the query, null detail when not usable (unless managed access with Manage prompts), execute
   refuses with a typed failure, and the group-list save rule from T17.
   Acceptance: `Umbraco.AI.Prompt.Tests.Unit` specs for each criterion.

@@ -6,13 +6,16 @@ import {
     repeat,
     state,
     when,
-    type TemplateResult, nothing,
+    type TemplateResult,
+    nothing,
 } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import type { UmbModalToken } from "@umbraco-cms/backoffice/modal";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
 import { UMB_USER_GROUP_PICKER_MODAL, UmbUserGroupItemRepository } from "@umbraco-cms/backoffice/user-group";
+import { UAI_ITEM_PICKER_MODAL } from "../../modals/item-picker/item-picker-modal.token.js";
+import { isUserGroupEditable } from "./user-group-settings-list.utils.js";
 
 /**
  * Configuration for the user group settings list component.
@@ -20,34 +23,34 @@ import { UMB_USER_GROUP_PICKER_MODAL, UmbUserGroupItemRepository } from "@umbrac
  * @public
  */
 export interface UaiUserGroupSettingsConfig<TSettings> {
-	/** Modal configuration for editing settings */
-	editorModal: {
-		/** Modal token to open for editing */
-		token: UmbModalToken<any, any>;
+    /** Modal configuration for editing settings */
+    editorModal: {
+        /** Modal token to open for editing */
+        token: UmbModalToken<any, any>;
 
-		/** Factory to create modal data */
-		createData: (userGroupId: string, userGroupName: string, existingSettings?: TSettings) => any;
+        /** Factory to create modal data */
+        createData: (userGroupId: string, userGroupName: string, existingSettings?: TSettings) => any;
 
-		/** Extract settings from modal result */
-		extractValue: (modalResult: any) => TSettings;
-	};
+        /** Extract settings from modal result */
+        extractValue: (modalResult: any) => TSettings;
+    };
 
-	/** Display configuration */
-	display: {
-		/** Render summary text/content for list item detail */
-		renderSummary: (settings: TSettings) => TemplateResult | string;
+    /** Display configuration */
+    display: {
+        /** Render summary text/content for list item detail */
+        renderSummary: (settings: TSettings) => TemplateResult | string;
 
-		/** Optional: Render tags/badges in list item */
-		renderTags?: (settings: TSettings) => TemplateResult;
-	};
+        /** Optional: Render tags/badges in list item */
+        renderTags?: (settings: TSettings) => TemplateResult;
+    };
 
-	/** Localization (all optional with sensible defaults) */
-	labels?: {
-		/** Box headline (default: "User Group Overrides") */
-		headline?: string;
-		/** Add button label (default: "Add User Group Override") */
-		addButton?: string;
-	};
+    /** Localization (all optional with sensible defaults) */
+    labels?: {
+        /** Box headline (default: "User Group Overrides") */
+        headline?: string;
+        /** Add button label (default: "Add User Group Override") */
+        addButton?: string;
+    };
 }
 
 /**
@@ -79,255 +82,300 @@ export interface UaiUserGroupSettingsConfig<TSettings> {
  */
 @customElement("uai-user-group-settings-list")
 export class UaiUserGroupSettingsListElement<TSettings> extends UmbLitElement {
-	/**
-	 * Map of user group IDs to their settings.
-	 * Dictionary key is the user group ID (GUID as string).
-	 */
-	@property({ type: Object })
-	value: Record<string, TSettings> = {};
+    /**
+     * Map of user group IDs to their settings.
+     * Dictionary key is the user group ID (GUID as string).
+     */
+    @property({ type: Object })
+    value: Record<string, TSettings> = {};
 
-	/**
-	 * Configuration for the component (modal, display, labels).
-	 */
-	@property({ type: Object })
-	config!: UaiUserGroupSettingsConfig<TSettings>;
+    /**
+     * Configuration for the component (modal, display, labels).
+     */
+    @property({ type: Object })
+    config!: UaiUserGroupSettingsConfig<TSettings>;
 
-	/**
-	 * Whether the component is in readonly mode.
-	 */
-	@property({ type: Boolean })
-	readonly = false;
+    /**
+     * Whether the component is in readonly mode.
+     */
+    @property({ type: Boolean })
+    readonly = false;
 
-	/**
-	 * Internal state for resolved user group names.
-	 */
-	@state()
-	private _userGroupNames: Map<string, string> = new Map();
+    /**
+     * IDs of the user groups whose entries the current user may add, change or remove.
+     * Entries for other groups show read-only, and the Add picker lists only these groups.
+     * When unset, every group is editable.
+     */
+    @property({ type: Array, attribute: false })
+    editableUserGroupIds?: string[];
 
-	/**
-	 * User group repository for fetching user group data.
-	 */
-	#userGroupRepository = new UmbUserGroupItemRepository(this);
+    /**
+     * Internal state for resolved user group names.
+     */
+    @state()
+    private _userGroupNames: Map<string, string> = new Map();
 
-	/**
-	 * Computed labels with defaults.
-	 */
-	private get _labels() {
-		return {
-			headline: this.config.labels?.headline ?? this.localize.term("uaiUserGroupPermissions_headline"),
-			addButton: this.config.labels?.addButton ?? this.localize.term("general_add")
-		};
-	}
+    /**
+     * User group repository for fetching user group data.
+     */
+    #userGroupRepository = new UmbUserGroupItemRepository(this);
 
-	/**
-	 * Check if there are any user groups configured.
-	 */
-	private get _hasUserGroups(): boolean {
-		return Object.keys(this.value).length > 0;
-	}
+    /**
+     * Computed labels with defaults.
+     */
+    private get _labels() {
+        return {
+            headline: this.config.labels?.headline ?? this.localize.term("uaiUserGroupPermissions_headline"),
+            addButton: this.config.labels?.addButton ?? this.localize.term("general_add"),
+        };
+    }
 
-	/**
-	 * Get user group entries as array for rendering.
-	 */
-	private get _userGroupEntries(): [string, TSettings][] {
-		return Object.entries(this.value);
-	}
+    /**
+     * Check if there are any user groups configured.
+     */
+    private get _hasUserGroups(): boolean {
+        return Object.keys(this.value).length > 0;
+    }
 
-	override connectedCallback(): void {
-		super.connectedCallback();
-		// Load user group names when component mounts
-		this._loadUserGroupNames();
-	}
+    /**
+     * Get user group entries as array for rendering.
+     */
+    private get _userGroupEntries(): [string, TSettings][] {
+        return Object.entries(this.value);
+    }
 
-	/**
-	 * Load user group names for all configured user groups.
-	 */
-	private async _loadUserGroupNames(): Promise<void> {
-		const userGroupIds = Object.keys(this.value);
-		for (const userGroupId of userGroupIds) {
-			const name = await this._getUserGroupName(userGroupId);
-			if (name) {
-				this._userGroupNames = new Map(this._userGroupNames).set(userGroupId, name);
-			}
-		}
-	}
+    override connectedCallback(): void {
+        super.connectedCallback();
+        // Load user group names when component mounts
+        this._loadUserGroupNames();
+    }
 
-	/**
-	 * Get user group name by ID.
-	 */
-	private async _getUserGroupName(userGroupId: string): Promise<string> {
-		// Check cache first
-		if (this._userGroupNames.has(userGroupId)) {
-			return this._userGroupNames.get(userGroupId)!;
-		}
+    /**
+     * Load user group names for all configured user groups.
+     */
+    private async _loadUserGroupNames(): Promise<void> {
+        const userGroupIds = Object.keys(this.value);
+        for (const userGroupId of userGroupIds) {
+            const name = await this._getUserGroupName(userGroupId);
+            if (name) {
+                this._userGroupNames = new Map(this._userGroupNames).set(userGroupId, name);
+            }
+        }
+    }
 
-		// Fetch from user group repository
-		try {
-			const { data } = await this.#userGroupRepository.requestItems([userGroupId]);
-			if (data && data.length > 0 && data[0]) {
-				const name = data[0].name ?? userGroupId;
-				this._userGroupNames = new Map(this._userGroupNames).set(userGroupId, name);
-				return name;
-			}
-		} catch (error) {
-			console.error(`Failed to fetch user group name for ${userGroupId}:`, error);
-		}
+    /**
+     * Get user group name by ID.
+     */
+    private async _getUserGroupName(userGroupId: string): Promise<string> {
+        // Check cache first
+        if (this._userGroupNames.has(userGroupId)) {
+            return this._userGroupNames.get(userGroupId)!;
+        }
 
-		// Fallback to ID if fetch fails
-		return userGroupId;
-	}
+        // Fetch from user group repository
+        try {
+            const { data } = await this.#userGroupRepository.requestItems([userGroupId]);
+            if (data && data.length > 0 && data[0]) {
+                const name = data[0].name ?? userGroupId;
+                this._userGroupNames = new Map(this._userGroupNames).set(userGroupId, name);
+                return name;
+            }
+        } catch (error) {
+            console.error(`Failed to fetch user group name for ${userGroupId}:`, error);
+        }
 
-	/**
-	 * Add a new user group override.
-	 */
-	private async _addUserGroup(): Promise<void> {
-		const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
-		if (!modalManager) return;
+        // Fallback to ID if fetch fails
+        return userGroupId;
+    }
 
-		// 1. Open user group picker
-		const pickerResult = await modalManager.open(this, UMB_USER_GROUP_PICKER_MODAL, {
-			data: {
-				multiple: false,
-			},
-		});
+    /**
+     * Add a new user group override.
+     */
+    private async _addUserGroup(): Promise<void> {
+        const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
+        if (!modalManager) return;
 
-		const pickerValue = await pickerResult?.onSubmit();
-		if (!pickerValue || !pickerValue.selection || pickerValue.selection.length === 0) {
-			return;
-		}
+        // 1. Open user group picker
+        const userGroupId = await this._pickUserGroup(modalManager);
+        if (!userGroupId) return;
 
-		const userGroupId = pickerValue.selection[0];
-		if (!userGroupId) return;
+        // Check if already configured
+        if (this.value[userGroupId]) {
+            // TODO: Show notification that user group is already configured
+            return;
+        }
 
-		// Check if already configured
-		if (this.value[userGroupId]) {
-			// TODO: Show notification that user group is already configured
-			return;
-		}
+        // 2. Get user group name
+        const userGroupName = await this._getUserGroupName(userGroupId);
 
-		// 2. Get user group name
-		const userGroupName = await this._getUserGroupName(userGroupId);
+        // 3. Open editor modal
+        const modalData = this.config.editorModal.createData(userGroupId, userGroupName);
+        const modal = modalManager.open(this, this.config.editorModal.token, {
+            data: modalData,
+        });
 
-		// 3. Open editor modal
-		const modalData = this.config.editorModal.createData(userGroupId, userGroupName);
-		const modal = modalManager.open(this, this.config.editorModal.token, {
-			data: modalData,
-		});
+        const modalResult = await modal.onSubmit();
+        if (!modalResult) {
+            return;
+        }
 
-		const modalResult = await modal.onSubmit();
-		if (!modalResult) {
-			return;
-		}
+        // 4. Extract settings and update value
+        const settings = this.config.editorModal.extractValue(modalResult);
+        this.value = { ...this.value, [userGroupId]: settings };
+        this._dispatchChangeEvent();
+    }
 
-		// 4. Extract settings and update value
-		const settings = this.config.editorModal.extractValue(modalResult);
-		this.value = { ...this.value, [userGroupId]: settings };
-		this._dispatchChangeEvent();
-	}
+    /**
+     * Let the user pick a group. The CMS picker can't be limited to some groups,
+     * so when editable groups are set a generic item picker lists just those.
+     */
+    private async _pickUserGroup(modalManager: typeof UMB_MODAL_MANAGER_CONTEXT.TYPE): Promise<string | undefined> {
+        const editableIds = this.editableUserGroupIds;
+        if (!editableIds) {
+            const pickerResult = modalManager.open(this, UMB_USER_GROUP_PICKER_MODAL, {
+                data: { multiple: false },
+            });
+            const pickerValue = await pickerResult.onSubmit();
+            return pickerValue?.selection?.[0] ?? undefined;
+        }
 
-	/**
-	 * Edit an existing user group override.
-	 */
-	private async _editUserGroup(userGroupId: string): Promise<void> {
-		const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
-		if (!modalManager) return;
+        const modal = modalManager.open(this, UAI_ITEM_PICKER_MODAL, {
+            data: {
+                fetchItems: async () => {
+                    if (editableIds.length === 0) return [];
+                    const { data } = await this.#userGroupRepository.requestItems(editableIds);
+                    return (data ?? []).map((group) => ({
+                        value: group.unique,
+                        label: group.name,
+                        icon: group.icon ?? "icon-users",
+                    }));
+                },
+                selectionMode: "single",
+                title: this.localize.term("user_chooseUserGroup", false),
+            },
+        });
+        const result = await modal.onSubmit();
+        return result?.selection?.[0]?.value;
+    }
 
-		const userGroupName = await this._getUserGroupName(userGroupId);
-		const existingSettings = this.value[userGroupId];
+    /**
+     * Edit an existing user group override.
+     */
+    private async _editUserGroup(userGroupId: string): Promise<void> {
+        const modalManager = await this.getContext(UMB_MODAL_MANAGER_CONTEXT);
+        if (!modalManager) return;
 
-		const modalData = this.config.editorModal.createData(userGroupId, userGroupName, existingSettings);
-		const modal = modalManager.open(this, this.config.editorModal.token, {
-			data: modalData,
-		});
+        const userGroupName = await this._getUserGroupName(userGroupId);
+        const existingSettings = this.value[userGroupId];
 
-		const modalResult = await modal.onSubmit();
-		if (!modalResult) {
-			return;
-		}
+        const modalData = this.config.editorModal.createData(userGroupId, userGroupName, existingSettings);
+        const modal = modalManager.open(this, this.config.editorModal.token, {
+            data: modalData,
+        });
 
-		const settings = this.config.editorModal.extractValue(modalResult);
-		this.value = { ...this.value, [userGroupId]: settings };
-		this._dispatchChangeEvent();
-	}
+        const modalResult = await modal.onSubmit();
+        if (!modalResult) {
+            return;
+        }
 
-	/**
-	 * Remove a user group override.
-	 */
-	private _removeUserGroup(userGroupId: string): void {
-		const { [userGroupId]: _, ...remaining } = this.value;
-		this.value = remaining;
-		this._dispatchChangeEvent();
-	}
+        const settings = this.config.editorModal.extractValue(modalResult);
+        this.value = { ...this.value, [userGroupId]: settings };
+        this._dispatchChangeEvent();
+    }
 
-	/**
-	 * Dispatch change event.
-	 */
-	private _dispatchChangeEvent(): void {
-		this.dispatchEvent(new UmbChangeEvent());
-	}
+    /**
+     * Remove a user group override.
+     */
+    private _removeUserGroup(userGroupId: string): void {
+        const { [userGroupId]: _, ...remaining } = this.value;
+        this.value = remaining;
+        this._dispatchChangeEvent();
+    }
 
-	override render() {
-		return html`
-				${when(
-					this._hasUserGroups,
-					() => html`
-						<uui-ref-list>
-							${repeat(
-								this._userGroupEntries,
-								([id]) => id,
-								([id, settings]) => html`
-									<uui-ref-node
-										name=${this._userGroupNames.get(id) ?? id}
-										detail=${this.config.display.renderSummary(settings)}
-										@open=${this.readonly ? undefined : () => this._editUserGroup(id)}>
-										<umb-icon slot="icon" name="icon-users"></umb-icon>
-										<div slot="tag" class="tags">
-                                            ${this.config.display.renderTags ? this.config.display.renderTags(settings) : nothing}
-                                        </div>
-										${when(
-											!this.readonly,
-											() => html`
-												<uui-action-bar slot="actions">
-													<uui-button
-														label=${this.localize.term("general_edit")}
-														@click=${(e: Event) => { e.stopPropagation(); this._editUserGroup(id); }}>
-														<uui-icon name="icon-edit"></uui-icon>
-													</uui-button>
-													<uui-button
-														label=${this.localize.term("general_remove")}
-														@click=${(e: Event) => { e.stopPropagation(); this._removeUserGroup(id); }}>
-														<uui-icon name="icon-trash"></uui-icon>
-													</uui-button>
-												</uui-action-bar>
-											`
-										)}
-									</uui-ref-node>
-								`
-							)}
-						</uui-ref-list>
-					`,
-                    () => nothing
-				)}
-				${when(
-					!this.readonly,
-					() => html`
-						<uui-button
-							look="placeholder"
-							@click=${this._addUserGroup}
-							label=${this._labels.addButton}>
-							<uui-icon name="icon-add"></uui-icon>
-							${this._labels.addButton}
-						</uui-button>
-					`
-				)}
-		`;
-	}
+    /**
+     * A row is read-only when the whole list is, or when it is for a group the user can't change.
+     */
+    private _isRowReadonly(userGroupId: string): boolean {
+        return this.readonly || !isUserGroupEditable(userGroupId, this.editableUserGroupIds);
+    }
 
-	static override styles = [
-		css`
-			:host {
-				display: block;
-			}
+    /**
+     * Dispatch change event.
+     */
+    private _dispatchChangeEvent(): void {
+        this.dispatchEvent(new UmbChangeEvent());
+    }
+
+    override render() {
+        return html`
+            ${when(
+                this._hasUserGroups,
+                () => html`
+                    <uui-ref-list>
+                        ${repeat(
+                            this._userGroupEntries,
+                            ([id]) => id,
+                            ([id, settings]) => html`
+                                <uui-ref-node
+                                    name=${this._userGroupNames.get(id) ?? id}
+                                    detail=${this.config.display.renderSummary(settings)}
+                                    @open=${this._isRowReadonly(id) ? undefined : () => this._editUserGroup(id)}
+                                >
+                                    <umb-icon slot="icon" name="icon-users"></umb-icon>
+                                    <div slot="tag" class="tags">
+                                        ${this.config.display.renderTags
+                                            ? this.config.display.renderTags(settings)
+                                            : nothing}
+                                    </div>
+                                    ${when(
+                                        !this._isRowReadonly(id),
+                                        () => html`
+                                            <uui-action-bar slot="actions">
+                                                <uui-button
+                                                    label=${this.localize.term("general_edit")}
+                                                    @click=${(e: Event) => {
+                                                        e.stopPropagation();
+                                                        this._editUserGroup(id);
+                                                    }}
+                                                >
+                                                    <uui-icon name="icon-edit"></uui-icon>
+                                                </uui-button>
+                                                <uui-button
+                                                    label=${this.localize.term("general_remove")}
+                                                    @click=${(e: Event) => {
+                                                        e.stopPropagation();
+                                                        this._removeUserGroup(id);
+                                                    }}
+                                                >
+                                                    <uui-icon name="icon-trash"></uui-icon>
+                                                </uui-button>
+                                            </uui-action-bar>
+                                        `,
+                                    )}
+                                </uui-ref-node>
+                            `,
+                        )}
+                    </uui-ref-list>
+                `,
+                () => nothing,
+            )}
+            ${when(
+                !this.readonly,
+                () => html`
+                    <uui-button look="placeholder" @click=${this._addUserGroup} label=${this._labels.addButton}>
+                        <uui-icon name="icon-add"></uui-icon>
+                        ${this._labels.addButton}
+                    </uui-button>
+                `,
+            )}
+        `;
+    }
+
+    static override styles = [
+        css`
+            :host {
+                display: block;
+            }
 
             uui-tag {
                 white-space: nowrap;
@@ -339,16 +387,16 @@ export class UaiUserGroupSettingsListElement<TSettings> extends UmbLitElement {
                 margin-right: var(--uui-size-space-2);
             }
 
-			uui-button[look="placeholder"] {
-				width: 100%;
-				margin-top: var(--uui-size-space-4);
-			}
-		`,
-	];
+            uui-button[look="placeholder"] {
+                width: 100%;
+                margin-top: var(--uui-size-space-4);
+            }
+        `,
+    ];
 }
 
 declare global {
-	interface HTMLElementTagNameMap {
-		"uai-user-group-settings-list": UaiUserGroupSettingsListElement<any>;
-	}
+    interface HTMLElementTagNameMap {
+        "uai-user-group-settings-list": UaiUserGroupSettingsListElement<any>;
+    }
 }

@@ -52,7 +52,7 @@ frontend criteria use Vitest.
 
 ## Core: Management API (Umbraco.AI)
 
-- [ ] **T3** - story: GP-2 (AC1, AC2, AC4, AC5, AC6). Swap `SectionAccessAI` for the area policy
+- [x] **T3** - story: GP-2 (AC1, AC2, AC4, AC5, AC6). Swap `SectionAccessAI` for the area policy
   on the create, update and delete controllers of Connection, Profile, Context and Guardrail, on
   `POST connections/{idOrAlias}/test`, and on `PUT settings`. Read controllers keep their current
   check (#509).

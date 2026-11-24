@@ -194,7 +194,7 @@ frontend criteria use Vitest.
   green.
   depends-on: T17
 
-- [ ] **T18** - story: GP-9 (AC6). `Agents/Selection/AIAgentSelectionService.cs` drops agents the
+- [x] **T18** - story: GP-9 (AC6). `Agents/Selection/AIAgentSelectionService.cs` drops agents the
   user can't use before selection runs.
   Acceptance: unit spec: the best-matching agent limited to another group isn't picked.
   depends-on: T16. parallel-group: C

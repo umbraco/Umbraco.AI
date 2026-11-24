@@ -12,8 +12,12 @@ using Shouldly;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Deploy.Configuration;
 using Umbraco.AI.Prompt.Core.Prompts;
+using Umbraco.AI.Prompt.Deploy.Artifacts;
 using Umbraco.AI.Prompt.Deploy.Connectors.ServiceConnectors;
 using Umbraco.Cms.Core;
+using Umbraco.Cms.Core.Deploy;
+using Umbraco.Cms.Core.Models.Membership;
+using Umbraco.Cms.Core.Services;
 
 using Xunit;
 
@@ -24,6 +28,7 @@ public class UmbracoAIPromptServiceConnectorTests
     private readonly Mock<IAIPromptService> _promptServiceMock;
     private readonly Mock<IAIPromptUnrestrictedReader> _promptReaderMock;
     private readonly Mock<IAIProfileService> _profileServiceMock;
+    private readonly Mock<IUserGroupService> _userGroupServiceMock;
     private readonly Mock<UmbracoAIDeploySettingsAccessor> _settingsAccessorMock;
     private readonly UmbracoAIPromptServiceConnector _connector;
 
@@ -32,6 +37,7 @@ public class UmbracoAIPromptServiceConnectorTests
         _promptServiceMock = new Mock<IAIPromptService>();
         _promptReaderMock = new Mock<IAIPromptUnrestrictedReader>();
         _profileServiceMock = new Mock<IAIProfileService>();
+        _userGroupServiceMock = new Mock<IUserGroupService>();
         _settingsAccessorMock = new Mock<UmbracoAIDeploySettingsAccessor>(MockBehavior.Strict, null!);
 
         _settingsAccessorMock.Setup(x => x.Settings).Returns(new UmbracoAIDeploySettings());
@@ -40,6 +46,7 @@ public class UmbracoAIPromptServiceConnectorTests
             _promptServiceMock.Object,
             _profileServiceMock.Object,
             _settingsAccessorMock.Object,
+            _userGroupServiceMock.Object,
             _promptReaderMock.Object);
     }
 
@@ -251,5 +258,91 @@ public class UmbracoAIPromptServiceConnectorTests
     {
         // Assert
         _connector.UdiEntityType.ShouldBe("umbraco-ai-prompt");
+    }
+
+    [Fact]
+    public async Task GetArtifactAsync_WithAllowedUserGroups_ExportsTheirAliases()
+    {
+        var group = Mock.Of<IUserGroup>(g => g.Alias == "translators");
+        var groupKey = Guid.NewGuid();
+        _userGroupServiceMock.Setup(x => x.GetAsync(groupKey)).ReturnsAsync(group);
+        var prompt = new AIPrompt { Alias = "p", Name = "P", Instructions = "i", AllowedUserGroupIds = [groupKey] };
+
+        var artifact = await _connector.GetArtifactAsync(new GuidUdi("umbraco-ai-prompt", prompt.Id), prompt);
+
+        artifact.ShouldNotBeNull();
+        artifact.AllowedUserGroups.ShouldBe(["translators"]);
+    }
+
+    [Fact]
+    public async Task GetArtifactAsync_WithNoAllowedUserGroups_ExportsAnEmptyList()
+    {
+        var prompt = new AIPrompt { Alias = "p", Name = "P", Instructions = "i" };
+
+        var artifact = await _connector.GetArtifactAsync(new GuidUdi("umbraco-ai-prompt", prompt.Id), prompt);
+
+        artifact.ShouldNotBeNull();
+        artifact.AllowedUserGroups.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WithAllowedUserGroupAlias_SavesTheTargetsKey()
+    {
+        var targetKey = Guid.NewGuid();
+        _userGroupServiceMock.Setup(x => x.GetAsync("translators"))
+            .ReturnsAsync(Mock.Of<IUserGroup>(g => g.Key == targetKey));
+        var saved = CaptureSave();
+        var state = NewState(["translators"]);
+
+        await _connector.ProcessAsync(state, Mock.Of<IDeployContext>(), 3);
+
+        saved().ShouldNotBeNull().AllowedUserGroupIds.ShouldBe([targetKey]);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WithNoAllowedUserGroups_SavesAnEmptyList()
+    {
+        var saved = CaptureSave();
+        var state = NewState([]);
+
+        await _connector.ProcessAsync(state, Mock.Of<IDeployContext>(), 3);
+
+        saved().ShouldNotBeNull().AllowedUserGroupIds.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WithMissingUserGroup_FailsNamingTheAliasAndSavesNothing()
+    {
+        _userGroupServiceMock.Setup(x => x.GetAsync("translators")).ReturnsAsync((IUserGroup?)null);
+        var saved = CaptureSave();
+        var state = NewState(["translators"]);
+
+        var ex = await Should.ThrowAsync<InvalidOperationException>(
+            () => _connector.ProcessAsync(state, Mock.Of<IDeployContext>(), 3));
+
+        ex.Message.ShouldContain("translators");
+        saved().ShouldBeNull();
+    }
+
+    private Func<AIPrompt?> CaptureSave()
+    {
+        AIPrompt? saved = null;
+        _promptServiceMock
+            .Setup(x => x.SavePromptAsync(It.IsAny<AIPrompt>(), It.IsAny<CancellationToken>()))
+            .Callback<AIPrompt, CancellationToken>((p, _) => saved = p)
+            .ReturnsAsync((AIPrompt p, CancellationToken _) => p);
+        return () => saved;
+    }
+
+    private ArtifactDeployState<AIPromptArtifact, AIPrompt> NewState(string[] allowedUserGroups)
+    {
+        var artifact = new AIPromptArtifact(new GuidUdi("umbraco-ai-prompt", Guid.NewGuid()))
+        {
+            Alias = "p",
+            Name = "P",
+            Instructions = "i",
+            AllowedUserGroups = allowedUserGroups,
+        };
+        return new ArtifactDeployState<AIPromptArtifact, AIPrompt>(artifact, null, _connector, 3);
     }
 }

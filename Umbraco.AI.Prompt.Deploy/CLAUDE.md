@@ -36,6 +36,7 @@ Single-project structure (consistent with Deploy pattern):
 - Tags array for categorization
 - Scope as JsonElement (serialized AIPromptScope)
 - Settings (IsActive, IncludeEntityContext, OptionCount)
+- AllowedUserGroups: user group aliases the prompt is limited to (empty means everyone). Travels by alias because group keys differ per environment; a missing alias always fails the import, before saving. Older artifacts without it read as empty
 
 **Service Connector** - `UmbracoAIPromptServiceConnector`:
 - Extends `UmbracoAIProfileDependentEntityServiceConnectorBase`

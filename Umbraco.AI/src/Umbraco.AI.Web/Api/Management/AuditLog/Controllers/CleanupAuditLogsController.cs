@@ -11,7 +11,7 @@ namespace Umbraco.AI.Web.Api.Management.AuditLog.Controllers;
 /// Controller to clean up old audit-log logs based on retention policy.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ManageSettingsAI)]
 public class CleanupAuditLogsController : AuditLogControllerBase
 {
     private readonly IAIAuditLogService _auditLogService;

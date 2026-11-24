@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 
 using Umbraco.AI.Core.Security;
+using Umbraco.AI.Web.Api.Management.AuditLog.Controllers;
 using Umbraco.AI.Web.Api.Management.Connection.Controllers;
 using Umbraco.AI.Web.Api.Management.Context.Controllers;
 using Umbraco.AI.Web.Api.Management.Guardrail.Controllers;
@@ -53,9 +54,11 @@ public class AreaWriteAuthorizationTests
         { typeof(RunTestsByTagsController), AIAuthorizationPolicies.ManageTestsAI },
         { typeof(DeleteTestRunController), AIAuthorizationPolicies.ManageTestsAI },
         { typeof(SetBaselineController), AIAuthorizationPolicies.ManageTestsAI },
+        { typeof(DeleteAuditLogController), AIAuthorizationPolicies.ManageSettingsAI },
+        { typeof(CleanupAuditLogsController), AIAuthorizationPolicies.ManageSettingsAI },
     };
 
-    private static readonly string[] AllVerbs =
+    internal static readonly string[] AllVerbs =
     [
         AIPermissions.ManageConnections,
         AIPermissions.ManageProfiles,
@@ -104,12 +107,12 @@ public class AreaWriteAuthorizationTests
         nameof(CompareVariationsController),
     ];
 
-    private static readonly string[] AreaNamespaces = ["Connection", "Profile", "Context", "Guardrail", "Settings", "Test", "TestRun"];
+    private static readonly string[] AreaNamespaces = ["Connection", "Profile", "Context", "Guardrail", "Settings", "Test", "TestRun", "AuditLog"];
 
     [Fact]
     public void EveryWriteController_InAnArea_CarriesAnAreaPolicy()
     {
-        // Given every controller in the Connection, Profile, Context, Guardrail, Settings, Test and TestRun areas
+        // Given every controller in the Connection, Profile, Context, Guardrail, Settings, Test, TestRun and AuditLog areas
         var writeControllers = typeof(AIAuthorizationPolicies).Assembly.GetTypes()
             .Where(t => t is { IsClass: true, IsAbstract: false } && typeof(ControllerBase).IsAssignableFrom(t))
             .Where(t => AreaNamespaces.Any(a => t.Namespace == $"Umbraco.AI.Web.Api.Management.{a}.Controllers"))
@@ -188,13 +191,17 @@ public class AreaWriteAuthorizationTests
         allowed.ShouldBeFalse();
     }
 
-    [Fact(Skip = "Pending implementation: T5")]
+    [Fact]
     public async Task AuditLogDelete_WithViewLogsOnly_Returns403()
     {
         // Given an AI section user with Uai.AuditLog.View but not Uai.Settings.Manage
+        var authorizationService = CreateAuthorizationService(hasSection: true, verbs: [AIPermissions.ViewAuditLogs]);
+
         // When  they call the audit log delete endpoint
-        // Then  the response is 403 (AC7, spec guess 1)
-        await Task.CompletedTask;
+        var allowed = await IsAllowedAsync(authorizationService, typeof(DeleteAuditLogController));
+
+        // Then  authorization fails, so the response is 403 (AC7, spec guess 1)
+        allowed.ShouldBeFalse();
     }
 
     #endregion
@@ -206,17 +213,17 @@ public class AreaWriteAuthorizationTests
         .Select(f => (string)f.GetRawConstantValue()!)
         .ToHashSet(StringComparer.Ordinal);
 
-    private static bool IsAIPolicy(string? policy)
+    internal static bool IsAIPolicy(string? policy)
         => policy is not null && AIPolicyNames.Contains(policy);
 
     // Every [Authorize(Policy)] on the controller and its bases must pass, as in ASP.NET Core.
-    private static List<string?> GetPolicies(Type controllerType)
+    internal static List<string?> GetPolicies(Type controllerType)
         => controllerType
             .GetCustomAttributes<AuthorizeAttribute>(inherit: true)
             .Select(a => a.Policy)
             .ToList();
 
-    private static async Task<bool> IsAllowedAsync(IAuthorizationService authorizationService, Type controllerType)
+    internal static async Task<bool> IsAllowedAsync(IAuthorizationService authorizationService, Type controllerType)
     {
         // The CMS base policy needs a real backoffice login, so only the AI policies are evaluated here.
         foreach (var policy in GetPolicies(controllerType).Where(IsAIPolicy))
@@ -231,7 +238,7 @@ public class AreaWriteAuthorizationTests
         return true;
     }
 
-    private static IAuthorizationService CreateAuthorizationService(bool hasSection, string[] verbs)
+    internal static IAuthorizationService CreateAuthorizationService(bool hasSection, string[] verbs)
     {
         var user = new Mock<IUser>();
         user.SetupGet(u => u.AllowedSections).Returns(hasSection ? [Core.Constants.Sections.AI] : []);

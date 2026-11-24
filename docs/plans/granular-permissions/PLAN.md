@@ -175,7 +175,7 @@ frontend criteria use Vitest.
   listed, including a SQLite query spec that the filter is one query.
   depends-on: T1, T14
 
-- [ ] **T17** - story: GP-8 (AC1, AC2, AC4, AC6, AC7). Group-list save rule in
+- [x] **T17** - story: GP-8 (AC1, AC2, AC4, AC6, AC7). Group-list save rule in
   `AIAgentService.SaveAgentAsync`, copied from the CMS `UserGroupService` rule (18.3.2): admins
   change freely; a non-admin may change the list only on an agent they can use, may add or remove
   only groups they belong to, and may not leave it empty when it wasn't (spec guess 5). A refused

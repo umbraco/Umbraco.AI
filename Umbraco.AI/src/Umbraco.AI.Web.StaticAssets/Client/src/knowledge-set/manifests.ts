@@ -3,6 +3,8 @@ import { knowledgeSetComponentManifests } from "./components/manifests.js";
 import { knowledgeSetMenuManifests } from "./menu/manifests.js";
 import { knowledgeSetRepositoryManifests } from "./repository/manifests.js";
 import { knowledgeSetWorkspaceManifests } from "./workspace/manifests.js";
+import { withAreaPermission } from "../permissions/area-conditions.js";
+import { UAI_PERMISSION_VERB_MANAGE_KNOWLEDGE_SETS } from "../permissions/constants.js";
 
 /**
  * Manifests for the Knowledge Set feature.
@@ -12,9 +14,11 @@ import { knowledgeSetWorkspaceManifests } from "./workspace/manifests.js";
  * entity actions, no bulk actions, no pickers.
  */
 export const knowledgeSetManifests: Array<UmbExtensionManifest> = [
-    ...knowledgeSetCollectionManifests,
+    ...withAreaPermission(UAI_PERMISSION_VERB_MANAGE_KNOWLEDGE_SETS, [
+        ...knowledgeSetCollectionManifests,
+        ...knowledgeSetMenuManifests,
+        ...knowledgeSetWorkspaceManifests,
+    ]),
     ...knowledgeSetComponentManifests,
-    ...knowledgeSetMenuManifests,
     ...knowledgeSetRepositoryManifests,
-    ...knowledgeSetWorkspaceManifests,
 ];

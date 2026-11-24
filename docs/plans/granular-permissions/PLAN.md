@@ -239,7 +239,7 @@ frontend criteria use Vitest.
   Acceptance: `npm run build:agent` passes with the new types.
   depends-on: T22
 
-- [ ] **T24** - story: GP-1 (AC1, AC4), GP-5, GP-9 (AC2). Add `agent/permissions/manifests.ts`
+- [x] **T24** - story: GP-1 (AC1, AC4), GP-5, GP-9 (AC2). Add `agent/permissions/manifests.ts`
   (Manage agents, `UAI_PERMISSION_ENTITY_TYPE`, group "Add-ons"). Add the fallback condition to the
   agent menu, collection, entity actions and workspace manifests. The AI section's agent collection
   asks with `includeRestricted=true`.

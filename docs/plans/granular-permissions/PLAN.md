@@ -326,14 +326,14 @@ frontend criteria use Vitest.
 
 ## Copilot Workspace (Umbraco.AI.Agent.Copilot.Workspace)
 
-- [ ] **T35** - story: GP-11 (AC1, AC2). `StreamConversationAGUIController` maps the agent
+- [x] **T35** - story: GP-11 (AC1, AC2). `StreamConversationAGUIController` maps the agent
   service's "agent not available" failure to 403 `ProblemDetails` "Agent not available".
   Conversation read endpoints don't check the agent limit.
   Acceptance: `Umbraco.AI.Agent.Copilot.Workspace.Tests.Integration` specs: history 200, new
   message 403.
   depends-on: T16
 
-- [ ] **T36** - **wire: Workspace refusal into the running site.** story: GP-11. On the demo site,
+- [x] **T36** - **wire: Workspace refusal into the running site.** story: GP-11. On the demo site,
   start a Workspace chat with an agent, then limit the agent to a group the user isn't in.
   Acceptance: the chat reopens with its messages; sending a message shows the refusal; the stream
   request returns 403.

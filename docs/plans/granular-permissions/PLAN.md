@@ -295,7 +295,7 @@ frontend criteria use Vitest.
   Acceptance: `Umbraco.AI.Prompt.Tests.Unit` specs for each criterion.
   depends-on: T1, T28
 
-- [ ] **T31** - story: GP-2 (prompts), GP-13 (AC2-AC5), GP-12 (AC4, AC5). Prompt controllers:
+- [x] **T31** - story: GP-2 (prompts), GP-13 (AC2-AC5), GP-12 (AC4, AC5). Prompt controllers:
   `includeRestricted`, 404 detail, Manage prompts policy on writes, `allowedUserGroupIds` on
   models and mapping, `execute` 403 `ProblemDetails` "Prompt not available", 403 on a refused
   group-list change. No `onBehalfOf`.
@@ -303,7 +303,7 @@ frontend criteria use Vitest.
   `Umbraco.AI.Prompt.Tests.Unit` against the controllers, and prove the HTTP behaviour in T32).
   depends-on: T2, T30
 
-- [ ] **T32** - **wire: prompt limits into the Management API.** story: GP-12, GP-13. On the demo
+- [x] **T32** - **wire: prompt limits into the Management API.** story: GP-12, GP-13. On the demo
   site, limit one prompt to "Editors".
   Acceptance: real requests: outside "Editors", `GET prompts` hides it, detail 404, `execute` 403;
   a member executes it; a manager sees it with `includeRestricted=true`; the Prompt migration

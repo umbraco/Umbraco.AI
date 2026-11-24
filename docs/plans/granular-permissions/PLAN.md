@@ -233,7 +233,7 @@ frontend criteria use Vitest.
 
 ## Agent: backoffice (Umbraco.AI.Agent)
 
-- [ ] **T23** - story: GP-7 (AC4), GP-14. Regenerate the Agent OpenAPI client
+- [x] **T23** - story: GP-7 (AC4), GP-14. Regenerate the Agent OpenAPI client
   (`npm run generate-client` against the running demo site) for `allowedUserGroupIds`,
   `includeRestricted` and `onBehalfOf`.
   Acceptance: `npm run build:agent` passes with the new types.

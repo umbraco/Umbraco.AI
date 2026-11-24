@@ -205,7 +205,7 @@ frontend criteria use Vitest.
   Acceptance: spec: a test run by a user outside the agent's groups is refused.
   depends-on: T16. parallel-group: C
 
-- [ ] **T20** - story: GP-14 (AC3, AC4). Add public `Agents/IAIAgentUserGroupResolver.cs` and its
+- [x] **T20** - story: GP-14 (AC3, AC4). Add public `Agents/IAIAgentUserGroupResolver.cs` and its
   collection builder: a resolver claims an `onBehalfOf` kind (the text before `:`) and returns
   group keys, or says the caller may not act for it, or that it has no user. Register the empty
   collection in the Agent Composer.

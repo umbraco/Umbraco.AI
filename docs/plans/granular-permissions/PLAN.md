@@ -131,7 +131,7 @@ frontend criteria use Vitest.
   Acceptance: Vitest specs; `npm run build:core`.
   depends-on: T10
 
-- [ ] **T47** - story: GP-18 (AC3, AC4). `core/components/user-group-settings-list/user-group-settings-list.element.ts`
+- [x] **T47** - story: GP-18 (AC3, AC4). `core/components/user-group-settings-list/user-group-settings-list.element.ts`
   gains an optional `editableUserGroupIds` property. When set, rows for other groups render in the
   list's existing read-only look (no edit, no remove), and the Add picker lists only those groups.
   When unset, it behaves as today. Its only other user is the agent tool rules field.

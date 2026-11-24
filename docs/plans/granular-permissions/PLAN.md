@@ -266,7 +266,7 @@ frontend criteria use Vitest.
   Acceptance: `npm run build:agent`.
   depends-on: T23. parallel-group: D
 
-- [ ] **T27** - **wire: agent Access box and rights into the backoffice.** story: GP-1, GP-5,
+- [x] **T27** - **wire: agent Access box and rights into the backoffice.** story: GP-1, GP-5,
   GP-7, GP-8, GP-18. Smoke test on the demo site.
   Acceptance: Manage agents shows under Add-ons on the user group screen; an agent's Availability
   view shows the Access box, opens the CMS picker, saves and reopens "Editors"; a deleted group

@@ -102,7 +102,7 @@ frontend criteria use Vitest.
   section afterwards has none.
   depends-on: T1. parallel-group: B
 
-- [ ] **T9** - **wire: core grant step into the demo site upgrade.** story: GP-6 (AC1, AC2). Start
+- [x] **T9** - **wire: core grant step into the demo site upgrade.** story: GP-6 (AC1, AC2). Start
   the demo site on its existing database.
   Acceptance: the migration runs on start; the Administrators group shows all 9 core rights ticked
   on the user group screen; a second start adds nothing (row count unchanged).

@@ -13,6 +13,7 @@ using Umbraco.AI.Deploy.Connectors.ServiceConnectors;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Deploy;
+using Umbraco.Cms.Core.Models.Membership;
 using Umbraco.Cms.Core.Services;
 
 namespace Umbraco.AI.Agent.Deploy.Connectors.ServiceConnectors;
@@ -184,6 +185,7 @@ public class UmbracoAIAgentServiceConnector
             SurfaceIds = entity.SurfaceIds.ToList(),
             Scope = entity.Scope != null ? JsonSerializer.SerializeToElement(entity.Scope) : null,
             StarterPrompts = entity.StarterPrompts.ToList(),
+            AllowedUserGroups = await GetUserGroupAliasesAsync(entity.AllowedUserGroupIds),
             IsActive = entity.IsActive
         };
 
@@ -235,6 +237,9 @@ public class UmbracoAIAgentServiceConnector
             : artifact.Config;
         IAIAgentConfig? config = DeserializeConfig(agentType, configJson);
 
+        // Map before anything is saved, so a missing group fails the import and changes nothing
+        var allowedUserGroupIds = await GetTargetUserGroupKeysAsync(artifact.AllowedUserGroups, artifact.Alias);
+
         // Get or create agent entity
         var agent = state.Entity
             ?? new AIAgent(artifact.Udi.Guid)
@@ -263,6 +268,7 @@ public class UmbracoAIAgentServiceConnector
                 ? p with { Prompt = p.Prompt[..MaxStarterPromptLength] }
                 : p)
             .ToList();
+        agent.AllowedUserGroupIds = allowedUserGroupIds;
         agent.IsActive = artifact.IsActive;
 
         state.Entity = await _agentService.SaveAgentAsync(agent, cancellationToken);
@@ -284,10 +290,7 @@ public class UmbracoAIAgentServiceConnector
         foreach ((string key, JsonNode? value) in permissions.ToList())
         {
             permissions.Remove(key);
-            var userGroup = Guid.TryParse(key, out Guid userGroupKey)
-                ? await _userGroupService.GetAsync(userGroupKey)
-                : null;
-            rekeyed[userGroup?.Alias ?? key] = value;
+            rekeyed[await GetUserGroupAliasAsync(key)] = value;
         }
 
         config[UserGroupPermissionsProperty] = rekeyed;
@@ -315,9 +318,7 @@ public class UmbracoAIAgentServiceConnector
         foreach ((string key, JsonNode? value) in permissions.ToList())
         {
             permissions.Remove(key);
-            var userGroup = Guid.TryParse(key, out Guid userGroupKey)
-                ? await _userGroupService.GetAsync(userGroupKey)
-                : await _userGroupService.GetAsync(key);
+            var userGroup = await FindTargetUserGroupAsync(key);
 
             if (userGroup is not null)
             {
@@ -335,6 +336,52 @@ public class UmbracoAIAgentServiceConnector
 
         config[UserGroupPermissionsProperty] = rekeyed;
         return config.ToJsonString();
+    }
+
+    // Shared by every user group reference in the artifact (tool permissions and allowed groups), so
+    // they map the same way: key to alias on export, alias (or an old artifact's key) to the target's group on import.
+    private async Task<string> GetUserGroupAliasAsync(string userGroupKey)
+    {
+        var userGroup = Guid.TryParse(userGroupKey, out Guid key)
+            ? await _userGroupService.GetAsync(key)
+            : null;
+        return userGroup?.Alias ?? userGroupKey;
+    }
+
+    private async Task<IUserGroup?> FindTargetUserGroupAsync(string aliasOrKey)
+        => Guid.TryParse(aliasOrKey, out Guid key)
+            ? await _userGroupService.GetAsync(key)
+            : await _userGroupService.GetAsync(aliasOrKey);
+
+    private async Task<IReadOnlyList<string>> GetUserGroupAliasesAsync(IEnumerable<Guid> userGroupKeys)
+    {
+        var aliases = new List<string>();
+        foreach (var key in userGroupKeys)
+        {
+            aliases.Add(await GetUserGroupAliasAsync(key.ToString()));
+        }
+
+        return aliases;
+    }
+
+    /// <summary>
+    /// Maps the allowed group aliases to the target's keys. A missing group always fails: dropping it
+    /// would widen who can use the agent.
+    /// </summary>
+    private async Task<IReadOnlyList<Guid>> GetTargetUserGroupKeysAsync(IEnumerable<string> aliases, string? agentAlias)
+    {
+        var keys = new List<Guid>();
+        foreach (var alias in aliases)
+        {
+            var userGroup = await FindTargetUserGroupAsync(alias)
+                ?? throw new InvalidOperationException(
+                    $"Agent '{agentAlias}' is limited to user group '{alias}', which doesn't exist in this environment. "
+                    + "Create a user group with that alias (or, if the value is a key, add the group to the source and export again), "
+                    + "then deploy the agent again.");
+            keys.Add(userGroup.Key);
+        }
+
+        return keys;
     }
 
     private static bool HasDenies(JsonNode? permissions)

@@ -350,7 +350,7 @@ frontend criteria use Vitest.
   → refusal; no service account → "no user".
   depends-on: T20
 
-- [ ] **T38** - story: GP-15 (AC1, AC2), GP-16 (AC1-AC3). `Actions/RunAgentAction.cs`: before
+- [x] **T38** - story: GP-15 (AC1, AC2), GP-16 (AC1-AC3). `Actions/RunAgentAction.cs`: before
   running, check the service account can use the agent; on failure, fail with category
   `Authentication` and the reason text from R18; no service account and a limited agent → fail
   without running (R19). Implement `IPublishValidatableStepType`: publishing fails naming the step
@@ -358,7 +358,7 @@ frontend criteria use Vitest.
   Acceptance: unit specs for each criterion.
   depends-on: T16, T37
 
-- [ ] **T39** - **wire: Automate checks into the demo site.** story: GP-14, GP-15, GP-16. On the
+- [x] **T39** - **wire: Automate checks into the demo site.** story: GP-14, GP-15, GP-16. On the
   demo site (it has Umbraco.Automate), a workspace whose service account is in "Automation".
   Acceptance: the "Run agent" picker lists an agent limited to "Automation" and hides one limited
   to "Editors" while the builder is in "Editors"; publishing with the "Editors" agent fails naming

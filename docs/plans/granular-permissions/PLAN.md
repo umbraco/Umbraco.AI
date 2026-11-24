@@ -246,7 +246,7 @@ frontend criteria use Vitest.
   Acceptance: `npm run build:agent`.
   depends-on: T10, T23. parallel-group: D
 
-- [ ] **T25** - story: GP-7 (AC1-AC3, AC6), GP-8 (AC3, AC5). Access box in
+- [x] **T25** - story: GP-7 (AC1-AC3, AC6), GP-8 (AC3, AC5). Access box in
   `agent-availability-workspace-view.element.ts`: `umb-user-group-input`; deleted keys show
   "Deleted user group" with a `color="danger"` Deleted tag; read-only when the user can't use the
   agent and isn't an admin; the picker lists only the user's own groups unless admin. Match

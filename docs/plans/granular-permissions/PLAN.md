@@ -212,7 +212,7 @@ frontend criteria use Vitest.
   Acceptance: unit specs: unknown kind → not handled; resolver refusals map to the right result.
   depends-on: T16. parallel-group: C
 
-- [ ] **T21** - story: GP-2 (agents), GP-7 (AC4), GP-8 (AC4, AC8), GP-9 (AC2-AC5), GP-10 (AC2),
+- [x] **T21** - story: GP-2 (agents), GP-7 (AC4), GP-8 (AC4, AC8), GP-9 (AC2-AC5), GP-10 (AC2),
   GP-14 (AC3, AC4), GP-18 (AC5, AC6, AC8). In `Umbraco.AI.Agent.Web/Api/Management/Agent/`: `AllAgentController` takes
   `includeRestricted` and `onBehalfOf`; `ByIdOrAliasAgentController` returns 404 when not usable
   and takes `onBehalfOf`; Create, Update and Delete use the Manage agents policy; models and
@@ -223,7 +223,7 @@ frontend criteria use Vitest.
   Acceptance: `Umbraco.AI.Agent.Tests.Integration` endpoint specs for each status.
   depends-on: T2, T20, T46
 
-- [ ] **T22** - **wire: agent limits into the Management API.** story: GP-7, GP-8, GP-9, GP-10.
+- [x] **T22** - **wire: agent limits into the Management API.** story: GP-7, GP-8, GP-9, GP-10.
   On the demo site, limit one agent to "Editors".
   Acceptance: real requests: a user outside "Editors" doesn't see it in `GET agents`, gets 404 on
   its detail and 403 on `run`; a member sees and runs it; a manager outside "Editors" sees it with

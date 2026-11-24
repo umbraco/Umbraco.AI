@@ -339,7 +339,7 @@ public class AgentUsageLimitTests
     /// A real <see cref="AIAgentService"/> over the in-memory repository (which applies the same group rule the
     /// SQL query does), a real permission service, and a stubbed agent factory and streaming service.
     /// </summary>
-    private sealed class Harness
+    internal sealed class Harness
     {
         private readonly InMemoryAIAgentRepository _repository = new();
 

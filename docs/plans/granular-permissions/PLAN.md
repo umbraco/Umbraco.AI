@@ -119,7 +119,7 @@ frontend criteria use Vitest.
   Acceptance: Vitest spec: 9 manifests, each with its verb and group; `npm run build:core` passes.
   depends-on: T1. parallel-group: B
 
-- [ ] **T11** - story: GP-5 (AC1, AC3-AC6). Add `Umb.Condition.UserPermission.Fallback` with the
+- [x] **T11** - story: GP-5 (AC1, AC3-AC6). Add `Umb.Condition.UserPermission.Fallback` with the
   area's verb to Connection, Profile, Context, Knowledge set, Guardrail and Settings: menu item,
   collection action, bulk action, create and delete entity actions, the workspace and its save
   action, and the collection.

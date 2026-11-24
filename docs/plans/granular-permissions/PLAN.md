@@ -138,12 +138,13 @@ frontend criteria use Vitest.
   Acceptance: `npm run build:core`; Vitest spec of the row-editability helper.
   depends-on: none. parallel-group: B
 
-- [ ] **T13** - **wire: AI rights and hidden areas into the backoffice.** story: GP-1, GP-4 (AC6),
+- [x] **T13** - **wire: AI rights and hidden areas into the backoffice.** story: GP-1, GP-4 (AC6),
   GP-5. Smoke test on the demo site.
   Acceptance: the user group screen shows the AI box with Configuration and Monitoring rights;
   ticking Manage contexts saves and reopens ticked; the "Context managers" user (T7) sees Contexts
   with create and save, sees no Connections, Audit log or Analytics menu items, gets no editor at a
-  connection's direct URL, and can still pick a profile in a context.
+  connection's direct URL, and can still pick a profile (contexts have no profile field, so this is
+  checked in the agent editor's profile picker).
   depends-on: T7, T11, T12
 
 ## Agent: server (Umbraco.AI.Agent)

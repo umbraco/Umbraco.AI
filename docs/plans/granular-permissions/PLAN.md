@@ -110,7 +110,7 @@ frontend criteria use Vitest.
 
 ## Core: backoffice (Umbraco.AI)
 
-- [ ] **T10** - story: GP-1 (AC1, AC2, AC4). Add `Client/src/permissions/constants.ts` (verb
+- [x] **T10** - story: GP-1 (AC1, AC2, AC4). Add `Client/src/permissions/constants.ts` (verb
   constants, `UAI_PERMISSION_ENTITY_TYPE`) and `permissions/manifests.ts` with one
   `entityUserPermission` per core right, grouped as Configuration and Monitoring. Register through
   the core `manifests.ts`. Labels, descriptions and group headings in `lang/*`. Export the

@@ -198,13 +198,40 @@ public class AgentUserGroupListRuleTests
             Times.Never);
     }
 
-    [Fact(Skip = "Pending implementation: T46")]
+    [Fact]
+    public async Task Save_NewAgent_WithSomeoneElsesGroup_IsRefused()
+    {
+        // Given a non-admin in editors only, and an agent with no stored row
+        var id = Guid.NewGuid();
+        GivenUser(Editors);
+
+        // When  they create it limited to translators
+        var save = () => CreateService().SaveAgentAsync(CreateAgent(id, [Translators]));
+
+        // Then  the save is refused, as a new agent is checked against an empty list
+        await Should.ThrowAsync<AIPermissionDeniedException>(save);
+    }
+
+    [Fact]
     public async Task Rollback_ChangingGroupList_ByNonAdmin_IsRefused()
     {
         // Given an agent saved with no groups, then limited to editors by an admin, and a non-admin manager in editors
+        var id = Guid.NewGuid();
+        GivenStoredAgent(id, [Editors]);
+        _versionServiceMock
+            .Setup(x => x.GetVersionSnapshotAsync<AIAgent>(id, 1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(CreateAgent(id, []));
+        GivenUser(Editors);
+        var adapter = new AIAgentVersionableEntityAdapter(CreateService(), _versionServiceMock.Object);
+
         // When  they roll it back to the first version
-        // Then  the rollback is refused (AC8, R23)
-        await Task.CompletedTask;
+        var rollback = () => adapter.RollbackAsync(id, 1);
+
+        // Then  the rollback is refused (AC8, R23), and nothing is restored
+        await Should.ThrowAsync<AIPermissionDeniedException>(rollback);
+        _repositoryMock.Verify(
+            x => x.SaveAsync(It.IsAny<AIAgent>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     #endregion

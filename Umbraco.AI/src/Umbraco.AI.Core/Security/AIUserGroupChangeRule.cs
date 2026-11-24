@@ -30,6 +30,37 @@ internal static class AIUserGroupChangeRule
     }
 
     /// <summary>
+    /// Refuses a change to per-group entries (such as an agent's tool rules) when it touches a group the
+    /// user does not belong to. Admins change freely. Does nothing when no entry changed.
+    /// </summary>
+    /// <param name="permissionService">Decides who the user is.</param>
+    /// <param name="changedGroupKeys">The groups whose entry was added, changed or removed.</param>
+    /// <param name="subject">What is being saved, for the message, such as "agent 'support'".</param>
+    /// <exception cref="AIPermissionDeniedException">Thrown when the change is not allowed.</exception>
+    public static void EnsureCanChangeGroupEntries(
+        IAIPermissionService permissionService,
+        IReadOnlyCollection<Guid> changedGroupKeys,
+        string subject)
+    {
+        if (changedGroupKeys.Count == 0)
+        {
+            return;
+        }
+
+        var user = permissionService.GetCurrentUserGroups();
+        if (user.IsAdmin)
+        {
+            return;
+        }
+
+        if (GetUnauthorizedChanges(user.GroupKeys, [], changedGroupKeys).Count > 0)
+        {
+            throw new AIPermissionDeniedException(
+                $"You can only change the settings of user groups you belong to on {subject}.");
+        }
+    }
+
+    /// <summary>
     /// Refuses a change to a group list the user may not make. Does nothing when the list is unchanged.
     /// </summary>
     /// <param name="permissionService">Decides who can use an item and who the user is.</param>

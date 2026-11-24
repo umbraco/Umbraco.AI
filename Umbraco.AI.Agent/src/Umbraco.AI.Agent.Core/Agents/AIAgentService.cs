@@ -254,6 +254,12 @@ internal sealed class AIAgentService : IAIAgentService, IAIAgentUnrestrictedRead
                 existing?.AllowedUserGroupIds ?? [],
                 agent.AllowedUserGroupIds,
                 $"agent '{agent.Alias}'");
+
+            // Tool rules follow the same rule per group (R22).
+            AIUserGroupChangeRule.EnsureCanChangeGroupEntries(
+                _permissionService,
+                AIAgentToolRuleChanges.GetChangedGroupKeys(existing?.Config, agent.Config),
+                $"agent '{agent.Alias}'");
         }
 
         // Publish saving notification (before save)

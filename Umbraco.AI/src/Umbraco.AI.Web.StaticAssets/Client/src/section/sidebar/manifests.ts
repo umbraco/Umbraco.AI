@@ -1,5 +1,12 @@
 import type { ManifestSectionSidebarApp } from "@umbraco-cms/backoffice/section";
-import { UAI_ADDONS_MENU_ALIAS, UAI_SECTION_ALIAS, UAI_CONFIGURATION_MENU_ALIAS, UAI_MONITORING_MENU_ALIAS } from "../constants.js";
+import { createGroupPermissionCondition } from "../../permissions/area-conditions.js";
+import { UAI_PERMISSION_GROUP_CONFIGURATION, UAI_PERMISSION_GROUP_MONITORING } from "../../permissions/constants.js";
+import {
+    UAI_ADDONS_MENU_ALIAS,
+    UAI_SECTION_ALIAS,
+    UAI_CONFIGURATION_MENU_ALIAS,
+    UAI_MONITORING_MENU_ALIAS,
+} from "../constants.js";
 
 export const sectionSidebarManifests: ManifestSectionSidebarApp[] = [
     {
@@ -15,8 +22,9 @@ export const sectionSidebarManifests: ManifestSectionSidebarApp[] = [
         conditions: [
             {
                 alias: "Umb.Condition.SectionAlias",
-                match: UAI_SECTION_ALIAS
-            }
+                match: UAI_SECTION_ALIAS,
+            },
+            createGroupPermissionCondition(UAI_PERMISSION_GROUP_CONFIGURATION),
         ],
     },
     {
@@ -32,8 +40,9 @@ export const sectionSidebarManifests: ManifestSectionSidebarApp[] = [
         conditions: [
             {
                 alias: "Umb.Condition.SectionAlias",
-                match: UAI_SECTION_ALIAS
-            }
+                match: UAI_SECTION_ALIAS,
+            },
+            createGroupPermissionCondition(UAI_PERMISSION_GROUP_MONITORING),
         ],
     },
     {
@@ -49,8 +58,8 @@ export const sectionSidebarManifests: ManifestSectionSidebarApp[] = [
         conditions: [
             {
                 alias: "Umb.Condition.SectionAlias",
-                match: UAI_SECTION_ALIAS
-            }
+                match: UAI_SECTION_ALIAS,
+            },
         ],
     },
 ];

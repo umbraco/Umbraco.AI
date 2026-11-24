@@ -1,4 +1,5 @@
 import { UMB_FALLBACK_USER_PERMISSION_CONDITION_ALIAS } from "@umbraco-cms/backoffice/user-permission";
+import { verbsInGroup } from "./manifests.js";
 
 /**
  * Manifest types that open or change an area (its menu item, lists, editors and the buttons and
@@ -20,6 +21,14 @@ export const UAI_AREA_GATED_MANIFEST_TYPES: ReadonlySet<string> = new Set([
 /** The condition that shows an extension only to users whose groups hold the area's right. */
 export function createAreaPermissionCondition(verb: string) {
     return { alias: UMB_FALLBACK_USER_PERMISSION_CONDITION_ALIAS, allOf: [verb] };
+}
+
+/** The condition that shows an extension to users who hold any right in a permission group. */
+export function createGroupPermissionCondition(group: string) {
+    const verbs = verbsInGroup(group);
+    // The CMS skips an empty oneOf, which would show the extension to everyone.
+    if (verbs.length === 0) throw new Error(`Permission group "${group}" has no verbs to condition on.`);
+    return { alias: UMB_FALLBACK_USER_PERMISSION_CONDITION_ALIAS, oneOf: verbs };
 }
 
 /**

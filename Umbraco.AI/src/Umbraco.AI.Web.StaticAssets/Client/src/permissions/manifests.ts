@@ -29,6 +29,11 @@ export const UAI_CORE_PERMISSIONS: ReadonlyArray<{ verb: string; group: string }
     { verb: UAI_PERMISSION_VERB_MANAGE_TESTS, group: UAI_PERMISSION_GROUP_MONITORING },
 ];
 
+/** The verbs the table assigns to a group, so a group's gate never needs its own list. */
+export function verbsInGroup(group: string): string[] {
+    return UAI_CORE_PERMISSIONS.filter((permission) => permission.group === group).map(({ verb }) => verb);
+}
+
 /** "Uai.Connection.Manage" becomes ["Connection", "Manage"]. */
 function verbParts(verb: string): string[] {
     return verb.split(".").slice(1);

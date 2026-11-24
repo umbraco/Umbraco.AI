@@ -1,12 +1,19 @@
 // GP-5 (AC1, AC3-AC6), GP-4 (AC6)
 import { describe, expect, it } from "vitest";
+import { analyticsManifests } from "../analytics/manifests.js";
+import { auditLogManifests } from "../audit-log/manifests.js";
 import { connectionManifests } from "../connection/manifests.js";
 import { contextManifests } from "../context/manifests.js";
 import { guardrailManifests } from "../guardrail/manifests.js";
 import { knowledgeSetManifests } from "../knowledge-set/manifests.js";
 import { profileManifests } from "../profile/manifests.js";
 import { settingsManifests } from "../settings/manifests.js";
-import { UAI_AREA_GATED_MANIFEST_TYPES, createAreaPermissionCondition } from "./area-conditions.js";
+import { testManifests } from "../test/manifests.js";
+import {
+    UAI_AREA_GATED_MANIFEST_TYPES,
+    createAreaPermissionCondition,
+    createGroupPermissionCondition,
+} from "./area-conditions.js";
 import {
     UAI_PERMISSION_VERB_MANAGE_CONNECTIONS,
     UAI_PERMISSION_VERB_MANAGE_CONTEXTS,
@@ -14,6 +21,9 @@ import {
     UAI_PERMISSION_VERB_MANAGE_KNOWLEDGE_SETS,
     UAI_PERMISSION_VERB_MANAGE_PROFILES,
     UAI_PERMISSION_VERB_MANAGE_SETTINGS,
+    UAI_PERMISSION_VERB_MANAGE_TESTS,
+    UAI_PERMISSION_VERB_VIEW_ANALYTICS,
+    UAI_PERMISSION_VERB_VIEW_AUDIT_LOGS,
 } from "./constants.js";
 
 type AnyManifest = { type: string; alias: string; conditions?: Array<{ alias: string; allOf?: string[] }> };
@@ -30,7 +40,14 @@ const FULL_CRUD_TYPES = [
 ];
 
 // The types each area must register at least once, so the sweeps below can't pass on an empty list.
-const areas: Array<{ name: string; verb: string; manifests: AnyManifest[]; mustHave: string[] }> = [
+// `also` lists manifests that need a second right on top of the area's own (by alias).
+const areas: Array<{
+    name: string;
+    verb: string;
+    manifests: AnyManifest[];
+    mustHave: string[];
+    also?: Record<string, string>;
+}> = [
     {
         name: "Connection",
         verb: UAI_PERMISSION_VERB_MANAGE_CONNECTIONS,
@@ -67,13 +84,40 @@ const areas: Array<{ name: string; verb: string; manifests: AnyManifest[]; mustH
         manifests: settingsManifests as AnyManifest[],
         mustHave: ["menuItem", "workspace", "workspaceAction"],
     },
+    {
+        name: "Audit log",
+        verb: UAI_PERMISSION_VERB_VIEW_AUDIT_LOGS,
+        manifests: auditLogManifests as AnyManifest[],
+        mustHave: ["menuItem", "collection", "entityBulkAction", "workspace"],
+        also: { "UmbracoAI.EntityBulkAction.AuditLog.Delete": UAI_PERMISSION_VERB_MANAGE_SETTINGS },
+    },
+    {
+        name: "Analytics",
+        verb: UAI_PERMISSION_VERB_VIEW_ANALYTICS,
+        manifests: analyticsManifests as AnyManifest[],
+        mustHave: ["menuItem", "workspace"],
+    },
+    {
+        name: "Tests",
+        verb: UAI_PERMISSION_VERB_MANAGE_TESTS,
+        manifests: testManifests as AnyManifest[],
+        mustHave: [
+            "menuItem",
+            "collection",
+            "collectionAction",
+            "entityBulkAction",
+            "entityAction",
+            "workspace",
+            "workspaceAction",
+        ],
+    },
 ];
 
 const fallbackConditions = (m: AnyManifest) => (m.conditions ?? []).filter((c) => c.alias === FALLBACK);
 
 describe("Feature: areas need their right in the backoffice", () => {
     describe("Scenario: each area's manifests carry its fallback condition", () => {
-        for (const { name, verb, manifests, mustHave } of areas) {
+        for (const { name, verb, manifests, mustHave, also } of areas) {
             describe(name, () => {
                 const gated = manifests.filter((m) => UAI_AREA_GATED_MANIFEST_TYPES.has(m.type));
                 const open = manifests.filter((m) => !UAI_AREA_GATED_MANIFEST_TYPES.has(m.type));
@@ -83,11 +127,12 @@ describe("Feature: areas need their right in the backoffice", () => {
                     expect(mustHave.filter((t) => !types.has(t))).toEqual([]);
                 });
 
-                it("conditions every gated manifest on exactly its own verb", () => {
+                it("conditions every gated manifest on its own verb (and no other, bar the listed extras)", () => {
                     const wrong = gated
                         .filter((m) => {
-                            const found = fallbackConditions(m);
-                            return found.length !== 1 || JSON.stringify(found[0].allOf) !== JSON.stringify([verb]);
+                            const expected = [verb, ...(also?.[m.alias] ? [also[m.alias]] : [])];
+                            const found = fallbackConditions(m).flatMap((c) => c.allOf ?? []);
+                            return JSON.stringify([...found].sort()) !== JSON.stringify([...expected].sort());
                         })
                         .map((m) => m.alias);
                     expect(wrong).toEqual([]);
@@ -113,14 +158,9 @@ describe("Feature: areas need their right in the backoffice", () => {
                 allOf: ["Uai.Context.Manage"],
             });
         });
-    });
 
-    describe("Scenario: the other areas are still open", () => {
-        it.skip("pending: T12: conditions the Audit log menu item on Uai.AuditLog.View", () => {
-            // Given the audit log menu item manifest
-            // When  its conditions are read
-            // Then  it has the fallback condition with Uai.AuditLog.View (GP-4 AC6)
-            expect(true).toBe(true);
+        it("refuses a group with no verbs, since the CMS would let everyone through an empty oneOf", () => {
+            expect(() => createGroupPermissionCondition("No.Such.Group")).toThrow(/no verbs/);
         });
     });
 });

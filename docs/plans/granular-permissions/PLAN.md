@@ -367,14 +367,14 @@ frontend criteria use Vitest.
 
 ## Deploy (Umbraco.AI.Agent.Deploy, Umbraco.AI.Prompt.Deploy)
 
-- [ ] **T40** - story: GP-17 (AC1, AC2, AC4, AC5). `Artifacts/AIAgentArtifact.cs` gains
+- [x] **T40** - story: GP-17 (AC1, AC2, AC4, AC5). `Artifacts/AIAgentArtifact.cs` gains
   `AllowedUserGroups` (aliases). `UmbracoAIAgentServiceConnector` maps keys to aliases on export
   and aliases to the target's keys on import, through the same code path as tool permission
   groups. A missing alias fails the import with a message naming it, before anything is saved.
   Acceptance: `Umbraco.AI.Agent.Deploy.Tests.Unit` specs for each criterion.
   depends-on: T14. parallel-group: E
 
-- [ ] **T41** - story: GP-17 (AC3, AC4, AC5). Same for `AIPromptArtifact` and
+- [x] **T41** - story: GP-17 (AC3, AC4, AC5). Same for `AIPromptArtifact` and
   `UmbracoAIPromptServiceConnector`.
   Acceptance: `Umbraco.AI.Prompt.Deploy.Tests.Unit` specs.
   depends-on: T28. parallel-group: E

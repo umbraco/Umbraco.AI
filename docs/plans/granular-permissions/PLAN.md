@@ -126,7 +126,7 @@ frontend criteria use Vitest.
   Acceptance: Vitest specs that each area's manifests carry the condition; `npm run build:core`.
   depends-on: T10
 
-- [ ] **T12** - story: GP-4 (AC6), GP-5. Same condition on Audit log (View logs), Analytics (View
+- [x] **T12** - story: GP-4 (AC6), GP-5. Same condition on Audit log (View logs), Analytics (View
   analytics) and Tests (Manage tests) manifests.
   Acceptance: Vitest specs; `npm run build:core`.
   depends-on: T10

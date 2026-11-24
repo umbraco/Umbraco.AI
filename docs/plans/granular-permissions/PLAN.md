@@ -278,7 +278,7 @@ frontend criteria use Vitest.
 
 ## Prompt (Umbraco.AI.Prompt)
 
-- [ ] **T28** - story: GP-12 (AC3). Same as T14 for `Prompts/AIPrompt.cs`: column, factory,
+- [x] **T28** - story: GP-12 (AC3). Same as T14 for `Prompts/AIPrompt.cs`: column, factory,
   `UmbracoAIPrompt_AddAllowedUserGroupIds` for SQL Server and SQLite,
   `AIPromptVersionableEntityAdapter` snapshot.
   Acceptance: Prompt specs: save and reload keep the list; rollback restores it.

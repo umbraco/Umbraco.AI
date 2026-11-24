@@ -30,7 +30,7 @@
 
   <!-- Umbraco Automate -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.Automate.Core" Version="[18.0.0, 18.999.999)" />
+    <PackageVersion Include="Umbraco.Automate.Core" Version="[18.5.0, 18.999.999)" />
   </ItemGroup>
 
   <!-- Umbraco Search -->

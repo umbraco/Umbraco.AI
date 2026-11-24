@@ -1,7 +1,10 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+
+using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Agent.Startup.Configuration;
 using Umbraco.AI.Automate.Actions;
+using Umbraco.AI.Automate.Security;
 using Umbraco.Automate.Extensions;
 using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.DependencyInjection;
@@ -48,5 +51,8 @@ public class UmbracoAIAutomateComposer : IComposer
 
         // Extract Values reads the run date (UTC) from TimeProvider when no reference date is set.
         builder.Services.TryAddSingleton(TimeProvider.System);
+
+        // The Run AI Agent picker asks for the agents of a workspace's service account.
+        builder.AIAgentUserGroupResolvers().Append<AutomateWorkspaceAgentUserGroupResolver>();
     }
 }

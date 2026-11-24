@@ -36,6 +36,21 @@ public class AIPromptServiceDefaultMembersTests
         _old.GetPromptsPagedCalls.ShouldBe(1);
     }
 
+    [Fact]
+    public async Task GetPromptForUse_FallsBackToTheFilteringGetters()
+    {
+        // Given an implementer of the old surface whose filtering getters hide the prompt
+        // When  the for-use members are called
+        var byId = await Service.GetPromptForUseAsync(Guid.NewGuid());
+        var byAlias = await Service.GetPromptForUseByAliasAsync("limited");
+
+        // Then  the prompt reads as missing, and the old getters were the ones asked
+        byId.ShouldBeNull();
+        byAlias.ShouldBeNull();
+        _old.GetPromptCalls.ShouldBe(1);
+        _old.GetPromptByAliasCalls.ShouldBe(1);
+    }
+
     /// <summary>Implements only the members that existed before includeRestricted.</summary>
     private sealed class OldSurfacePromptService : IAIPromptService
     {

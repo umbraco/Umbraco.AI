@@ -13,7 +13,7 @@ namespace Umbraco.AI.Prompt.Web.Api.Management.Prompt.Controllers;
 /// Controller for deleting prompts.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ManagePromptsAI)]
 public class DeletePromptController : PromptControllerBase
 {
     private readonly IAIPromptService _aiPromptService;
@@ -40,7 +40,7 @@ public class DeletePromptController : PromptControllerBase
         IdOrAlias promptIdOrAlias,
         CancellationToken cancellationToken = default)
     {
-        var promptId = await _aiPromptService.TryGetPromptIdAsync(promptIdOrAlias, cancellationToken);
+        var promptId = await _aiPromptService.TryGetPromptIdAsync(promptIdOrAlias, includeRestricted: true, cancellationToken);
         if (promptId is null)
         {
             return PromptNotFound();

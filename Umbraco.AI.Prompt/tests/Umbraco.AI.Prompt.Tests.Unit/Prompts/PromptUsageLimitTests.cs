@@ -259,6 +259,47 @@ public class PromptUsageLimitTests
         thrown.Message.ShouldContain("not found");
     }
 
+    [Fact]
+    public async Task GetForUse_ForMember_ReturnsTheLimitedPrompt()
+    {
+        // Given a prompt limited to editors and a user in editors
+        var harness = new Harness(inGroups: [Editors]);
+        var limited = harness.Add("limited", allowedGroups: [Editors]);
+
+        // When it is fetched to run, by id and by alias
+        // Then it is returned
+        (await harness.Service.GetPromptForUseAsync(limited.Id)).ShouldBe(limited);
+        (await harness.Service.GetPromptForUseByAliasAsync("limited")).ShouldBe(limited);
+    }
+
+    [Fact]
+    public async Task GetForUse_ForNonMember_IsRefusedNotHidden()
+    {
+        // Given a prompt limited to editors and a user in translators, even one who holds Manage prompts
+        var harness = new Harness(inGroups: [Translators], permissions: [AIPermissions.ManagePrompts]);
+        var limited = harness.Add("limited", allowedGroups: [Editors]);
+
+        // When it is fetched to run, by id and by alias
+        var byId = () => harness.Service.GetPromptForUseAsync(limited.Id);
+        var byAlias = () => harness.Service.GetPromptForUseByAliasAsync("limited");
+
+        // Then both are refused, so the caller can tell it from a missing prompt (GP-13 AC4)
+        (await Should.ThrowAsync<AIPromptNotAvailableException>(byId)).PromptId.ShouldBe(limited.Id);
+        await Should.ThrowAsync<AIPromptNotAvailableException>(byAlias);
+    }
+
+    [Fact]
+    public async Task GetForUse_OnAMissingPrompt_ReturnsNull()
+    {
+        // Given no prompt
+        var harness = new Harness(inGroups: [Editors]);
+
+        // When it is fetched to run, by id and by alias
+        // Then null comes back, not a refusal
+        (await harness.Service.GetPromptForUseAsync(Guid.NewGuid())).ShouldBeNull();
+        (await harness.Service.GetPromptForUseByAliasAsync("missing")).ShouldBeNull();
+    }
+
     #endregion
 
     internal sealed class Harness

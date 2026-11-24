@@ -46,7 +46,7 @@ internal class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapD
         };
     }
 
-    // Umbraco.Code.MapAll -Id -DateCreated -Version -CreatedByUserId -ModifiedByUserId -AllowedUserGroupIds
+    // Umbraco.Code.MapAll -Id -DateCreated -Version -CreatedByUserId -ModifiedByUserId
     private static void MapFromCreateRequest(CreatePromptRequestModel source, AIPrompt target, MapperContext context)
     {
         target.Alias = source.Alias;
@@ -57,6 +57,7 @@ internal class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapD
         target.ContextIds = source.ContextIds?.ToList() ?? [];
         target.GuardrailIds = source.GuardrailIds?.ToList() ?? [];
         target.Tags = source.Tags?.ToList() ?? [];
+        target.AllowedUserGroupIds = source.AllowedUserGroupIds?.Distinct().ToList() ?? [];
         target.IsActive = true;
         target.IncludeEntityContext = source.IncludeEntityContext;
         target.OptionCount = source.OptionCount;
@@ -65,7 +66,7 @@ internal class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapD
         target.DateModified = DateTime.UtcNow;
     }
 
-    // Umbraco.Code.MapAll -Id -DateCreated -DateModified -Version -CreatedByUserId -ModifiedByUserId -AllowedUserGroupIds
+    // Umbraco.Code.MapAll -Id -DateCreated -DateModified -Version -CreatedByUserId -ModifiedByUserId
     private static void MapFromUpdateRequest(UpdatePromptRequestModel source, AIPrompt target, MapperContext context)
     {
         // Note: Id, DateCreated, and DateModified are preserved from the existing entity
@@ -78,6 +79,13 @@ internal class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapD
         target.ContextIds = source.ContextIds?.ToList() ?? [];
         target.GuardrailIds = source.GuardrailIds?.ToList() ?? [];
         target.Tags = source.Tags?.ToList() ?? [];
+
+        // Missing keeps the stored list; an empty array opens the prompt to everyone.
+        if (source.AllowedUserGroupIds is not null)
+        {
+            target.AllowedUserGroupIds = source.AllowedUserGroupIds.Distinct().ToList();
+        }
+
         target.IsActive = source.IsActive;
         target.IncludeEntityContext = source.IncludeEntityContext;
         target.OptionCount = source.OptionCount;
@@ -98,6 +106,7 @@ internal class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapD
         target.ContextIds = source.ContextIds;
         target.GuardrailIds = source.GuardrailIds;
         target.Tags = source.Tags;
+        target.AllowedUserGroupIds = source.AllowedUserGroupIds;
         target.IsActive = source.IsActive;
         target.IncludeEntityContext = source.IncludeEntityContext;
         target.OptionCount = source.OptionCount;
@@ -108,7 +117,7 @@ internal class PromptMapDefinition(IShortStringHelper shortStringHelper) : IMapD
         target.Version = source.Version;
     }
 
-    // Umbraco.Code.MapAll -Version -CreatedByUserId -ModifiedByUserId
+    // Umbraco.Code.MapAll -Version -CreatedByUserId -ModifiedByUserId -AllowedUserGroupIds
     private static void MapToItemResponse(AIPrompt source, PromptItemResponseModel target, MapperContext context)
     {
         target.Id = source.Id;

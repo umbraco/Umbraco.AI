@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Umbraco.AI.Core.Security;
 using Umbraco.AI.Prompt.Core.Prompts;
 using Umbraco.AI.Prompt.Extensions;
 using Umbraco.AI.Prompt.Web.Api.Management.Prompt.Models;
@@ -15,7 +16,7 @@ namespace Umbraco.AI.Prompt.Web.Api.Management.Prompt.Controllers;
 /// Controller for updating prompts.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ManagePromptsAI)]
 public class UpdatePromptController : PromptControllerBase
 {
     private readonly IAIPromptService _aiPromptService;
@@ -40,6 +41,7 @@ public class UpdatePromptController : PromptControllerBase
     [HttpPut($"{{{nameof(promptIdOrAlias)}}}")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UpdatePrompt(
@@ -47,7 +49,8 @@ public class UpdatePromptController : PromptControllerBase
         [FromBody] UpdatePromptRequestModel model,
         CancellationToken cancellationToken = default)
     {
-        AIPrompt? existing = await _aiPromptService.GetPromptAsync(promptIdOrAlias, cancellationToken);
+        // Managed access: editing a prompt doesn't need being able to use it (the group list rule still applies).
+        AIPrompt? existing = await _aiPromptService.GetPromptAsync(promptIdOrAlias, includeRestricted: true, cancellationToken);
         if (existing is null)
         {
             return PromptNotFound();
@@ -55,7 +58,15 @@ public class UpdatePromptController : PromptControllerBase
 
         AIPrompt prompt = _umbracoMapper.Map(model, existing);
 
-        await _aiPromptService.SavePromptAsync(prompt, cancellationToken);
+        try
+        {
+            await _aiPromptService.SavePromptAsync(prompt, cancellationToken);
+        }
+        catch (AIPermissionDeniedException ex)
+        {
+            return Forbidden(ex.Message);
+        }
+
         return Ok();
     }
 }

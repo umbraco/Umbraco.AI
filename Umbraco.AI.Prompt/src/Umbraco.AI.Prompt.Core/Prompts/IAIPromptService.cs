@@ -65,6 +65,35 @@ public interface IAIPromptService
         => GetPromptByAliasAsync(alias, cancellationToken);
 
     /// <summary>
+    /// Gets a prompt by ID to run it for the current user.
+    /// </summary>
+    /// <param name="id">The prompt ID.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The prompt, or null if there is none with that ID.</returns>
+    /// <exception cref="AIPromptNotAvailableException">Thrown if the prompt is limited to user groups the caller is not in.</exception>
+    /// <remarks>
+    /// Unlike <see cref="GetPromptAsync(Guid, CancellationToken)"/>, a limited prompt is refused, not read as
+    /// missing, so the caller can tell "not available to you" from "doesn't exist". The default implementation
+    /// exists so that third-party implementations of this interface keep compiling; it reads a limited prompt as missing.
+    /// </remarks>
+    Task<AIPrompt?> GetPromptForUseAsync(Guid id, CancellationToken cancellationToken = default)
+        => GetPromptAsync(id, cancellationToken);
+
+    /// <summary>
+    /// Gets a prompt by alias to run it for the current user.
+    /// </summary>
+    /// <param name="alias">The prompt alias.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The prompt, or null if there is none with that alias.</returns>
+    /// <exception cref="AIPromptNotAvailableException">Thrown if the prompt is limited to user groups the caller is not in.</exception>
+    /// <remarks>
+    /// See <see cref="GetPromptForUseAsync(Guid, CancellationToken)"/> for how this differs from
+    /// <see cref="GetPromptByAliasAsync(string, CancellationToken)"/>.
+    /// </remarks>
+    Task<AIPrompt?> GetPromptForUseByAliasAsync(string alias, CancellationToken cancellationToken = default)
+        => GetPromptByAliasAsync(alias, cancellationToken);
+
+    /// <summary>
     /// Gets all prompts.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>

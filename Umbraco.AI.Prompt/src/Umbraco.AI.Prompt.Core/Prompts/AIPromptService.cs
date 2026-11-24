@@ -102,6 +102,24 @@ internal sealed class AIPromptService : IAIPromptService, IAIPromptUnrestrictedR
     }
 
     /// <inheritdoc />
+    public async Task<AIPrompt?> GetPromptForUseAsync(Guid id, CancellationToken cancellationToken = default)
+        => EnsureAvailableForCurrentUser(await _repository.GetByIdAsync(id, cancellationToken));
+
+    /// <inheritdoc />
+    public async Task<AIPrompt?> GetPromptForUseByAliasAsync(string alias, CancellationToken cancellationToken = default)
+        => EnsureAvailableForCurrentUser(await _repository.GetByAliasAsync(alias, cancellationToken));
+
+    private AIPrompt? EnsureAvailableForCurrentUser(AIPrompt? prompt)
+    {
+        if (prompt is not null)
+        {
+            EnsurePromptAvailable(prompt);
+        }
+
+        return prompt;
+    }
+
+    /// <inheritdoc />
     public Task<IEnumerable<AIPrompt>> GetPromptsAsync(CancellationToken cancellationToken = default)
         => _repository.GetAllAsync(GetUsableByGroupKeys(includeRestricted: false), cancellationToken);
 

@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Umbraco.AI.Core.Security;
 using Umbraco.AI.Prompt.Core.Prompts;
 using Umbraco.AI.Prompt.Web.Api.Management.Prompt.Models;
 using Umbraco.AI.Web.Authorization;
@@ -13,7 +14,7 @@ namespace Umbraco.AI.Prompt.Web.Api.Management.Prompt.Controllers;
 /// Controller for creating prompts.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ManagePromptsAI)]
 public class CreatePromptController : PromptControllerBase
 {
     private readonly IAIPromptService _aiPromptService;
@@ -37,6 +38,7 @@ public class CreatePromptController : PromptControllerBase
     [HttpPost]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(PromptResponseModel), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreatePrompt(
@@ -54,6 +56,10 @@ public class CreatePromptController : PromptControllerBase
                 "ByIdOrAliasPrompt",
                 new { promptIdOrAlias = created.Id },
                 created.Id.ToString());
+        }
+        catch (AIPermissionDeniedException ex)
+        {
+            return Forbidden(ex.Message);
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("already exists"))
         {

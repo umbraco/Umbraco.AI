@@ -149,7 +149,7 @@ frontend criteria use Vitest.
 
 ## Agent: server (Umbraco.AI.Agent)
 
-- [ ] **T14** - story: GP-7 (AC4, AC5). Add `AllowedUserGroupIds` (`IReadOnlyList<Guid>`, empty =
+- [x] **T14** - story: GP-7 (AC4, AC5). Add `AllowedUserGroupIds` (`IReadOnlyList<Guid>`, empty =
   everyone) to `Agents/AIAgent.cs`. Persistence: entity column (JSON, keys lowercase "D" format),
   factory, and migrations `UmbracoAIAgent_AddAllowedUserGroupIds` for SQL Server and SQLite, the
   way `SurfaceIds` is done. `AIAgentVersionableEntityAdapter` includes the list in the snapshot

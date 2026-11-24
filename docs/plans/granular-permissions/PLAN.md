@@ -40,7 +40,7 @@ frontend criteria use Vitest.
   R14).
   depends-on: none. parallel-group: S
 
-- [ ] **T2** - story: GP-2 (AC4, AC6). Add `AIPermissionRequirement(verb)` and
+- [x] **T2** - story: GP-2 (AC4, AC6). Add `AIPermissionRequirement(verb)` and
   `AIPermissionAuthorizationHandler` (calls `IAIPermissionService.HasPermission`) in
   `Umbraco.AI.Web/Authorization/`. Add one public policy name per right to
   `AIAuthorizationPolicies.cs`. Each policy holds the existing `AISectionRequirement` plus the

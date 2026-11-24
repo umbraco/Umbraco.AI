@@ -39,6 +39,7 @@ internal sealed class AIPromptVersionableEntityAdapter : AIVersionableEntityAdap
             entity.Description,
             entity.Instructions,
             entity.ProfileId,
+            entity.AllowedUserGroupIds,
             ContextIds = entity.ContextIds.Count > 0 ? string.Join(',', entity.ContextIds) : null,
             Tags = entity.Tags.Count > 0 ? string.Join(',', entity.Tags) : null,
             entity.IsActive,
@@ -81,6 +82,14 @@ internal sealed class AIPromptVersionableEntityAdapter : AIVersionableEntityAdap
                 }
             }
 
+            IReadOnlyList<Guid> allowedUserGroupIds = Array.Empty<Guid>();
+            if (root.TryGetProperty("allowedUserGroupIds", out var allowedUserGroupIdsElement) &&
+                allowedUserGroupIdsElement.ValueKind == JsonValueKind.Array)
+            {
+                allowedUserGroupIds = allowedUserGroupIdsElement.Deserialize<IReadOnlyList<Guid>>(CoreConstants.DefaultJsonSerializerOptions)
+                    ?? Array.Empty<Guid>();
+            }
+
             IReadOnlyList<string> tags = Array.Empty<string>();
             if (root.TryGetProperty("tags", out var tagsElement) &&
                 tagsElement.ValueKind == JsonValueKind.String)
@@ -114,6 +123,7 @@ internal sealed class AIPromptVersionableEntityAdapter : AIVersionableEntityAdap
                 ProfileId = root.TryGetProperty("profileId", out var profIdEl) && profIdEl.ValueKind != JsonValueKind.Null
                     ? profIdEl.GetGuid() : null,
                 ContextIds = contextIds,
+                AllowedUserGroupIds = allowedUserGroupIds,
                 Tags = tags,
                 IsActive = root.GetProperty("isActive").GetBoolean(),
                 IncludeEntityContext = root.TryGetProperty("includeEntityContext", out var iecEl)
@@ -171,6 +181,13 @@ internal sealed class AIPromptVersionableEntityAdapter : AIVersionableEntityAdap
         if (fromContextIds != toContextIds)
         {
             changes.Add(new AIValueChange("ContextIds", fromContextIds.Length > 0 ? fromContextIds : "(none)", toContextIds.Length > 0 ? toContextIds : "(none)"));
+        }
+
+        var fromAllowedUserGroupIds = string.Join(",", from.AllowedUserGroupIds);
+        var toAllowedUserGroupIds = string.Join(",", to.AllowedUserGroupIds);
+        if (fromAllowedUserGroupIds != toAllowedUserGroupIds)
+        {
+            changes.Add(new AIValueChange("AllowedUserGroupIds", fromAllowedUserGroupIds.Length > 0 ? fromAllowedUserGroupIds : "(everyone)", toAllowedUserGroupIds.Length > 0 ? toAllowedUserGroupIds : "(everyone)"));
         }
 
         // Compare tags

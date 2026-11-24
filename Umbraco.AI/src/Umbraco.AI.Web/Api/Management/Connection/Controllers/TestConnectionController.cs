@@ -15,7 +15,7 @@ namespace Umbraco.AI.Web.Api.Management.Connection.Controllers;
 /// Controller to test a connection.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ManageConnectionsAI)]
 public class TestConnectionController : ConnectionControllerBase
 {
     private readonly IAIConnectionService _connectionService;

@@ -17,7 +17,7 @@ namespace Umbraco.AI.Web.Api.Management.Context.Controllers;
 /// Controller to update an existing context.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ManageContextsAI)]
 public class UpdateContextController : ContextControllerBase
 {
     private readonly IAIContextService _contextService;

@@ -15,7 +15,7 @@ namespace Umbraco.AI.Web.Api.Management.Profile.Controllers;
 /// Controller to delete a profile.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ManageProfilesAI)]
 public class DeleteProfileController : ProfileControllerBase
 {
     private readonly IAIProfileService _profileService;

@@ -1,6 +1,8 @@
 using Asp.Versioning;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+
 using Umbraco.AI.Prompt.Core.Prompts;
 using Umbraco.AI.Prompt.Web.Api.Management.Prompt.Models;
 using Umbraco.Cms.Api.Common.ViewModels.Pagination;
@@ -60,4 +62,17 @@ public class AllPromptController : PromptControllerBase
 
         return Ok(viewModel);
     }
+
+    /// <summary>
+    /// Gets all prompts with optional paging and filtering.
+    /// </summary>
+    [NonAction]
+    [Obsolete("Use the overload that accepts includeRestricted. Will be removed in v20.")]
+    public Task<IActionResult> GetAllPrompts(
+        int skip,
+        int take,
+        string? filter,
+        Guid? profileId,
+        CancellationToken cancellationToken)
+        => GetAllPrompts(skip, take, filter, profileId, false, cancellationToken);
 }

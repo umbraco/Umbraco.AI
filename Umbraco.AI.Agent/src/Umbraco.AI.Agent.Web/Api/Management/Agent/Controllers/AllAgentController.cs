@@ -1,7 +1,9 @@
 using Asp.Versioning;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Web.Api.Management.Agent.Models;
 using Umbraco.Cms.Api.Common.ViewModels.Pagination;
@@ -118,4 +120,20 @@ public class AllAgentController : AgentControllerBase
 
         return Ok(viewModel);
     }
+
+    /// <summary>
+    /// Gets all agents with optional paging and filtering.
+    /// </summary>
+    [NonAction]
+    [Obsolete("Use the overload that accepts includeRestricted and onBehalfOf. Will be removed in v20.")]
+    public Task<IActionResult> GetAllAgents(
+        int skip,
+        int take,
+        string? filter,
+        Guid? profileId,
+        string? surfaceId,
+        bool? isActive,
+        string? agentType,
+        CancellationToken cancellationToken)
+        => GetAllAgents(skip, take, filter, profileId, surfaceId, isActive, agentType, false, null, cancellationToken);
 }

@@ -1,7 +1,9 @@
 using Asp.Versioning;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Agent.Web.Api.Management.Agent.Models;
@@ -93,4 +95,12 @@ public class ByIdOrAliasAgentController : AgentControllerBase
 
         return Ok(_umbracoMapper.Map<AgentResponseModel>(agent));
     }
+
+    /// <summary>
+    /// Gets an agent by ID or alias.
+    /// </summary>
+    [NonAction]
+    [Obsolete("Use the overload that accepts onBehalfOf. Will be removed in v20.")]
+    public Task<IActionResult> GetAgentByIdOrAlias(IdOrAlias agentIdOrAlias, CancellationToken cancellationToken)
+        => GetAgentByIdOrAlias(agentIdOrAlias, null, cancellationToken);
 }

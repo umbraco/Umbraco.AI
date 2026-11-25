@@ -347,6 +347,7 @@ public class RunAgentActionAccessTests
             Mock.Of<IAIUmbracoMediaResolver>(),
             Mock.Of<IAutomationActionAuthorizer>(),
             new AgentAccessChecker(_agentServiceMock.Object, _readerMock.Object, _resolverMock.Object),
+            _readerMock.Object,
             Mock.Of<ILogger<RunAgentAction>>());
 
     private static ActionContext CreateRunContext(bool withServiceAccount = true)

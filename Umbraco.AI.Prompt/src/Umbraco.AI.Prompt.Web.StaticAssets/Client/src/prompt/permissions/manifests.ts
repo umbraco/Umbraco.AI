@@ -10,7 +10,7 @@ export const promptPermissionManifests: Array<UmbExtensionManifest> = [
         type: "entityUserPermission",
         alias: "Uai.EntityUserPermission.Prompt.Manage",
         name: "AI Permission Prompt Manage",
-        weight: UAI_PERMISSION_WEIGHT_ADD_ON_START - 1, // one below Agent, so Prompt lists after it
+        weight: UAI_PERMISSION_WEIGHT_ADD_ON_START - 1, // next step down from Agent; see UAI_PERMISSION_WEIGHT_ADD_ON_START in core
         forEntityTypes: [UAI_PERMISSION_ENTITY_TYPE],
         meta: {
             verbs: [UAI_PERMISSION_VERB_MANAGE_PROMPTS],

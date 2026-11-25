@@ -7,7 +7,7 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// </summary>
 /// <remarks>
 /// <code>
-/// builder.AIAgentUserGroupResolvers().Add&lt;MyResolver&gt;();
+/// builder.AIAgentUserGroupResolvers().Append&lt;MyResolver&gt;();
 /// </code>
 /// </remarks>
 public class AIAgentUserGroupResolverCollectionBuilder

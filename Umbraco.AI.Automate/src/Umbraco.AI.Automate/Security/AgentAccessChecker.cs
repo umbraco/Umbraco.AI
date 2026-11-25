@@ -29,11 +29,6 @@ internal sealed class AgentAccessChecker
     }
 
     /// <summary>
-    /// For agent metadata that is not a run, such as the output schema. Not for deciding who may use the agent.
-    /// </summary>
-    public IAIAgentUnrestrictedReader MetadataReader => _unrestrictedReader;
-
-    /// <summary>
     /// Checks the agent against the service account of a workspace.
     /// </summary>
     public async Task<AgentAccess> CheckForWorkspaceAsync(

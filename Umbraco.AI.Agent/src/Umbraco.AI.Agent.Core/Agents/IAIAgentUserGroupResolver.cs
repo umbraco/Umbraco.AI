@@ -8,7 +8,7 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Register with <c>builder.AIAgentUserGroupResolvers().Add&lt;MyResolver&gt;()</c>. Each resolver claims one
+/// Register with <c>builder.AIAgentUserGroupResolvers().Append&lt;MyResolver&gt;()</c>. Each resolver claims one
 /// <see cref="Kind"/>. Two resolvers claiming the same kind (case-insensitive) is a configuration error:
 /// the first resolution throws <see cref="InvalidOperationException"/>. To override a kind, use
 /// <c>Replace&lt;TOld, TNew&gt;()</c> or <c>Remove&lt;T&gt;()</c> on the collection builder.

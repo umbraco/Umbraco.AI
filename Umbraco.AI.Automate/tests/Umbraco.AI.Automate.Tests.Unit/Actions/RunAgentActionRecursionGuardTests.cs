@@ -134,6 +134,7 @@ public class RunAgentActionRecursionGuardTests
             Mock.Of<IAIUmbracoMediaResolver>(),
             Mock.Of<IAutomationActionAuthorizer>(),
             new AgentAccessChecker(_agentServiceMock.Object, _readerMock.Object, _serviceAccountResolverMock.Object),
+            _readerMock.Object,
             _loggerMock.Object);
 
     private static ActionContext CreateContextWithNestingDepth(RunAgentSettings settings, int nestingDepth)

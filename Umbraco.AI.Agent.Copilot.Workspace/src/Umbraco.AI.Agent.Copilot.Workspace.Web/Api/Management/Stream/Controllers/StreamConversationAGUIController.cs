@@ -173,8 +173,8 @@ public class StreamConversationAGUIController : CopilotWorkspaceStreamController
             return Results.Problem(new ProblemDetails
             {
                 Type = "Error",
-                Title = "Agent not available",
-                Detail = "The specified agent is not available to you.",
+                Title = AIAgentNotAvailableProblem.Title,
+                Detail = AIAgentNotAvailableProblem.Detail,
                 Status = StatusCodes.Status403Forbidden,
             });
         }

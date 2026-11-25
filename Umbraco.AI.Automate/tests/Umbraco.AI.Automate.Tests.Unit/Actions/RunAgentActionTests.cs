@@ -617,6 +617,7 @@ public class RunAgentActionTests
             _mediaResolverMock.Object,
             _authorizerMock.Object,
             new AgentAccessChecker(_agentServiceMock.Object, _readerMock.Object, _serviceAccountResolverMock.Object),
+            _readerMock.Object,
             _loggerMock.Object);
 
     private static ActionContext CreateContext(RunAgentSettings settings, Guid? runId = null)

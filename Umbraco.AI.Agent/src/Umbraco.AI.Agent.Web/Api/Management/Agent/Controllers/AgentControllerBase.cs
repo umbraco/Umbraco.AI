@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Web.Api.Management.Common.Controllers;
 using Umbraco.AI.Web.Api.Management.Common.Routing;
@@ -31,8 +32,8 @@ public abstract class AgentControllerBase : UmbracoAIAgentManagementControllerBa
     protected static ProblemDetails AgentNotAvailableProblem() => new()
     {
         Type = "Error",
-        Title = "Agent not available",
-        Detail = "The specified agent is not available to you.",
+        Title = AIAgentNotAvailableProblem.Title,
+        Detail = AIAgentNotAvailableProblem.Detail,
         Status = StatusCodes.Status403Forbidden
     };
 

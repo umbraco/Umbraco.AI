@@ -115,5 +115,10 @@ public abstract class AIVersionableEntityAdapterBase<TEntity> : IAIVersionableEn
     /// <param name="entityId">The unique identifier of the entity.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The entity if found; otherwise, null.</returns>
+    /// <remarks>
+    /// Returning <c>null</c> for an entity the current user may not see also hides its version history, snapshots
+    /// and comparisons, the same as <see cref="IAIVersionableEntityAdapter.GetEntityAsync"/>. Rollback is not
+    /// decided here: it is governed by <c>RollbackPermission</c> and the service's save rules.
+    /// </remarks>
     protected abstract Task<TEntity?> GetEntityAsync(Guid entityId, CancellationToken cancellationToken);
 }

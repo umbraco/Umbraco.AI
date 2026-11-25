@@ -5,10 +5,9 @@ reason moves it into the real test project, fills in the body from its Given/Whe
 and makes it pass. The files can't live in the test projects yet: they name types that don't
 exist until their task builds them.
 
-**132 specs in 27 files**: 117 xUnit (`[Fact(Skip = "Pending implementation: T<n>")]`) and 15
-Vitest (`it.skip`). The real entry point (bdd-specs rule 4) is
-`Umbraco.AI.Agent/tests/Umbraco.AI.Agent.Tests.Integration/Api/AgentEndpointAccessTests.cs`, through
-the test server.
+**2 specs in 1 file.** Every other staged file now has a real test under another name. What is
+left is `ConversationAgentAccessTests` (GP-11): "an old chat stays readable after the agent is lost"
+(T35) has no real test yet. The 403 on sending is covered by `StreamConversationAutoSelectionTests`.
 
 **Criteria with no spec file here, proven by their `wire:` smoke test instead** (the Agent and
 Prompt frontends have no test runner):

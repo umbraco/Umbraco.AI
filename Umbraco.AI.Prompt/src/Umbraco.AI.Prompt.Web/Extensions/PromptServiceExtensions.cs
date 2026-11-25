@@ -9,19 +9,6 @@ namespace Umbraco.AI.Prompt.Extensions;
 internal static class PromptServiceExtensions
 {
     /// <summary>
-    /// Gets a prompt by ID or alias.
-    /// </summary>
-    /// <param name="service">The prompt service.</param>
-    /// <param name="idOrAlias">The ID or alias to look up.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The prompt if found and the current user may use it, otherwise null.</returns>
-    public static Task<Core.Prompts.AIPrompt?> GetPromptAsync(
-        this IAIPromptService service,
-        IdOrAlias idOrAlias,
-        CancellationToken cancellationToken = default)
-        => GetPromptAsync(service, idOrAlias, includeRestricted: false, cancellationToken);
-
-    /// <summary>
     /// Gets a prompt by ID or alias, optionally including prompts the current user may not use.
     /// </summary>
     /// <param name="service">The prompt service.</param>
@@ -73,20 +60,6 @@ internal static class PromptServiceExtensions
 
         return null;
     }
-
-    /// <summary>
-    /// Tries to get a prompt ID by ID or alias.
-    /// If already an ID, returns it directly without a database lookup.
-    /// </summary>
-    /// <param name="service">The prompt service.</param>
-    /// <param name="idOrAlias">The ID or alias to look up.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The prompt ID if found, otherwise null.</returns>
-    public static Task<Guid?> TryGetPromptIdAsync(
-        this IAIPromptService service,
-        IdOrAlias idOrAlias,
-        CancellationToken cancellationToken = default)
-        => TryGetPromptIdAsync(service, idOrAlias, includeRestricted: false, cancellationToken);
 
     /// <summary>
     /// Tries to get a prompt ID by ID or alias, optionally including prompts the current user may not use.

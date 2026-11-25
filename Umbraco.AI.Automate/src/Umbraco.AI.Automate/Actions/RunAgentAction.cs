@@ -42,6 +42,7 @@ public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>, IPubl
     private readonly IAIUmbracoMediaResolver _mediaResolver;
     private readonly IAutomationActionAuthorizer _authorizer;
     private readonly AgentAccessChecker _accessChecker;
+    private readonly IAIAgentUnrestrictedReader _unrestrictedReader;
     private readonly ILogger<RunAgentAction> _logger;
 
     /// <summary>
@@ -88,6 +89,7 @@ public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>, IPubl
             mediaResolver,
             authorizer,
             StaticServiceProvider.Instance.GetRequiredService<AgentAccessChecker>(),
+            StaticServiceProvider.Instance.GetRequiredService<IAIAgentUnrestrictedReader>(),
             logger)
     {
     }
@@ -101,10 +103,12 @@ public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>, IPubl
         IAIUmbracoMediaResolver mediaResolver,
         IAutomationActionAuthorizer authorizer,
         AgentAccessChecker accessChecker,
+        IAIAgentUnrestrictedReader unrestrictedReader,
         ILogger<RunAgentAction> logger)
         : base(infrastructure)
     {
         _accessChecker = accessChecker;
+        _unrestrictedReader = unrestrictedReader;
         _agentService = agentService;
         _userService = userService;
         _mediaService = mediaService;
@@ -126,7 +130,7 @@ public sealed class RunAgentAction : ActionBase<RunAgentSettings, object>, IPubl
             return null;
         }
 
-        return await AgentOutputSchemaHelper.GetOutputSchemaAsync(_accessChecker.MetadataReader, settings.AgentId, cancellationToken);
+        return await AgentOutputSchemaHelper.GetOutputSchemaAsync(_unrestrictedReader, settings.AgentId, cancellationToken);
     }
 
     /// <summary>

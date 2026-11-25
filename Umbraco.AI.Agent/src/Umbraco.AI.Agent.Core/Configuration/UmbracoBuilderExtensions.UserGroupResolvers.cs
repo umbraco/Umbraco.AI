@@ -16,7 +16,7 @@ public static partial class UmbracoBuilderExtensions
     /// <remarks>
     /// Use this to add a resolver for an <c>onBehalfOf</c> kind. Example:
     /// <code>
-    /// builder.AIAgentUserGroupResolvers().Add&lt;MyResolver&gt;();
+    /// builder.AIAgentUserGroupResolvers().Append&lt;MyResolver&gt;();
     /// </code>
     /// </remarks>
     public static AIAgentUserGroupResolverCollectionBuilder AIAgentUserGroupResolvers(this IUmbracoBuilder builder)

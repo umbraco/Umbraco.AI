@@ -25,7 +25,7 @@ namespace Umbraco.AI.Prompt.Deploy.Tests.Unit.Connectors.ServiceConnectors;
 
 public class UmbracoAIPromptServiceConnectorTests
 {
-    private readonly Mock<IAIPromptService> _promptServiceMock;
+    private readonly Mock<IAIPromptUnrestrictedWriter> _promptServiceMock;
     private readonly Mock<IAIPromptUnrestrictedReader> _promptReaderMock;
     private readonly Mock<IAIProfileService> _profileServiceMock;
     private readonly Mock<IUserGroupService> _userGroupServiceMock;
@@ -34,7 +34,7 @@ public class UmbracoAIPromptServiceConnectorTests
 
     public UmbracoAIPromptServiceConnectorTests()
     {
-        _promptServiceMock = new Mock<IAIPromptService>();
+        _promptServiceMock = new Mock<IAIPromptUnrestrictedWriter>();
         _promptReaderMock = new Mock<IAIPromptUnrestrictedReader>();
         _profileServiceMock = new Mock<IAIProfileService>();
         _userGroupServiceMock = new Mock<IUserGroupService>();
@@ -43,11 +43,11 @@ public class UmbracoAIPromptServiceConnectorTests
         _settingsAccessorMock.Setup(x => x.Settings).Returns(new UmbracoAIDeploySettings());
 
         _connector = new UmbracoAIPromptServiceConnector(
-            _promptServiceMock.Object,
             _profileServiceMock.Object,
             _settingsAccessorMock.Object,
             _userGroupServiceMock.Object,
-            _promptReaderMock.Object);
+            _promptReaderMock.Object,
+            _promptServiceMock.Object);
     }
 
     [Fact]
@@ -315,6 +315,21 @@ public class UmbracoAIPromptServiceConnectorTests
     }
 
     [Fact]
+    public async Task ProcessAsync_ThatChangesTheGroups_SavesThroughTheUnrestrictedWriter()
+    {
+        // The user group rule must not depend on who started the import, so the connector never uses the
+        // per-user save.
+        var targetKey = Guid.NewGuid();
+        _userGroupServiceMock.Setup(x => x.GetAsync("translators"))
+            .ReturnsAsync(Mock.Of<IUserGroup>(g => g.Key == targetKey));
+        CaptureSave();
+
+        await _connector.ProcessAsync(NewState(["translators"]), Mock.Of<IDeployContext>(), 3);
+
+        _promptServiceMock.Verify(x => x.SavePromptUnrestrictedAsync(It.IsAny<AIPrompt>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task ProcessAsync_WithNoAllowedUserGroups_SavesAnEmptyList()
     {
         var saved = CaptureSave();
@@ -343,7 +358,7 @@ public class UmbracoAIPromptServiceConnectorTests
     {
         AIPrompt? saved = null;
         _promptServiceMock
-            .Setup(x => x.SavePromptAsync(It.IsAny<AIPrompt>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.SavePromptUnrestrictedAsync(It.IsAny<AIPrompt>(), It.IsAny<CancellationToken>()))
             .Callback<AIPrompt, CancellationToken>((p, _) => saved = p)
             .ReturnsAsync((AIPrompt p, CancellationToken _) => p);
         return () => saved;

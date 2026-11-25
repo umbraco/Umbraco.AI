@@ -236,6 +236,42 @@ public class AgentUserGroupListRuleTests
 
     #endregion
 
+    #region Unrestricted save (Deploy import)
+
+    [Fact]
+    public async Task SaveUnrestricted_ByNonAdmin_ChangingTheListToSomeoneElsesGroup_Succeeds()
+    {
+        // Given a non-admin in editors only, and an unlimited agent
+        var id = Guid.NewGuid();
+        GivenStoredAgent(id, []);
+        GivenUser(Editors);
+
+        // When  an import started by them saves the agent limited to translators
+        var result = await CreateService().SaveAgentUnrestrictedAsync(CreateAgent(id, [Translators]));
+
+        // Then  the exported groups are saved, as the rule does not apply to an import
+        result.AllowedUserGroupIds.ShouldBe([Translators]);
+    }
+
+    [Fact]
+    public async Task SaveUnrestricted_StillRunsOtherValidation()
+    {
+        // Given a non-admin and an agent with five starter prompts (the cap is four)
+        var id = Guid.NewGuid();
+        GivenStoredAgent(id, []);
+        GivenUser(Editors);
+        var agent = CreateAgent(id, [Translators]);
+        agent.StarterPrompts = Enumerable.Range(0, 5).Select(i => new AIStarterPrompt { Prompt = $"p{i}" }).ToList();
+
+        // When  it is saved unrestricted
+        var save = () => CreateService().SaveAgentUnrestrictedAsync(agent);
+
+        // Then  only the group rule is skipped, so the cap still refuses it
+        await Should.ThrowAsync<InvalidOperationException>(save);
+    }
+
+    #endregion
+
     private void GivenStoredAgent(Guid id, Guid[] groups)
         => _repositoryMock
             .Setup(x => x.GetByIdAsync(id, It.IsAny<CancellationToken>()))

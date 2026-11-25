@@ -23,8 +23,8 @@ namespace Umbraco.AI.Prompt.Deploy.Connectors.ServiceConnectors;
 public class UmbracoAIPromptServiceConnector
     : UmbracoAIProfileDependentEntityServiceConnectorBase<AIPromptArtifact, AIPrompt>
 {
-    private readonly IAIPromptService _promptService;
     private readonly IAIPromptUnrestrictedReader _promptReader;
+    private readonly IAIPromptUnrestrictedWriter _promptWriter;
     private readonly IUserGroupService _userGroupService;
 
     /// <summary>
@@ -52,27 +52,28 @@ public class UmbracoAIPromptServiceConnector
         UmbracoAIDeploySettingsAccessor settingsAccessor,
         IUserGroupService userGroupService)
         : this(
-            promptService,
             profileService,
             settingsAccessor,
             userGroupService,
-            StaticServiceProvider.Instance.GetRequiredService<IAIPromptUnrestrictedReader>())
+            StaticServiceProvider.Instance.GetRequiredService<IAIPromptUnrestrictedReader>(),
+            StaticServiceProvider.Instance.GetRequiredService<IAIPromptUnrestrictedWriter>())
     {
     }
 
     // Deploy runs with no signed-in user, so export and import read prompts through the unrestricted
     // reader: the per-user filter on IAIPromptService would hide limited prompts. The reader is internal,
-    // so the public constructor above resolves it rather than taking it.
+    // so the public constructor above resolves it rather than taking it. Import saves through the unrestricted
+    // writer for the same reason: the user group rule must not depend on who started the import.
     internal UmbracoAIPromptServiceConnector(
-        IAIPromptService promptService,
         IAIProfileService profileService,
         UmbracoAIDeploySettingsAccessor settingsAccessor,
         IUserGroupService userGroupService,
-        IAIPromptUnrestrictedReader promptReader)
+        IAIPromptUnrestrictedReader promptReader,
+        IAIPromptUnrestrictedWriter promptWriter)
         : base(profileService, settingsAccessor)
     {
-        _promptService = promptService;
         _promptReader = promptReader;
+        _promptWriter = promptWriter;
         _userGroupService = userGroupService;
     }
 
@@ -211,6 +212,6 @@ public class UmbracoAIPromptServiceConnector
         prompt.OptionCount = artifact.OptionCount;
         prompt.Scope = scope;
 
-        state.Entity = await _promptService.SavePromptAsync(prompt, cancellationToken);
+        state.Entity = await _promptWriter.SavePromptUnrestrictedAsync(prompt, cancellationToken);
     }
 }

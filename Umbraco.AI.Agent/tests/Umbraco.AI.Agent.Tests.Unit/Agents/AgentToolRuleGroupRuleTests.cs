@@ -225,6 +225,21 @@ public class AgentToolRuleGroupRuleTests
 
     #endregion
 
+    [Fact]
+    public async Task SaveUnrestricted_ByNonAdmin_ChangingAnotherGroupsRules_Succeeds()
+    {
+        // Given a non-admin in editors and an agent with translators rules
+        var id = Guid.NewGuid();
+        GivenStoredAgent(id, Rules((Translators, ["tool-a"])));
+        GivenUser(Editors);
+
+        // When  an import started by them saves different translators rules
+        var result = await CreateService().SaveAgentUnrestrictedAsync(CreateAgent(id, Rules((Translators, ["tool-b"]))));
+
+        // Then  the exported rules are saved, as the rule does not apply to an import
+        ((AIStandardAgentConfig)result.Config!).UserGroupPermissions[Translators].AllowedToolIds.ShouldBe(["tool-b"]);
+    }
+
     private void GivenStoredAgent(Guid id, AIStandardAgentConfig config)
         => _repositoryMock
             .Setup(x => x.GetByIdAsync(id, It.IsAny<CancellationToken>()))

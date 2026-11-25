@@ -32,7 +32,7 @@ public class UmbracoAIAgentUserGroupPermissionsDeployTests
     private static readonly Guid TargetMarketingKey = Guid.NewGuid();
     private static readonly Guid EditorsKey = Guid.NewGuid(); // built-in groups share a key everywhere
 
-    private readonly Mock<IAIAgentService> _agentService = new();
+    private readonly Mock<IAIAgentUnrestrictedWriter> _agentService = new();
     private readonly Mock<IUserGroupService> _sourceGroups = new();
     private readonly Mock<IUserGroupService> _targetGroups = new();
     private AIAgent? _saved;
@@ -48,7 +48,7 @@ public class UmbracoAIAgentUserGroupPermissionsDeployTests
         _targetGroups.Setup(x => x.GetAsync(EditorsKey)).ReturnsAsync(Group("editor", EditorsKey));
 
         _agentService
-            .Setup(x => x.SaveAgentAsync(It.IsAny<AIAgent>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.SaveAgentUnrestrictedAsync(It.IsAny<AIAgent>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((AIAgent a, CancellationToken _) => _saved = a);
     }
 
@@ -131,7 +131,7 @@ public class UmbracoAIAgentUserGroupPermissionsDeployTests
     {
         var settings = new Mock<UmbracoAIDeploySettingsAccessor>(MockBehavior.Strict, null!);
         settings.Setup(x => x.Settings).Returns(new UmbracoAIDeploySettings());
-        return new UmbracoAIAgentServiceConnector(_agentService.Object, new Mock<IAIProfileService>().Object, settings.Object, userGroups.Object, new Mock<IAIAgentUnrestrictedReader>().Object);
+        return new UmbracoAIAgentServiceConnector(new Mock<IAIProfileService>().Object, settings.Object, userGroups.Object, new Mock<IAIAgentUnrestrictedReader>().Object, _agentService.Object);
     }
 
     private async Task ImportAsync(AIAgentArtifact artifact)

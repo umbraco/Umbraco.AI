@@ -32,8 +32,8 @@ public class UmbracoAIAgentServiceConnector
 {
     private const string UserGroupPermissionsProperty = "userGroupPermissions";
 
-    private readonly IAIAgentService _agentService;
     private readonly IAIAgentUnrestrictedReader _agentReader;
+    private readonly IAIAgentUnrestrictedWriter _agentWriter;
     private readonly IUserGroupService _userGroupService;
 
     /// <summary>
@@ -61,28 +61,29 @@ public class UmbracoAIAgentServiceConnector
         UmbracoAIDeploySettingsAccessor settingsAccessor,
         IUserGroupService userGroupService)
         : this(
-            agentService,
             profileService,
             settingsAccessor,
             userGroupService,
-            StaticServiceProvider.Instance.GetRequiredService<IAIAgentUnrestrictedReader>())
+            StaticServiceProvider.Instance.GetRequiredService<IAIAgentUnrestrictedReader>(),
+            StaticServiceProvider.Instance.GetRequiredService<IAIAgentUnrestrictedWriter>())
     {
     }
 
     // Deploy runs with no signed-in user, so export and import read agents through the unrestricted
     // reader: the per-user filter on IAIAgentService would hide limited agents. The reader is internal,
-    // so the public constructor above resolves it rather than taking it.
+    // so the public constructor above resolves it rather than taking it. Import saves through the unrestricted
+    // writer for the same reason: the user group rule must not depend on who started the import.
     internal UmbracoAIAgentServiceConnector(
-        IAIAgentService agentService,
         IAIProfileService profileService,
         UmbracoAIDeploySettingsAccessor settingsAccessor,
         IUserGroupService userGroupService,
-        IAIAgentUnrestrictedReader agentReader)
+        IAIAgentUnrestrictedReader agentReader,
+        IAIAgentUnrestrictedWriter agentWriter)
         : base(profileService, settingsAccessor)
     {
-        _agentService = agentService;
         _userGroupService = userGroupService;
         _agentReader = agentReader;
+        _agentWriter = agentWriter;
     }
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -271,7 +272,7 @@ public class UmbracoAIAgentServiceConnector
         agent.AllowedUserGroupIds = allowedUserGroupIds;
         agent.IsActive = artifact.IsActive;
 
-        state.Entity = await _agentService.SaveAgentAsync(agent, cancellationToken);
+        state.Entity = await _agentWriter.SaveAgentUnrestrictedAsync(agent, cancellationToken);
     }
 
     /// <summary>

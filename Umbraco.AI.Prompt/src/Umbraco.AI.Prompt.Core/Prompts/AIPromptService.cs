@@ -28,7 +28,7 @@ namespace Umbraco.AI.Prompt.Core.Prompts;
 /// <summary>
 /// Service implementation for prompt management operations.
 /// </summary>
-internal sealed class AIPromptService : IAIPromptService, IAIPromptUnrestrictedReader
+internal sealed class AIPromptService : IAIPromptService, IAIPromptUnrestrictedReader, IAIPromptUnrestrictedWriter
 {
     private readonly IAIPromptRepository _repository;
     private readonly IAIEntityVersionService _versionService;
@@ -173,7 +173,14 @@ internal sealed class AIPromptService : IAIPromptService, IAIPromptUnrestrictedR
     }
 
     /// <inheritdoc />
-    public async Task<AIPrompt> SavePromptAsync(AIPrompt prompt, CancellationToken cancellationToken = default)
+    public Task<AIPrompt> SavePromptAsync(AIPrompt prompt, CancellationToken cancellationToken = default)
+        => SavePromptCoreAsync(prompt, enforceUserGroupRule: true, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<AIPrompt> SavePromptUnrestrictedAsync(AIPrompt prompt, CancellationToken cancellationToken = default)
+        => SavePromptCoreAsync(prompt, enforceUserGroupRule: false, cancellationToken);
+
+    private async Task<AIPrompt> SavePromptCoreAsync(AIPrompt prompt, bool enforceUserGroupRule, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(prompt);
         ArgumentException.ThrowIfNullOrWhiteSpace(prompt.Alias);
@@ -206,8 +213,9 @@ internal sealed class AIPromptService : IAIPromptService, IAIPromptUnrestrictedR
 
         var existing = await _repository.GetByIdAsync(prompt.Id, cancellationToken);
 
-        // Group list rule. Like the CMS, a save with no current user (Deploy import, startup) is not checked.
-        if (userId is not null)
+        // Group list rule. Like the CMS, a save with no current user (Deploy import, startup) is not checked,
+        // and a Deploy import (unrestricted save) skips it whoever started it.
+        if (enforceUserGroupRule && userId is not null)
         {
             AIUserGroupChangeRule.EnsureCanChangeList(
                 _permissionService,

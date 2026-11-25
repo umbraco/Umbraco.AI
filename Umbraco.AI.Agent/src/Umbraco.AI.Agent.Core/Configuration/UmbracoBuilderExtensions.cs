@@ -61,6 +61,7 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<AIAgentService>();
         builder.Services.AddSingleton<IAIAgentService>(sp => sp.GetRequiredService<AIAgentService>());
         builder.Services.AddSingleton<IAIAgentUnrestrictedReader>(sp => sp.GetRequiredService<AIAgentService>());
+        builder.Services.AddSingleton<IAIAgentUnrestrictedWriter>(sp => sp.GetRequiredService<AIAgentService>());
         // Owns the selector chain so AIAgentService doesn't grow further. Depends on IAIAgentService
         // itself (for GetAgentsBySurfaceAsync) - the obsolete SelectAgentForPromptAsync proxy resolves
         // this via the static service provider instead of a constructor parameter, to avoid a cycle.

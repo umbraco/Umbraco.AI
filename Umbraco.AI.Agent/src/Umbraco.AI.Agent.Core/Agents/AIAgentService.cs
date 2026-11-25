@@ -42,7 +42,7 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// <summary>
 /// Service implementation for agent management operations.
 /// </summary>
-internal sealed class AIAgentService : IAIAgentService, IAIAgentUnrestrictedReader
+internal sealed class AIAgentService : IAIAgentService, IAIAgentUnrestrictedReader, IAIAgentUnrestrictedWriter
 {
     /// <summary>
     /// Maximum number of starter prompts an agent can carry. Also the chip window, so a single
@@ -253,7 +253,14 @@ internal sealed class AIAgentService : IAIAgentService, IAIAgentUnrestrictedRead
     }
 
     /// <inheritdoc />
-    public async Task<AIAgent> SaveAgentAsync(AIAgent agent, CancellationToken cancellationToken = default)
+    public Task<AIAgent> SaveAgentAsync(AIAgent agent, CancellationToken cancellationToken = default)
+        => SaveAgentCoreAsync(agent, enforceUserGroupRule: true, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<AIAgent> SaveAgentUnrestrictedAsync(AIAgent agent, CancellationToken cancellationToken = default)
+        => SaveAgentCoreAsync(agent, enforceUserGroupRule: false, cancellationToken);
+
+    private async Task<AIAgent> SaveAgentCoreAsync(AIAgent agent, bool enforceUserGroupRule, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(agent);
         ArgumentException.ThrowIfNullOrWhiteSpace(agent.Alias);
@@ -292,8 +299,9 @@ internal sealed class AIAgentService : IAIAgentService, IAIAgentUnrestrictedRead
 
         var existing = await _repository.GetByIdAsync(agent.Id, cancellationToken);
 
-        // Group list rule. Like the CMS, a save with no current user (Deploy import, startup) is not checked.
-        if (userId is not null)
+        // Group list rule. Like the CMS, a save with no current user (Deploy import, startup) is not checked,
+        // and a Deploy import (unrestricted save) skips it whoever started it.
+        if (enforceUserGroupRule && userId is not null)
         {
             AIUserGroupChangeRule.EnsureCanChangeList(
                 _permissionService,

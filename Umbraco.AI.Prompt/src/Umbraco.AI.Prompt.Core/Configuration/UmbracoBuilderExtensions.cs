@@ -58,6 +58,7 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<AIPromptService>();
         builder.Services.AddSingleton<IAIPromptService>(sp => sp.GetRequiredService<AIPromptService>());
         builder.Services.AddSingleton<IAIPromptUnrestrictedReader>(sp => sp.GetRequiredService<AIPromptService>());
+        builder.Services.AddSingleton<IAIPromptUnrestrictedWriter>(sp => sp.GetRequiredService<AIPromptService>());
 
         // Prevent deletion of profiles referenced by prompts
         builder.AddNotificationAsyncHandler<AIProfileDeletingNotification, AIProfileDeletingPromptNotificationHandler>();

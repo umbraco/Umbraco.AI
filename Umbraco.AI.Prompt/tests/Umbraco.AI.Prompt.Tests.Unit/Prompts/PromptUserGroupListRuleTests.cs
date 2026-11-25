@@ -221,6 +221,41 @@ public class PromptUserGroupListRuleTests
 
     #endregion
 
+    #region Unrestricted save (Deploy import)
+
+    [Fact]
+    public async Task SaveUnrestricted_ByNonAdmin_ChangingTheListToSomeoneElsesGroup_Succeeds()
+    {
+        // Given a non-admin in editors only, and an unlimited prompt
+        var id = Guid.NewGuid();
+        await GivenStoredPromptAsync(id, []);
+        GivenUser(Editors);
+
+        // When  an import started by them saves the prompt limited to translators
+        var result = await CreateService().SavePromptUnrestrictedAsync(CreatePrompt(id, [Translators]));
+
+        // Then  the exported groups are saved, as the rule does not apply to an import
+        result.AllowedUserGroupIds.ShouldBe([Translators]);
+    }
+
+    [Fact]
+    public async Task SaveUnrestricted_StillRunsOtherValidation()
+    {
+        // Given a non-admin and a prompt with an invalid option count
+        var id = Guid.NewGuid();
+        GivenUser(Editors);
+        var prompt = CreatePrompt(id, [Translators]);
+        prompt.OptionCount = -1;
+
+        // When  it is saved unrestricted
+        var save = () => CreateService().SavePromptUnrestrictedAsync(prompt);
+
+        // Then  only the group rule is skipped, so the option count check still refuses it
+        await Should.ThrowAsync<ArgumentException>(save);
+    }
+
+    #endregion
+
     private async Task GivenStoredPromptAsync(Guid id, Guid[] groups)
         => await _repository.SaveAsync(CreatePrompt(id, groups, "stored"));
 

@@ -30,7 +30,7 @@ public class UmbracoAIAgentAllowedUserGroupsDeployTests
     private static readonly Guid SourceTranslatorsKey = Guid.NewGuid();
     private static readonly Guid TargetTranslatorsKey = Guid.NewGuid();
 
-    private readonly Mock<IAIAgentService> _agentService = new();
+    private readonly Mock<IAIAgentUnrestrictedWriter> _agentService = new();
     private readonly Mock<IUserGroupService> _sourceGroups = new();
     private readonly Mock<IUserGroupService> _targetGroups = new();
     private AIAgent? _saved;
@@ -43,7 +43,7 @@ public class UmbracoAIAgentAllowedUserGroupsDeployTests
         _targetGroups.Setup(x => x.GetAsync(TargetTranslatorsKey)).ReturnsAsync(Group("translators", TargetTranslatorsKey));
 
         _agentService
-            .Setup(x => x.SaveAgentAsync(It.IsAny<AIAgent>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.SaveAgentUnrestrictedAsync(It.IsAny<AIAgent>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((AIAgent a, CancellationToken _) => _saved = a);
     }
 
@@ -74,6 +74,16 @@ public class UmbracoAIAgentAllowedUserGroupsDeployTests
     }
 
     [Fact]
+    public async Task Import_ThatChangesTheGroups_SavesThroughTheUnrestrictedWriter()
+    {
+        // The user group rule must not depend on who started the import, so the connector never uses the
+        // per-user save (it no longer even receives IAIAgentService).
+        await ImportAsync(new AIAgentArtifact(Udi()) { Alias = "agent", Name = "Agent", AllowedUserGroups = ["translators"] });
+
+        _agentService.Verify(x => x.SaveAgentUnrestrictedAsync(It.IsAny<AIAgent>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task Import_AliasMissingOnTheTarget_FailsNamingTheAlias()
     {
         var artifact = new AIAgentArtifact(Udi()) { Alias = "agent", Name = "Agent", AllowedUserGroups = ["translators", "sales"] };
@@ -90,7 +100,7 @@ public class UmbracoAIAgentAllowedUserGroupsDeployTests
 
         await Should.ThrowAsync<InvalidOperationException>(() => ImportAsync(artifact));
 
-        _agentService.Verify(x => x.SaveAgentAsync(It.IsAny<AIAgent>(), It.IsAny<CancellationToken>()), Times.Never);
+        _agentService.Verify(x => x.SaveAgentUnrestrictedAsync(It.IsAny<AIAgent>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -117,7 +127,7 @@ public class UmbracoAIAgentAllowedUserGroupsDeployTests
     {
         var settings = new Mock<UmbracoAIDeploySettingsAccessor>(MockBehavior.Strict, null!);
         settings.Setup(x => x.Settings).Returns(new UmbracoAIDeploySettings());
-        return new UmbracoAIAgentServiceConnector(_agentService.Object, new Mock<IAIProfileService>().Object, settings.Object, userGroups.Object, new Mock<IAIAgentUnrestrictedReader>().Object);
+        return new UmbracoAIAgentServiceConnector(new Mock<IAIProfileService>().Object, settings.Object, userGroups.Object, new Mock<IAIAgentUnrestrictedReader>().Object, _agentService.Object);
     }
 
     private async Task ImportAsync(AIAgentArtifact artifact)

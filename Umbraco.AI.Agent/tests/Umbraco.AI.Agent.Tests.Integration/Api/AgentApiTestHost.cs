@@ -270,6 +270,7 @@ internal sealed class AgentApiTestHost : IAsyncDisposable
             new MapDefinitionCollection(() => new IMapDefinition[]
             {
                 new AgentMapDefinition(Mock.Of<IShortStringHelper>()),
+                new Umbraco.AI.Web.Api.Management.Common.Mapping.CommonMapDefinition(),
             }),
             Mock.Of<ICoreScopeProvider>(),
             NullLogger<UmbracoMapper>.Instance));

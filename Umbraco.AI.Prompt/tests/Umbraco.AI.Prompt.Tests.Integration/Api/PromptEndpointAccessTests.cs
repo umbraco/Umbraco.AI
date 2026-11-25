@@ -9,6 +9,7 @@ using Moq;
 using Shouldly;
 
 using Umbraco.AI.Core.Security;
+using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Prompt.Core.Prompts;
 
 using Xunit;
@@ -25,6 +26,7 @@ namespace Umbraco.AI.Prompt.Tests.Integration.Api;
 public class PromptEndpointAccessTests : IAsyncLifetime
 {
     private const string Prompts = "/umbraco/ai/management/api/v1/prompts";
+    private const string Versions = "/umbraco/ai/management/api/v1/versions";
     private static readonly Guid Editors = PromptApiTestHost.Editors;
     private static readonly Guid Translators = PromptApiTestHost.Translators;
 
@@ -179,6 +181,41 @@ public class PromptEndpointAccessTests : IAsyncLifetime
         // Then  the list is cleared
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         (await _host.Repository.GetByIdAsync(id)).ShouldNotBeNull().AllowedUserGroupIds.ShouldBeEmpty();
+    }
+
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("/1")]
+    [InlineData("/1/compare/2")]
+    public async Task VersionHistory_OfALimitedPrompt_ForAMemberOfTheGroup_Returns200(string path)
+    {
+        // Given a prompt limited to editors, and a user in editors
+        var id = await SeedAsync("limited", [Editors]);
+        SetUpVersions(id);
+
+        // When  they GET its version history (list, snapshot or compare)
+        var response = await _editorsManager.GetAsync($"{Versions}/prompt/{id}{path}");
+
+        // Then  they get it, because they can use the prompt
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("/1")]
+    [InlineData("/1/compare/2")]
+    public async Task VersionHistory_OfALimitedPrompt_ForAManagerOutsideTheGroups_Returns200(string path)
+    {
+        // Given a prompt limited to editors, and a manager not in editors
+        var id = await SeedAsync("limited", [Editors]);
+        SetUpVersions(id);
+
+        // When  they GET its version history
+        var response = await _translatorsManager.GetAsync($"{Versions}/prompt/{id}{path}");
+
+        // Then  they get it, as they do the detail, because managing prompts sees limited ones (R12)
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
     #endregion
@@ -402,6 +439,24 @@ public class PromptEndpointAccessTests : IAsyncLifetime
         (await _host.Repository.GetByIdAsync(id))!.AllowedUserGroupIds.ShouldBe([Editors]);
     }
 
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("/1")]
+    [InlineData("/1/compare/2")]
+    public async Task VersionHistory_OfALimitedPrompt_ForAUserOutsideTheGroups_Returns404(string path)
+    {
+        // Given a prompt limited to editors, and an AI section user outside editors without the manage right
+        var id = await SeedAsync("limited", [Editors]);
+        SetUpVersions(id);
+
+        // When  they GET its version history (list, snapshot or compare)
+        var response = await _translator.GetAsync($"{Versions}/prompt/{id}{path}");
+
+        // Then  it looks like the prompt does not exist, as its detail does (R11)
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
     #endregion
 
     #region Helpers
@@ -467,6 +522,21 @@ public class PromptEndpointAccessTests : IAsyncLifetime
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var body = await ReadJsonAsync(response);
         return body["items"]!.AsArray().Select(i => i!["alias"]!.GetValue<string>()).ToArray();
+    }
+
+
+    private void SetUpVersions(Guid id)
+    {
+        var version = new AIEntityVersion { EntityId = id, EntityType = "Prompt", Version = 1, Snapshot = "{}" };
+        _host.Versions
+            .Setup(v => v.GetVersionHistoryAsync(id, "Prompt", It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(([version], 1));
+        _host.Versions
+            .Setup(v => v.GetVersionAsync(id, "Prompt", 1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(version);
+        _host.Versions
+            .Setup(v => v.CompareVersionsAsync(id, "Prompt", 1, 2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AIVersionComparison(id, "Prompt", 1, 2, []));
     }
 
     #endregion

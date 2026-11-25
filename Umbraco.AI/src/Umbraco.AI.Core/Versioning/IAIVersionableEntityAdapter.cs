@@ -92,6 +92,9 @@ public interface IAIVersionableEntityAdapter
     /// <remarks>
     /// This method retrieves the live entity state, which represents the current version
     /// that may not yet have a snapshot in the version history table.
+    /// It is also how version history reads (list, snapshot, comparison) are limited: return <c>null</c> for an
+    /// entity the current user may not see, the same as its detail endpoint does, and its history is treated as
+    /// missing too.
     /// </remarks>
     Task<object?> GetEntityAsync(Guid entityId, CancellationToken cancellationToken = default);
 }

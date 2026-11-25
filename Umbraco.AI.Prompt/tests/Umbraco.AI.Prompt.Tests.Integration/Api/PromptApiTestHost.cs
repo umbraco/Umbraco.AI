@@ -242,6 +242,7 @@ internal sealed class PromptApiTestHost : IAsyncDisposable
             {
                 new PromptMapDefinition(Mock.Of<IShortStringHelper>()),
                 new PromptExecutionMapDefinition(),
+                new Umbraco.AI.Web.Api.Management.Common.Mapping.CommonMapDefinition(),
             }),
             Mock.Of<ICoreScopeProvider>(),
             NullLogger<UmbracoMapper>.Instance));

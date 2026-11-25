@@ -1,4 +1,5 @@
 using Asp.Versioning;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -94,10 +95,8 @@ public class EntityVersionHistoryController : VersioningControllerBase
         var currentEntity = await handler.GetEntityAsync(entityId, cancellationToken);
         if (currentEntity is not IAIAuditableEntity auditable)
         {
-            // Entity not found or doesn't implement IAIAuditableEntity
-            return NotFound(CreateProblemDetails(
-                "Entity not found",
-                $"The {entityType} with ID {entityId} was not found."));
+            // Entity not found, hidden from this user, or doesn't implement IAIAuditableEntity
+            return EntityNotFound(entityType, entityId);
         }
 
         // Create the current version entry from the live entity
@@ -167,13 +166,19 @@ public class EntityVersionHistoryController : VersioningControllerBase
         [FromRoute] int entityVersion,
         CancellationToken cancellationToken = default)
     {
-        // Normalize entity type (case-insensitive)
-        var normalizedType = NormalizeEntityType(entityType);
-        if (normalizedType is null)
+        // Get the entity type handler (case-insensitive)
+        var handler = _entityTypes.GetByTypeName(entityType);
+        if (handler is null)
         {
             return UnknownEntityType(entityType);
         }
 
+        if (!await EntityIsVisibleAsync(handler, entityId, cancellationToken))
+        {
+            return EntityNotFound(entityType, entityId);
+        }
+
+        var normalizedType = handler.EntityTypeName;
         var versionRecord = await _versionService.GetVersionAsync(entityId, normalizedType, entityVersion, cancellationToken);
         if (versionRecord is null)
         {
@@ -204,13 +209,19 @@ public class EntityVersionHistoryController : VersioningControllerBase
         [FromRoute] int toEntityVersion,
         CancellationToken cancellationToken = default)
     {
-        // Normalize entity type (case-insensitive)
-        var normalizedType = NormalizeEntityType(entityType);
-        if (normalizedType is null)
+        // Get the entity type handler (case-insensitive)
+        var handler = _entityTypes.GetByTypeName(entityType);
+        if (handler is null)
         {
             return UnknownEntityType(entityType);
         }
 
+        if (!await EntityIsVisibleAsync(handler, entityId, cancellationToken))
+        {
+            return EntityNotFound(entityType, entityId);
+        }
+
+        var normalizedType = handler.EntityTypeName;
         var comparison = await _versionService.CompareVersionsAsync(entityId, normalizedType, fromEntityVersion, toEntityVersion, cancellationToken);
         if (comparison is null)
         {
@@ -301,10 +312,16 @@ public class EntityVersionHistoryController : VersioningControllerBase
     private ObjectResult Forbidden(string detail)
         => StatusCode(StatusCodes.Status403Forbidden, CreateProblemDetails("Forbidden", detail));
 
-    private string? NormalizeEntityType(string entityType)
-    {
-        // Try to find by case-insensitive match
-        var handler = _entityTypes.GetByTypeName(entityType);
-        return handler?.EntityTypeName;
-    }
+    // The adapter's GetEntityAsync is the visibility rule: it returns null for an entity the current user
+    // may not see, so a hidden entity reads as missing for the history, a snapshot and a comparison alike.
+    private static async Task<bool> EntityIsVisibleAsync(
+        IAIVersionableEntityAdapter handler,
+        Guid entityId,
+        CancellationToken cancellationToken)
+        => await handler.GetEntityAsync(entityId, cancellationToken) is not null;
+
+    private NotFoundObjectResult EntityNotFound(string entityType, Guid entityId)
+        => NotFound(CreateProblemDetails(
+            "Entity not found",
+            $"The {entityType} with ID {entityId} was not found."));
 }

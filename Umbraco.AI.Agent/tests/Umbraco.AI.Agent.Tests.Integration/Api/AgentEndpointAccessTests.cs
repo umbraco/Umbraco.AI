@@ -12,6 +12,7 @@ using Shouldly;
 
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Core.Security;
+using Umbraco.AI.Core.Versioning;
 
 using Xunit;
 
@@ -27,6 +28,7 @@ namespace Umbraco.AI.Agent.Tests.Integration.Api;
 public class AgentEndpointAccessTests : IAsyncLifetime
 {
     private const string Agents = "/umbraco/ai/management/api/v1/agents";
+    private const string Versions = "/umbraco/ai/management/api/v1/versions";
     private static readonly Guid Editors = AgentApiTestHost.Editors;
     private static readonly Guid Translators = AgentApiTestHost.Translators;
 
@@ -194,6 +196,41 @@ public class AgentEndpointAccessTests : IAsyncLifetime
         // Then  the list is cleared
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         (await _host.Repository.GetByIdAsync(id)).ShouldNotBeNull().AllowedUserGroupIds.ShouldBeEmpty();
+    }
+
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("/1")]
+    [InlineData("/1/compare/2")]
+    public async Task VersionHistory_OfALimitedAgent_ForAMemberOfTheGroup_Returns200(string path)
+    {
+        // Given a agent limited to editors, and a user in editors
+        var id = await SeedAsync("limited", [Editors]);
+        SetUpVersions(id);
+
+        // When  they GET its version history (list, snapshot or compare)
+        var response = await _editorsManager.GetAsync($"{Versions}/agent/{id}{path}");
+
+        // Then  they get it, because they can use the agent
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("/1")]
+    [InlineData("/1/compare/2")]
+    public async Task VersionHistory_OfALimitedAgent_ForAManagerOutsideTheGroups_Returns200(string path)
+    {
+        // Given a agent limited to editors, and a manager not in editors
+        var id = await SeedAsync("limited", [Editors]);
+        SetUpVersions(id);
+
+        // When  they GET its version history
+        var response = await _translatorsManager.GetAsync($"{Versions}/agent/{id}{path}");
+
+        // Then  they get it, as they do the detail, because managing agents sees limited ones (R12)
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
     #endregion
@@ -463,6 +500,24 @@ public class AgentEndpointAccessTests : IAsyncLifetime
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("/1")]
+    [InlineData("/1/compare/2")]
+    public async Task VersionHistory_OfALimitedAgent_ForAUserOutsideTheGroups_Returns404(string path)
+    {
+        // Given a agent limited to editors, and an AI section user outside editors without the manage right
+        var id = await SeedAsync("limited", [Editors]);
+        SetUpVersions(id);
+
+        // When  they GET its version history (list, snapshot or compare)
+        var response = await _translator.GetAsync($"{Versions}/agent/{id}{path}");
+
+        // Then  it looks like the agent does not exist, as its detail does (R11)
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
     #endregion
 
     #region Helpers
@@ -556,6 +611,21 @@ public class AgentEndpointAccessTests : IAsyncLifetime
         {
             Content = body is null ? null : Json(body),
         });
+
+
+    private void SetUpVersions(Guid id)
+    {
+        var version = new AIEntityVersion { EntityId = id, EntityType = "Agent", Version = 1, Snapshot = "{}" };
+        _host.Versions
+            .Setup(v => v.GetVersionHistoryAsync(id, "Agent", It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(([version], 1));
+        _host.Versions
+            .Setup(v => v.GetVersionAsync(id, "Agent", 1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(version);
+        _host.Versions
+            .Setup(v => v.CompareVersionsAsync(id, "Agent", 1, 2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AIVersionComparison(id, "Agent", 1, 2, []));
+    }
 
     #endregion
 }

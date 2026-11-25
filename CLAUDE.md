@@ -540,6 +540,17 @@ Before saying a task is done, actually run the relevant build/test command and l
 - Provider packages are named after the *company* (e.g. `Umbraco.AI.ZAI`, `Umbraco.AI.Alibaba`), never after the specific model they happen to ship first (e.g. not `Umbraco.AI.Qwen`) — see the `add-provider` skill
 - Worktrees pile up because cleanup is easy to forget — `ExitWorktree` alone does not delete anything. See CLAUDE.local.md's "Finishing a worktree" section, and actually run `/worktree-cleanup` or `/worktree-merge` before considering a worktree task done
 
+## Security process
+
+How `advisory-fix` handles a reported vulnerability in this package.
+
+- Report a vulnerability to: security@umbraco.dk
+- Reports arrive as: a work item in the InfoSec project on Azure DevOps, which names the GitHub security advisory when there is one
+- Read with: the Azure DevOps MCP server
+- Updates go to: a private Slack channel per advisory, named dxp-security-{ticket}
+- Security team needs: affected and fixed version ranges for each package
+- Private fork: GitHub advisory fork
+
 ## Issue tracker
 
 - Type: GitHub Issues

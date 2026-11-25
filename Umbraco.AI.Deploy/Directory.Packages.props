@@ -7,6 +7,6 @@
     <!-- 18.7.0 is the first Umbraco.AI release with the Extraction capability (AICapability.Extraction and
          AISettings.DefaultExtractionProfileId), which the settings connector carries. The floor
          is kept level with the root Umbraco.AI floor so this override never sits below it. -->
-    <PackageVersion Update="Umbraco.AI.Startup" Version="[18.8.2, 18.999.999)" />
+    <PackageVersion Update="Umbraco.AI.Startup" Version="[18.8.3, 18.999.999)" />
   </ItemGroup>
 </Project>

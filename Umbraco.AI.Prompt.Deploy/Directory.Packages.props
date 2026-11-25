@@ -4,8 +4,9 @@
   <Import Project="$([MSBuild]::GetPathOfFileAbove(Directory.Packages.props, $(MSBuildThisFileDirectory)..))" />
 
   <ItemGroup>
-    <!-- 18.4.0 is the first Umbraco.AI.Prompt release with the public AIPrompt(Guid id) constructor
-         the service connector creates prompts with. -->
-    <PackageVersion Update="Umbraco.AI.Prompt.Startup" Version="[18.4.1, 18.999.999)" />
+    <!-- Floor for the internal contracts shared with Umbraco.AI.Prompt via InternalsVisibleTo:
+         IAIPromptUnrestrictedReader and AIPrompt.AllowedUserGroupIds. Do not lower it below the
+         Umbraco.AI.Prompt version that ships granular permissions. -->
+    <PackageVersion Update="Umbraco.AI.Prompt.Startup" Version="[18.4.3, 18.999.999)" />
   </ItemGroup>
 </Project>

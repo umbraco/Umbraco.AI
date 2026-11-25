@@ -4,8 +4,9 @@
   <Import Project="$([MSBuild]::GetPathOfFileAbove(Directory.Packages.props, $(MSBuildThisFileDirectory)..))" />
 
   <ItemGroup>
-    <!-- 18.4.0 is the first Umbraco.AI.Agent release with the public AIAgent(Guid id) constructor
-         the service connector creates agents with. -->
-    <PackageVersion Update="Umbraco.AI.Agent.Startup" Version="[18.4.2, 18.999.999)" />
+    <!-- Floor for the internal contracts shared with Umbraco.AI.Agent via InternalsVisibleTo:
+         IAIAgentUnrestrictedReader and the allowed-user-groups mapping on AIAgent. Do not lower it
+         below the Umbraco.AI.Agent version that ships granular permissions. -->
+    <PackageVersion Update="Umbraco.AI.Agent.Startup" Version="[18.4.5, 18.999.999)" />
   </ItemGroup>
 </Project>

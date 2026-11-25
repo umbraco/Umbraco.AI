@@ -379,7 +379,7 @@ frontend criteria use Vitest.
   Acceptance: `Umbraco.AI.Prompt.Deploy.Tests.Unit` specs.
   depends-on: T28. parallel-group: E
 
-- [ ] **T42** - **wire: groups through a real Deploy export and import.** story: GP-17. The demo
+- [x] **T42** - **wire: groups through a real Deploy export and import.** story: GP-17. The demo
   site has no Umbraco.Deploy: add it locally for this check only, don't commit it.
   Acceptance: exporting an agent and a prompt limited to a custom group writes the alias into
   their artifacts; importing on a site with that group maps to its key; importing where the group

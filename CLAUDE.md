@@ -549,6 +549,8 @@ How `advisory-fix` handles a reported vulnerability in this package.
 - Read with: the Azure DevOps MCP server
 - Updates go to: a private Slack channel per advisory, named dxp-security-{ticket}
 - Security team needs: affected and fixed version ranges for each package
+- Approves release: the release date is approved in advance; the dev team pushes the release on that date
+- Advisory published by: InfoSec, once the release is out
 - Private fork: GitHub advisory fork
 
 ## Issue tracker

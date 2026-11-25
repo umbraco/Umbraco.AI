@@ -74,6 +74,8 @@ IAIAgentConfig? config = agentType switch
 **Standard config** (`AIStandardAgentConfig`):
 - ContextIds, Instructions, AllowedToolIds, AllowedToolScopeIds, UserGroupPermissions
 
+**Artifact property** `AllowedUserGroups`: user group aliases the agent is limited to (empty means everyone); older artifacts without it read as empty.
+
 **Orchestrated config** (`AIOrchestratedAgentConfig`):
 - WorkflowId, Settings (JsonElement)
 
@@ -203,6 +205,7 @@ private static IAIAgentConfig? DeserializeConfig(AIAgentType agentType, string? 
 - **Orchestrated agents require workflow code**: The deployment transfers the workflow ID and settings, but the workflow implementation must be registered in the target environment
 - **Standard agent config includes tool permissions**: AllowedToolIds, AllowedToolScopeIds, and UserGroupPermissions are all part of the serialized config
 - **UserGroupPermissions travel by user group alias**: user group keys differ per environment (Deploy doesn't transfer user groups), so export re-keys the dictionary by alias and import maps each alias back to the target's group. Artifacts from older versions are keyed by the source's group key, used as-is only if that group exists on the target. An entry matching no target group is dropped if it only allows tools, and **fails the import** if it denies any — silently dropping a deny would hand that group's users tools an administrator withheld. The source is authoritative: a redeploy replaces target-only edits.
+- **AllowedUserGroups travel by user group alias**: export lists each allowed group by alias and import maps each alias back to the target's group key. A missing alias always fails the import, before anything is saved: dropping it would widen who can use the agent.
 
 ## Related Documentation
 

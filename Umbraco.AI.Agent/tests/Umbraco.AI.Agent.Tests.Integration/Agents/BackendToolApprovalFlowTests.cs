@@ -124,7 +124,7 @@ public class BackendToolApprovalFlowTests
     /// </summary>
     private static ChatClientAgent CreateApprovalAgent(Action onExecute)
     {
-        var inner = AIFunctionFactory.Create(
+        var inner = Microsoft.Extensions.AI.AIFunctionFactory.Create(
             (string id) => { onExecute(); return $"deleted {id}"; },
             name: ToolName);
         var approvalFn = new ApprovalRequiredAIFunction(inner);
@@ -148,7 +148,7 @@ public class BackendToolApprovalFlowTests
     /// </summary>
     private static ChatClientAgent CreateDenyAllAgent(Action onExecute)
     {
-        var inner = AIFunctionFactory.Create(
+        var inner = Microsoft.Extensions.AI.AIFunctionFactory.Create(
             (string id) => { onExecute(); return $"deleted {id}"; },
             name: ToolName);
         var deniedFn = new ApprovalDeniedAIFunction(inner);

@@ -1,9 +1,14 @@
 using Moq;
+
 using Shouldly;
+
 using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.Cms.Core.Events;
+using Umbraco.Cms.Core.Security;
+
 using Xunit;
 
 namespace Umbraco.AI.Agent.Tests.Unit.Agents;
@@ -31,6 +36,7 @@ public class AIAgentServiceIdTests
             null!, // IAIGuardrailService
             null!, // IAIContextService
             Mock.Of<IEventAggregator>(),
+            new AIPermissionService(Mock.Of<IBackOfficeSecurityAccessor>()),
             null); // IBackOfficeSecurityAccessor
     }
 

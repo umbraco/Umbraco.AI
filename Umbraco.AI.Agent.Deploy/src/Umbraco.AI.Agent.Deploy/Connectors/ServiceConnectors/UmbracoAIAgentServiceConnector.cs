@@ -1,16 +1,19 @@
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Umbraco.AI.Agent.Core.Agents;
-using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Agent.Deploy.Artifacts;
+using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Deploy;
 using Umbraco.AI.Deploy.Configuration;
 using Umbraco.AI.Deploy.Connectors.ServiceConnectors;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Deploy;
+using Umbraco.Cms.Core.Models.Membership;
 using Umbraco.Cms.Core.Services;
 
 namespace Umbraco.AI.Agent.Deploy.Connectors.ServiceConnectors;
@@ -29,7 +32,8 @@ public class UmbracoAIAgentServiceConnector
 {
     private const string UserGroupPermissionsProperty = "userGroupPermissions";
 
-    private readonly IAIAgentService _agentService;
+    private readonly IAIAgentUnrestrictedReader _agentReader;
+    private readonly IAIAgentUnrestrictedWriter _agentWriter;
     private readonly IUserGroupService _userGroupService;
 
     /// <summary>
@@ -56,11 +60,32 @@ public class UmbracoAIAgentServiceConnector
         IAIProfileService profileService,
         UmbracoAIDeploySettingsAccessor settingsAccessor,
         IUserGroupService userGroupService)
+        : this(
+            profileService,
+            settingsAccessor,
+            userGroupService,
+            StaticServiceProvider.Instance.GetRequiredService<IAIAgentUnrestrictedReader>(),
+            StaticServiceProvider.Instance.GetRequiredService<IAIAgentUnrestrictedWriter>())
+    {
+    }
+
+    // Deploy runs with no signed-in user, so export and import read agents through the unrestricted
+    // reader: the per-user filter on IAIAgentService would hide limited agents. The reader is internal,
+    // so the public constructor above resolves it rather than taking it. Import saves through the unrestricted
+    // writer for the same reason: the user group rule must not depend on who started the import.
+    internal UmbracoAIAgentServiceConnector(
+        IAIProfileService profileService,
+        UmbracoAIDeploySettingsAccessor settingsAccessor,
+        IUserGroupService userGroupService,
+        IAIAgentUnrestrictedReader agentReader,
+        IAIAgentUnrestrictedWriter agentWriter)
         : base(profileService, settingsAccessor)
     {
-        _agentService = agentService;
         _userGroupService = userGroupService;
+        _agentReader = agentReader;
+        _agentWriter = agentWriter;
     }
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -91,12 +116,12 @@ public class UmbracoAIAgentServiceConnector
 
     /// <inheritdoc />
     public override Task<AIAgent?> GetEntityAsync(Guid id, CancellationToken cancellationToken = default)
-        => _agentService.GetAgentAsync(id, cancellationToken);
+        => _agentReader.GetAgentUnrestrictedAsync(id, cancellationToken);
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<AIAgent> GetEntitiesAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var agents = await _agentService.GetAgentsAsync(cancellationToken);
+        var agents = await _agentReader.GetAgentsUnrestrictedAsync(cancellationToken);
         foreach (var agent in agents)
         {
             yield return agent;
@@ -161,6 +186,7 @@ public class UmbracoAIAgentServiceConnector
             SurfaceIds = entity.SurfaceIds.ToList(),
             Scope = entity.Scope != null ? JsonSerializer.SerializeToElement(entity.Scope) : null,
             StarterPrompts = entity.StarterPrompts.ToList(),
+            AllowedUserGroups = await UmbracoAIUserGroupMapper.GetAliasesAsync(_userGroupService, entity.AllowedUserGroupIds),
             IsActive = entity.IsActive
         };
 
@@ -212,6 +238,9 @@ public class UmbracoAIAgentServiceConnector
             : artifact.Config;
         IAIAgentConfig? config = DeserializeConfig(agentType, configJson);
 
+        // Map before anything is saved, so a missing group fails the import and changes nothing
+        var allowedUserGroupIds = await UmbracoAIUserGroupMapper.GetTargetKeysAsync(_userGroupService, artifact.AllowedUserGroups, "agent", artifact.Alias);
+
         // Get or create agent entity
         var agent = state.Entity
             ?? new AIAgent(artifact.Udi.Guid)
@@ -240,9 +269,10 @@ public class UmbracoAIAgentServiceConnector
                 ? p with { Prompt = p.Prompt[..MaxStarterPromptLength] }
                 : p)
             .ToList();
+        agent.AllowedUserGroupIds = allowedUserGroupIds;
         agent.IsActive = artifact.IsActive;
 
-        state.Entity = await _agentService.SaveAgentAsync(agent, cancellationToken);
+        state.Entity = await _agentWriter.SaveAgentUnrestrictedAsync(agent, cancellationToken);
     }
 
     /// <summary>
@@ -261,10 +291,7 @@ public class UmbracoAIAgentServiceConnector
         foreach ((string key, JsonNode? value) in permissions.ToList())
         {
             permissions.Remove(key);
-            var userGroup = Guid.TryParse(key, out Guid userGroupKey)
-                ? await _userGroupService.GetAsync(userGroupKey)
-                : null;
-            rekeyed[userGroup?.Alias ?? key] = value;
+            rekeyed[await GetUserGroupAliasAsync(key)] = value;
         }
 
         config[UserGroupPermissionsProperty] = rekeyed;
@@ -292,9 +319,7 @@ public class UmbracoAIAgentServiceConnector
         foreach ((string key, JsonNode? value) in permissions.ToList())
         {
             permissions.Remove(key);
-            var userGroup = Guid.TryParse(key, out Guid userGroupKey)
-                ? await _userGroupService.GetAsync(userGroupKey)
-                : await _userGroupService.GetAsync(key);
+            var userGroup = await FindTargetUserGroupAsync(key);
 
             if (userGroup is not null)
             {
@@ -313,6 +338,12 @@ public class UmbracoAIAgentServiceConnector
         config[UserGroupPermissionsProperty] = rekeyed;
         return config.ToJsonString();
     }
+
+    private Task<string> GetUserGroupAliasAsync(string userGroupKey)
+        => UmbracoAIUserGroupMapper.GetAliasAsync(_userGroupService, userGroupKey);
+
+    private Task<IUserGroup?> FindTargetUserGroupAsync(string aliasOrKey)
+        => UmbracoAIUserGroupMapper.FindTargetAsync(_userGroupService, aliasOrKey);
 
     private static bool HasDenies(JsonNode? permissions)
     {

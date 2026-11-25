@@ -14,7 +14,7 @@ namespace Umbraco.AI.Web.Api.Management.AuditLog.Controllers;
 /// Controller to get all audit-log logs with filtering and pagination.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ViewAuditLogsAI)]
 public class AllAuditLogController : AuditLogControllerBase
 {
     private readonly IAIAuditLogService _auditLogService;

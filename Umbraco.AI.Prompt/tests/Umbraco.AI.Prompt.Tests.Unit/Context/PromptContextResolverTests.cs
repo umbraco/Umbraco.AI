@@ -1,10 +1,14 @@
 using Moq;
+
 using Shouldly;
+
 using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Prompt.Core.Context;
 using Umbraco.AI.Prompt.Core.Prompts;
+
 using Xunit;
+
 using CoreConstants = Umbraco.AI.Core.Constants;
 using PromptConstants = Umbraco.AI.Prompt.Core.Constants;
 
@@ -18,7 +22,7 @@ namespace Umbraco.AI.Prompt.Tests.Unit.Context;
 public class PromptContextResolverTests
 {
     private readonly Mock<IAIContextService> _contextServiceMock = new();
-    private readonly Mock<IAIPromptService> _promptServiceMock = new();
+    private readonly Mock<IAIPromptUnrestrictedReader> _promptServiceMock = new();
     private readonly Mock<IAIRuntimeContextAccessor> _runtimeContextAccessorMock = new();
 
     [Fact]
@@ -40,7 +44,7 @@ public class PromptContextResolverTests
         result.Resources.ShouldBeEmpty();
         result.Sources.ShouldBeEmpty();
         _promptServiceMock.Verify(
-            x => x.GetPromptAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            x => x.GetPromptUnrestrictedAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
             Times.Never);
         _contextServiceMock.Verify(
             x => x.GetContextAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),

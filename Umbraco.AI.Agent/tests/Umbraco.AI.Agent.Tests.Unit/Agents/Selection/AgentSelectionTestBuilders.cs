@@ -7,23 +7,28 @@ using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+
 using Moq;
-using Umbraco.AI.AGUI.Events;
-using Umbraco.AI.AGUI.Models;
-using Umbraco.AI.Agent.Core.AGUI;
+
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Core.Agents.Selection;
+using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
 using Umbraco.AI.Agent.Core.Surfaces;
+using Umbraco.AI.AGUI.Events;
+using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.Tools;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Models.Membership;
 using Umbraco.Cms.Core.Security;
+
 using Xunit;
+
 using CoreConstants = Umbraco.AI.Core.Constants;
 using MsAIAgent = Microsoft.Agents.AI.AIAgent;
 using UmbracoAIAgent = Umbraco.AI.Agent.Core.Agents.AIAgent;
@@ -319,6 +324,7 @@ internal static class AgentSelectionTestBuilders
                 null!, // IAIGuardrailService
                 null!, // IAIContextService
                 Mock.Of<IEventAggregator>(),
+                new AIPermissionService(Mock.Of<IBackOfficeSecurityAccessor>()),
                 backOfficeSecurityAccessor: null);
         }
 
@@ -382,6 +388,7 @@ internal static class AgentSelectionTestBuilders
                     null!, // IAIGuardrailService
                     null!, // IAIContextService
                     Mock.Of<IEventAggregator>(),
+                    new AIPermissionService(Mock.Of<IBackOfficeSecurityAccessor>()),
                     backOfficeSecurityAccessor: null);
 
                 var services = new ServiceCollection();

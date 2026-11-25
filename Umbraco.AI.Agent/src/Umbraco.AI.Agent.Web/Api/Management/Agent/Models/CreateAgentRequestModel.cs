@@ -51,6 +51,11 @@ public class CreateAgentRequestModel
     public IEnumerable<string>? SurfaceIds { get; init; }
 
     /// <summary>
+    /// Keys of the user groups allowed to use this agent. Empty or missing means everyone.
+    /// </summary>
+    public IEnumerable<Guid>? AllowedUserGroupIds { get; init; }
+
+    /// <summary>
     /// Optional scope defining where this agent is available.
     /// If null, agent is available in all contexts (backwards compatible).
     /// </summary>

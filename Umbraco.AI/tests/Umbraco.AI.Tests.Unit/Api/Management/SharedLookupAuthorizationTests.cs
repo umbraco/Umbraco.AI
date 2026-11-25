@@ -1,10 +1,10 @@
-using System.Reflection;
-using Microsoft.AspNetCore.Authorization;
 using Umbraco.AI.Web.Api.Management.Context.Controllers;
 using Umbraco.AI.Web.Api.Management.ContextResourceTypes.Controllers;
 using Umbraco.AI.Web.Api.Management.Profile.Controllers;
 using Umbraco.AI.Web.Authorization;
 using Umbraco.Cms.Web.Common.Authorization;
+
+using static Umbraco.AI.Tests.Unit.Api.Management.AIAuthorizationTestHelper;
 
 namespace Umbraco.AI.Tests.Unit.Api.Management;
 
@@ -61,10 +61,4 @@ public class SharedLookupAuthorizationTests
         // Assert
         policies.ShouldContain(AIAuthorizationPolicies.SectionAccessAI);
     }
-
-    private static List<string?> GetPolicies(Type controllerType)
-        => controllerType
-            .GetCustomAttributes<AuthorizeAttribute>(inherit: true)
-            .Select(a => a.Policy)
-            .ToList();
 }

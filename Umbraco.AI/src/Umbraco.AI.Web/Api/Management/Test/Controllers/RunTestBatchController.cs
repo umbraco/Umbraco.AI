@@ -13,7 +13,7 @@ namespace Umbraco.AI.Web.Api.Management.Test.Controllers;
 /// Controller to execute multiple tests in batch.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ManageTestsAI)]
 public class RunTestBatchController : TestControllerBase
 {
     private readonly IAITestService _testService;

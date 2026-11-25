@@ -46,13 +46,24 @@ public class StreamAgentController : AgentControllerBase
     [Produces("text/event-stream")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IResult> StreamAgent(
         IdOrAlias agentIdOrAlias,
         RunAgentRequestModel requestModel,
         CancellationToken cancellationToken = default)
     {
-        var agentId = await _agentService.TryGetAgentIdAsync(agentIdOrAlias, cancellationToken);
+        // Checked before the response starts: the stream only reports a refusal after the headers are sent.
+        Guid? agentId;
+        try
+        {
+            agentId = await _agentService.TryGetAgentIdForUseAsync(agentIdOrAlias, cancellationToken);
+        }
+        catch (AIAgentNotAvailableException)
+        {
+            return Results.Problem(AgentNotAvailableProblem());
+        }
+
         if (agentId is null)
         {
             return Results.NotFound(new ProblemDetails

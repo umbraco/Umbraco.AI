@@ -98,6 +98,7 @@ public static partial class UmbracoBuilderExtensions
 
         // Security infrastructure
         services.AddSingleton<IAISensitiveFieldProtector, AISensitiveFieldProtector>();
+        services.AddSingleton<IAIPermissionService, AIPermissionService>();
 
         // Provider infrastructure
         services.AddSingleton<IAICapabilityFactory, AICapabilityFactory>();

@@ -3,6 +3,7 @@ using Microsoft.OpenApi;
 using Umbraco.AI.Agent.Core.FileStore;
 using Umbraco.AI.Agent.Web.Api.Management.File;
 using Umbraco.AI.Agent.Web.Api.Management.Agent.Mapping;
+using Umbraco.AI.Agent.Web.Authorization;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Mapping;
 using Umbraco.AI.Extensions;
@@ -23,6 +24,9 @@ public static class UmbracoBuilderExtensions
     {
         // Register file URL provider for serving uploaded files
         builder.Services.AddSingleton<IAIFileUrlProvider, AIFileUrlProvider>();
+
+        // Declare this add-on's own permission policy; core keeps no list of add-on rights
+        builder.Services.AddAuthorization(AIAgentAuthorizationPolicies.Register);
 
         // Register map definitions
         builder.WithCollectionBuilder<MapDefinitionCollectionBuilder>()

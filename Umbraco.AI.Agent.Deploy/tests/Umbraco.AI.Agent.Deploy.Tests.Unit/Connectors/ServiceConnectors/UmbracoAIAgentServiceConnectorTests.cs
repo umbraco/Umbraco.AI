@@ -4,40 +4,69 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Moq;
+
 using Shouldly;
+
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Deploy.Artifacts;
 using Umbraco.AI.Agent.Deploy.Connectors.ServiceConnectors;
-using Umbraco.AI.Deploy.Configuration;
 using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Deploy.Configuration;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Deploy;
 using Umbraco.Cms.Core.Services;
+
 using Xunit;
 
 namespace Umbraco.AI.Agent.Deploy.Tests.Unit.Connectors.ServiceConnectors;
 
 public class UmbracoAIAgentServiceConnectorTests
 {
-    private readonly Mock<IAIAgentService> _agentServiceMock;
+    private readonly Mock<IAIAgentUnrestrictedWriter> _agentServiceMock;
+    private readonly Mock<IAIAgentUnrestrictedReader> _agentReaderMock;
     private readonly Mock<IAIProfileService> _profileServiceMock;
     private readonly Mock<UmbracoAIDeploySettingsAccessor> _settingsAccessorMock;
     private readonly UmbracoAIAgentServiceConnector _connector;
 
     public UmbracoAIAgentServiceConnectorTests()
     {
-        _agentServiceMock = new Mock<IAIAgentService>();
+        _agentServiceMock = new Mock<IAIAgentUnrestrictedWriter>();
+        _agentReaderMock = new Mock<IAIAgentUnrestrictedReader>();
         _profileServiceMock = new Mock<IAIProfileService>();
         _settingsAccessorMock = new Mock<UmbracoAIDeploySettingsAccessor>(MockBehavior.Strict, null!);
 
         _settingsAccessorMock.Setup(x => x.Settings).Returns(new UmbracoAIDeploySettings());
 
         _connector = new UmbracoAIAgentServiceConnector(
-            _agentServiceMock.Object,
             _profileServiceMock.Object,
             _settingsAccessorMock.Object,
-            new Mock<IUserGroupService>().Object);
+            new Mock<IUserGroupService>().Object,
+            _agentReaderMock.Object,
+            _agentServiceMock.Object);
+    }
+
+    [Fact]
+    public async Task GetEntityAsync_ReadsThroughTheUnrestrictedReader_SoALimitedAgentIsStillFound()
+    {
+        var limited = new AIAgent { Id = Guid.NewGuid(), Alias = "limited", Name = "Limited", AllowedUserGroupIds = [Guid.NewGuid()] };
+        _agentReaderMock.Setup(x => x.GetAgentUnrestrictedAsync(limited.Id, It.IsAny<CancellationToken>())).ReturnsAsync(limited);
+
+        var found = await _connector.GetEntityAsync(limited.Id);
+
+        found.ShouldBeSameAs(limited);
+    }
+
+    [Fact]
+    public async Task GetEntitiesAsync_ReadsThroughTheUnrestrictedReader_SoALimitedAgentIsStillExported()
+    {
+        var limited = new AIAgent { Id = Guid.NewGuid(), Alias = "limited", Name = "Limited", AllowedUserGroupIds = [Guid.NewGuid()] };
+        _agentReaderMock.Setup(x => x.GetAgentsUnrestrictedAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new[] { limited });
+
+        var exported = await _connector.GetEntitiesAsync().ToListAsync();
+
+        exported.ShouldBe([limited]);
     }
 
     [Fact]
@@ -229,8 +258,8 @@ public class UmbracoAIAgentServiceConnectorTests
             ProfileId = null
         };
 
-        _agentServiceMock
-            .Setup(x => x.GetAgentAsync(agentId, It.IsAny<CancellationToken>()))
+        _agentReaderMock
+            .Setup(x => x.GetAgentUnrestrictedAsync(agentId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(agent);
 
         // Act
@@ -289,7 +318,7 @@ public class UmbracoAIAgentServiceConnectorTests
 
         AIAgent? savedAgent = null;
         _agentServiceMock
-            .Setup(x => x.SaveAgentAsync(It.IsAny<AIAgent>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.SaveAgentUnrestrictedAsync(It.IsAny<AIAgent>(), It.IsAny<CancellationToken>()))
             .Callback<AIAgent, CancellationToken>((a, _) => savedAgent = a)
             .ReturnsAsync((AIAgent a, CancellationToken _) => a);
 
@@ -326,7 +355,7 @@ public class UmbracoAIAgentServiceConnectorTests
 
         AIAgent? savedAgent = null;
         _agentServiceMock
-            .Setup(x => x.SaveAgentAsync(It.IsAny<AIAgent>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.SaveAgentUnrestrictedAsync(It.IsAny<AIAgent>(), It.IsAny<CancellationToken>()))
             .Callback<AIAgent, CancellationToken>((a, _) => savedAgent = a)
             .ReturnsAsync((AIAgent a, CancellationToken _) => a);
 
@@ -362,7 +391,7 @@ public class UmbracoAIAgentServiceConnectorTests
 
         AIAgent? savedAgent = null;
         _agentServiceMock
-            .Setup(x => x.SaveAgentAsync(It.IsAny<AIAgent>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.SaveAgentUnrestrictedAsync(It.IsAny<AIAgent>(), It.IsAny<CancellationToken>()))
             .Callback<AIAgent, CancellationToken>((a, _) => savedAgent = a)
             .ReturnsAsync((AIAgent a, CancellationToken _) => a);
 

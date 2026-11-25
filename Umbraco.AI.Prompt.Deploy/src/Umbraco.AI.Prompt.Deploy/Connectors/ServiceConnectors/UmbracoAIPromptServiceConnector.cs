@@ -1,13 +1,18 @@
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+
+using Microsoft.Extensions.DependencyInjection;
+
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Deploy;
 using Umbraco.AI.Deploy.Configuration;
 using Umbraco.AI.Deploy.Connectors.ServiceConnectors;
-using Umbraco.AI.Prompt.Deploy.Artifacts;
 using Umbraco.AI.Prompt.Core.Prompts;
+using Umbraco.AI.Prompt.Deploy.Artifacts;
 using Umbraco.Cms.Core;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Deploy;
+using Umbraco.Cms.Core.Services;
 
 namespace Umbraco.AI.Prompt.Deploy.Connectors.ServiceConnectors;
 
@@ -15,14 +20,63 @@ namespace Umbraco.AI.Prompt.Deploy.Connectors.ServiceConnectors;
 /// Service connector for Umbraco AI Prompts, responsible for connecting the deployment process to the IAIPromptService to retrieve and save prompts during deployment.
 /// </summary>
 [UdiDefinition(UmbracoAIPromptConstants.UdiEntityType.Prompt, UdiType.GuidUdi)]
-public class UmbracoAIPromptServiceConnector(
-    IAIPromptService promptService,
-    IAIProfileService profileService,
-    UmbracoAIDeploySettingsAccessor settingsAccessor)
-    : UmbracoAIProfileDependentEntityServiceConnectorBase<AIPromptArtifact, AIPrompt>(
-        profileService,
-        settingsAccessor)
+public class UmbracoAIPromptServiceConnector
+    : UmbracoAIProfileDependentEntityServiceConnectorBase<AIPromptArtifact, AIPrompt>
 {
+    private readonly IAIPromptUnrestrictedReader _promptReader;
+    private readonly IAIPromptUnrestrictedWriter _promptWriter;
+    private readonly IUserGroupService _userGroupService;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UmbracoAIPromptServiceConnector"/> class.
+    /// </summary>
+    [Obsolete("Use the constructor that accepts an IUserGroupService. Will be removed in v20.")]
+    public UmbracoAIPromptServiceConnector(
+        IAIPromptService promptService,
+        IAIProfileService profileService,
+        UmbracoAIDeploySettingsAccessor settingsAccessor)
+        : this(
+            promptService,
+            profileService,
+            settingsAccessor,
+            StaticServiceProvider.Instance.GetRequiredService<IUserGroupService>())
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UmbracoAIPromptServiceConnector"/> class.
+    /// </summary>
+    public UmbracoAIPromptServiceConnector(
+        IAIPromptService promptService,
+        IAIProfileService profileService,
+        UmbracoAIDeploySettingsAccessor settingsAccessor,
+        IUserGroupService userGroupService)
+        : this(
+            profileService,
+            settingsAccessor,
+            userGroupService,
+            StaticServiceProvider.Instance.GetRequiredService<IAIPromptUnrestrictedReader>(),
+            StaticServiceProvider.Instance.GetRequiredService<IAIPromptUnrestrictedWriter>())
+    {
+    }
+
+    // Deploy runs with no signed-in user, so export and import read prompts through the unrestricted
+    // reader: the per-user filter on IAIPromptService would hide limited prompts. The reader is internal,
+    // so the public constructor above resolves it rather than taking it. Import saves through the unrestricted
+    // writer for the same reason: the user group rule must not depend on who started the import.
+    internal UmbracoAIPromptServiceConnector(
+        IAIProfileService profileService,
+        UmbracoAIDeploySettingsAccessor settingsAccessor,
+        IUserGroupService userGroupService,
+        IAIPromptUnrestrictedReader promptReader,
+        IAIPromptUnrestrictedWriter promptWriter)
+        : base(profileService, settingsAccessor)
+    {
+        _promptReader = promptReader;
+        _promptWriter = promptWriter;
+        _userGroupService = userGroupService;
+    }
+
     /// <inheritdoc />
     protected override string[] ValidOpenSelectors => ["this", "this-and-descendants", "descendants"];
 
@@ -34,12 +88,12 @@ public class UmbracoAIPromptServiceConnector(
 
     /// <inheritdoc />
     public override Task<AIPrompt?> GetEntityAsync(Guid id, CancellationToken cancellationToken = default)
-        => promptService.GetPromptAsync(id, cancellationToken);
+        => _promptReader.GetPromptUnrestrictedAsync(id, cancellationToken);
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<AIPrompt> GetEntitiesAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var prompts = await promptService.GetPromptsAsync(cancellationToken);
+        var prompts = await _promptReader.GetPromptsUnrestrictedAsync(cancellationToken);
         foreach (var prompt in prompts)
         {
             yield return prompt;
@@ -51,12 +105,12 @@ public class UmbracoAIPromptServiceConnector(
         => entity.Name;
 
     /// <inheritdoc />
-    public override Task<AIPromptArtifact?> GetArtifactAsync(
+    public override async Task<AIPromptArtifact?> GetArtifactAsync(
         GuidUdi udi,
         AIPrompt? entity,
         CancellationToken cancellationToken = default)
     {
-        if (entity == null) return Task.FromResult<AIPromptArtifact?>(null);
+        if (entity == null) return null;
 
         var dependencies = new ArtifactDependencyCollection();
 
@@ -86,6 +140,7 @@ public class UmbracoAIPromptServiceConnector(
             ProfileUdi = profileUdi,
             ContextIds = entity.ContextIds.ToList(),
             GuardrailIds = entity.GuardrailIds.ToList(),
+            AllowedUserGroups = await UmbracoAIUserGroupMapper.GetAliasesAsync(_userGroupService, entity.AllowedUserGroupIds),
             Tags = entity.Tags.ToList(),
             IsActive = entity.IsActive,
             IncludeEntityContext = entity.IncludeEntityContext,
@@ -93,7 +148,7 @@ public class UmbracoAIPromptServiceConnector(
             Scope = entity.Scope != null ? JsonSerializer.SerializeToElement(entity.Scope) : null
         };
 
-        return Task.FromResult<AIPromptArtifact?>(artifact);
+        return artifact;
     }
 
     /// <inheritdoc />
@@ -130,6 +185,9 @@ public class UmbracoAIPromptServiceConnector(
             scope = artifact.Scope.Value.Deserialize<AIPromptScope>();
         }
 
+        // Resolve the allowed user groups before anything is saved, so a missing group fails the import
+        var allowedUserGroupIds = await UmbracoAIUserGroupMapper.GetTargetKeysAsync(_userGroupService, artifact.AllowedUserGroups, "prompt", artifact.Alias);
+
         // Get or create prompt entity
         var prompt = state.Entity
             ?? new AIPrompt(artifact.Udi.Guid)
@@ -147,12 +205,13 @@ public class UmbracoAIPromptServiceConnector(
         prompt.Instructions = artifact.Instructions;
         prompt.ContextIds = artifact.ContextIds.ToList();
         prompt.GuardrailIds = artifact.GuardrailIds.ToList();
+        prompt.AllowedUserGroupIds = allowedUserGroupIds;
         prompt.Tags = artifact.Tags.ToList();
         prompt.IsActive = artifact.IsActive;
         prompt.IncludeEntityContext = artifact.IncludeEntityContext;
         prompt.OptionCount = artifact.OptionCount;
         prompt.Scope = scope;
 
-        state.Entity = await promptService.SavePromptAsync(prompt, cancellationToken);
+        state.Entity = await _promptWriter.SavePromptUnrestrictedAsync(prompt, cancellationToken);
     }
 }

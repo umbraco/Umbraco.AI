@@ -5,6 +5,8 @@ import {
 } from "../constants.js";
 import { auditLogDetailsModalManifests } from "./modals/manifests.ts";
 import { auditLogBulkActionManifests } from "./bulk-action/manifests.js";
+import { withAreaPermission } from "../../permissions/area-conditions.js";
+import { UAI_PERMISSION_VERB_MANAGE_SETTINGS } from "../../permissions/constants.js";
 
 export const auditLogCollectionManifests: Array<UmbExtensionManifest> = [
     {
@@ -30,5 +32,6 @@ export const auditLogCollectionManifests: Array<UmbExtensionManifest> = [
         conditions: [{ alias: "Umb.Condition.CollectionAlias", match: UAI_AUDIT_LOG_COLLECTION_ALIAS }],
     },
     ...auditLogDetailsModalManifests,
-    ...auditLogBulkActionManifests,
+    // Deleting log entries needs Manage settings on top of View logs (the endpoint does too).
+    ...withAreaPermission(UAI_PERMISSION_VERB_MANAGE_SETTINGS, auditLogBulkActionManifests),
 ];

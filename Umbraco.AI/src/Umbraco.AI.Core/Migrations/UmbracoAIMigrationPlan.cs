@@ -30,6 +30,7 @@ public class UmbracoAIMigrationPlan : PackageMigrationPlan
     {
         From("{uai-init-state}")
             .To<AddAISectionToAdminGroup>("E2043C98-2791-46CD-8E6E-4C01B985D4C0")
-            .To<MigrateAISectionAlias>("A7F3B1D2-9E4C-4A8F-B6D5-2C1E8F0A3B7D");
+            .To<MigrateAISectionAlias>("A7F3B1D2-9E4C-4A8F-B6D5-2C1E8F0A3B7D")
+            .To<GrantAIPermissionsToSectionGroups>("147AE3B8-E7D7-4A4D-8402-389A400E463E");
     }
 }

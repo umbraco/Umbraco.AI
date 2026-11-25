@@ -3,6 +3,7 @@ using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Core.Contexts.Resolvers;
 using Umbraco.AI.Core.RuntimeContext;
+
 using CoreConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Agent.Core.Context;
@@ -18,7 +19,7 @@ internal sealed class AgentContextResolver : IAIContextResolver
 {
     private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAIContextService _contextService;
-    private readonly IAIAgentService _agentService;
+    private readonly IAIAgentUnrestrictedReader _agentService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AgentContextResolver"/> class.
@@ -29,7 +30,7 @@ internal sealed class AgentContextResolver : IAIContextResolver
     public AgentContextResolver(
         IAIRuntimeContextAccessor runtimeContextAccessor,
         IAIContextService contextService,
-        IAIAgentService agentService)
+        IAIAgentUnrestrictedReader agentService)
     {
         _runtimeContextAccessor = runtimeContextAccessor;
         _contextService = contextService;
@@ -52,7 +53,7 @@ internal sealed class AgentContextResolver : IAIContextResolver
             return AIContextResolverResult.Empty;
         }
 
-        var agent = await _agentService.GetAgentAsync(agentId.Value, cancellationToken);
+        var agent = await _agentService.GetAgentUnrestrictedAsync(agentId.Value, cancellationToken);
 
         if (agent is null)
         {

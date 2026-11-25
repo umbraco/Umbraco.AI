@@ -29,8 +29,9 @@ internal static class AIAgentEntityFactory
             AgentType = agentType,
             Config = AIAgentConfigSerializer.Deserialize(agentType, entity.Config),
             ProfileId = entity.ProfileId,
-            GuardrailIds = DeserializeGuardrailIds(entity.GuardrailIds),
+            GuardrailIds = DeserializeGuidList(entity.GuardrailIds),
             SurfaceIds = DeserializeSurfaceIds(entity.SurfaceIds),
+            AllowedUserGroupIds = DeserializeGuidList(entity.AllowedUserGroupIds),
             Scope = DeserializeScope(entity.Scope),
             StarterPrompts = DeserializeStarterPrompts(entity.StarterPrompts),
             IsActive = entity.IsActive,
@@ -56,8 +57,9 @@ internal static class AIAgentEntityFactory
             AgentType = (int)aiAgent.AgentType,
             Config = AIAgentConfigSerializer.Serialize(aiAgent.Config),
             ProfileId = aiAgent.ProfileId,
-            GuardrailIds = SerializeGuardrailIds(aiAgent.GuardrailIds),
+            GuardrailIds = SerializeGuidList(aiAgent.GuardrailIds),
             SurfaceIds = SerializeSurfaceIds(aiAgent.SurfaceIds),
+            AllowedUserGroupIds = SerializeGuidList(aiAgent.AllowedUserGroupIds),
             Scope = SerializeScope(aiAgent.Scope),
             StarterPrompts = SerializeStarterPrompts(aiAgent.StarterPrompts),
             IsActive = aiAgent.IsActive,
@@ -80,8 +82,9 @@ internal static class AIAgentEntityFactory
         // AgentType is intentionally not updated (immutable after creation)
         entity.Config = AIAgentConfigSerializer.Serialize(aiAgent.Config);
         entity.ProfileId = aiAgent.ProfileId;
-        entity.GuardrailIds = SerializeGuardrailIds(aiAgent.GuardrailIds);
+        entity.GuardrailIds = SerializeGuidList(aiAgent.GuardrailIds);
         entity.SurfaceIds = SerializeSurfaceIds(aiAgent.SurfaceIds);
+        entity.AllowedUserGroupIds = SerializeGuidList(aiAgent.AllowedUserGroupIds);
         entity.Scope = SerializeScope(aiAgent.Scope);
         entity.StarterPrompts = SerializeStarterPrompts(aiAgent.StarterPrompts);
         entity.IsActive = aiAgent.IsActive;
@@ -91,17 +94,17 @@ internal static class AIAgentEntityFactory
         // DateCreated and CreatedByUserId are intentionally not updated
     }
 
-    private static string? SerializeGuardrailIds(IReadOnlyList<Guid> guardrailIds)
+    private static string? SerializeGuidList(IReadOnlyList<Guid> ids)
     {
-        if (guardrailIds.Count == 0)
+        if (ids.Count == 0)
         {
             return null;
         }
 
-        return JsonSerializer.Serialize(guardrailIds, JsonOptions);
+        return JsonSerializer.Serialize(ids, JsonOptions);
     }
 
-    private static IReadOnlyList<Guid> DeserializeGuardrailIds(string? json)
+    private static IReadOnlyList<Guid> DeserializeGuidList(string? json)
     {
         if (string.IsNullOrWhiteSpace(json))
         {

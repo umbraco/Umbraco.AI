@@ -24,4 +24,13 @@
         <ProjectReference Include="..\Umbraco.AI.Prompt.Core\Umbraco.AI.Prompt.Core.csproj" />
         <ProjectReference Include="..\Umbraco.AI.Prompt.Persistence\Umbraco.AI.Prompt.Persistence.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>Umbraco.AI.Prompt.Tests.Unit</_Parameter1>
+        </AssemblyAttribute>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>Umbraco.AI.Prompt.Tests.Integration</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
 </Project>

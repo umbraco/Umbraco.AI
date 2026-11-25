@@ -1,11 +1,15 @@
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+
 using Moq;
+
 using Shouldly;
+
 using Umbraco.AI.Agent.Core;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Automate.Actions;
+using Umbraco.AI.Automate.Security;
 using Umbraco.AI.Core.Media;
 using Umbraco.AI.Core.Providers.Errors;
 using Umbraco.Automate.Core.Actions;
@@ -13,7 +17,9 @@ using Umbraco.Automate.Core.Security;
 using Umbraco.Automate.Core.Settings;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Services;
+
 using Xunit;
+
 using AIAgent = Umbraco.AI.Agent.Core.Agents.AIAgent;
 using CoreConstants = Umbraco.AI.Core.Constants;
 
@@ -23,6 +29,8 @@ public class RunAgentActionTests
 {
     private readonly Mock<IAIAgentService> _agentServiceMock = new();
     private readonly Mock<IUserService> _userServiceMock = new();
+    private readonly Mock<IAIAgentUnrestrictedReader> _readerMock = new();
+    private readonly Mock<IWorkspaceServiceAccountResolver> _serviceAccountResolverMock = new();
     private readonly Mock<IMediaService> _mediaServiceMock = new();
     private readonly Mock<IAIUmbracoMediaResolver> _mediaResolverMock = new();
     private readonly Mock<IAutomationActionAuthorizer> _authorizerMock = new();
@@ -53,13 +61,11 @@ public class RunAgentActionTests
         var responseMessage = new ChatMessage(ChatRole.Assistant, "Hello from agent!");
         var agentResponse = new AgentResponse(responseMessage);
 
-        _agentServiceMock
-            .Setup(s => s.GetAgentAsync(TestAgentId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(agent);
+        SetupAgent(TestAgentId, agent);
 
         _agentServiceMock
             .Setup(s => s.RunAgentAsync(
-                agent.Id,
+                It.IsAny<Guid>(),
                 It.IsAny<IEnumerable<ChatMessage>>(),
                 It.IsAny<AIAgentExecutionOptions?>(),
                 It.IsAny<CancellationToken>()))
@@ -93,13 +99,11 @@ public class RunAgentActionTests
         var responseMessage = new ChatMessage(ChatRole.Assistant, "Hello from agent!");
         var agentResponse = new AgentResponse(responseMessage);
 
-        _agentServiceMock
-            .Setup(s => s.GetAgentAsync(TestAgentId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(agent);
+        SetupAgent(TestAgentId, agent);
 
         _agentServiceMock
             .Setup(s => s.RunAgentAsync(
-                agent.Id,
+                It.IsAny<Guid>(),
                 It.IsAny<IEnumerable<ChatMessage>>(),
                 It.IsAny<AIAgentExecutionOptions?>(),
                 It.IsAny<CancellationToken>()))
@@ -135,14 +139,12 @@ public class RunAgentActionTests
         var agentResponse = new AgentResponse(responseMessage);
         var automationRunId = Guid.NewGuid();
 
-        _agentServiceMock
-            .Setup(s => s.GetAgentAsync(TestAgentId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(agent);
+        SetupAgent(TestAgentId, agent);
 
         AIAgentExecutionOptions? capturedOptions = null;
         _agentServiceMock
             .Setup(s => s.RunAgentAsync(
-                agent.Id,
+                It.IsAny<Guid>(),
                 It.IsAny<IEnumerable<ChatMessage>>(),
                 It.IsAny<AIAgentExecutionOptions?>(),
                 It.IsAny<CancellationToken>()))
@@ -195,14 +197,12 @@ public class RunAgentActionTests
             Name = "Test Agent",
         };
 
-        _agentServiceMock
-            .Setup(s => s.GetAgentAsync(TestAgentId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(agent);
+        SetupAgent(TestAgentId, agent);
 
         AIAgentExecutionOptions? capturedOptions = null;
         _agentServiceMock
             .Setup(s => s.RunAgentAsync(
-                agent.Id,
+                It.IsAny<Guid>(),
                 It.IsAny<IEnumerable<ChatMessage>>(),
                 It.IsAny<AIAgentExecutionOptions?>(),
                 It.IsAny<CancellationToken>()))
@@ -242,13 +242,11 @@ public class RunAgentActionTests
         var responseMessage = new ChatMessage(ChatRole.Assistant, jsonResponse);
         var agentResponse = new AgentResponse(responseMessage);
 
-        _agentServiceMock
-            .Setup(s => s.GetAgentAsync(TestAgentId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(agent);
+        SetupAgent(TestAgentId, agent);
 
         _agentServiceMock
             .Setup(s => s.RunAgentAsync(
-                agent.Id,
+                It.IsAny<Guid>(),
                 It.IsAny<IEnumerable<ChatMessage>>(),
                 It.IsAny<AIAgentExecutionOptions?>(),
                 It.IsAny<CancellationToken>()))
@@ -299,9 +297,7 @@ public class RunAgentActionTests
         // Arrange
         var agentId = Guid.NewGuid();
 
-        _agentServiceMock
-            .Setup(s => s.GetAgentAsync(agentId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AIAgent?)null);
+        SetupAgent(agentId, (AIAgent?)null);
 
         var action = CreateAction();
         var context = CreateContext(new RunAgentSettings
@@ -328,13 +324,11 @@ public class RunAgentActionTests
             Name = "Test Agent",
         };
 
-        _agentServiceMock
-            .Setup(s => s.GetAgentAsync(TestAgentId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(agent);
+        SetupAgent(TestAgentId, agent);
 
         _agentServiceMock
             .Setup(s => s.RunAgentAsync(
-                agent.Id,
+                It.IsAny<Guid>(),
                 It.IsAny<IEnumerable<ChatMessage>>(),
                 It.IsAny<AIAgentExecutionOptions?>(),
                 It.IsAny<CancellationToken>()))
@@ -371,9 +365,7 @@ public class RunAgentActionTests
             Name = "Test Agent",
         };
 
-        _agentServiceMock
-            .Setup(s => s.GetAgentAsync(TestAgentId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(agent);
+        SetupAgent(TestAgentId, agent);
 
         var providerError = new AIProviderException(
             new AIProviderErrorInfo(providerCategory, "user-safe message", ProviderCode: null, "raw message"),
@@ -381,7 +373,7 @@ public class RunAgentActionTests
 
         _agentServiceMock
             .Setup(s => s.RunAgentAsync(
-                agent.Id,
+                It.IsAny<Guid>(),
                 It.IsAny<IEnumerable<ChatMessage>>(),
                 It.IsAny<AIAgentExecutionOptions?>(),
                 It.IsAny<CancellationToken>()))
@@ -570,13 +562,11 @@ public class RunAgentActionTests
         var agent = new AIAgent { Alias = "test-agent", Name = "Test Agent" };
         var captured = new List<ChatMessage>();
 
-        _agentServiceMock
-            .Setup(s => s.GetAgentAsync(TestAgentId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(agent);
+        SetupAgent(TestAgentId, agent);
 
         _agentServiceMock
             .Setup(s => s.RunAgentAsync(
-                agent.Id,
+                It.IsAny<Guid>(),
                 It.IsAny<IEnumerable<ChatMessage>>(),
                 It.IsAny<AIAgentExecutionOptions?>(),
                 It.IsAny<CancellationToken>()))
@@ -607,6 +597,17 @@ public class RunAgentActionTests
                 It.IsAny<CancellationToken>()),
             Times.Never);
 
+    // The agent exists and, as far as the service account's groups go, can be used.
+    private void SetupAgent(Guid agentId, AIAgent? agent)
+    {
+        _readerMock
+            .Setup(r => r.GetAgentUnrestrictedAsync(agentId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(agent);
+        _agentServiceMock
+            .Setup(s => s.GetAgentAsync(agentId, It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(agent);
+    }
+
     private RunAgentAction CreateAction()
         => new(
             _infrastructure,
@@ -615,6 +616,8 @@ public class RunAgentActionTests
             _mediaServiceMock.Object,
             _mediaResolverMock.Object,
             _authorizerMock.Object,
+            new AgentAccessChecker(_agentServiceMock.Object, _readerMock.Object, _serviceAccountResolverMock.Object),
+            _readerMock.Object,
             _loggerMock.Object);
 
     private static ActionContext CreateContext(RunAgentSettings settings, Guid? runId = null)

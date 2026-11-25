@@ -15,7 +15,7 @@ namespace Umbraco.AI.Web.Api.Management.Test.Controllers;
 /// Controller to update a test.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ManageTestsAI)]
 public class UpdateTestController : TestControllerBase
 {
     private readonly IAITestService _testService;

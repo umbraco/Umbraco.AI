@@ -196,7 +196,7 @@ public class SessionBoundApprovalResumeTests
 
     private static ChatClientAgent CreateApprovalAgent(Action onExecute, ChatHistoryProvider historyProvider)
     {
-        var inner = AIFunctionFactory.Create(
+        var inner = Microsoft.Extensions.AI.AIFunctionFactory.Create(
             (string id) => { onExecute(); return $"deleted {id}"; },
             name: ToolName);
         var approvalFn = new ApprovalRequiredAIFunction(inner);

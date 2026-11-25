@@ -27,6 +27,16 @@ public interface IAIVersionableEntityAdapter
     string EntityTypeName { get; }
 
     /// <summary>
+    /// Gets the <see cref="Security.AIPermissions"/> verb a user needs to roll this entity type back.
+    /// </summary>
+    /// <remarks>
+    /// Rollback writes the entity, so it should need the same right as editing it. The default is
+    /// <c>null</c>, which means rollback is refused for this entity type, so an adapter that does not
+    /// declare a right cannot be rolled back by accident.
+    /// </remarks>
+    string? RollbackPermission => null;
+
+    /// <summary>
     /// Gets the CLR type of the entity this handler manages.
     /// </summary>
     Type EntityType { get; }
@@ -82,6 +92,9 @@ public interface IAIVersionableEntityAdapter
     /// <remarks>
     /// This method retrieves the live entity state, which represents the current version
     /// that may not yet have a snapshot in the version history table.
+    /// It is also how version history reads (list, snapshot, comparison) are limited: return <c>null</c> for an
+    /// entity the current user may not see, the same as its detail endpoint does, and its history is treated as
+    /// missing too.
     /// </remarks>
     Task<object?> GetEntityAsync(Guid entityId, CancellationToken cancellationToken = default);
 }

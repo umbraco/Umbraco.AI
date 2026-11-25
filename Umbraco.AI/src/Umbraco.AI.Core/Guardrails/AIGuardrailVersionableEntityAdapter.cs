@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.Versioning;
 
 namespace Umbraco.AI.Core.Guardrails;
@@ -14,6 +15,9 @@ internal sealed class AIGuardrailVersionableEntityAdapter : AIVersionableEntityA
     {
         _guardrailService = guardrailService;
     }
+
+    /// <inheritdoc />
+    public override string? RollbackPermission => AIPermissions.ManageGuardrails;
 
     /// <inheritdoc />
     protected override string CreateSnapshot(AIGuardrail entity)

@@ -15,6 +15,7 @@ import type { UmbModalToken } from "@umbraco-cms/backoffice/modal";
 import { UMB_MODAL_MANAGER_CONTEXT } from "@umbraco-cms/backoffice/modal";
 import { UmbUserGroupItemRepository } from "@umbraco-cms/backoffice/user-group";
 import { pickUserGroups } from "../user-group-access-input/user-group-picker.js";
+import { canAddUserGroups } from "../user-group-access-input/user-group-access.utils.js";
 import { isUserGroupEditable } from "./user-group-settings-list.utils.js";
 
 /**
@@ -290,12 +291,13 @@ export class UaiUserGroupSettingsListElement<TSettings> extends UmbLitElement {
             ${when(
                 this._hasUserGroups,
                 () => html`
-                    <uui-ref-list>
+                    <uui-ref-list role="list">
                         ${repeat(
                             this._userGroupEntries,
                             ([id]) => id,
                             ([id, settings]) => html`
                                 <uui-ref-node
+                                    role="listitem"
                                     name=${this._userGroupNames.get(id) ?? id}
                                     detail=${this.config.display.renderSummary(settings)}
                                     @open=${this._isRowReadonly(id) ? undefined : () => this._editUserGroup(id)}
@@ -320,7 +322,7 @@ export class UaiUserGroupSettingsListElement<TSettings> extends UmbLitElement {
                                                     <uui-icon name="icon-edit"></uui-icon>
                                                 </uui-button>
                                                 <uui-button
-                                                    label=${this.localize.term("general_remove")}
+                                                    label=${`${this.localize.term("general_remove")} ${this._userGroupNames.get(id) ?? id}`}
                                                     @click=${(e: Event) => {
                                                         e.stopPropagation();
                                                         this._removeUserGroup(id);
@@ -339,7 +341,7 @@ export class UaiUserGroupSettingsListElement<TSettings> extends UmbLitElement {
                 () => nothing,
             )}
             ${when(
-                !this.readonly,
+                !this.readonly && canAddUserGroups(this.editableUserGroupIds),
                 () => html`
                     <uui-button look="placeholder" @click=${this._addUserGroup} label=${this._labels.addButton}>
                         <uui-icon name="icon-add"></uui-icon>

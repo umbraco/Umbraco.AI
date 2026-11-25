@@ -30,6 +30,14 @@ export function canRemoveUserGroup(
     return includesKey(userGroupIds, userGroupId) && allowedUserGroupIds.length > 1;
 }
 
+/**
+ * Whether there is any group to choose from. An unset list means every group is available;
+ * a non-admin in no group has nothing they may add.
+ */
+export function canAddUserGroups(restrictToIds: readonly string[] | undefined): boolean {
+    return !restrictToIds || restrictToIds.length > 0;
+}
+
 /** Adds the groups that aren't already in the list, keeping the existing order. */
 export function addUserGroupIds(current: readonly string[], added: readonly string[]): string[] {
     const result = [...current];

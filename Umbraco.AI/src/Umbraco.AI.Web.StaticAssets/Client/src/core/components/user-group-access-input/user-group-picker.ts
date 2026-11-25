@@ -24,6 +24,7 @@ export async function pickUserGroups(
     if (!modalManager) return [];
 
     const { multiple, restrictToIds } = options;
+    if (restrictToIds?.length === 0) return [];
     if (!restrictToIds) {
         const modal = modalManager.open(host, UMB_USER_GROUP_PICKER_MODAL, { data: { multiple } });
         const value = await modal.onSubmit().catch(() => undefined);

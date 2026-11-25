@@ -6,6 +6,7 @@ import { UmbUserGroupItemRepository } from "@umbraco-cms/backoffice/user-group";
 import { pickUserGroups } from "./user-group-picker.js";
 import {
     addUserGroupIds,
+    canAddUserGroups,
     canRemoveUserGroup,
     canUseRestrictedItem,
     removeUserGroupId,
@@ -79,10 +80,13 @@ export class UaiUserGroupAccessInputElement extends UmbLitElement {
     #renderRow(id: string, readonly: boolean) {
         const name = this._userGroupNames.get(id);
         const deleted = name === null;
+        const displayName = deleted ? this.localize.term("uaiUserGroupAccess_deletedUserGroup") : (name ?? id);
+        const removeLabel = `${this.localize.term("general_remove")} ${displayName}`;
         const canRemove = !readonly && canRemoveUserGroup(id, this.value, this._userGroupIds, this._isAdmin);
         return html`
             <uui-ref-node
-                name=${deleted ? this.localize.term("uaiUserGroupAccess_deletedUserGroup") : (name ?? id)}
+                role="listitem"
+                name=${displayName}
                 detail=${deleted ? this.localize.term("uaiUserGroupAccess_deletedUserGroupDetail") : ""}
                 readonly
             >
@@ -95,7 +99,7 @@ export class UaiUserGroupAccessInputElement extends UmbLitElement {
                 ${canRemove
                     ? html`<uui-action-bar slot="actions">
                           <uui-button
-                              label=${this.localize.term("general_remove")}
+                              label=${removeLabel}
                               @click=${() => this.#setValue(removeUserGroupId(this.value, id))}
                           >
                               ${this.localize.term("general_remove")}
@@ -108,6 +112,7 @@ export class UaiUserGroupAccessInputElement extends UmbLitElement {
 
     override render() {
         const readonly = !canUseRestrictedItem(this.value, this._userGroupIds, this._isAdmin);
+        const canAdd = canAddUserGroups(this._isAdmin ? undefined : this._userGroupIds);
         return html`
             <umb-property-layout
                 label=${this.localize.term("user_usergroups")}
@@ -116,14 +121,14 @@ export class UaiUserGroupAccessInputElement extends UmbLitElement {
                 )}
             >
                 <div slot="editor">
-                    <uui-ref-list>
+                    <uui-ref-list role="list">
                         ${repeat(
                             this.value,
                             (id) => id,
                             (id) => this.#renderRow(id, readonly),
                         )}
                     </uui-ref-list>
-                    ${readonly
+                    ${readonly || !canAdd
                         ? nothing
                         : html`<uui-button
                               id="choose"

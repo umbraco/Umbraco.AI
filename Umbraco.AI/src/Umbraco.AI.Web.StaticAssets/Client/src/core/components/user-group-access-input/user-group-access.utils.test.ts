@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import {
     addUserGroupIds,
+    canAddUserGroups,
     canRemoveUserGroup,
     canUseRestrictedItem,
     removeUserGroupId,
@@ -46,5 +47,17 @@ describe("Feature: editing the list", () => {
     });
     it("removing drops only that group", () => {
         expect(removeUserGroupId(["a", "b"], "A")).toEqual(["b"]);
+    });
+});
+
+describe("Feature: whether there is any group to choose", () => {
+    it("an admin (no restriction) can add a group", () => {
+        expect(canAddUserGroups(undefined)).toBe(true);
+    });
+    it("a user in some groups can add one", () => {
+        expect(canAddUserGroups(["a"])).toBe(true);
+    });
+    it("a user in no group has nothing to add", () => {
+        expect(canAddUserGroups([])).toBe(false);
     });
 });

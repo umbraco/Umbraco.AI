@@ -30,6 +30,7 @@ using Umbraco.AI.Prompt.Persistence.Prompts;
 using Umbraco.AI.Prompt.Tests.Integration.Fixtures;
 using Umbraco.AI.Prompt.Web.Api.Management.Prompt.Controllers;
 using Umbraco.AI.Prompt.Web.Api.Management.Prompt.Mapping;
+using Umbraco.AI.Prompt.Web.Authorization;
 using Umbraco.AI.Web.Api.Management.Versioning.Controllers;
 using Umbraco.AI.Web.Authorization;
 using Umbraco.Cms.Api.Common.DependencyInjection;
@@ -207,6 +208,7 @@ internal sealed class PromptApiTestHost : IAsyncDisposable
         {
             options.AddPolicy(AuthorizationPolicies.BackOfficeAccess, policy => policy.RequireAuthenticatedUser());
             AIAuthorizationPolicies.Register(options);
+            AIPromptAuthorizationPolicies.Register(options);
         });
         services.AddSingleton<IAuthorizationHandler, AISectionAuthorizationHandler>();
         services.AddSingleton<IAuthorizationHandler, AIPermissionAuthorizationHandler>();

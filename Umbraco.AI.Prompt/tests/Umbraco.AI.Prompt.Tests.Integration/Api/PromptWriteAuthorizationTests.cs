@@ -8,7 +8,9 @@ using Microsoft.AspNetCore.Mvc;
 using Shouldly;
 
 using Umbraco.AI.Core.Security;
+using Umbraco.AI.Prompt.Core.Security;
 using Umbraco.AI.Prompt.Web.Api.Management.Prompt.Controllers;
+using Umbraco.AI.Prompt.Web.Authorization;
 using Umbraco.AI.Web.Authorization;
 
 using Xunit;
@@ -44,7 +46,7 @@ public class PromptWriteAuthorizationTests
         // When  the ones not listed as exceptions are checked for the Manage prompts policy
         var unguarded = WriteControllers
             .Where(t => !SectionOnlyWriteControllers.ContainsKey(t.Name))
-            .Where(t => !PoliciesOf(t).Contains(AIAuthorizationPolicies.ManagePromptsAI))
+            .Where(t => !PoliciesOf(t).Contains(AIPromptAuthorizationPolicies.ManagePromptsAI))
             .Select(t => t.Name)
             .ToList();
 
@@ -59,13 +61,35 @@ public class PromptWriteAuthorizationTests
         // Given the policy the prompt controllers use
         var options = new AuthorizationOptions();
         AIAuthorizationPolicies.Register(options);
+        AIPromptAuthorizationPolicies.Register(options);
 
         // When  its requirements are read
-        var verbs = options.GetPolicy(AIAuthorizationPolicies.ManagePromptsAI)!.Requirements
+        var verbs = options.GetPolicy(AIPromptAuthorizationPolicies.ManagePromptsAI)!.Requirements
             .OfType<AIPermissionRequirement>().Select(r => r.Verb);
 
         // Then  it asks for Uai.Prompt.Manage, not another area's right
-        verbs.ShouldBe([AIPermissions.ManagePrompts]);
+        verbs.ShouldBe([AIPromptPermissions.Manage]);
+    }
+
+    [Fact]
+    public void ManagePromptsVerb_IsTheSavedString()
+    {
+        // Given the verb stored on user groups and used by the grant migration and the backoffice
+        // When  it is read
+        // Then  it never changes
+        AIPromptPermissions.Manage.ShouldBe("Uai.Prompt.Manage");
+    }
+
+    [Fact]
+    public void ManagePromptsPolicy_IsMissingUntilThePromptAddOnRegistersIt()
+    {
+        // Given only core's policies
+        var options = new AuthorizationOptions();
+        AIAuthorizationPolicies.Register(options);
+
+        // When  the prompt policy is looked up
+        // Then  core does not know it, so the add-on must declare its own
+        options.GetPolicy(AIPromptAuthorizationPolicies.ManagePromptsAI).ShouldBeNull();
     }
 
     [Fact]

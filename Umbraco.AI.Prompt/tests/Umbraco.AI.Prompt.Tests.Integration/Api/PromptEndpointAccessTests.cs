@@ -8,9 +8,9 @@ using Moq;
 
 using Shouldly;
 
-using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Prompt.Core.Prompts;
+using Umbraco.AI.Prompt.Core.Security;
 
 using Xunit;
 
@@ -50,10 +50,10 @@ public class PromptEndpointAccessTests : IAsyncLifetime
     public async Task InitializeAsync()
     {
         _host = await PromptApiTestHost.StartAsync();
-        _editorsManager = _host.AddUser("editors-manager", [Editors], [AIPermissions.ManagePrompts]);
-        _translatorsManager = _host.AddUser("translators-manager", [Translators], [AIPermissions.ManagePrompts]);
+        _editorsManager = _host.AddUser("editors-manager", [Editors], [AIPromptPermissions.Manage]);
+        _translatorsManager = _host.AddUser("translators-manager", [Translators], [AIPromptPermissions.Manage]);
         _translator = _host.AddUser("translator", [Translators], []);
-        _admin = _host.AddUser("admin", [CmsSecurity.AdminGroupKey], [AIPermissions.ManagePrompts]);
+        _admin = _host.AddUser("admin", [CmsSecurity.AdminGroupKey], [AIPromptPermissions.Manage]);
     }
 
     public async Task DisposeAsync() => await _host.DisposeAsync();
@@ -266,7 +266,7 @@ public class PromptEndpointAccessTests : IAsyncLifetime
     public async Task CreatePrompt_WithTheRightButNotTheAISection_Returns403()
     {
         // Given a user with Uai.Prompt.Manage but without the AI section
-        var client = _host.AddUser("no-section", [Editors], [AIPermissions.ManagePrompts], hasAISection: false);
+        var client = _host.AddUser("no-section", [Editors], [AIPromptPermissions.Manage], hasAISection: false);
 
         // When  they POST prompts
         var response = await client.PostAsync(Prompts, Json(CreateBody("created")));

@@ -7,7 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 
 using Shouldly;
 
+using Umbraco.AI.Agent.Core.Security;
 using Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
+using Umbraco.AI.Agent.Web.Authorization;
 using Umbraco.AI.Core.Security;
 using Umbraco.AI.Web.Authorization;
 
@@ -47,7 +49,7 @@ public class AgentWriteAuthorizationTests
         // When  the ones not listed as exceptions are checked for the Manage agents policy
         var unguarded = WriteControllers
             .Where(t => !SectionOnlyWriteControllers.ContainsKey(t.Name))
-            .Where(t => !PoliciesOf(t).Contains(AIAuthorizationPolicies.ManageAgentsAI))
+            .Where(t => !PoliciesOf(t).Contains(AIAgentAuthorizationPolicies.ManageAgentsAI))
             .Select(t => t.Name)
             .ToList();
 
@@ -62,13 +64,35 @@ public class AgentWriteAuthorizationTests
         // Given the policy the agent controllers use
         var options = new AuthorizationOptions();
         AIAuthorizationPolicies.Register(options);
+        AIAgentAuthorizationPolicies.Register(options);
 
         // When  its requirements are read
-        var verbs = options.GetPolicy(AIAuthorizationPolicies.ManageAgentsAI)!.Requirements
+        var verbs = options.GetPolicy(AIAgentAuthorizationPolicies.ManageAgentsAI)!.Requirements
             .OfType<AIPermissionRequirement>().Select(r => r.Verb);
 
         // Then  it asks for Uai.Agent.Manage, not another area's right
-        verbs.ShouldBe([AIPermissions.ManageAgents]);
+        verbs.ShouldBe([AIAgentPermissions.Manage]);
+    }
+
+    [Fact]
+    public void ManageAgentsVerb_IsTheSavedString()
+    {
+        // Given the verb stored on user groups and used by the grant migration and the backoffice
+        // When  it is read
+        // Then  it never changes
+        AIAgentPermissions.Manage.ShouldBe("Uai.Agent.Manage");
+    }
+
+    [Fact]
+    public void ManageAgentsPolicy_IsMissingUntilTheAgentAddOnRegistersIt()
+    {
+        // Given only core's policies
+        var options = new AuthorizationOptions();
+        AIAuthorizationPolicies.Register(options);
+
+        // When  the agent policy is looked up
+        // Then  core does not know it, so the add-on must declare its own
+        options.GetPolicy(AIAgentAuthorizationPolicies.ManageAgentsAI).ShouldBeNull();
     }
 
     [Fact]

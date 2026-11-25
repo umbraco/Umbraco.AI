@@ -6,6 +6,7 @@ using Shouldly;
 using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Prompt.Core.Prompts;
+using Umbraco.AI.Prompt.Core.Security;
 
 using Xunit;
 
@@ -20,7 +21,8 @@ public class AIPromptRollbackPermissionTests
         var adapterTypes = typeof(AIPromptVersionableEntityAdapter).Assembly.GetTypes()
             .Where(t => t is { IsAbstract: false, IsInterface: false } && typeof(IAIVersionableEntityAdapter).IsAssignableFrom(t))
             .ToList();
-        var knownVerbs = typeof(AIPermissions).GetFields(BindingFlags.Public | BindingFlags.Static)
+        var knownVerbs = new[] { typeof(AIPermissions), typeof(AIPromptPermissions) }
+            .SelectMany(t => t.GetFields(BindingFlags.Public | BindingFlags.Static))
             .Where(f => f.IsLiteral)
             .Select(f => (string)f.GetRawConstantValue()!)
             .ToList();

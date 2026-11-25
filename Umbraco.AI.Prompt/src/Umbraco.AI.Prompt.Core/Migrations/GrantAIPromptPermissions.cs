@@ -1,9 +1,9 @@
 using Microsoft.Extensions.Logging;
 
 using Umbraco.AI.Core.Migrations;
-using Umbraco.AI.Core.Security;
 using Umbraco.Cms.Core.Cache;
 using Umbraco.Cms.Infrastructure.Migrations;
+using Umbraco.AI.Prompt.Core.Security;
 
 namespace Umbraco.AI.Prompt.Core.Migrations;
 
@@ -18,7 +18,7 @@ namespace Umbraco.AI.Prompt.Core.Migrations;
 public class GrantAIPromptPermissions : AsyncMigrationBase
 {
     // A migration is a snapshot of one release, so this list stays as it is when later prompt verbs are added.
-    private static readonly string[] PromptVerbs = [AIPermissions.ManagePrompts];
+    private static readonly string[] PromptVerbs = [AIPromptPermissions.Manage];
 
     private readonly AppCaches _appCaches;
 

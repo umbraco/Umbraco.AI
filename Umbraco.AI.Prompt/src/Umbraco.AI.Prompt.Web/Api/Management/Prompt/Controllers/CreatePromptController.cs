@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Umbraco.AI.Core.Security;
 using Umbraco.AI.Prompt.Core.Prompts;
 using Umbraco.AI.Prompt.Web.Api.Management.Prompt.Models;
+using Umbraco.AI.Prompt.Web.Authorization;
 using Umbraco.AI.Web.Authorization;
 using Umbraco.Cms.Core.Mapping;
 
@@ -14,7 +15,7 @@ namespace Umbraco.AI.Prompt.Web.Api.Management.Prompt.Controllers;
 /// Controller for creating prompts.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.ManagePromptsAI)]
+[Authorize(Policy = AIPromptAuthorizationPolicies.ManagePromptsAI)]
 public class CreatePromptController : PromptControllerBase
 {
     private readonly IAIPromptService _aiPromptService;

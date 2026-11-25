@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Web.Api.Management.Agent.Models;
+using Umbraco.AI.Agent.Web.Authorization;
 using Umbraco.AI.Core.Security;
 using Umbraco.AI.Web.Authorization;
 using Umbraco.Cms.Core.Mapping;
@@ -14,7 +15,7 @@ namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 /// Controller for creating Agents.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.ManageAgentsAI)]
+[Authorize(Policy = AIAgentAuthorizationPolicies.ManageAgentsAI)]
 public class CreateAgentController : AgentControllerBase
 {
     private readonly IAIAgentService _AIAgentService;

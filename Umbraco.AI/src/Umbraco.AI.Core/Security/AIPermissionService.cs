@@ -21,6 +21,21 @@ internal sealed class AIPermissionService(IBackOfficeSecurityAccessor backOffice
            || allowedUserGroupIds.Any(userGroupKeys.Contains);
 
     /// <inheritdoc />
+    public bool CanCurrentUserUse(IReadOnlyCollection<Guid>? allowedUserGroupIds)
+        => CanUse(allowedUserGroupIds, GetCurrentUserGroups().GroupKeys);
+
+    /// <inheritdoc />
+    public IReadOnlyCollection<Guid>? GetListFilter(string manageVerb, bool includeRestricted)
+        => HasManagedAccess(manageVerb, includeRestricted) ? null : GetCurrentUserGroups().GroupKeys;
+
+    /// <inheritdoc />
+    public bool IsVisible(IReadOnlyCollection<Guid>? allowedUserGroupIds, string manageVerb, bool includeRestricted)
+        => HasManagedAccess(manageVerb, includeRestricted) || CanCurrentUserUse(allowedUserGroupIds);
+
+    private bool HasManagedAccess(string manageVerb, bool includeRestricted)
+        => includeRestricted && HasPermission(manageVerb);
+
+    /// <inheritdoc />
     public AICurrentUserGroups GetCurrentUserGroups()
     {
         var groups = backOfficeSecurityAccessor.BackOfficeSecurity?.CurrentUser?.Groups;

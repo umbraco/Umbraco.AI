@@ -32,10 +32,4 @@ public static class AIPermissions
 
     /// <summary>Create, update, delete and run tests.</summary>
     public const string ManageTests = "Uai.Test.Manage";
-
-    /// <summary>Create, update and delete agents.</summary>
-    public const string ManageAgents = "Uai.Agent.Manage";
-
-    /// <summary>Create, update and delete prompts.</summary>
-    public const string ManagePrompts = "Uai.Prompt.Manage";
 }

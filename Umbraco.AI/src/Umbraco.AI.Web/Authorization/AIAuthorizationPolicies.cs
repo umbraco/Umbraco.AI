@@ -62,16 +62,6 @@ public static class AIAuthorizationPolicies
     /// </summary>
     public const string ManageTestsAI = nameof(ManageTestsAI);
 
-    /// <summary>
-    /// Create, update and delete agents. Needs the AI section and the matching user group right.
-    /// </summary>
-    public const string ManageAgentsAI = nameof(ManageAgentsAI);
-
-    /// <summary>
-    /// Create, update and delete prompts. Needs the AI section and the matching user group right.
-    /// </summary>
-    public const string ManagePromptsAI = nameof(ManagePromptsAI);
-
     /// <summary>Registers every AI policy.</summary>
     internal static void Register(AuthorizationOptions options)
     {
@@ -81,16 +71,32 @@ public static class AIAuthorizationPolicies
             policy.Requirements.Add(new AISectionRequirement());
         });
 
-        // One policy per right: the AI section plus the user group permission
+        // One policy per core right
         foreach (var (policyName, verb) in PermissionPolicies)
         {
-            options.AddPolicy(policyName, policy =>
-            {
-                policy.AuthenticationSchemes.Add(OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme);
-                policy.Requirements.Add(new AISectionRequirement());
-                policy.Requirements.Add(new AIPermissionRequirement(verb));
-            });
+            AddPermissionPolicy(options, policyName, verb);
         }
+    }
+
+    /// <summary>
+    /// Adds a policy that needs the AI section and a user group right. An add-on calls this from its own
+    /// authorization setup to guard its endpoints with a right it declares itself, with no change to core.
+    /// </summary>
+    /// <param name="options">The authorization options.</param>
+    /// <param name="policyName">The name of the policy, used in <c>[Authorize(Policy = ...)]</c>.</param>
+    /// <param name="verb">The permission verb of the right, as ticked on the CMS user group screen.</param>
+    public static void AddPermissionPolicy(AuthorizationOptions options, string policyName, string verb)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentException.ThrowIfNullOrWhiteSpace(policyName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(verb);
+
+        options.AddPolicy(policyName, policy =>
+        {
+            policy.AuthenticationSchemes.Add(OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme);
+            policy.Requirements.Add(new AISectionRequirement());
+            policy.Requirements.Add(new AIPermissionRequirement(verb));
+        });
     }
 
     private static readonly (string PolicyName, string Verb)[] PermissionPolicies =
@@ -104,7 +110,5 @@ public static class AIAuthorizationPolicies
         (AIAuthorizationPolicies.ViewAuditLogsAI, AIPermissions.ViewAuditLogs),
         (AIAuthorizationPolicies.ViewAnalyticsAI, AIPermissions.ViewAnalytics),
         (AIAuthorizationPolicies.ManageTestsAI, AIPermissions.ManageTests),
-        (AIAuthorizationPolicies.ManageAgentsAI, AIPermissions.ManageAgents),
-        (AIAuthorizationPolicies.ManagePromptsAI, AIPermissions.ManagePrompts),
     ];
 }

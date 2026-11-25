@@ -1,5 +1,7 @@
+using Microsoft.Extensions.DependencyInjection;
 using Umbraco.AI.Extensions;
 using Umbraco.AI.Prompt.Web.Api.Management.Prompt.Mapping;
+using Umbraco.AI.Prompt.Web.Authorization;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Mapping;
 
@@ -17,6 +19,9 @@ public static class UmbracoBuilderExtensions
     /// <returns>The builder for chaining.</returns>
     public static IUmbracoBuilder AddUmbracoAIPromptWeb(this IUmbracoBuilder builder)
     {
+        // Declare this add-on's own permission policy; core keeps no list of add-on rights
+        builder.Services.AddAuthorization(AIPromptAuthorizationPolicies.Register);
+
         // Register map definitions
         builder.WithCollectionBuilder<MapDefinitionCollectionBuilder>()
             .Add<PromptMapDefinition>()

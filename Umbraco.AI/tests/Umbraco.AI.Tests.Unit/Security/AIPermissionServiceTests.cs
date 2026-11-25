@@ -24,8 +24,6 @@ public class AIPermissionServiceTests
         AIPermissions.ViewAuditLogs,
         AIPermissions.ViewAnalytics,
         AIPermissions.ManageTests,
-        AIPermissions.ManageAgents,
-        AIPermissions.ManagePrompts,
     ];
 
     private static IReadOnlyUserGroup Group(Guid key, params string[] permissions)
@@ -80,7 +78,7 @@ public class AIPermissionServiceTests
     }
 
     [Fact]
-    public void Verbs_AreTheElevenSavedStrings()
+    public void Verbs_AreTheNineSavedStrings()
     {
         AllVerbs.ShouldBe(
         [
@@ -93,8 +91,6 @@ public class AIPermissionServiceTests
             "Uai.AuditLog.View",
             "Uai.Analytics.View",
             "Uai.Test.Manage",
-            "Uai.Agent.Manage",
-            "Uai.Prompt.Manage",
         ]);
     }
 
@@ -223,6 +219,131 @@ public class AIPermissionServiceTests
 
         // Then it returns false (R14)
         result.ShouldBeFalse();
+    }
+
+    #endregion
+
+    #region Visibility of limited items
+
+    private const string AddOnManageVerb = "Uai.AddOn.Manage";
+
+    [Fact]
+    public void GetListFilter_ForManagerAskingForRestricted_ReturnsNull()
+    {
+        // Given a user holding the add-on's manage verb
+        var service = ServiceFor(Group(Guid.NewGuid(), AddOnManageVerb));
+
+        // When the list filter is read with managed access asked for
+        var result = service.GetListFilter(AddOnManageVerb, includeRestricted: true);
+
+        // Then no group filter applies
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public void GetListFilter_ForManagerNotAskingForRestricted_ReturnsTheirGroups()
+    {
+        // Given a user holding the add-on's manage verb
+        var editors = Guid.NewGuid();
+        var service = ServiceFor(Group(editors, AddOnManageVerb));
+
+        // When the list filter is read without asking for managed access
+        var result = service.GetListFilter(AddOnManageVerb, includeRestricted: false);
+
+        // Then the manage verb does not lift the limit
+        result.ShouldBe([editors]);
+    }
+
+    [Fact]
+    public void GetListFilter_ForNonManagerAskingForRestricted_ReturnsTheirGroups()
+    {
+        // Given a user without the add-on's manage verb
+        var editors = Guid.NewGuid();
+        var service = ServiceFor(Group(editors, AIPermissions.ManageConnections));
+
+        // When the list filter is read with managed access asked for
+        var result = service.GetListFilter(AddOnManageVerb, includeRestricted: true);
+
+        // Then the limit still applies
+        result.ShouldBe([editors]);
+    }
+
+    [Fact]
+    public void GetListFilter_WithNoCurrentUser_ReturnsNoGroupsEvenWhenAskingForRestricted()
+    {
+        // Given no current backoffice user
+        var accessor = new Mock<IBackOfficeSecurityAccessor>();
+        accessor.SetupGet(a => a.BackOfficeSecurity).Returns((IBackOfficeSecurity?)null);
+        var service = new AIPermissionService(accessor.Object);
+
+        // When the list filter is read with managed access asked for
+        var result = service.GetListFilter(AddOnManageVerb, includeRestricted: true);
+
+        // Then a headless caller gets an empty group list, not null, so limited items stay hidden
+        result.ShouldNotBeNull();
+        result.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void IsVisible_ForMemberOfTheItemsGroup_ReturnsTrue()
+    {
+        var editors = Guid.NewGuid();
+        var service = ServiceFor(Group(editors));
+
+        service.IsVisible([editors], AddOnManageVerb, includeRestricted: false).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsVisible_ForOutsiderWithoutManagedAccess_ReturnsFalse()
+    {
+        var service = ServiceFor(Group(Guid.NewGuid(), AddOnManageVerb));
+
+        // Holding the manage verb does not help unless managed access is asked for
+        service.IsVisible([Guid.NewGuid()], AddOnManageVerb, includeRestricted: false).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsVisible_ForManagerAskingForRestricted_ReturnsTrueEvenOutsideTheGroups()
+    {
+        var service = ServiceFor(Group(Guid.NewGuid(), AddOnManageVerb));
+
+        service.IsVisible([Guid.NewGuid()], AddOnManageVerb, includeRestricted: true).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsVisible_ForNonManagerAskingForRestricted_ReturnsFalseOutsideTheGroups()
+    {
+        var service = ServiceFor(Group(Guid.NewGuid()));
+
+        service.IsVisible([Guid.NewGuid()], AddOnManageVerb, includeRestricted: true).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsVisible_ForItemWithNoLimit_ReturnsTrueForAnyone()
+    {
+        var service = ServiceFor(Group(Guid.NewGuid()));
+
+        service.IsVisible(null, AddOnManageVerb, includeRestricted: false).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void CanCurrentUserUse_ForManagerOutsideTheGroups_ReturnsFalse()
+    {
+        // Given a manager outside the item's groups
+        var service = ServiceFor(Group(Guid.NewGuid(), AddOnManageVerb));
+
+        // When availability is checked
+        // Then managing does not lift the limit when using the item
+        service.CanCurrentUserUse([Guid.NewGuid()]).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void CanCurrentUserUse_ForMember_ReturnsTrue()
+    {
+        var editors = Guid.NewGuid();
+        var service = ServiceFor(Group(editors));
+
+        service.CanCurrentUserUse([editors]).ShouldBeTrue();
     }
 
     #endregion

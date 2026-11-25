@@ -28,6 +28,7 @@ using Umbraco.AI.Agent.Persistence.Agents;
 using Umbraco.AI.Agent.Tests.Integration.Fixtures;
 using Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 using Umbraco.AI.Agent.Web.Api.Management.Agent.Mapping;
+using Umbraco.AI.Agent.Web.Authorization;
 using Umbraco.AI.Core.Configuration;
 using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.Versioning;
@@ -223,6 +224,7 @@ internal sealed class AgentApiTestHost : IAsyncDisposable
         {
             options.AddPolicy(AuthorizationPolicies.BackOfficeAccess, policy => policy.RequireAuthenticatedUser());
             AIAuthorizationPolicies.Register(options);
+            AIAgentAuthorizationPolicies.Register(options);
         });
         services.AddSingleton<IAuthorizationHandler, AISectionAuthorizationHandler>();
         services.AddSingleton<IAuthorizationHandler, AIPermissionAuthorizationHandler>();

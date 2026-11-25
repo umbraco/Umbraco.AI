@@ -11,6 +11,7 @@ using NPoco;
 using Shouldly;
 
 using Umbraco.AI.Agent.Core.Migrations;
+using Umbraco.AI.Agent.Core.Security;
 using Umbraco.AI.Core;
 using Umbraco.AI.Core.Security;
 using Umbraco.Cms.Core.Cache;
@@ -82,7 +83,7 @@ public sealed class GrantAIAgentPermissionsTests : IDisposable
         await RunMigrationAsync();
 
         // Then  the group holds Uai.Agent.Manage exactly once (AC3)
-        PermissionsOf(group).ShouldBe([AIPermissions.ManageAgents]);
+        PermissionsOf(group).ShouldBe([AIAgentPermissions.Manage]);
     }
 
     [Fact]
@@ -95,7 +96,7 @@ public sealed class GrantAIAgentPermissionsTests : IDisposable
         await RunMigrationAsync();
 
         // Then  the admin group holds Uai.Agent.Manage (AC3)
-        PermissionsOf(admin).ShouldBe([AIPermissions.ManageAgents]);
+        PermissionsOf(admin).ShouldBe([AIAgentPermissions.Manage]);
     }
 
     [Fact]
@@ -123,7 +124,7 @@ public sealed class GrantAIAgentPermissionsTests : IDisposable
         await RunMigrationAsync();
 
         // Then  it keeps those and gains the agent verb
-        PermissionsOf(group).ShouldBe(["F", AIPermissions.ManageProfiles, AIPermissions.ManageAgents], ignoreOrder: true);
+        PermissionsOf(group).ShouldBe(["F", AIPermissions.ManageProfiles, AIAgentPermissions.Manage], ignoreOrder: true);
     }
 
     [Fact]

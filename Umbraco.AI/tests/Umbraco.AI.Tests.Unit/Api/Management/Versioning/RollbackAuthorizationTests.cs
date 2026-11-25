@@ -22,6 +22,9 @@ namespace Umbraco.AI.Tests.Unit.Api.Management.Versioning;
 /// </summary>
 public class RollbackAuthorizationTests
 {
+    // The verb an add-on such as Umbraco.AI.Agent declares; core only sees it as an adapter's rollback right
+    private const string AgentManageVerb = "Uai.Agent.Manage";
+
     private static Mock<IAIVersionableEntityAdapter> CreateAdapter(string entityTypeName, string? rollbackPermission)
     {
         var adapter = new Mock<IAIVersionableEntityAdapter>();
@@ -105,7 +108,7 @@ public class RollbackAuthorizationTests
     public async Task AgentRollback_WithOnlyManageProfiles_Returns403()
     {
         // Given an AI section user with Uai.Profile.Manage but not Uai.Agent.Manage
-        var controller = CreateController(CreateAdapter("Agent", AIPermissions.ManageAgents), [AIPermissions.ManageProfiles]);
+        var controller = CreateController(CreateAdapter("Agent", AgentManageVerb), [AIPermissions.ManageProfiles]);
 
         // When  they roll back an agent
         var result = await controller.RollbackToVersion("agent", Guid.NewGuid(), 1);
@@ -118,10 +121,10 @@ public class RollbackAuthorizationTests
     public async Task Rollback_WhenAdapterThrowsPermissionDenied_Returns403()
     {
         // Given an AI section user with Uai.Agent.Manage and an agent adapter whose rollback throws AIPermissionDeniedException
-        var adapter = CreateAdapter("Agent", AIPermissions.ManageAgents);
+        var adapter = CreateAdapter("Agent", AgentManageVerb);
         adapter.Setup(a => a.RollbackAsync(It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new AIPermissionDeniedException("Not allowed to change this."));
-        var controller = CreateController(adapter, [AIPermissions.ManageAgents]);
+        var controller = CreateController(adapter, [AgentManageVerb]);
 
         // When  they roll the agent back
         var result = await controller.RollbackToVersion("agent", Guid.NewGuid(), 1);

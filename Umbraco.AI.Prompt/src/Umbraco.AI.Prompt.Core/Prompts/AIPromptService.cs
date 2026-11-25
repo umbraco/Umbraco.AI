@@ -14,6 +14,7 @@ using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Extensions;
+using Umbraco.AI.Prompt.Core.Security;
 using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Notifications;
@@ -151,21 +152,13 @@ internal sealed class AIPromptService : IAIPromptService, IAIPromptUnrestrictedR
         => _repository.GetAllAsync(usableByGroupKeys: null, cancellationToken);
 
     /// <summary>
-    /// Whether the caller asked for managed access and has the Manage prompts right. Without a current
-    /// backoffice user the right is never held, so a headless caller never gets managed access.
-    /// </summary>
-    private bool HasManagedAccess(bool includeRestricted)
-        => includeRestricted && _permissionService.HasPermission(AIPermissions.ManagePrompts);
-
-    /// <summary>
-    /// The group keys to filter a list by, or null when managed access lifts the limit.
+    /// The group keys to filter a list by, or null when managed access (the Manage prompts right) lifts the limit.
     /// </summary>
     private IReadOnlyCollection<Guid>? GetUsableByGroupKeys(bool includeRestricted)
-        => HasManagedAccess(includeRestricted) ? null : _permissionService.GetCurrentUserGroups().GroupKeys;
+        => _permissionService.GetListFilter(AIPromptPermissions.Manage, includeRestricted);
 
     private bool IsVisible(AIPrompt prompt, bool includeRestricted)
-        => HasManagedAccess(includeRestricted)
-           || _permissionService.CanUse(prompt.AllowedUserGroupIds, _permissionService.GetCurrentUserGroups().GroupKeys);
+        => _permissionService.IsVisible(prompt.AllowedUserGroupIds, AIPromptPermissions.Manage, includeRestricted);
 
     /// <summary>
     /// Refuses a prompt the current user may not use. Managing prompts does not lift the limit when running one.
@@ -173,7 +166,7 @@ internal sealed class AIPromptService : IAIPromptService, IAIPromptUnrestrictedR
     /// <exception cref="AIPromptNotAvailableException">Thrown if the prompt is limited to other user groups.</exception>
     private void EnsurePromptAvailable(AIPrompt prompt)
     {
-        if (!_permissionService.CanUse(prompt.AllowedUserGroupIds, _permissionService.GetCurrentUserGroups().GroupKeys))
+        if (!_permissionService.CanCurrentUserUse(prompt.AllowedUserGroupIds))
         {
             throw new AIPromptNotAvailableException(prompt.Id);
         }

@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-using Umbraco.AI.Core.Security;
+using Umbraco.AI.Agent.Core.Security;
 using Umbraco.AI.Core.Versioning;
 
 using CoreConstants = Umbraco.AI.Core.Constants;
@@ -27,7 +27,7 @@ internal sealed class AIAgentVersionableEntityAdapter : AIVersionableEntityAdapt
     }
 
     /// <inheritdoc />
-    public override string? RollbackPermission => AIPermissions.ManageAgents;
+    public override string? RollbackPermission => AIAgentPermissions.Manage;
 
     /// <inheritdoc />
     protected override string CreateSnapshot(AIAgent entity)

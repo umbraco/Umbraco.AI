@@ -11,7 +11,7 @@ using Moq;
 using Shouldly;
 
 using Umbraco.AI.Agent.Core.Agents;
-using Umbraco.AI.Core.Security;
+using Umbraco.AI.Agent.Core.Security;
 using Umbraco.AI.Core.Versioning;
 
 using Xunit;
@@ -49,10 +49,10 @@ public class AgentEndpointAccessTests : IAsyncLifetime
     public async Task InitializeAsync()
     {
         _host = await AgentApiTestHost.StartAsync();
-        _editorsManager = _host.AddUser("editors-manager", [Editors], [AIPermissions.ManageAgents]);
-        _translatorsManager = _host.AddUser("translators-manager", [Translators], [AIPermissions.ManageAgents]);
+        _editorsManager = _host.AddUser("editors-manager", [Editors], [AIAgentPermissions.Manage]);
+        _translatorsManager = _host.AddUser("translators-manager", [Translators], [AIAgentPermissions.Manage]);
         _translator = _host.AddUser("translator", [Translators], []);
-        _admin = _host.AddUser("admin", [CmsSecurity.AdminGroupKey], [AIPermissions.ManageAgents]);
+        _admin = _host.AddUser("admin", [CmsSecurity.AdminGroupKey], [AIAgentPermissions.Manage]);
     }
 
     public async Task DisposeAsync() => await _host.DisposeAsync();
@@ -253,7 +253,7 @@ public class AgentEndpointAccessTests : IAsyncLifetime
     public async Task CreateAgent_WithTheRightButNotTheAISection_Returns403()
     {
         // Given a user with Uai.Agent.Manage but without the AI section
-        var client = _host.AddUser("no-section", [Editors], [AIPermissions.ManageAgents], hasAISection: false);
+        var client = _host.AddUser("no-section", [Editors], [AIAgentPermissions.Manage], hasAISection: false);
 
         // When  they POST agents
         var response = await client.PostAsync(Agents, Json(CreateBody("created")));

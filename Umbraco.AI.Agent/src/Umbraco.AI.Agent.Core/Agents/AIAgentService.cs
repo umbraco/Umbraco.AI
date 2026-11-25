@@ -12,6 +12,7 @@ using Umbraco.AI.Agent.Core.Agents.Selection;
 using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
 using Umbraco.AI.Agent.Core.InlineAgents;
+using Umbraco.AI.Agent.Core.Security;
 using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Events.Lifecycle;
@@ -212,21 +213,13 @@ internal sealed class AIAgentService : IAIAgentService, IAIAgentUnrestrictedRead
         => _repository.GetAllAsync(usableByGroupKeys: null, cancellationToken);
 
     /// <summary>
-    /// Whether the caller asked for managed access and has the Manage agents right. Without a current
-    /// backoffice user the right is never held, so a headless caller never gets managed access.
-    /// </summary>
-    private bool HasManagedAccess(bool includeRestricted)
-        => includeRestricted && _permissionService.HasPermission(AIPermissions.ManageAgents);
-
-    /// <summary>
-    /// The group keys to filter a list by, or null when managed access lifts the limit.
+    /// The group keys to filter a list by, or null when managed access (the Manage agents right) lifts the limit.
     /// </summary>
     private IReadOnlyCollection<Guid>? GetUsableByGroupKeys(bool includeRestricted)
-        => HasManagedAccess(includeRestricted) ? null : _permissionService.GetCurrentUserGroups().GroupKeys;
+        => _permissionService.GetListFilter(AIAgentPermissions.Manage, includeRestricted);
 
     private bool IsVisible(AIAgent agent, bool includeRestricted)
-        => HasManagedAccess(includeRestricted)
-           || _permissionService.CanUse(agent.AllowedUserGroupIds, _permissionService.GetCurrentUserGroups().GroupKeys);
+        => _permissionService.IsVisible(agent.AllowedUserGroupIds, AIAgentPermissions.Manage, includeRestricted);
 
     /// <summary>
     /// Refuses an agent the caller may not use. Groups come from <see cref="AIAgentExecutionOptions.UserGroupIds"/>
@@ -236,14 +229,14 @@ internal sealed class AIAgentService : IAIAgentService, IAIAgentUnrestrictedRead
     /// <exception cref="AIAgentNotAvailableException">Thrown if the agent is limited to other user groups.</exception>
     private void EnsureAgentAvailable(AIAgent agent, AIAgentExecutionOptions options)
     {
-        var groupKeys = options.UserGroupIds switch
+        var available = options.UserGroupIds switch
         {
-            IReadOnlyCollection<Guid> collection => collection,
-            { } groups => groups.ToArray(),
-            _ => _permissionService.GetCurrentUserGroups().GroupKeys,
+            IReadOnlyCollection<Guid> collection => _permissionService.CanUse(agent.AllowedUserGroupIds, collection),
+            { } groups => _permissionService.CanUse(agent.AllowedUserGroupIds, groups.ToArray()),
+            _ => _permissionService.CanCurrentUserUse(agent.AllowedUserGroupIds),
         };
 
-        if (!_permissionService.CanUse(agent.AllowedUserGroupIds, groupKeys))
+        if (!available)
         {
             throw new AIAgentNotAvailableException(agent.Id);
         }

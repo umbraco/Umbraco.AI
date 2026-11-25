@@ -48,8 +48,6 @@ public class AIPermissionAuthorizationHandlerTests
     [InlineData(AIAuthorizationPolicies.ViewAuditLogsAI, AIPermissions.ViewAuditLogs)]
     [InlineData(AIAuthorizationPolicies.ViewAnalyticsAI, AIPermissions.ViewAnalytics)]
     [InlineData(AIAuthorizationPolicies.ManageTestsAI, AIPermissions.ManageTests)]
-    [InlineData(AIAuthorizationPolicies.ManageAgentsAI, AIPermissions.ManageAgents)]
-    [InlineData(AIAuthorizationPolicies.ManagePromptsAI, AIPermissions.ManagePrompts)]
     public async Task Policy_WithSectionAndItsOwnVerb_Succeeds(string policyName, string verb)
     {
         // Given a user with the AI section and the policy's verb
@@ -102,8 +100,6 @@ public class AIPermissionAuthorizationHandlerTests
     [InlineData(AIAuthorizationPolicies.ViewAuditLogsAI, AIPermissions.ViewAuditLogs)]
     [InlineData(AIAuthorizationPolicies.ViewAnalyticsAI, AIPermissions.ViewAnalytics)]
     [InlineData(AIAuthorizationPolicies.ManageTestsAI, AIPermissions.ManageTests)]
-    [InlineData(AIAuthorizationPolicies.ManageAgentsAI, AIPermissions.ManageAgents)]
-    [InlineData(AIAuthorizationPolicies.ManagePromptsAI, AIPermissions.ManagePrompts)]
     public async Task Policy_WithSectionAndOnlyADifferentVerb_Fails(string policyName, string verb)
     {
         // Given a user with the AI section and a verb other than the policy's

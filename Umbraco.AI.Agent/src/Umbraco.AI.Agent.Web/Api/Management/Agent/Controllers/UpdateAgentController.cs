@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Agent.Web.Api.Management.Agent.Models;
+using Umbraco.AI.Agent.Web.Authorization;
 using Umbraco.AI.Core.Security;
 using Umbraco.AI.Web.Api.Common.Models;
 using Umbraco.AI.Web.Authorization;
@@ -16,7 +17,7 @@ namespace Umbraco.AI.Agent.Web.Api.Management.Agent.Controllers;
 /// Controller for updating Agents.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.ManageAgentsAI)]
+[Authorize(Policy = AIAgentAuthorizationPolicies.ManageAgentsAI)]
 public class UpdateAgentController : AgentControllerBase
 {
     private readonly IAIAgentService _AIAgentService;

@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using Shouldly;
 
 using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Agent.Core.Security;
 using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.Versioning;
 
@@ -20,7 +21,8 @@ public class AIAgentRollbackPermissionTests
         var adapterTypes = typeof(AIAgentVersionableEntityAdapter).Assembly.GetTypes()
             .Where(t => t is { IsAbstract: false, IsInterface: false } && typeof(IAIVersionableEntityAdapter).IsAssignableFrom(t))
             .ToList();
-        var knownVerbs = typeof(AIPermissions).GetFields(BindingFlags.Public | BindingFlags.Static)
+        var knownVerbs = new[] { typeof(AIPermissions), typeof(AIAgentPermissions) }
+            .SelectMany(t => t.GetFields(BindingFlags.Public | BindingFlags.Static))
             .Where(f => f.IsLiteral)
             .Select(f => (string)f.GetRawConstantValue()!)
             .ToList();

@@ -19,6 +19,7 @@ using Umbraco.Cms.Core.Models.Membership;
 using Umbraco.Cms.Infrastructure.Migrations;
 using Umbraco.Cms.Infrastructure.Persistence;
 using Umbraco.Cms.Persistence.Sqlite.Services;
+using Umbraco.AI.Prompt.Core.Security;
 
 using Xunit;
 
@@ -82,7 +83,7 @@ public sealed class GrantAIPromptPermissionsTests : IDisposable
         await RunMigrationAsync();
 
         // Then  the group holds Uai.Prompt.Manage exactly once (AC4)
-        PermissionsOf(group).ShouldBe([AIPermissions.ManagePrompts]);
+        PermissionsOf(group).ShouldBe([AIPromptPermissions.Manage]);
     }
 
     [Fact]
@@ -95,7 +96,7 @@ public sealed class GrantAIPromptPermissionsTests : IDisposable
         await RunMigrationAsync();
 
         // Then  the admin group holds Uai.Prompt.Manage (AC4)
-        PermissionsOf(admin).ShouldBe([AIPermissions.ManagePrompts]);
+        PermissionsOf(admin).ShouldBe([AIPromptPermissions.Manage]);
     }
 
     [Fact]
@@ -123,7 +124,7 @@ public sealed class GrantAIPromptPermissionsTests : IDisposable
         await RunMigrationAsync();
 
         // Then  it keeps those and gains the prompt verb
-        PermissionsOf(group).ShouldBe(["F", AIPermissions.ManageProfiles, AIPermissions.ManagePrompts], ignoreOrder: true);
+        PermissionsOf(group).ShouldBe(["F", AIPermissions.ManageProfiles, AIPromptPermissions.Manage], ignoreOrder: true);
     }
 
     [Fact]

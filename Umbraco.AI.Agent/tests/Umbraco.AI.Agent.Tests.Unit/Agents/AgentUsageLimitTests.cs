@@ -8,6 +8,7 @@ using Shouldly;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
+using Umbraco.AI.Agent.Core.Security;
 using Umbraco.AI.Agent.Core.Surfaces;
 using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Models;
@@ -89,7 +90,7 @@ public class AgentUsageLimitTests
     public async Task GetByAlias_ForManagerWhoAsksForManagedAccess_ReturnsLimitedAgent()
     {
         // Given a user with Uai.Agent.Manage not in editors
-        var harness = new Harness(inGroups: [Translators], permissions: [AIPermissions.ManageAgents]);
+        var harness = new Harness(inGroups: [Translators], permissions: [AIAgentPermissions.Manage]);
         var limited = harness.Add("limited", allowedGroups: [Editors]);
 
         // When managed access is asked for
@@ -102,7 +103,7 @@ public class AgentUsageLimitTests
     [Fact]
     public async Task Paged_ForManagerWhoAsksForManagedAccess_ListsLimitedAgent()
     {
-        var harness = new Harness(inGroups: [Translators], permissions: [AIPermissions.ManageAgents]);
+        var harness = new Harness(inGroups: [Translators], permissions: [AIAgentPermissions.Manage]);
         var limited = harness.Add("limited", allowedGroups: [Editors]);
 
         var (items, total) = await harness.Service.GetAgentsPagedAsync(0, 10, null, null, null, null, null, includeRestricted: true);
@@ -206,7 +207,7 @@ public class AgentUsageLimitTests
     [Fact]
     public async Task GetById_ForManagerWhoDidNotAskForManagedAccess_ReturnsNull()
     {
-        var harness = new Harness(inGroups: [Translators], permissions: [AIPermissions.ManageAgents]);
+        var harness = new Harness(inGroups: [Translators], permissions: [AIAgentPermissions.Manage]);
         var limited = harness.Add("limited", allowedGroups: [Editors]);
 
         var found = await harness.Service.GetAgentAsync(limited.Id);
@@ -269,7 +270,7 @@ public class AgentUsageLimitTests
     public async Task Run_ForManagerOutsideGroups_IsRefused(RunMethod method)
     {
         // Given a user with Uai.Agent.Manage not in editors
-        var harness = new Harness(inGroups: [Translators], permissions: [AIPermissions.ManageAgents]);
+        var harness = new Harness(inGroups: [Translators], permissions: [AIAgentPermissions.Manage]);
         var limited = harness.Add("limited", allowedGroups: [Editors]);
 
         // When they run the agent limited to editors

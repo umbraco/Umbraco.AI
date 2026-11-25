@@ -21,6 +21,31 @@ internal interface IAIPermissionService
     bool CanUse(IReadOnlyCollection<Guid>? allowedUserGroupIds, IReadOnlyCollection<Guid> userGroupKeys);
 
     /// <summary>
+    /// Whether the current backoffice user may use an item limited to the given groups, going by their own groups.
+    /// Managing the item's type does not lift the limit.
+    /// </summary>
+    /// <param name="allowedUserGroupIds">The saved limit, or null or empty for no limit.</param>
+    bool CanCurrentUserUse(IReadOnlyCollection<Guid>? allowedUserGroupIds);
+
+    /// <summary>
+    /// Gets the group keys to filter a list of limited items by, or <c>null</c> when no limit applies. No limit applies
+    /// when the caller asked for managed access (<paramref name="includeRestricted"/>) and the current user holds the
+    /// manage verb. Without a current backoffice user the verb is never held, so a headless caller never gets it.
+    /// </summary>
+    /// <param name="manageVerb">The add-on's manage right, e.g. its <c>Manage</c> permission verb.</param>
+    /// <param name="includeRestricted">Whether the caller asked for the items the user could only manage.</param>
+    IReadOnlyCollection<Guid>? GetListFilter(string manageVerb, bool includeRestricted);
+
+    /// <summary>
+    /// Whether one limited item is visible to the current backoffice user: managed access
+    /// (see <see cref="GetListFilter"/>) or membership of one of the item's groups.
+    /// </summary>
+    /// <param name="allowedUserGroupIds">The saved limit, or null or empty for no limit.</param>
+    /// <param name="manageVerb">The add-on's manage right.</param>
+    /// <param name="includeRestricted">Whether the caller asked for the items the user could only manage.</param>
+    bool IsVisible(IReadOnlyCollection<Guid>? allowedUserGroupIds, string manageVerb, bool includeRestricted);
+
+    /// <summary>
     /// Gets the current backoffice user's group keys and whether they are in the admin group.
     /// Empty when there is no current backoffice user.
     /// </summary>

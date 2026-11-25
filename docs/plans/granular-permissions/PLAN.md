@@ -388,7 +388,7 @@ frontend criteria use Vitest.
 
 ## Shipping
 
-- [ ] **T43** - story: GP-1 to GP-17 (shipping). Raise cross-product floors in
+- [x] **T43** - story: GP-1 to GP-17 (shipping). Raise cross-product floors in
   `Directory.Packages.props` to the versions that ship this feature: Agent, Prompt and Copilot
   Workspace on `Umbraco.AI.Core`/`Web` (they use the internal permission service); Automate,
   Copilot Workspace and Agent.Deploy on `Umbraco.AI.Agent.Core`; Prompt.Deploy on the Prompt

@@ -1,7 +1,7 @@
 # Spec: Granular permissions
 
-> [!IMPORTANT]
-> **5 guesses need your OK.**
+> [!NOTE]
+> **5 guesses, approved as built on 25-11-2026.**
 >
 > 1. Deleting audit log entries and running the audit log cleanup need **Manage settings**, not
 >    View logs. Viewing and deleting are different jobs, and the area only has a view right.\
@@ -84,7 +84,8 @@ today stay open.
 - **404** the agent doesn't exist, or the caller can't use it and doesn't have Manage agents.
 
 **`POST agents`, `PUT agents/{idOrAlias}`** take `allowedUserGroupIds: string[]` (user group keys).
-Empty or missing means everyone.
+Empty means everyone. On `POST`, missing means everyone; on `PUT`, missing keeps the saved list
+(decided 25-11-2026, so an older client can't open a limited agent by accident).
 - **403** the change to `allowedUserGroupIds` breaks R12. Nothing is saved.
 - **403** the change to `userGroupPermissions` (tool rules per group) breaks R22. Nothing is
   saved.

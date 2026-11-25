@@ -7,8 +7,8 @@ inside `IAIAgentService` and `IAIPromptService`.
 
 ![Access check flow](./diagrams/access-check-flow.svg)
 
-> [!IMPORTANT]
-> **5 guesses need your OK.**
+> [!NOTE]
+> **5 guesses, approved as built on 25-11-2026.**
 >
 > 1. The "who can use it" list is a JSON column, `AllowedUserGroupIds`, on the agent and
 >    prompt tables, filtered with `LIKE` the way `SurfaceIds` already is.\

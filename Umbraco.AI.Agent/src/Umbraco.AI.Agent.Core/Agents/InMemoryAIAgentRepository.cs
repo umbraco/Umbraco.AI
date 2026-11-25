@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.Cms.Core.Models;
@@ -28,8 +29,15 @@ internal sealed class InMemoryAIAgentRepository : IAIAgentRepository
     }
 
     /// <inheritdoc />
-    public Task<IEnumerable<AIAgent>> GetAllAsync(CancellationToken cancellationToken = default)
-        => Task.FromResult<IEnumerable<AIAgent>>(_agents.Values.ToList());
+    public Task<IEnumerable<AIAgent>> GetAllAsync(
+        IReadOnlyCollection<Guid>? usableByGroupKeys = null,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult<IEnumerable<AIAgent>>(_agents.Values.Where(a => IsUsableBy(a, usableByGroupKeys)).ToList());
+
+    private static bool IsUsableBy(AIAgent agent, IReadOnlyCollection<Guid>? groupKeys)
+        => groupKeys is null
+           || agent.AllowedUserGroupIds.Count == 0
+           || agent.AllowedUserGroupIds.Any(groupKeys.Contains);
 
     /// <inheritdoc />
     public Task<IEnumerable<AIAgent>> GetByProfileAsync(Guid profileId, CancellationToken cancellationToken = default)
@@ -49,9 +57,10 @@ internal sealed class InMemoryAIAgentRepository : IAIAgentRepository
         string? surfaceId = null,
         bool? isActive = null,
         AIAgentType? agentType = null,
+        IReadOnlyCollection<Guid>? usableByGroupKeys = null,
         CancellationToken cancellationToken = default)
     {
-        var query = _agents.Values.AsEnumerable();
+        var query = _agents.Values.Where(p => IsUsableBy(p, usableByGroupKeys));
 
         if (!string.IsNullOrWhiteSpace(filter))
         {
@@ -91,10 +100,13 @@ internal sealed class InMemoryAIAgentRepository : IAIAgentRepository
     }
 
     /// <inheritdoc />
-    public Task<IEnumerable<AIAgent>> GetBySurfaceAsync(string surfaceId, CancellationToken cancellationToken = default)
+    public Task<IEnumerable<AIAgent>> GetBySurfaceAsync(
+        string surfaceId,
+        IReadOnlyCollection<Guid>? usableByGroupKeys = null,
+        CancellationToken cancellationToken = default)
     {
         var agents = _agents.Values
-            .Where(p => p.SurfaceIds.Contains(surfaceId, StringComparer.OrdinalIgnoreCase))
+            .Where(p => p.SurfaceIds.Contains(surfaceId, StringComparer.OrdinalIgnoreCase) && IsUsableBy(p, usableByGroupKeys))
             .ToList();
         return Task.FromResult<IEnumerable<AIAgent>>(agents);
     }

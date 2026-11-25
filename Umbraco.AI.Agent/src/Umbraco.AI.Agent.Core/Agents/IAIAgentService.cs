@@ -1,9 +1,11 @@
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
+
+using Umbraco.AI.Agent.Core.InlineAgents;
 using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Models;
-using Umbraco.AI.Agent.Core.InlineAgents;
 using Umbraco.Cms.Core.Models;
+
 using MsAIAgent = Microsoft.Agents.AI.AIAgent;
 
 namespace Umbraco.AI.Agent.Core.Agents;
@@ -13,27 +15,133 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// </summary>
 public interface IAIAgentService
 {
+    private const string ExplicitUserGroupsNotSupported =
+        "This IAIAgentService implementation doesn't support checking agents against explicit user groups. Override the overload that takes userGroupIds.";
+
     /// <summary>
     /// Gets a agent by its unique identifier.
     /// </summary>
     /// <param name="id">The agent ID.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The agent if found, null otherwise.</returns>
+    /// <returns>The agent if found and the current user may use it, null otherwise.</returns>
+    /// <remarks>
+    /// An agent limited to user groups the current user is not in is treated as not found.
+    /// Use <see cref="GetAgentAsync(Guid, bool, CancellationToken)"/> to manage agents the user can't use.
+    /// </remarks>
     Task<AIAgent?> GetAgentAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets a agent by its unique identifier, optionally including agents the current user may not use.
+    /// </summary>
+    /// <param name="id">The agent ID.</param>
+    /// <param name="includeRestricted">
+    /// Ask for managed access: return the agent even when it is limited to other user groups. Only honoured
+    /// when the current user has the Manage agents right; otherwise it is ignored.
+    /// </param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The agent if found and visible to the caller, null otherwise.</returns>
+    /// <remarks>
+    /// The default implementation exists so that third-party implementations of this interface keep compiling;
+    /// it ignores <paramref name="includeRestricted"/> and returns what <see cref="GetAgentAsync(Guid, CancellationToken)"/> does.
+    /// </remarks>
+    Task<AIAgent?> GetAgentAsync(Guid id, bool includeRestricted, CancellationToken cancellationToken = default)
+        => GetAgentAsync(id, cancellationToken);
+
+    /// <summary>
+    /// Gets a agent by its unique identifier as seen by the given user groups, not the current user's.
+    /// </summary>
+    /// <param name="id">The agent ID.</param>
+    /// <param name="userGroupIds">The keys of the user groups to check the agent's limit against.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The agent if found and usable by those groups, null otherwise.</returns>
+    /// <remarks>
+    /// For acting on behalf of someone else, such as an Automate workspace's service account. Managing
+    /// agents never lifts the limit here. The default implementation exists so that third-party implementations
+    /// of this interface keep compiling; it throws <see cref="NotSupportedException"/>, because it can't check
+    /// a limit it doesn't know about.
+    /// </remarks>
+    Task<AIAgent?> GetAgentAsync(Guid id, IReadOnlyCollection<Guid> userGroupIds, CancellationToken cancellationToken = default)
+        => throw new NotSupportedException(ExplicitUserGroupsNotSupported);
+
+    /// <summary>
+    /// Gets a agent by its unique identifier so it can be used (run, streamed, suggested for).
+    /// </summary>
+    /// <param name="id">The agent ID.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The agent when the current user may use it, null when there is no such agent.</returns>
+    /// <exception cref="AIAgentNotAvailableException">Thrown if the agent exists but is limited to user groups the current user is not in.</exception>
+    /// <remarks>
+    /// Unlike <see cref="GetAgentAsync(Guid, CancellationToken)"/>, a limited agent is reported as refused, not as
+    /// missing, so a caller can tell the two apart. Managing agents does not lift the limit. The default
+    /// implementation exists so that third-party implementations of this interface keep compiling; it fails
+    /// closed by returning what <see cref="GetAgentAsync(Guid, CancellationToken)"/> does, so a limited agent
+    /// reads as missing.
+    /// </remarks>
+    Task<AIAgent?> GetAgentForUseAsync(Guid id, CancellationToken cancellationToken = default)
+        => GetAgentAsync(id, cancellationToken);
 
     /// <summary>
     /// Gets a agent by its alias.
     /// </summary>
     /// <param name="alias">The agent alias.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The agent if found, null otherwise.</returns>
+    /// <returns>The agent if found and the current user may use it, null otherwise.</returns>
+    /// <remarks>
+    /// An agent limited to user groups the current user is not in is treated as not found.
+    /// </remarks>
     Task<AIAgent?> GetAgentByAliasAsync(string alias, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets all Agents.
+    /// Gets a agent by its alias, optionally including agents the current user may not use.
+    /// </summary>
+    /// <param name="alias">The agent alias.</param>
+    /// <param name="includeRestricted">
+    /// Ask for managed access: return the agent even when it is limited to other user groups. Only honoured
+    /// when the current user has the Manage agents right; otherwise it is ignored.
+    /// </param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The agent if found and visible to the caller, null otherwise.</returns>
+    /// <remarks>
+    /// The default implementation exists so that third-party implementations of this interface keep compiling;
+    /// it ignores <paramref name="includeRestricted"/> and returns what <see cref="GetAgentByAliasAsync(string, CancellationToken)"/> does.
+    /// </remarks>
+    Task<AIAgent?> GetAgentByAliasAsync(string alias, bool includeRestricted, CancellationToken cancellationToken = default)
+        => GetAgentByAliasAsync(alias, cancellationToken);
+
+    /// <summary>
+    /// Gets a agent by its alias as seen by the given user groups, not the current user's.
+    /// </summary>
+    /// <param name="alias">The agent alias.</param>
+    /// <param name="userGroupIds">The keys of the user groups to check the agent's limit against.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The agent if found and usable by those groups, null otherwise.</returns>
+    /// <remarks>
+    /// The default implementation exists so that third-party implementations of this interface keep compiling;
+    /// it throws <see cref="NotSupportedException"/>, because it can't check a limit it doesn't know about.
+    /// </remarks>
+    Task<AIAgent?> GetAgentByAliasAsync(string alias, IReadOnlyCollection<Guid> userGroupIds, CancellationToken cancellationToken = default)
+        => throw new NotSupportedException(ExplicitUserGroupsNotSupported);
+
+    /// <summary>
+    /// Gets a agent by its alias so it can be used (run, streamed, suggested for).
+    /// </summary>
+    /// <param name="alias">The agent alias.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The agent when the current user may use it, null when there is no such agent.</returns>
+    /// <exception cref="AIAgentNotAvailableException">Thrown if the agent exists but is limited to user groups the current user is not in.</exception>
+    /// <remarks>
+    /// The default implementation exists so that third-party implementations of this interface keep compiling;
+    /// it fails closed by returning what <see cref="GetAgentByAliasAsync(string, CancellationToken)"/> does, so a
+    /// limited agent reads as missing.
+    /// </remarks>
+    Task<AIAgent?> GetAgentForUseByAliasAsync(string alias, CancellationToken cancellationToken = default)
+        => GetAgentByAliasAsync(alias, cancellationToken);
+
+    /// <summary>
+    /// Gets all Agents the current user may use.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>All Agents.</returns>
+    /// <returns>The agents that are not limited, or are limited to a group the current user is in.</returns>
     Task<IEnumerable<AIAgent>> GetAgentsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -47,6 +155,7 @@ public interface IAIAgentService
     /// <param name="isActive">Optional active status filter.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A tuple containing the filtered/paginated agents and the total count.</returns>
+    /// <remarks>Only agents the current user may use are returned.</remarks>
     Task<(IEnumerable<AIAgent> Items, int Total)> GetAgentsPagedAsync(
         int skip,
         int take,
@@ -58,11 +167,74 @@ public interface IAIAgentService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets a paged list of Agents with optional filtering, optionally including agents the current user may not use.
+    /// </summary>
+    /// <param name="skip">Number of items to skip.</param>
+    /// <param name="take">Number of items to take.</param>
+    /// <param name="filter">Optional filter string for name/alias.</param>
+    /// <param name="profileId">Optional profile ID filter.</param>
+    /// <param name="surfaceId">Optional surface ID filter.</param>
+    /// <param name="isActive">Optional active status filter.</param>
+    /// <param name="agentType">Optional agent type filter.</param>
+    /// <param name="includeRestricted">
+    /// Ask for managed access: return every agent, limited or not. Only honoured when the current user has
+    /// the Manage agents right; otherwise it is ignored.
+    /// </param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A tuple containing the filtered/paginated agents and the total count.</returns>
+    /// <remarks>
+    /// The default implementation exists so that third-party implementations of this interface keep compiling;
+    /// it ignores <paramref name="includeRestricted"/> and returns what the overload without it does.
+    /// </remarks>
+    Task<(IEnumerable<AIAgent> Items, int Total)> GetAgentsPagedAsync(
+        int skip,
+        int take,
+        string? filter,
+        Guid? profileId,
+        string? surfaceId,
+        bool? isActive,
+        AIAgentType? agentType,
+        bool includeRestricted,
+        CancellationToken cancellationToken = default)
+        => GetAgentsPagedAsync(skip, take, filter, profileId, surfaceId, isActive, agentType, cancellationToken);
+
+    /// <summary>
+    /// Gets a paged list of Agents with optional filtering, as seen by the given user groups, not the current user's.
+    /// </summary>
+    /// <param name="skip">Number of items to skip.</param>
+    /// <param name="take">Number of items to take.</param>
+    /// <param name="filter">Optional filter string for name/alias.</param>
+    /// <param name="profileId">Optional profile ID filter.</param>
+    /// <param name="surfaceId">Optional surface ID filter.</param>
+    /// <param name="isActive">Optional active status filter.</param>
+    /// <param name="agentType">Optional agent type filter.</param>
+    /// <param name="userGroupIds">The keys of the user groups to check each agent's limit against.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A tuple containing the filtered/paginated agents and the total count.</returns>
+    /// <remarks>
+    /// For acting on behalf of someone else, such as an Automate workspace's service account. Managing
+    /// agents never lifts the limit here. The default implementation exists so that third-party implementations
+    /// of this interface keep compiling; it throws <see cref="NotSupportedException"/>, because it can't check
+    /// a limit it doesn't know about.
+    /// </remarks>
+    Task<(IEnumerable<AIAgent> Items, int Total)> GetAgentsPagedAsync(
+        int skip,
+        int take,
+        string? filter,
+        Guid? profileId,
+        string? surfaceId,
+        bool? isActive,
+        AIAgentType? agentType,
+        IReadOnlyCollection<Guid> userGroupIds,
+        CancellationToken cancellationToken = default)
+        => throw new NotSupportedException(ExplicitUserGroupsNotSupported);
+
+    /// <summary>
     /// Gets all agents that belong to a specific surface.
     /// </summary>
     /// <param name="surfaceId">The surface ID to filter by.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>Agents that have the specified surface ID in their SurfaceIds.</returns>
+    /// <returns>Agents the current user may use that have the specified surface ID in their SurfaceIds.</returns>
     Task<IEnumerable<AIAgent>> GetAgentsBySurfaceAsync(string surfaceId, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -164,6 +336,7 @@ public interface IAIAgentService
     /// <param name="options">Optional execution options for overrides.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The agent response.</returns>
+    /// <exception cref="AIAgentNotAvailableException">Thrown if the agent is limited to user groups the caller is not in.</exception>
     /// <exception cref="InvalidOperationException">Thrown if agent not found, inactive, or execution cancelled.</exception>
     Task<AgentResponse> RunAgentAsync(
         Guid agentId,
@@ -179,6 +352,7 @@ public interface IAIAgentService
     /// <param name="options">Optional execution options for overrides.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The agent response.</returns>
+    /// <exception cref="AIAgentNotAvailableException">Thrown if the agent is limited to user groups the caller is not in.</exception>
     /// <exception cref="InvalidOperationException">Thrown if agent not found, inactive, or execution cancelled.</exception>
     Task<AgentResponse> RunAgentAsync(
         string agentAlias,
@@ -200,6 +374,7 @@ public interface IAIAgentService
     /// <param name="options">Optional execution options for overrides.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>An async enumerable of agent response updates.</returns>
+    /// <exception cref="AIAgentNotAvailableException">Thrown if the agent is limited to user groups the caller is not in.</exception>
     /// <exception cref="InvalidOperationException">Thrown if agent not found, inactive, or execution cancelled.</exception>
     IAsyncEnumerable<AgentResponseUpdate> StreamAgentAsync(
         Guid agentId,
@@ -215,6 +390,7 @@ public interface IAIAgentService
     /// <param name="options">Optional execution options for overrides.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>An async enumerable of agent response updates.</returns>
+    /// <exception cref="AIAgentNotAvailableException">Thrown if the agent is limited to user groups the caller is not in.</exception>
     /// <exception cref="InvalidOperationException">Thrown if agent not found, inactive, or execution cancelled.</exception>
     IAsyncEnumerable<AgentResponseUpdate> StreamAgentAsync(
         string agentAlias,
@@ -242,6 +418,9 @@ public interface IAIAgentService
     /// <param name="frontendTools">Frontend tools with metadata for permission filtering.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Async enumerable of AG-UI events.</returns>
+    /// <exception cref="AIAgentNotAvailableException">
+    /// Thrown when the stream is first enumerated, if the agent is limited to user groups the caller is not in.
+    /// </exception>
     IAsyncEnumerable<IAGUIEvent> StreamAgentAGUIAsync(
         Guid agentId,
         AGUIRunRequest request,
@@ -257,6 +436,9 @@ public interface IAIAgentService
     /// <param name="options">Options controlling profile and context overrides.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Async enumerable of AG-UI events.</returns>
+    /// <exception cref="AIAgentNotAvailableException">
+    /// Thrown when the stream is first enumerated, if the agent is limited to user groups the caller is not in.
+    /// </exception>
     IAsyncEnumerable<IAGUIEvent> StreamAgentAGUIAsync(
         Guid agentId,
         AGUIRunRequest request,

@@ -4,6 +4,12 @@
   <Import Project="$([MSBuild]::GetPathOfFileAbove(Directory.Packages.props, $(MSBuildThisFileDirectory)..))" />
 
   <ItemGroup>
+    <!-- Floor for the internal contracts shared with Umbraco.AI.Prompt via InternalsVisibleTo:
+         IAIPromptUnrestrictedReader and AIPrompt.AllowedUserGroupIds. Do not lower it below the
+         Umbraco.AI.Prompt version that ships granular permissions. -->
     <PackageVersion Update="Umbraco.AI.Prompt.Startup" Version="[19.0.0-rc.1, 19.999.999)" />
+    <!-- Floor for the internal UmbracoAIUserGroupMapper shared from Umbraco.AI.Deploy via InternalsVisibleTo.
+         Do not lower it below the Umbraco.AI.Deploy version that ships it. -->
+    <PackageVersion Update="Umbraco.AI.Deploy" Version="[19.0.0-rc.1, 19.999.999)" />
   </ItemGroup>
 </Project>

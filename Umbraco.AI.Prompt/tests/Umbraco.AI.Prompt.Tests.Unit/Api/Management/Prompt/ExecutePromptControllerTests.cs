@@ -42,8 +42,8 @@ public class ExecutePromptControllerTests
         var promptId = Guid.NewGuid();
         var service = new Mock<IAIPromptService>();
         service
-            .Setup(x => x.GetPromptAsync(promptId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AIPrompt { Alias = "summarize", Name = "Summarize", Instructions = "Summarize" });
+            .Setup(x => x.GetPromptForUseAsync(promptId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AIPrompt { Id = promptId, Alias = "summarize", Name = "Summarize", Instructions = "Summarize" });
         service
             .Setup(x => x.ExecutePromptAsync(promptId, It.IsAny<AIPromptExecutionRequest>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(exception);
@@ -100,6 +100,28 @@ public class ExecutePromptControllerTests
         problem.Status.ShouldBe(expectedStatus);
         problem.Type.ShouldBe("Error");
         problem.Detail.ShouldBe("Provider said no.");
+    }
+
+    [Fact]
+    public async Task ExecutePrompt_ForALimitedPrompt_Returns403PromptNotAvailable()
+    {
+        // Given a prompt the caller may not use
+        var promptId = Guid.NewGuid();
+        var service = new Mock<IAIPromptService>();
+        service
+            .Setup(x => x.GetPromptForUseAsync(promptId, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new AIPromptNotAvailableException(promptId));
+
+        // When it is executed
+        var result = await CreateController(service).ExecutePrompt(new IdOrAlias(promptId), RequestModel);
+
+        // Then the response is a 403 titled "Prompt not available", and nothing was run
+        var objectResult = result.ShouldBeOfType<ObjectResult>();
+        objectResult.StatusCode.ShouldBe(403);
+        objectResult.Value.ShouldBeOfType<ProblemDetails>().Title.ShouldBe("Prompt not available");
+        service.Verify(
+            x => x.ExecutePromptAsync(It.IsAny<Guid>(), It.IsAny<AIPromptExecutionRequest>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]

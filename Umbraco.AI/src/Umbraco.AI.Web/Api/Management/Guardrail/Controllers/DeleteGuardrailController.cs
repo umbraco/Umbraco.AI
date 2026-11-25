@@ -14,7 +14,7 @@ namespace Umbraco.AI.Web.Api.Management.Guardrail.Controllers;
 /// Controller to delete a guardrail.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ManageGuardrailsAI)]
 public class DeleteGuardrailController : GuardrailControllerBase
 {
     private readonly IAIGuardrailService _guardrailService;

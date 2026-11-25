@@ -45,6 +45,11 @@ public class UpdateAgentRequestModel
     public IEnumerable<string>? SurfaceIds { get; init; }
 
     /// <summary>
+    /// Keys of the user groups allowed to use this agent. Missing keeps the agent's current list; an empty array means everyone.
+    /// </summary>
+    public IEnumerable<Guid>? AllowedUserGroupIds { get; init; }
+
+    /// <summary>
     /// Optional scope defining where this agent is available.
     /// If null, agent is available in all contexts (backwards compatible).
     /// </summary>

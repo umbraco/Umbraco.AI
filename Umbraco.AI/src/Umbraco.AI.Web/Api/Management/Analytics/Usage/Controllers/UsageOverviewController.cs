@@ -14,7 +14,7 @@ namespace Umbraco.AI.Web.Api.Management.Analytics.Usage.Controllers;
 /// Controller to get the usage overview: totals and a time series for a range and its comparison range.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ViewAnalyticsAI)]
 public class UsageOverviewController : UsageRangeControllerBase
 {
     /// <summary>

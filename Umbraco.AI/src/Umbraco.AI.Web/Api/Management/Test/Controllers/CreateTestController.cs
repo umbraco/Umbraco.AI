@@ -13,7 +13,7 @@ namespace Umbraco.AI.Web.Api.Management.Test.Controllers;
 /// Controller to create a new test.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ManageTestsAI)]
 public class CreateTestController : TestControllerBase
 {
     private readonly IAITestService _testService;

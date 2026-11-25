@@ -1,4 +1,5 @@
 using System.Text.Json;
+
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Deploy;
@@ -51,6 +52,13 @@ public class AIAgentArtifact(GuidUdi udi, IEnumerable<ArtifactDependency>? depen
     /// Starter prompts shown as clickable chips in an empty chat for this agent.
     /// </summary>
     public IEnumerable<AIStarterPrompt> StarterPrompts { get; set; } = [];
+
+    /// <summary>
+    /// Aliases of the user groups allowed to use the agent. Empty means everyone. Aliases, not keys,
+    /// because a custom user group has a different key on each environment. Artifacts written before
+    /// this property existed don't set it and import as everyone.
+    /// </summary>
+    public IEnumerable<string> AllowedUserGroups { get; set; } = [];
 
     /// <summary>
     /// Whether the agent is active.

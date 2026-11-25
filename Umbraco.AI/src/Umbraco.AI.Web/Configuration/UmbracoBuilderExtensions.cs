@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.Extensions.DependencyInjection;
@@ -46,7 +47,8 @@ public static class UmbracoBuilderExtensions
 
         // Security
         builder.Services.AddSingleton<IAuthorizationHandler, AISectionAuthorizationHandler>();
-        builder.Services.AddAuthorization(AIAuthorizationPolicyConfiguration.Configure);
+        builder.Services.AddSingleton<IAuthorizationHandler, AIPermissionAuthorizationHandler>();
+        builder.Services.AddAuthorization(AIAuthorizationPolicies.Register);
 
         return builder;
     }

@@ -17,7 +17,10 @@ import type {
     UaiStarterPrompt,
 } from "./types.js";
 
-function mapConfigFromResponse(agentType: string, config: StandardAgentConfigModel | OrchestratedAgentConfigModel | null | undefined): UaiAgentConfig {
+function mapConfigFromResponse(
+    agentType: string,
+    config: StandardAgentConfigModel | OrchestratedAgentConfigModel | null | undefined,
+): UaiAgentConfig {
     if (agentType === "orchestrated") {
         const orchestrated = config as { $type?: string; workflowId?: string; settings?: unknown } | null;
         return {
@@ -84,6 +87,7 @@ export const UaiAgentTypeMapper = {
             agentType,
             profileId: response.profileId ?? null,
             surfaceIds: response.surfaceIds ?? [],
+            allowedUserGroupIds: response.allowedUserGroupIds ?? [],
             scope: (response as any).scope ?? null,
             config: mapConfigFromResponse(agentType, response.config),
             guardrailIds: response.guardrailIds ?? [],
@@ -122,6 +126,7 @@ export const UaiAgentTypeMapper = {
             description: model.description,
             profileId: model.profileId,
             surfaceIds: model.surfaceIds,
+            allowedUserGroupIds: model.allowedUserGroupIds,
             scope: model.scope,
             config: mapConfigToRequest(model.config),
             guardrailIds: model.guardrailIds,
@@ -136,6 +141,7 @@ export const UaiAgentTypeMapper = {
             description: model.description,
             profileId: model.profileId,
             surfaceIds: model.surfaceIds,
+            allowedUserGroupIds: model.allowedUserGroupIds,
             scope: model.scope,
             config: mapConfigToRequest(model.config),
             guardrailIds: model.guardrailIds,

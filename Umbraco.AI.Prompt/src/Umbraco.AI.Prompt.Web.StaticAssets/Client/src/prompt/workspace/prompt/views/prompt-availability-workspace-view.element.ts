@@ -1,4 +1,5 @@
 import { css, html, customElement, state } from "@umbraco-cms/backoffice/external/lit";
+import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
@@ -53,6 +54,17 @@ export class UaiPromptAvailabilityWorkspaceViewElement extends UmbLitElement {
         this.#workspaceContext?.handleCommand(new UaiPartialUpdateCommand<UaiPromptDetailModel>({ scope }, "scope"));
     }
 
+    #onAllowedUserGroupIdsChange(event: UmbChangeEvent) {
+        event.stopPropagation();
+        const input = event.target as HTMLElement & { value: string[] };
+        this.#workspaceContext?.handleCommand(
+            new UaiPartialUpdateCommand<UaiPromptDetailModel>(
+                { allowedUserGroupIds: input.value },
+                "allowedUserGroupIds",
+            ),
+        );
+    }
+
     #onAllowRulesChange(event: CustomEvent<UaiScopeRule[]>) {
         event.stopPropagation();
         const scope = this.#getScope();
@@ -102,6 +114,13 @@ export class UaiPromptAvailabilityWorkspaceViewElement extends UmbLitElement {
                     ></uai-prompt-scope-rules-editor>
                 </umb-property-layout>
             </uui-box>
+
+            <uui-box headline=${this.localize.term("uaiUserGroupAccess_headline")}>
+                <uai-user-group-access-input
+                    .value=${this._model.allowedUserGroupIds}
+                    @change=${this.#onAllowedUserGroupIdsChange}
+                ></uai-user-group-access-input>
+            </uui-box>
         `;
     }
 
@@ -115,6 +134,9 @@ export class UaiPromptAvailabilityWorkspaceViewElement extends UmbLitElement {
 
             uui-box {
                 --uui-box-default-padding: 0 var(--uui-size-space-5);
+            }
+            uui-box:not(:first-child) {
+                margin-top: var(--uui-size-layout-1);
             }
 
             uui-loader {

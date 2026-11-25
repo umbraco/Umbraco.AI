@@ -42,23 +42,29 @@ public class RunAgentController : AgentControllerBase
     [MapToApiVersion("1.0")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> RunAgent(
         IdOrAlias agentIdOrAlias,
         RunAgentRequestModel requestModel,
         CancellationToken cancellationToken = default)
     {
-        var agentId = await _agentService.TryGetAgentIdAsync(agentIdOrAlias, cancellationToken);
-        if (agentId is null)
-        {
-            return AgentNotFound();
-        }
-
         try
         {
+            // A limited agent is refused here (403), not hidden (404): the caller learns why it won't run.
+            var agentId = await _agentService.TryGetAgentIdForUseAsync(agentIdOrAlias, cancellationToken);
+            if (agentId is null)
+            {
+                return AgentNotFound();
+            }
+
             var messages = _umbracoMapper.MapEnumerable<ChatMessageModel, ChatMessage>(requestModel.Messages).ToList();
             var response = await _agentService.RunAgentAsync(agentId.Value, messages, cancellationToken: cancellationToken);
             return Ok(response);
+        }
+        catch (AIAgentNotAvailableException)
+        {
+            return AgentNotAvailable();
         }
         catch (InvalidOperationException ex)
         {

@@ -59,6 +59,11 @@ public class PromptResponseModel
     public IEnumerable<string> Tags { get; set; } = [];
 
     /// <summary>
+    /// Keys of the user groups allowed to use this prompt. Empty means everyone.
+    /// </summary>
+    public IEnumerable<Guid> AllowedUserGroupIds { get; set; } = [];
+
+    /// <summary>
     /// Whether the prompt is active.
     /// </summary>
     public bool IsActive { get; set; }

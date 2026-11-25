@@ -33,6 +33,9 @@ namespace Umbraco.AI.Agent.Persistence.Sqlite.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("AllowedUserGroupIds")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Config")
                         .HasColumnType("TEXT");
 

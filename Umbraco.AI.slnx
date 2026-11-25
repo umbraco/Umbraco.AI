@@ -45,6 +45,7 @@
     <Project Path="Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Web.StaticAssets/Umbraco.AI.Prompt.Web.StaticAssets.csproj" />
     <Project Path="Umbraco.AI.Prompt/src/Umbraco.AI.Prompt.Web/Umbraco.AI.Prompt.Web.csproj" />
     <Project Path="Umbraco.AI.Prompt/src/Umbraco.AI.Prompt/Umbraco.AI.Prompt.csproj" />
+    <Project Path="Umbraco.AI.Prompt/tests/Umbraco.AI.Prompt.Tests.Integration/Umbraco.AI.Prompt.Tests.Integration.csproj" />
     <Project Path="Umbraco.AI.Prompt/tests/Umbraco.AI.Prompt.Tests.Unit/Umbraco.AI.Prompt.Tests.Unit.csproj" />
   </Folder>
   <Folder Name="/AddOns/Search/">

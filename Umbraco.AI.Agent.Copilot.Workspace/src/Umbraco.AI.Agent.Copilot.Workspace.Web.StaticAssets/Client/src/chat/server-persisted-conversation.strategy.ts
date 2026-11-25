@@ -42,7 +42,10 @@ export class UaiServerPersistedConversationStrategy implements UaiConversationSt
      * does, via its memoised `loadAgents()`), so the catalog is populated by the time this runs — not a
      * best-effort snapshot (see `toDisplayMessages`).
      */
-    constructor(repository: UaiConversationRepository, getAgentNames: () => ReadonlyMap<string, string> = () => new Map()) {
+    constructor(
+        repository: UaiConversationRepository,
+        getAgentNames: () => ReadonlyMap<string, string> = () => new Map(),
+    ) {
         this.#repository = repository;
         this.#getAgentNames = getAgentNames;
     }
@@ -57,7 +60,7 @@ export class UaiServerPersistedConversationStrategy implements UaiConversationSt
     createClient(agent: UaiAgentItem, callbacks: AgentClientCallbacks): UaiAgentClient {
         const transport = new UaiHttpAgent({
             agentId: agent.id,
-            runner: async (body, signal) => {
+            runner: async (body, signal, requestOptions) => {
                 const id = this.#conversationId;
                 if (!id) {
                     throw new Error("No conversation is bound to the Copilot Workspace chat.");
@@ -68,6 +71,7 @@ export class UaiServerPersistedConversationStrategy implements UaiConversationSt
                     path: { id },
                     body: body as never,
                     signal,
+                    ...requestOptions,
                 });
                 return { stream: result.stream as AsyncIterable<unknown> };
             },

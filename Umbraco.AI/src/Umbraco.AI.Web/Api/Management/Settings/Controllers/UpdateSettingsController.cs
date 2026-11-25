@@ -18,7 +18,7 @@ namespace Umbraco.AI.Web.Api.Management.Settings.Controllers;
 /// Controller to update the AI settings.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ManageSettingsAI)]
 public class UpdateSettingsController : SettingsControllerBase
 {
     private readonly IAISettingsService _settingsService;

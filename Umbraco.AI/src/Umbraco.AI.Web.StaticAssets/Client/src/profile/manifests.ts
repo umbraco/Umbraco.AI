@@ -4,12 +4,16 @@ import { profileMenuManifests } from "./menu/manifests.js";
 import { profileModalManifests } from "./modals/manifests.js";
 import { profileRepositoryManifests } from "./repository/manifests.js";
 import { profileWorkspaceManifests } from "./workspace/manifests.js";
+import { withAreaPermission } from "../permissions/area-conditions.js";
+import { UAI_PERMISSION_VERB_MANAGE_PROFILES } from "../permissions/constants.js";
 
 export const profileManifests = [
-    ...profileCollectionManifests,
-    ...profileEntityActionManifests,
-    ...profileMenuManifests,
+    ...withAreaPermission(UAI_PERMISSION_VERB_MANAGE_PROFILES, [
+        ...profileCollectionManifests,
+        ...profileEntityActionManifests,
+        ...profileMenuManifests,
+        ...profileWorkspaceManifests,
+    ]),
     ...profileModalManifests,
     ...profileRepositoryManifests,
-    ...profileWorkspaceManifests,
 ];

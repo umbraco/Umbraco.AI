@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+
 using Umbraco.AI.Prompt.Core.Prompts;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Persistence.EFCore.Scoping;
@@ -45,12 +46,14 @@ internal sealed class EFCoreAIPromptRepository : IAIPromptRepository
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<Core.Prompts.AIPrompt>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Core.Prompts.AIPrompt>> GetAllAsync(
+        IReadOnlyCollection<Guid>? usableByGroupKeys = null,
+        CancellationToken cancellationToken = default)
     {
         using IEFCoreScope<UmbracoAIPromptDbContext> scope = _scopeProvider.CreateScope();
 
         var entities = await scope.ExecuteWithContextAsync(async db =>
-            await db.Prompts.AsNoTracking().OrderBy(e => e.Name).ToListAsync(cancellationToken));
+            await db.Prompts.AsNoTracking().WhereUsableBy(usableByGroupKeys).OrderBy(e => e.Name).ToListAsync(cancellationToken));
 
         scope.Complete();
 
@@ -63,13 +66,14 @@ internal sealed class EFCoreAIPromptRepository : IAIPromptRepository
         int take,
         string? filter = null,
         Guid? profileId = null,
+        IReadOnlyCollection<Guid>? usableByGroupKeys = null,
         CancellationToken cancellationToken = default)
     {
         using IEFCoreScope<UmbracoAIPromptDbContext> scope = _scopeProvider.CreateScope();
 
         var result = await scope.ExecuteWithContextAsync(async db =>
         {
-            IQueryable<AIPromptEntity> query = db.Prompts.AsNoTracking();
+            IQueryable<AIPromptEntity> query = db.Prompts.AsNoTracking().WhereUsableBy(usableByGroupKeys);
 
             if (!string.IsNullOrWhiteSpace(filter))
             {

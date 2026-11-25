@@ -56,6 +56,11 @@ public class UpdatePromptRequestModel
     public IEnumerable<string>? Tags { get; init; }
 
     /// <summary>
+    /// Keys of the user groups allowed to use this prompt. Missing keeps the prompt's current list; an empty array means everyone.
+    /// </summary>
+    public IEnumerable<Guid>? AllowedUserGroupIds { get; init; }
+
+    /// <summary>
     /// Whether the prompt is active.
     /// </summary>
     public bool IsActive { get; init; } = true;

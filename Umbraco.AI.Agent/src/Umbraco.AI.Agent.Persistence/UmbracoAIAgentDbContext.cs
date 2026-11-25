@@ -102,6 +102,8 @@ public class UmbracoAIAgentDbContext : DbContext
             entity.Property(e => e.SurfaceIds)
                 .HasMaxLength(2000);
 
+            entity.Property(e => e.AllowedUserGroupIds);
+
             entity.Property(e => e.Scope);
 
             entity.Property(e => e.StarterPrompts);

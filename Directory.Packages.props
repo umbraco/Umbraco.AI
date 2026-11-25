@@ -55,7 +55,10 @@
     <PackageVersion Include="System.ClientModel" Version="[1.5.0, 1.999.999)" />
   </ItemGroup>
 
-  <!-- Inter-product dependencies (version ranges for NuGet packages) -->
+  <!-- Inter-product dependencies (version ranges for NuGet packages).
+       The Umbraco.AI Core/Web/Startup, Agent* and Prompt.Startup floors are the first 19.x releases
+       with granular permissions. Add-ons and Deploy packages use internal contracts shared via
+       InternalsVisibleTo, so do not lower them. -->
   <ItemGroup>
     <PackageVersion Include="Umbraco.AI.Core" Version="[19.0.0-rc.1, 19.999.999)" />
     <PackageVersion Include="Umbraco.AI.Web" Version="[19.0.0-rc.1, 19.999.999)" />

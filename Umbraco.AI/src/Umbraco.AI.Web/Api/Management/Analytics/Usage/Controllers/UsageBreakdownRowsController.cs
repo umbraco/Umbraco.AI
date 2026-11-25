@@ -14,7 +14,7 @@ namespace Umbraco.AI.Web.Api.Management.Analytics.Usage.Controllers;
 /// Controller to get a page of usage broken down by provider, model, profile or user.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ViewAnalyticsAI)]
 public class UsageBreakdownRowsController : UsageRangeControllerBase
 {
     /// <summary>

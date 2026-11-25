@@ -44,21 +44,29 @@ public class SuggestStartersAgentController : AgentControllerBase
     [HttpGet($"{{{nameof(agentIdOrAlias)}}}/suggest-starters/availability")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetSuggestStartersAvailability(
         IdOrAlias agentIdOrAlias,
         CancellationToken cancellationToken = default)
     {
-        var agent = await _agentService.GetAgentAsync(agentIdOrAlias, cancellationToken);
-        if (agent is null)
+        try
         {
-            return AgentNotFound();
+            var agent = await _agentService.GetAgentForUseAsync(agentIdOrAlias, cancellationToken);
+            if (agent is null)
+            {
+                return AgentNotFound();
+            }
+
+            var available = agent.ProfileId.HasValue
+                || await _profileService.HasDefaultProfileAsync(AICapability.Chat, cancellationToken);
+
+            return Ok(available);
         }
-
-        var available = agent.ProfileId.HasValue
-            || await _profileService.HasDefaultProfileAsync(AICapability.Chat, cancellationToken);
-
-        return Ok(available);
+        catch (AIAgentNotAvailableException)
+        {
+            return AgentNotAvailable();
+        }
     }
 
     /// <summary>
@@ -72,21 +80,26 @@ public class SuggestStartersAgentController : AgentControllerBase
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(SuggestStartersResponseModel), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> SuggestStarters(
         IdOrAlias agentIdOrAlias,
         CancellationToken cancellationToken = default)
     {
-        var agent = await _agentService.GetAgentAsync(agentIdOrAlias, cancellationToken);
-        if (agent is null)
-        {
-            return AgentNotFound();
-        }
-
         try
         {
+            var agent = await _agentService.GetAgentForUseAsync(agentIdOrAlias, cancellationToken);
+            if (agent is null)
+            {
+                return AgentNotFound();
+            }
+
             var starters = await _suggester.SuggestStartersAsync(agent, cancellationToken);
             return Ok(new SuggestStartersResponseModel { Starters = starters });
+        }
+        catch (AIAgentNotAvailableException)
+        {
+            return AgentNotAvailable();
         }
         catch (InvalidOperationException ex)
         {

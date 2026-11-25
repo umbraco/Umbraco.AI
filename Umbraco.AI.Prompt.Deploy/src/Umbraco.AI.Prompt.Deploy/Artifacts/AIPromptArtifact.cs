@@ -1,4 +1,5 @@
 using System.Text.Json;
+
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Deploy;
 using Umbraco.Deploy.Infrastructure.Artifacts;
@@ -35,6 +36,13 @@ public class AIPromptArtifact(GuidUdi udi, IEnumerable<ArtifactDependency>? depe
     /// Guardrail IDs assigned to this prompt for input/output safety enforcement.
     /// </summary>
     public IEnumerable<Guid> GuardrailIds { get; set; } = [];
+
+    /// <summary>
+    /// Aliases of the user groups allowed to use the prompt. Aliases, not keys, because a custom user
+    /// group has a different key on each environment. Empty means everyone; artifacts written before
+    /// this property existed read as empty.
+    /// </summary>
+    public IEnumerable<string> AllowedUserGroups { get; set; } = [];
 
     /// <summary>
     /// Tags for categorizing the prompt.

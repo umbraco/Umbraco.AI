@@ -14,7 +14,7 @@ namespace Umbraco.AI.Web.Api.Management.Analytics.Usage.Controllers;
 /// Controller to get usage summary statistics.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ViewAnalyticsAI)]
 public class UsageSummaryController : AnalyticsControllerBase
 {
     private readonly IAIUsageAnalyticsService _analyticsService;

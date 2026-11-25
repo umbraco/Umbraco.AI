@@ -1,20 +1,25 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Umbraco.AI.Core.Chat;
 using Umbraco.AI.Core.EntityAdapter;
 using Umbraco.AI.Core.InlineChat;
 using Umbraco.AI.Core.PropertyValueOperations;
 using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Extensions;
+using Umbraco.AI.Prompt.Core.Security;
 using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Notifications;
 using Umbraco.Cms.Core.Security;
+
 using AIValueChange = Umbraco.AI.Core.EntityAdapter.AIValueChange;
 using CoreConstants = Umbraco.AI.Core.Constants;
 
@@ -23,7 +28,7 @@ namespace Umbraco.AI.Prompt.Core.Prompts;
 /// <summary>
 /// Service implementation for prompt management operations.
 /// </summary>
-internal sealed class AIPromptService : IAIPromptService
+internal sealed class AIPromptService : IAIPromptService, IAIPromptUnrestrictedReader, IAIPromptUnrestrictedWriter
 {
     private readonly IAIPromptRepository _repository;
     private readonly IAIEntityVersionService _versionService;
@@ -34,6 +39,7 @@ internal sealed class AIPromptService : IAIPromptService
     private readonly IAIFunctionFactory _functionFactory;
     private readonly IAIRuntimeContextScopeProvider _runtimeContextScopeProvider;
     private readonly AIRuntimeContextContributorCollection _contextContributors;
+    private readonly IAIPermissionService _permissionService;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
     private readonly IEventAggregator _eventAggregator;
     private readonly IAIPromptPropertyValueSchemaResolver _propertyValueSchemaResolver;
@@ -54,8 +60,10 @@ internal sealed class AIPromptService : IAIPromptService
         IAIPromptPropertyValueSchemaResolver propertyValueSchemaResolver,
         AISimplifiedPropertyValueTransformerCollection transformers,
         ILogger<AIPromptService> logger,
+        IAIPermissionService permissionService,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null)
     {
+        _permissionService = permissionService;
         _repository = repository;
         _versionService = versionService;
         _chatService = chatService;
@@ -74,15 +82,47 @@ internal sealed class AIPromptService : IAIPromptService
 
     /// <inheritdoc />
     public Task<AIPrompt?> GetPromptAsync(Guid id, CancellationToken cancellationToken = default)
-        => _repository.GetByIdAsync(id, cancellationToken);
+        => GetPromptAsync(id, includeRestricted: false, cancellationToken);
+
+    /// <inheritdoc />
+    public async Task<AIPrompt?> GetPromptAsync(Guid id, bool includeRestricted, CancellationToken cancellationToken = default)
+    {
+        var prompt = await _repository.GetByIdAsync(id, cancellationToken);
+        return prompt is not null && IsVisible(prompt, includeRestricted) ? prompt : null;
+    }
 
     /// <inheritdoc />
     public Task<AIPrompt?> GetPromptByAliasAsync(string alias, CancellationToken cancellationToken = default)
-        => _repository.GetByAliasAsync(alias, cancellationToken);
+        => GetPromptByAliasAsync(alias, includeRestricted: false, cancellationToken);
+
+    /// <inheritdoc />
+    public async Task<AIPrompt?> GetPromptByAliasAsync(string alias, bool includeRestricted, CancellationToken cancellationToken = default)
+    {
+        var prompt = await _repository.GetByAliasAsync(alias, cancellationToken);
+        return prompt is not null && IsVisible(prompt, includeRestricted) ? prompt : null;
+    }
+
+    /// <inheritdoc />
+    public async Task<AIPrompt?> GetPromptForUseAsync(Guid id, CancellationToken cancellationToken = default)
+        => EnsureAvailableForCurrentUser(await _repository.GetByIdAsync(id, cancellationToken));
+
+    /// <inheritdoc />
+    public async Task<AIPrompt?> GetPromptForUseByAliasAsync(string alias, CancellationToken cancellationToken = default)
+        => EnsureAvailableForCurrentUser(await _repository.GetByAliasAsync(alias, cancellationToken));
+
+    private AIPrompt? EnsureAvailableForCurrentUser(AIPrompt? prompt)
+    {
+        if (prompt is not null)
+        {
+            EnsurePromptAvailable(prompt);
+        }
+
+        return prompt;
+    }
 
     /// <inheritdoc />
     public Task<IEnumerable<AIPrompt>> GetPromptsAsync(CancellationToken cancellationToken = default)
-        => _repository.GetAllAsync(cancellationToken);
+        => _repository.GetAllAsync(GetUsableByGroupKeys(includeRestricted: false), cancellationToken);
 
     /// <inheritdoc />
     public Task<(IEnumerable<AIPrompt> Items, int Total)> GetPromptsPagedAsync(
@@ -91,10 +131,56 @@ internal sealed class AIPromptService : IAIPromptService
         string? filter = null,
         Guid? profileId = null,
         CancellationToken cancellationToken = default)
-        => _repository.GetPagedAsync(skip, take, filter, profileId, cancellationToken);
+        => GetPromptsPagedAsync(skip, take, filter, profileId, includeRestricted: false, cancellationToken);
 
     /// <inheritdoc />
-    public async Task<AIPrompt> SavePromptAsync(AIPrompt prompt, CancellationToken cancellationToken = default)
+    public Task<(IEnumerable<AIPrompt> Items, int Total)> GetPromptsPagedAsync(
+        int skip,
+        int take,
+        string? filter,
+        Guid? profileId,
+        bool includeRestricted,
+        CancellationToken cancellationToken = default)
+        => _repository.GetPagedAsync(skip, take, filter, profileId, GetUsableByGroupKeys(includeRestricted), cancellationToken);
+
+    /// <inheritdoc />
+    public Task<AIPrompt?> GetPromptUnrestrictedAsync(Guid id, CancellationToken cancellationToken = default)
+        => _repository.GetByIdAsync(id, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<IEnumerable<AIPrompt>> GetPromptsUnrestrictedAsync(CancellationToken cancellationToken = default)
+        => _repository.GetAllAsync(usableByGroupKeys: null, cancellationToken);
+
+    /// <summary>
+    /// The group keys to filter a list by, or null when managed access (the Manage prompts right) lifts the limit.
+    /// </summary>
+    private IReadOnlyCollection<Guid>? GetUsableByGroupKeys(bool includeRestricted)
+        => _permissionService.GetListFilter(AIPromptPermissions.Manage, includeRestricted);
+
+    private bool IsVisible(AIPrompt prompt, bool includeRestricted)
+        => _permissionService.IsVisible(prompt.AllowedUserGroupIds, AIPromptPermissions.Manage, includeRestricted);
+
+    /// <summary>
+    /// Refuses a prompt the current user may not use. Managing prompts does not lift the limit when running one.
+    /// </summary>
+    /// <exception cref="AIPromptNotAvailableException">Thrown if the prompt is limited to other user groups.</exception>
+    private void EnsurePromptAvailable(AIPrompt prompt)
+    {
+        if (!_permissionService.CanCurrentUserUse(prompt.AllowedUserGroupIds))
+        {
+            throw new AIPromptNotAvailableException(prompt.Id);
+        }
+    }
+
+    /// <inheritdoc />
+    public Task<AIPrompt> SavePromptAsync(AIPrompt prompt, CancellationToken cancellationToken = default)
+        => SavePromptCoreAsync(prompt, enforceUserGroupRule: true, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<AIPrompt> SavePromptUnrestrictedAsync(AIPrompt prompt, CancellationToken cancellationToken = default)
+        => SavePromptCoreAsync(prompt, enforceUserGroupRule: false, cancellationToken);
+
+    private async Task<AIPrompt> SavePromptCoreAsync(AIPrompt prompt, bool enforceUserGroupRule, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(prompt);
         ArgumentException.ThrowIfNullOrWhiteSpace(prompt.Alias);
@@ -125,6 +211,19 @@ internal sealed class AIPromptService : IAIPromptService
 
         var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
 
+        var existing = await _repository.GetByIdAsync(prompt.Id, cancellationToken);
+
+        // Group list rule. Like the CMS, a save with no current user (Deploy import, startup) is not checked,
+        // and a Deploy import (unrestricted save) skips it whoever started it.
+        if (enforceUserGroupRule && userId is not null)
+        {
+            AIUserGroupChangeRule.EnsureCanChangeList(
+                _permissionService,
+                existing?.AllowedUserGroupIds ?? [],
+                prompt.AllowedUserGroupIds,
+                $"prompt '{prompt.Alias}'");
+        }
+
         // Publish saving notification (before save)
         var messages = new EventMessages();
         var savingNotification = new AIPromptSavingNotification(prompt, messages);
@@ -138,7 +237,6 @@ internal sealed class AIPromptService : IAIPromptService
         }
 
         // Save version snapshot of existing entity before update
-        var existing = await _repository.GetByIdAsync(prompt.Id, cancellationToken);
         if (existing is not null)
         {
             await _versionService.SaveVersionAsync(existing, userId, null, cancellationToken);
@@ -233,8 +331,9 @@ internal sealed class AIPromptService : IAIPromptService
         ArgumentNullException.ThrowIfNull(options);
 
         // 1. Get the prompt
-        var prompt = await GetPromptAsync(promptId, cancellationToken)
+        var prompt = await _repository.GetByIdAsync(promptId, cancellationToken)
             ?? throw new InvalidOperationException($"Prompt {promptId} not found");
+        EnsurePromptAvailable(prompt);
 
         // 2. Validate scope - ensure prompt is allowed to run for this context
         if (options.ValidateScope)
@@ -435,65 +534,65 @@ internal sealed class AIPromptService : IAIPromptService
         switch (prompt.OptionCount)
         {
             case 0:
-            {
-                var response = await _chatService.GetChatResponseAsync(ConfigureChat, messages, cancellationToken);
-                result = new AIPromptExecutionResult
                 {
-                    Content = response.Text ?? string.Empty,
-                    Usage = response.Usage,
-                    Messages = messages,
-                    ResultOptions = [] // Empty array for informational
-                };
-                break;
-            }
+                    var response = await _chatService.GetChatResponseAsync(ConfigureChat, messages, cancellationToken);
+                    result = new AIPromptExecutionResult
+                    {
+                        Content = response.Text ?? string.Empty,
+                        Usage = response.Usage,
+                        Messages = messages,
+                        ResultOptions = [] // Empty array for informational
+                    };
+                    break;
+                }
 
             case 1:
-            {
-                var response = await _chatService.GetChatResponseAsync(chat =>
                 {
-                    ConfigureChat(chat);
-                    chat.WithOutputSchema(propertyValueSchema is not null
-                        ? AIOutputSchema.FromJsonSchema(ToJsonElement(AIPromptDynamicResponseSchemas.BuildSingleValueSchema(propertyValueSchema)))
-                        : AIOutputSchema.FromType<SingleValueResponse>());
-                }, messages, cancellationToken);
-                var responseText = response.Text ?? string.Empty;
+                    var response = await _chatService.GetChatResponseAsync(chat =>
+                    {
+                        ConfigureChat(chat);
+                        chat.WithOutputSchema(propertyValueSchema is not null
+                            ? AIOutputSchema.FromJsonSchema(ToJsonElement(AIPromptDynamicResponseSchemas.BuildSingleValueSchema(propertyValueSchema)))
+                            : AIOutputSchema.FromType<SingleValueResponse>());
+                    }, messages, cancellationToken);
+                    var responseText = response.Text ?? string.Empty;
 
-                object? value;
-                string displayValue;
-                if (propertyValueSchema is not null &&
-                    response.TryGetResult(out JsonElement structuredResult) &&
-                    structuredResult.TryGetProperty("value", out var valueElement))
-                {
-                    // DisplayValue reflects the raw (simplified) value; ValueChange gets the transformed
-                    // write value when a simplified transformer produced the schema.
-                    displayValue = FormatDisplayValue(valueElement);
-                    value = resolution?.IsSimplified == true
-                        ? await TransformLlmValueAsync(resolution, ToJsonNode(valueElement), currentPropertyValue, request.PropertyAlias, cancellationToken)
-                        : valueElement;
-                }
-                else if (response.TryGetResult<SingleValueResponse>(out var parsed))
-                {
-                    displayValue = parsed.Value;
-                    value = resolution?.IsSimplified == true
-                        ? await TransformLlmValueAsync(resolution, JsonValue.Create(parsed.Value), currentPropertyValue, request.PropertyAlias, cancellationToken)
-                        : parsed.Value;
-                }
-                else
-                {
-                    displayValue = responseText;
-                    value = resolution?.IsSimplified == true
-                        ? await TransformLlmValueAsync(resolution, JsonValue.Create(responseText), currentPropertyValue, request.PropertyAlias, cancellationToken)
-                        : responseText;
-                }
+                    object? value;
+                    string displayValue;
+                    if (propertyValueSchema is not null &&
+                        response.TryGetResult(out JsonElement structuredResult) &&
+                        structuredResult.TryGetProperty("value", out var valueElement))
+                    {
+                        // DisplayValue reflects the raw (simplified) value; ValueChange gets the transformed
+                        // write value when a simplified transformer produced the schema.
+                        displayValue = FormatDisplayValue(valueElement);
+                        value = resolution?.IsSimplified == true
+                            ? await TransformLlmValueAsync(resolution, ToJsonNode(valueElement), currentPropertyValue, request.PropertyAlias, cancellationToken)
+                            : valueElement;
+                    }
+                    else if (response.TryGetResult<SingleValueResponse>(out var parsed))
+                    {
+                        displayValue = parsed.Value;
+                        value = resolution?.IsSimplified == true
+                            ? await TransformLlmValueAsync(resolution, JsonValue.Create(parsed.Value), currentPropertyValue, request.PropertyAlias, cancellationToken)
+                            : parsed.Value;
+                    }
+                    else
+                    {
+                        displayValue = responseText;
+                        value = resolution?.IsSimplified == true
+                            ? await TransformLlmValueAsync(resolution, JsonValue.Create(responseText), currentPropertyValue, request.PropertyAlias, cancellationToken)
+                            : responseText;
+                    }
 
-                result = new AIPromptExecutionResult
-                {
-                    Content = responseText,
-                    Usage = response.Usage,
-                    Messages = messages,
-                    ResultOptions =
-                    [
-                        new AIPromptExecutionResult.AIPromptResultOption
+                    result = new AIPromptExecutionResult
+                    {
+                        Content = responseText,
+                        Usage = response.Usage,
+                        Messages = messages,
+                        ResultOptions =
+                        [
+                            new AIPromptExecutionResult.AIPromptResultOption
                         {
                             Label = "Result",
                             DisplayValue = displayValue,
@@ -506,79 +605,79 @@ internal sealed class AIPromptService : IAIPromptService
                                 Segment = request.Segment
                             }
                         }
-                    ]
-                };
-                break;
-            }
+                        ]
+                    };
+                    break;
+                }
 
             case >= 2:
-            {
-                var response = await _chatService.GetChatResponseAsync(chat =>
                 {
-                    ConfigureChat(chat);
-                    chat.WithOutputSchema(propertyValueSchema is not null
-                        ? AIOutputSchema.FromJsonSchema(ToJsonElement(AIPromptDynamicResponseSchemas.BuildMultiOptionSchema(propertyValueSchema)))
-                        : AIOutputSchema.FromType<MultiOptionResponse>());
-                }, messages, cancellationToken);
-                var responseText = response.Text ?? string.Empty;
-
-                var structuredOptions = propertyValueSchema is not null
-                    ? await TryParseStructuredMultiOptionResultAsync(response, request, resolution, currentPropertyValue, cancellationToken)
-                    : null;
-
-                if (structuredOptions is { Count: > 0 })
-                {
-                    result = new AIPromptExecutionResult
+                    var response = await _chatService.GetChatResponseAsync(chat =>
                     {
-                        Content = responseText,
-                        Usage = response.Usage,
-                        Messages = messages,
-                        ResultOptions = structuredOptions
-                    };
-                }
-                else if (response.TryGetResult<MultiOptionResponse>(out var parsed) && parsed.Options is { Count: > 0 })
-                {
-                    var mappedOptions = new List<AIPromptExecutionResult.AIPromptResultOption>();
-                    foreach (var option in parsed.Options)
-                    {
-                        // DisplayValue is the raw (simplified) string; ValueChange gets the transformed
-                        // write value when a simplified transformer produced the schema.
-                        object? optionValue = resolution?.IsSimplified == true
-                            ? await TransformLlmValueAsync(resolution, JsonValue.Create(option.Value), currentPropertyValue, request.PropertyAlias, cancellationToken)
-                            : option.Value;
+                        ConfigureChat(chat);
+                        chat.WithOutputSchema(propertyValueSchema is not null
+                            ? AIOutputSchema.FromJsonSchema(ToJsonElement(AIPromptDynamicResponseSchemas.BuildMultiOptionSchema(propertyValueSchema)))
+                            : AIOutputSchema.FromType<MultiOptionResponse>());
+                    }, messages, cancellationToken);
+                    var responseText = response.Text ?? string.Empty;
 
-                        mappedOptions.Add(new AIPromptExecutionResult.AIPromptResultOption
+                    var structuredOptions = propertyValueSchema is not null
+                        ? await TryParseStructuredMultiOptionResultAsync(response, request, resolution, currentPropertyValue, cancellationToken)
+                        : null;
+
+                    if (structuredOptions is { Count: > 0 })
+                    {
+                        result = new AIPromptExecutionResult
                         {
-                            Label = option.Label,
-                            DisplayValue = option.Value,
-                            Description = option.Description,
-                            ValueChange = new AIValueChange
-                            {
-                                Path = request.PropertyAlias,
-                                Value = optionValue,
-                                Culture = request.Culture,
-                                Segment = request.Segment
-                            }
-                        });
+                            Content = responseText,
+                            Usage = response.Usage,
+                            Messages = messages,
+                            ResultOptions = structuredOptions
+                        };
                     }
-
-                    result = new AIPromptExecutionResult
+                    else if (response.TryGetResult<MultiOptionResponse>(out var parsed) && parsed.Options is { Count: > 0 })
                     {
-                        Content = responseText,
-                        Usage = response.Usage,
-                        Messages = messages,
-                        ResultOptions = mappedOptions
-                    };
+                        var mappedOptions = new List<AIPromptExecutionResult.AIPromptResultOption>();
+                        foreach (var option in parsed.Options)
+                        {
+                            // DisplayValue is the raw (simplified) string; ValueChange gets the transformed
+                            // write value when a simplified transformer produced the schema.
+                            object? optionValue = resolution?.IsSimplified == true
+                                ? await TransformLlmValueAsync(resolution, JsonValue.Create(option.Value), currentPropertyValue, request.PropertyAlias, cancellationToken)
+                                : option.Value;
+
+                            mappedOptions.Add(new AIPromptExecutionResult.AIPromptResultOption
+                            {
+                                Label = option.Label,
+                                DisplayValue = option.Value,
+                                Description = option.Description,
+                                ValueChange = new AIValueChange
+                                {
+                                    Path = request.PropertyAlias,
+                                    Value = optionValue,
+                                    Culture = request.Culture,
+                                    Segment = request.Segment
+                                }
+                            });
+                        }
+
+                        result = new AIPromptExecutionResult
+                        {
+                            Content = responseText,
+                            Usage = response.Usage,
+                            Messages = messages,
+                            ResultOptions = mappedOptions
+                        };
+                    }
+                    else
+                    {
+                        // Structured output not honored — fall back to retry-based parsing
+                        result = await ParseMultipleResultResponseWithRetryAsync(
+                            prompt, profileId, messages, formatInstructionsMessage, chatOptions, responseText,
+                            response.Usage, request, cancellationToken);
+                    }
+                    break;
                 }
-                else
-                {
-                    // Structured output not honored — fall back to retry-based parsing
-                    result = await ParseMultipleResultResponseWithRetryAsync(
-                        prompt, profileId, messages, formatInstructionsMessage, chatOptions, responseText,
-                        response.Usage, request, cancellationToken);
-                }
-                break;
-            }
 
             default:
                 throw new InvalidOperationException($"Invalid option count: {prompt.OptionCount}");

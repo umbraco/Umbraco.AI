@@ -32,6 +32,7 @@ export class UaiPromptDetailServerDataSource implements UmbDetailDataSource<UaiP
             contextIds: [],
             tags: [],
             displayMode: "PropertyAction",
+            allowedUserGroupIds: [],
             scope: {
                 allowRules: [
                     {
@@ -77,9 +78,12 @@ export class UaiPromptDetailServerDataSource implements UmbDetailDataSource<UaiP
     async create(model: UaiPromptDetailModel, _parentUnique: string | null) {
         const requestBody = UaiPromptTypeMapper.toCreateRequest(model);
 
-        const { response, error } = await tryExecute(this.#host, PromptsService.createPrompt({
-            body: requestBody
-        }));
+        const { response, error } = await tryExecute(
+            this.#host,
+            PromptsService.createPrompt({
+                body: requestBody,
+            }),
+        );
 
         if (error) {
             return { error };

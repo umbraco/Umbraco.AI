@@ -34,6 +34,18 @@ internal static class CopilotWorkspaceAgentAvailability
             : await agentService.GetAgentByAliasAsync(agentIdOrAlias, cancellationToken);
 
     /// <summary>
+    /// Looks up a named agent by id (GUID) or alias so it can be run. Returns null when it does not exist.
+    /// </summary>
+    /// <exception cref="AIAgentNotAvailableException">The agent exists but is limited to user groups the current user is not in.</exception>
+    public static async Task<AIAgent?> FindAgentForUseAsync(
+        IAIAgentService agentService,
+        string agentIdOrAlias,
+        CancellationToken cancellationToken)
+        => Guid.TryParse(agentIdOrAlias, out var agentId)
+            ? await agentService.GetAgentForUseAsync(agentId, cancellationToken)
+            : await agentService.GetAgentForUseByAliasAsync(agentIdOrAlias, cancellationToken);
+
+    /// <summary>
     /// Whether the agent can run on the Copilot Workspace surface: active, opted in via
     /// <see cref="AIAgent.SurfaceIds"/>, and allowed by its scope rules. Delegates to the shared
     /// Agent.Core rule so the Workspace can't drift from the other surfaces.

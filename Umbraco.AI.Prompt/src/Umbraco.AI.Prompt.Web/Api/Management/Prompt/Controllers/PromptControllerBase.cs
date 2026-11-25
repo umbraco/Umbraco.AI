@@ -25,6 +25,29 @@ public abstract class PromptControllerBase : UmbracoAIPromptManagementController
     });
 
     /// <summary>
+    /// Returns a 403 Forbidden response for a prompt the caller may not use: it exists, but is limited to
+    /// user groups the caller is not in.
+    /// </summary>
+    protected IActionResult PromptNotAvailable() => StatusCode(StatusCodes.Status403Forbidden, new ProblemDetails
+    {
+        Type = "Error",
+        Title = "Prompt not available",
+        Detail = "The specified prompt is not available to you.",
+        Status = StatusCodes.Status403Forbidden
+    });
+
+    /// <summary>
+    /// Returns a 403 Forbidden response with the reason a change was refused.
+    /// </summary>
+    protected IActionResult Forbidden(string detail) => StatusCode(StatusCodes.Status403Forbidden, new ProblemDetails
+    {
+        Type = "Error",
+        Title = "Forbidden",
+        Detail = detail,
+        Status = StatusCodes.Status403Forbidden
+    });
+
+    /// <summary>
     /// Returns a 409 Conflict response for duplicate alias.
     /// </summary>
     protected IActionResult AliasAlreadyExists(string alias) => Conflict(new ProblemDetails

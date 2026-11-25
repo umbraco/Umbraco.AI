@@ -16,7 +16,7 @@ namespace Umbraco.AI.Web.Api.Management.Context.Controllers;
 /// Controller to delete a context.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ManageContextsAI)]
 public class DeleteContextController : ContextControllerBase
 {
     private readonly IAIContextService _contextService;

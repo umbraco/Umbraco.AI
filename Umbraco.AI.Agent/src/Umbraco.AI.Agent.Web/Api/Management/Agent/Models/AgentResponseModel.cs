@@ -47,6 +47,11 @@ public class AgentResponseModel
     public IEnumerable<string> SurfaceIds { get; set; } = [];
 
     /// <summary>
+    /// Keys of the user groups allowed to use this agent. Empty means everyone.
+    /// </summary>
+    public IEnumerable<Guid> AllowedUserGroupIds { get; set; } = [];
+
+    /// <summary>
     /// Optional scope defining where this agent is available.
     /// If null, agent is available in all contexts (backwards compatible).
     /// </summary>

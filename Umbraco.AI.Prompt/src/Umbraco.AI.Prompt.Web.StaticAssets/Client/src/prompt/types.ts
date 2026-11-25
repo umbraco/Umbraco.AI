@@ -4,7 +4,7 @@ import type { UaiPromptScope } from "./property-actions/types.js";
 /**
  * Detail model for workspace editing.
  */
-export type UaiPromptDisplayMode = 'PropertyAction' | 'TipTapTool';
+export type UaiPromptDisplayMode = "PropertyAction" | "TipTapTool";
 
 export interface UaiPromptDetailModel extends UmbEntityModel {
     unique: string;
@@ -17,6 +17,8 @@ export interface UaiPromptDetailModel extends UmbEntityModel {
     contextIds: string[];
     tags: string[];
     displayMode: UaiPromptDisplayMode;
+    /** User groups that can use the prompt. Empty means every backoffice user can. */
+    allowedUserGroupIds: string[];
     scope: UaiPromptScope | null;
     isActive: boolean;
     includeEntityContext: boolean;

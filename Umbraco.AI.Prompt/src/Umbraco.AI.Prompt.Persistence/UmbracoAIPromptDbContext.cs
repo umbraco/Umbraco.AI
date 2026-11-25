@@ -98,6 +98,8 @@ public class UmbracoAIPromptDbContext : DbContext
             entity.Property(e => e.GuardrailIds)
                 .HasMaxLength(4000);
 
+            entity.Property(e => e.AllowedUserGroupIds);
+
             entity.Property(e => e.Tags)
                 .HasMaxLength(2000);
 

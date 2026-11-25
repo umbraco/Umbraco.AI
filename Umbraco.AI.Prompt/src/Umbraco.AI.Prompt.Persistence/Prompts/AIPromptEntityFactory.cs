@@ -20,8 +20,9 @@ internal static class AIPromptEntityFactory
     {
         var tags = DeserializeTags(entity.Tags);
         var scope = DeserializeScope(entity.Scope);
-        var contextIds = DeserializeContextIds(entity.ContextIds);
-        var guardrailIds = DeserializeGuardrailIds(entity.GuardrailIds);
+        var contextIds = DeserializeGuidList(entity.ContextIds);
+        var guardrailIds = DeserializeGuidList(entity.GuardrailIds);
+        var allowedUserGroupIds = DeserializeGuidList(entity.AllowedUserGroupIds);
 
         return new Core.Prompts.AIPrompt
         {
@@ -33,6 +34,7 @@ internal static class AIPromptEntityFactory
             ProfileId = entity.ProfileId,
             ContextIds = contextIds,
             GuardrailIds = guardrailIds,
+            AllowedUserGroupIds = allowedUserGroupIds,
             Tags = tags,
             IsActive = entity.IsActive,
             IncludeEntityContext = entity.IncludeEntityContext,
@@ -60,8 +62,9 @@ internal static class AIPromptEntityFactory
             Description = aiPrompt.Description,
             Instructions = aiPrompt.Instructions,
             ProfileId = aiPrompt.ProfileId,
-            ContextIds = SerializeContextIds(aiPrompt.ContextIds),
-            GuardrailIds = SerializeGuardrailIds(aiPrompt.GuardrailIds),
+            ContextIds = SerializeGuidList(aiPrompt.ContextIds),
+            GuardrailIds = SerializeGuidList(aiPrompt.GuardrailIds),
+            AllowedUserGroupIds = SerializeGuidList(aiPrompt.AllowedUserGroupIds),
             Tags = SerializeTags(aiPrompt.Tags),
             IsActive = aiPrompt.IsActive,
             IncludeEntityContext = aiPrompt.IncludeEntityContext,
@@ -86,8 +89,9 @@ internal static class AIPromptEntityFactory
         entity.Description = aiPrompt.Description;
         entity.Instructions = aiPrompt.Instructions;
         entity.ProfileId = aiPrompt.ProfileId;
-        entity.ContextIds = SerializeContextIds(aiPrompt.ContextIds);
-        entity.GuardrailIds = SerializeGuardrailIds(aiPrompt.GuardrailIds);
+        entity.ContextIds = SerializeGuidList(aiPrompt.ContextIds);
+        entity.GuardrailIds = SerializeGuidList(aiPrompt.GuardrailIds);
+        entity.AllowedUserGroupIds = SerializeGuidList(aiPrompt.AllowedUserGroupIds);
         entity.Tags = SerializeTags(aiPrompt.Tags);
         entity.IsActive = aiPrompt.IsActive;
         entity.IncludeEntityContext = aiPrompt.IncludeEntityContext;
@@ -143,34 +147,12 @@ internal static class AIPromptEntityFactory
         }
     }
 
-    private static string? SerializeContextIds(IReadOnlyList<Guid> contextIds)
+    private static string? SerializeGuidList(IReadOnlyList<Guid> ids)
     {
-        return contextIds.Count == 0 ? null : JsonSerializer.Serialize(contextIds, JsonOptions);
+        return ids.Count == 0 ? null : JsonSerializer.Serialize(ids, JsonOptions);
     }
 
-    private static IReadOnlyList<Guid> DeserializeContextIds(string? json)
-    {
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return [];
-        }
-
-        try
-        {
-            return JsonSerializer.Deserialize<List<Guid>>(json, JsonOptions) ?? [];
-        }
-        catch
-        {
-            return [];
-        }
-    }
-
-    private static string? SerializeGuardrailIds(IReadOnlyList<Guid> guardrailIds)
-    {
-        return guardrailIds.Count == 0 ? null : JsonSerializer.Serialize(guardrailIds, JsonOptions);
-    }
-
-    private static IReadOnlyList<Guid> DeserializeGuardrailIds(string? json)
+    private static IReadOnlyList<Guid> DeserializeGuidList(string? json)
     {
         if (string.IsNullOrWhiteSpace(json))
         {

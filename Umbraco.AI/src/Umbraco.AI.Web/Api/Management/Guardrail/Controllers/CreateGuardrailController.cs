@@ -15,7 +15,7 @@ namespace Umbraco.AI.Web.Api.Management.Guardrail.Controllers;
 /// Controller to create a new guardrail.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ManageGuardrailsAI)]
 public class CreateGuardrailController : GuardrailControllerBase
 {
     private readonly IAIGuardrailService _guardrailService;

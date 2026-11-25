@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+
 using Umbraco.AI.Core.Media;
 using Umbraco.AI.Core.Profiles;
 using Umbraco.AI.Extensions;
@@ -52,7 +53,12 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<IAIPromptPropertyValueSchemaResolver, AIPromptPropertyValueSchemaResolver>();
 
         // Register service (Singleton to match IAIProfileService pattern and allow use in context resolvers)
-        builder.Services.AddSingleton<IAIPromptService, AIPromptService>();
+        // One instance behind both: the limited IAIPromptService for request paths, and the internal
+        // unrestricted reader for server-side code that runs after an execution was already authorized.
+        builder.Services.AddSingleton<AIPromptService>();
+        builder.Services.AddSingleton<IAIPromptService>(sp => sp.GetRequiredService<AIPromptService>());
+        builder.Services.AddSingleton<IAIPromptUnrestrictedReader>(sp => sp.GetRequiredService<AIPromptService>());
+        builder.Services.AddSingleton<IAIPromptUnrestrictedWriter>(sp => sp.GetRequiredService<AIPromptService>());
 
         // Prevent deletion of profiles referenced by prompts
         builder.AddNotificationAsyncHandler<AIProfileDeletingNotification, AIProfileDeletingPromptNotificationHandler>();

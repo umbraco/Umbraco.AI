@@ -1,11 +1,4 @@
-import {
-	css,
-	customElement,
-	html,
-	property,
-	when,
-	type TemplateResult,
-} from "@umbraco-cms/backoffice/external/lit";
+import { css, customElement, html, property, when, type TemplateResult } from "@umbraco-cms/backoffice/external/lit";
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
 import type { UaiUserGroupSettingsConfig } from "@umbraco-ai/core";
@@ -22,213 +15,211 @@ import { UAI_TOOL_PERMISSIONS_OVERRIDE_EDITOR_MODAL } from "../../modals/tool-pe
  */
 @customElement("uai-user-group-tool-permissions")
 export class UaiUserGroupToolPermissionsElement extends UmbLitElement {
-	/**
-	 * User group permissions map.
-	 */
-	@property({ type: Object })
-	value: UaiUserGroupPermissionsMap = {};
+    /**
+     * User group permissions map.
+     */
+    @property({ type: Object })
+    value: UaiUserGroupPermissionsMap = {};
 
-	/**
-	 * Agent default permissions.
-	 */
-	@property({ type: Object })
-	agentDefaults: {
-		allowedToolIds: string[];
-		allowedToolScopeIds: string[];
-	} = {
-		allowedToolIds: [],
-		allowedToolScopeIds: [],
-	};
+    /**
+     * Agent default permissions.
+     */
+    @property({ type: Object })
+    agentDefaults: {
+        allowedToolIds: string[];
+        allowedToolScopeIds: string[];
+    } = {
+        allowedToolIds: [],
+        allowedToolScopeIds: [],
+    };
 
-	/**
-	 * Whether the component is in readonly mode.
-	 */
-	@property({ type: Boolean })
-	readonly = false;
+    /**
+     * Whether the component is in readonly mode.
+     */
+    @property({ type: Boolean })
+    readonly = false;
 
-	/**
-	 * Render summary for list item.
-	 */
-	private _renderSummary(settings: UaiUserGroupPermissionsModel): string {
-		const additions =
-			(settings.allowedToolIds?.length ?? 0) + (settings.allowedToolScopeIds?.length ?? 0);
-		const restrictions =
-			(settings.deniedToolIds?.length ?? 0) + (settings.deniedToolScopeIds?.length ?? 0);
+    /**
+     * Keys of the user groups whose rows can be changed. Unset means all of them, an empty list means none.
+     */
+    @property({ type: Array, attribute: false })
+    editableUserGroupIds?: string[];
 
-		if (additions > 0 && restrictions > 0) {
-			return `${additions} additions, ${restrictions} restrictions`;
-		} else if (additions > 0) {
-			return `${additions} additions`;
-		} else if (restrictions > 0) {
-			return `${restrictions} restrictions`;
-		} else {
-			return "No changes";
-		}
-	}
+    /**
+     * Render summary for list item.
+     */
+    private _renderSummary(settings: UaiUserGroupPermissionsModel): string {
+        const additions = (settings.allowedToolIds?.length ?? 0) + (settings.allowedToolScopeIds?.length ?? 0);
+        const restrictions = (settings.deniedToolIds?.length ?? 0) + (settings.deniedToolScopeIds?.length ?? 0);
 
-	/**
-	 * Render tags for list item.
-	 */
-	private _renderTags(settings: UaiUserGroupPermissionsModel): TemplateResult {
-		const additions =
-			(settings.allowedToolIds?.length ?? 0) + (settings.allowedToolScopeIds?.length ?? 0);
-		const restrictions =
-			(settings.deniedToolIds?.length ?? 0) + (settings.deniedToolScopeIds?.length ?? 0);
-		return html`
-			${when(
-				additions > 0,
-				() => html` <uui-tag color="positive">+${additions}</uui-tag> `
-			)}
-			${when(
-				restrictions > 0,
-				() => html` <uui-tag color="danger">-${restrictions}</uui-tag> `
-			)}
-		`;
-	}
+        if (additions > 0 && restrictions > 0) {
+            return `${additions} additions, ${restrictions} restrictions`;
+        } else if (additions > 0) {
+            return `${additions} additions`;
+        } else if (restrictions > 0) {
+            return `${restrictions} restrictions`;
+        } else {
+            return "No changes";
+        }
+    }
 
-	/**
-	 * Lifecycle hook to clean up orphaned overrides when agent defaults change.
-	 */
-	override updated(changedProperties: Map<string, unknown>): void {
-		super.updated(changedProperties);
+    /**
+     * Render tags for list item.
+     */
+    private _renderTags(settings: UaiUserGroupPermissionsModel): TemplateResult {
+        const additions = (settings.allowedToolIds?.length ?? 0) + (settings.allowedToolScopeIds?.length ?? 0);
+        const restrictions = (settings.deniedToolIds?.length ?? 0) + (settings.deniedToolScopeIds?.length ?? 0);
+        return html`
+            ${when(additions > 0, () => html` <uui-tag color="positive">+${additions}</uui-tag> `)}
+            ${when(restrictions > 0, () => html` <uui-tag color="danger">-${restrictions}</uui-tag> `)}
+        `;
+    }
 
-		// Clean up orphaned overrides when agent defaults change
-		if (changedProperties.has("agentDefaults")) {
-			const oldDefaults = changedProperties.get("agentDefaults") as typeof this.agentDefaults | undefined;
-			if (oldDefaults) {
-				const cleaned = this._cleanupOrphanedOverrides(this.value, oldDefaults, this.agentDefaults);
-				if (cleaned) {
-					this.value = cleaned.value;
-					if (cleaned.changed) {
-						this.dispatchEvent(new UmbChangeEvent());
-					}
-				}
-			}
-		}
-	}
+    /**
+     * Lifecycle hook to clean up orphaned overrides when agent defaults change.
+     */
+    override updated(changedProperties: Map<string, unknown>): void {
+        super.updated(changedProperties);
 
-	/**
-	 * Clean up orphaned overrides when agent defaults change.
-	 * Returns { value, changed } where changed indicates if any cleanup occurred.
-	 */
-	private _cleanupOrphanedOverrides(
-		permissions: UaiUserGroupPermissionsMap,
-		_oldDefaults: typeof this.agentDefaults,
-		newDefaults: typeof this.agentDefaults
-	): { value: UaiUserGroupPermissionsMap; changed: boolean } | null {
-		let hasChanges = false;
-		const cleaned: UaiUserGroupPermissionsMap = {};
+        // Clean up orphaned overrides when agent defaults change
+        if (changedProperties.has("agentDefaults")) {
+            const oldDefaults = changedProperties.get("agentDefaults") as typeof this.agentDefaults | undefined;
+            if (oldDefaults) {
+                const cleaned = this._cleanupOrphanedOverrides(this.value, oldDefaults, this.agentDefaults);
+                if (cleaned) {
+                    this.value = cleaned.value;
+                    if (cleaned.changed) {
+                        this.dispatchEvent(new UmbChangeEvent());
+                    }
+                }
+            }
+        }
+    }
 
-		// Get sets for efficient lookup
-		const newAllowedToolIds = new Set(newDefaults.allowedToolIds.map((id) => id.toLowerCase()));
-		const newAllowedScopeIds = new Set(newDefaults.allowedToolScopeIds.map((id) => id.toLowerCase()));
+    /**
+     * Clean up orphaned overrides when agent defaults change.
+     * Returns { value, changed } where changed indicates if any cleanup occurred.
+     */
+    private _cleanupOrphanedOverrides(
+        permissions: UaiUserGroupPermissionsMap,
+        _oldDefaults: typeof this.agentDefaults,
+        newDefaults: typeof this.agentDefaults,
+    ): { value: UaiUserGroupPermissionsMap; changed: boolean } | null {
+        let hasChanges = false;
+        const cleaned: UaiUserGroupPermissionsMap = {};
 
-		for (const [userGroupId, userGroupPerms] of Object.entries(permissions)) {
-			const cleanedPerms: UaiUserGroupPermissionsModel = { ...userGroupPerms };
+        // Get sets for efficient lookup
+        const newAllowedToolIds = new Set(newDefaults.allowedToolIds.map((id) => id.toLowerCase()));
+        const newAllowedScopeIds = new Set(newDefaults.allowedToolScopeIds.map((id) => id.toLowerCase()));
 
-			// Clean up denied tool IDs (remove if no longer in base allowed list)
-			if (cleanedPerms.deniedToolIds && cleanedPerms.deniedToolIds.length > 0) {
-				const filteredDenied = cleanedPerms.deniedToolIds.filter((toolId) =>
-					newAllowedToolIds.has(toolId.toLowerCase())
-				);
-				if (filteredDenied.length !== cleanedPerms.deniedToolIds.length) {
-					cleanedPerms.deniedToolIds = filteredDenied;
-					hasChanges = true;
-				}
-			}
+        for (const [userGroupId, userGroupPerms] of Object.entries(permissions)) {
+            const cleanedPerms: UaiUserGroupPermissionsModel = { ...userGroupPerms };
 
-			// Clean up denied scope IDs (remove if no longer in base allowed list)
-			if (cleanedPerms.deniedToolScopeIds && cleanedPerms.deniedToolScopeIds.length > 0) {
-				const filteredDenied = cleanedPerms.deniedToolScopeIds.filter((scopeId) =>
-					newAllowedScopeIds.has(scopeId.toLowerCase())
-				);
-				if (filteredDenied.length !== cleanedPerms.deniedToolScopeIds.length) {
-					cleanedPerms.deniedToolScopeIds = filteredDenied;
-					hasChanges = true;
-				}
-			}
+            // Clean up denied tool IDs (remove if no longer in base allowed list)
+            if (cleanedPerms.deniedToolIds && cleanedPerms.deniedToolIds.length > 0) {
+                const filteredDenied = cleanedPerms.deniedToolIds.filter((toolId) =>
+                    newAllowedToolIds.has(toolId.toLowerCase()),
+                );
+                if (filteredDenied.length !== cleanedPerms.deniedToolIds.length) {
+                    cleanedPerms.deniedToolIds = filteredDenied;
+                    hasChanges = true;
+                }
+            }
 
-			// Clean up allowed tool IDs (remove if now in base allowed list - they're inherited)
-			if (cleanedPerms.allowedToolIds && cleanedPerms.allowedToolIds.length > 0) {
-				const filteredAllowed = cleanedPerms.allowedToolIds.filter(
-					(toolId) => !newAllowedToolIds.has(toolId.toLowerCase())
-				);
-				if (filteredAllowed.length !== cleanedPerms.allowedToolIds.length) {
-					cleanedPerms.allowedToolIds = filteredAllowed;
-					hasChanges = true;
-				}
-			}
+            // Clean up denied scope IDs (remove if no longer in base allowed list)
+            if (cleanedPerms.deniedToolScopeIds && cleanedPerms.deniedToolScopeIds.length > 0) {
+                const filteredDenied = cleanedPerms.deniedToolScopeIds.filter((scopeId) =>
+                    newAllowedScopeIds.has(scopeId.toLowerCase()),
+                );
+                if (filteredDenied.length !== cleanedPerms.deniedToolScopeIds.length) {
+                    cleanedPerms.deniedToolScopeIds = filteredDenied;
+                    hasChanges = true;
+                }
+            }
 
-			// Clean up allowed scope IDs (remove if now in base allowed list - they're inherited)
-			if (cleanedPerms.allowedToolScopeIds && cleanedPerms.allowedToolScopeIds.length > 0) {
-				const filteredAllowed = cleanedPerms.allowedToolScopeIds.filter(
-					(scopeId) => !newAllowedScopeIds.has(scopeId.toLowerCase())
-				);
-				if (filteredAllowed.length !== cleanedPerms.allowedToolScopeIds.length) {
-					cleanedPerms.allowedToolScopeIds = filteredAllowed;
-					hasChanges = true;
-				}
-			}
+            // Clean up allowed tool IDs (remove if now in base allowed list - they're inherited)
+            if (cleanedPerms.allowedToolIds && cleanedPerms.allowedToolIds.length > 0) {
+                const filteredAllowed = cleanedPerms.allowedToolIds.filter(
+                    (toolId) => !newAllowedToolIds.has(toolId.toLowerCase()),
+                );
+                if (filteredAllowed.length !== cleanedPerms.allowedToolIds.length) {
+                    cleanedPerms.allowedToolIds = filteredAllowed;
+                    hasChanges = true;
+                }
+            }
 
-			cleaned[userGroupId] = cleanedPerms;
-		}
+            // Clean up allowed scope IDs (remove if now in base allowed list - they're inherited)
+            if (cleanedPerms.allowedToolScopeIds && cleanedPerms.allowedToolScopeIds.length > 0) {
+                const filteredAllowed = cleanedPerms.allowedToolScopeIds.filter(
+                    (scopeId) => !newAllowedScopeIds.has(scopeId.toLowerCase()),
+                );
+                if (filteredAllowed.length !== cleanedPerms.allowedToolScopeIds.length) {
+                    cleanedPerms.allowedToolScopeIds = filteredAllowed;
+                    hasChanges = true;
+                }
+            }
 
-		return hasChanges ? { value: cleaned, changed: true } : null;
-	}
+            cleaned[userGroupId] = cleanedPerms;
+        }
 
-	/**
-	 * Handle change event from user-group-settings-list.
-	 */
-	private _onChange(event: UmbChangeEvent): void {
-		event.stopPropagation();
-		const component = event.target as any;
-		this.value = component.value;
-		this.dispatchEvent(new UmbChangeEvent());
-	}
+        return hasChanges ? { value: cleaned, changed: true } : null;
+    }
 
-	override render() {
-		const config: UaiUserGroupSettingsConfig<UaiUserGroupPermissionsModel> = {
-			editorModal: {
-				token: UAI_TOOL_PERMISSIONS_OVERRIDE_EDITOR_MODAL,
-				createData: (userGroupId, userGroupName, existing) => ({
-					userGroupId,
-					userGroupName,
-					agentDefaults: this.agentDefaults,
-					currentPermissions: existing,
-				}),
-				extractValue: (result) => result.permissions,
-			},
-			display: {
-				renderSummary: (settings) => this._renderSummary(settings),
-				renderTags: (settings) => this._renderTags(settings),
-			}
-		};
+    /**
+     * Handle change event from user-group-settings-list.
+     */
+    private _onChange(event: UmbChangeEvent): void {
+        event.stopPropagation();
+        const component = event.target as any;
+        this.value = component.value;
+        this.dispatchEvent(new UmbChangeEvent());
+    }
 
-		return html`
-			<uai-user-group-settings-list
-				.value=${this.value}
-				.config=${config}
-				.readonly=${this.readonly}
-				@change=${this._onChange}>
-			</uai-user-group-settings-list>
-		`;
-	}
+    override render() {
+        const config: UaiUserGroupSettingsConfig<UaiUserGroupPermissionsModel> = {
+            editorModal: {
+                token: UAI_TOOL_PERMISSIONS_OVERRIDE_EDITOR_MODAL,
+                createData: (userGroupId, userGroupName, existing) => ({
+                    userGroupId,
+                    userGroupName,
+                    agentDefaults: this.agentDefaults,
+                    currentPermissions: existing,
+                }),
+                extractValue: (result) => result.permissions,
+            },
+            display: {
+                renderSummary: (settings) => this._renderSummary(settings),
+                renderTags: (settings) => this._renderTags(settings),
+            },
+        };
 
-	static override styles = [
-		css`
-			:host {
-				display: block;
-			}
+        return html`
+            <uai-user-group-settings-list
+                .value=${this.value}
+                .config=${config}
+                .readonly=${this.readonly}
+                .editableUserGroupIds=${this.editableUserGroupIds}
+                @change=${this._onChange}
+            >
+            </uai-user-group-settings-list>
+        `;
+    }
 
-			uui-tag {
-				white-space: nowrap;
-			}
-		`,
-	];
+    static override styles = [
+        css`
+            :host {
+                display: block;
+            }
+
+            uui-tag {
+                white-space: nowrap;
+            }
+        `,
+    ];
 }
 
 declare global {
-	interface HTMLElementTagNameMap {
-		"uai-user-group-tool-permissions": UaiUserGroupToolPermissionsElement;
-	}
+    interface HTMLElementTagNameMap {
+        "uai-user-group-tool-permissions": UaiUserGroupToolPermissionsElement;
+    }
 }

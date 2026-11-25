@@ -39,6 +39,7 @@ public class ExecutePromptController : PromptControllerBase
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(PromptExecutionResponseModel), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status429TooManyRequests)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
@@ -48,19 +49,23 @@ public class ExecutePromptController : PromptControllerBase
         [FromBody] PromptExecutionRequestModel requestModel,
         CancellationToken cancellationToken = default)
     {
-        // Resolve prompt ID from IdOrAlias. An ID is returned without a lookup, so confirm the prompt
-        // exists here; failures during execution are then never about the prompt itself.
-        var promptId = await _promptService.TryGetPromptIdAsync(promptIdOrAlias, cancellationToken);
-        if (!promptId.HasValue || await _promptService.GetPromptAsync(promptId.Value, cancellationToken) is null)
-        {
-            return PromptNotFound();
-        }
-
         try
         {
+            // Confirm the prompt exists here, so failures during execution are never about the prompt itself.
+            // A limited prompt is refused (403), not hidden (404): the caller learns why it won't run.
+            var prompt = await _promptService.GetPromptForUseAsync(promptIdOrAlias, cancellationToken);
+            if (prompt is null)
+            {
+                return PromptNotFound();
+            }
+
             var request = _mapper.Map<AIPromptExecutionRequest>(requestModel)!;
-            var result = await _promptService.ExecutePromptAsync(promptId.Value, request, cancellationToken);
+            var result = await _promptService.ExecutePromptAsync(prompt.Id, request, cancellationToken);
             return Ok(_mapper.Map<PromptExecutionResponseModel>(result));
+        }
+        catch (AIPromptNotAvailableException)
+        {
+            return PromptNotAvailable();
         }
         catch (InvalidOperationException ex)
         {

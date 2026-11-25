@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Moq;
+
 using Shouldly;
+
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Deploy.Artifacts;
 using Umbraco.AI.Agent.Deploy.Connectors.ServiceConnectors;
@@ -14,6 +17,7 @@ using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Deploy;
 using Umbraco.Cms.Core.Models.Membership;
 using Umbraco.Cms.Core.Services;
+
 using Xunit;
 
 namespace Umbraco.AI.Agent.Deploy.Tests.Unit.Connectors.ServiceConnectors;
@@ -28,7 +32,7 @@ public class UmbracoAIAgentUserGroupPermissionsDeployTests
     private static readonly Guid TargetMarketingKey = Guid.NewGuid();
     private static readonly Guid EditorsKey = Guid.NewGuid(); // built-in groups share a key everywhere
 
-    private readonly Mock<IAIAgentService> _agentService = new();
+    private readonly Mock<IAIAgentUnrestrictedWriter> _agentService = new();
     private readonly Mock<IUserGroupService> _sourceGroups = new();
     private readonly Mock<IUserGroupService> _targetGroups = new();
     private AIAgent? _saved;
@@ -44,7 +48,7 @@ public class UmbracoAIAgentUserGroupPermissionsDeployTests
         _targetGroups.Setup(x => x.GetAsync(EditorsKey)).ReturnsAsync(Group("editor", EditorsKey));
 
         _agentService
-            .Setup(x => x.SaveAgentAsync(It.IsAny<AIAgent>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.SaveAgentUnrestrictedAsync(It.IsAny<AIAgent>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((AIAgent a, CancellationToken _) => _saved = a);
     }
 
@@ -127,7 +131,7 @@ public class UmbracoAIAgentUserGroupPermissionsDeployTests
     {
         var settings = new Mock<UmbracoAIDeploySettingsAccessor>(MockBehavior.Strict, null!);
         settings.Setup(x => x.Settings).Returns(new UmbracoAIDeploySettings());
-        return new UmbracoAIAgentServiceConnector(_agentService.Object, new Mock<IAIProfileService>().Object, settings.Object, userGroups.Object);
+        return new UmbracoAIAgentServiceConnector(new Mock<IAIProfileService>().Object, settings.Object, userGroups.Object, new Mock<IAIAgentUnrestrictedReader>().Object, _agentService.Object);
     }
 
     private async Task ImportAsync(AIAgentArtifact artifact)

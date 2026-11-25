@@ -13,7 +13,7 @@ namespace Umbraco.AI.Web.Api.Management.AuditLog.Controllers;
 /// Controller to get an audit-log by id.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ViewAuditLogsAI)]
 public class ByIdAuditLogController : AuditLogControllerBase
 {
     private readonly IAIAuditLogService _auditLogService;

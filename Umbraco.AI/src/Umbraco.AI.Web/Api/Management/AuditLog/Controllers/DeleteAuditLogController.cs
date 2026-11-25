@@ -11,7 +11,7 @@ namespace Umbraco.AI.Web.Api.Management.AuditLog.Controllers;
 /// Controller to delete an audit-log.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ManageSettingsAI)]
 public class DeleteAuditLogController : AuditLogControllerBase
 {
     private readonly IAIAuditLogService _auditLogService;

@@ -1,11 +1,12 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Core.Agents.Selection;
 using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
-using Umbraco.AI.Agent.Core.FileStore;
 using Umbraco.AI.Agent.Core.Context;
+using Umbraco.AI.Agent.Core.FileStore;
 using Umbraco.AI.Agent.Core.Guardrails;
 using Umbraco.AI.Agent.Core.Models;
 using Umbraco.AI.Agent.Core.RuntimeContext;
@@ -14,8 +15,8 @@ using Umbraco.AI.Agent.Core.Telemetry;
 using Umbraco.AI.Agent.Core.Workflows;
 using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.Core.Chat.Middleware;
-using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Core.Profiles;
+using Umbraco.AI.Core.Tools.Scopes;
 using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Hosting;
@@ -54,7 +55,12 @@ public static class UmbracoBuilderExtensions
         builder.Services.AddSingleton<AIAgentScopeValidator>();
 
         // Register services
-        builder.Services.AddSingleton<IAIAgentService, AIAgentService>();
+        // One instance behind both: the limited IAIAgentService for request paths, and the internal
+        // unrestricted reader for server-side code that runs after a run was already authorized.
+        builder.Services.AddSingleton<AIAgentService>();
+        builder.Services.AddSingleton<IAIAgentService>(sp => sp.GetRequiredService<AIAgentService>());
+        builder.Services.AddSingleton<IAIAgentUnrestrictedReader>(sp => sp.GetRequiredService<AIAgentService>());
+        builder.Services.AddSingleton<IAIAgentUnrestrictedWriter>(sp => sp.GetRequiredService<AIAgentService>());
         // Owns the selector chain so AIAgentService doesn't grow further. Depends on IAIAgentService
         // itself (for GetAgentsBySurfaceAsync) - the obsolete SelectAgentForPromptAsync proxy resolves
         // this via the static service provider instead of a constructor parameter, to avoid a cycle.
@@ -137,6 +143,10 @@ public static class UmbracoBuilderExtensions
         // Auto-discover agent surfaces via [AIAgentSurface] attribute
         builder.AIAgentSurfaces()
             .Add(() => builder.TypeLoader.GetTypesWithAttribute<IAIAgentSurface, AIAgentSurfaceAttribute>(cache: true));
+
+        // onBehalfOf resolvers: empty by default, add-ons (e.g. Automate) add one per kind.
+        builder.AIAgentUserGroupResolvers();
+        builder.Services.AddSingleton<IAIAgentUserGroupResolutionService, AIAgentUserGroupResolutionService>();
 
         // Register the agent selector collection. See AddDefaultAIAgentSelectors for the order.
         AddDefaultAIAgentSelectors(builder.AIAgentSelectors());

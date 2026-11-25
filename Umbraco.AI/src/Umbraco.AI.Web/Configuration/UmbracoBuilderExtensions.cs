@@ -1,10 +1,10 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
 
-using OpenIddict.Validation.AspNetCore;
-
 using Swashbuckle.AspNetCore.SwaggerGen;
+
 using Umbraco.AI.Web;
 using Umbraco.AI.Web.Api;
 using Umbraco.AI.Web.Api.Common.Configuration;
@@ -49,16 +49,9 @@ public static class UmbracoBuilderExtensions
         builder.AddUmbracoAIMapDefinitions();
 
         // Security
-        builder.Services.AddAuthorization(o =>
-        {
-            o.AddPolicy(AIAuthorizationPolicies.SectionAccessAI, policy =>
-            {
-                policy.AuthenticationSchemes.Add(OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme);
-#pragma warning disable CS0618 // Type or member is obsolete
-                policy.RequireClaim(Umbraco.Cms.Core.Constants.Security.AllowedApplicationsClaimType, Core.Constants.Sections.AI);
-#pragma warning restore CS0618 // Type or member is obsolete
-            });
-        });
+        builder.Services.AddSingleton<IAuthorizationHandler, AISectionAuthorizationHandler>();
+        builder.Services.AddSingleton<IAuthorizationHandler, AIPermissionAuthorizationHandler>();
+        builder.Services.AddAuthorization(AIAuthorizationPolicies.Register);
 
         return builder;
     }

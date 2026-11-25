@@ -14,7 +14,7 @@ namespace Umbraco.AI.Web.Api.Management.Analytics.Usage.Controllers;
 /// Controller to get usage time series data.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ViewAnalyticsAI)]
 public class UsageTimeSeriesController : AnalyticsControllerBase
 {
     private readonly IAIUsageAnalyticsService _analyticsService;

@@ -27,9 +27,14 @@ internal interface IAIAgentRepository
     /// <summary>
     /// Gets all Agents.
     /// </summary>
+    /// <param name="usableByGroupKeys">
+    /// When set, only agents with no group limit, or limited to at least one of these user groups. Null means no limit is applied.
+    /// </param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>All Agents.</returns>
-    Task<IEnumerable<AIAgent>> GetAllAsync(CancellationToken cancellationToken = default);
+    /// <returns>All matching Agents.</returns>
+    Task<IEnumerable<AIAgent>> GetAllAsync(
+        IReadOnlyCollection<Guid>? usableByGroupKeys = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a paged list of Agents with optional filtering.
@@ -40,6 +45,10 @@ internal interface IAIAgentRepository
     /// <param name="profileId">Optional profile ID filter.</param>
     /// <param name="surfaceId">Optional surface ID filter.</param>
     /// <param name="isActive">Optional active status filter.</param>
+    /// <param name="agentType">Optional agent type filter.</param>
+    /// <param name="usableByGroupKeys">
+    /// When set, only agents with no group limit, or limited to at least one of these user groups, in the same query. Null means no limit is applied.
+    /// </param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A tuple containing the filtered/paginated agents and the total count.</returns>
     Task<(IEnumerable<AIAgent> Items, int Total)> GetPagedAsync(
@@ -50,15 +59,22 @@ internal interface IAIAgentRepository
         string? surfaceId = null,
         bool? isActive = null,
         AIAgentType? agentType = null,
+        IReadOnlyCollection<Guid>? usableByGroupKeys = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all agents that belong to a specific surface.
     /// </summary>
     /// <param name="surfaceId">The surface ID to filter by.</param>
+    /// <param name="usableByGroupKeys">
+    /// When set, only agents with no group limit, or limited to at least one of these user groups. Null means no limit is applied.
+    /// </param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Agents that have the specified surface ID in their SurfaceIds.</returns>
-    Task<IEnumerable<AIAgent>> GetBySurfaceAsync(string surfaceId, CancellationToken cancellationToken = default);
+    Task<IEnumerable<AIAgent>> GetBySurfaceAsync(
+        string surfaceId,
+        IReadOnlyCollection<Guid>? usableByGroupKeys = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Saves an agent (creates or updates).

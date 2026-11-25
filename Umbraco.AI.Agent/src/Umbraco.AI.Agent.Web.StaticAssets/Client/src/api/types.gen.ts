@@ -111,6 +111,7 @@ export type AgentResponseModel = {
     profileId?: string | null;
     guardrailIds: Array<string>;
     surfaceIds: Array<string>;
+    allowedUserGroupIds: Array<string>;
     scope?: AiAgentScopeModel | null;
     starterPrompts: Array<AiStarterPromptModel>;
     config?: StandardAgentConfigModel | OrchestratedAgentConfigModel | null;
@@ -161,6 +162,7 @@ export type CreateAgentRequestModel = {
     profileId?: string | null;
     guardrailIds?: Array<string> | null;
     surfaceIds?: Array<string> | null;
+    allowedUserGroupIds?: Array<string> | null;
     scope?: AiAgentScopeModel | null;
     starterPrompts?: Array<AiStarterPromptModel> | null;
     config?: StandardAgentConfigModel | OrchestratedAgentConfigModel | null;
@@ -235,6 +237,7 @@ export type UpdateAgentRequestModel = {
     profileId?: string | null;
     guardrailIds?: Array<string> | null;
     surfaceIds?: Array<string> | null;
+    allowedUserGroupIds?: Array<string> | null;
     scope?: AiAgentScopeModel | null;
     starterPrompts?: Array<AiStarterPromptModel> | null;
     config?: StandardAgentConfigModel | OrchestratedAgentConfigModel | null;
@@ -264,16 +267,28 @@ export type GetAllAgentsData = {
         surfaceId?: string;
         isActive?: boolean;
         agentType?: string;
+        includeRestricted?: boolean;
+        onBehalfOf?: string;
     };
     url: '/umbraco/ai/management/api/v1/agents';
 };
 
 export type GetAllAgentsErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * The resource is protected and requires an authentication token
      */
     401: unknown;
+    /**
+     * Forbidden
+     */
+    403: ProblemDetails;
 };
+
+export type GetAllAgentsError = GetAllAgentsErrors[keyof GetAllAgentsErrors];
 
 export type GetAllAgentsResponses = {
     /**
@@ -300,6 +315,10 @@ export type CreateAgentErrors = {
      * The resource is protected and requires an authentication token
      */
     401: unknown;
+    /**
+     * Forbidden
+     */
+    403: ProblemDetails;
     /**
      * Conflict
      */
@@ -353,15 +372,25 @@ export type GetAgentByIdOrAliasData = {
     path: {
         agentIdOrAlias: string;
     };
-    query?: never;
+    query?: {
+        onBehalfOf?: string;
+    };
     url: '/umbraco/ai/management/api/v1/agents/{agentIdOrAlias}';
 };
 
 export type GetAgentByIdOrAliasErrors = {
     /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
      * The resource is protected and requires an authentication token
      */
     401: unknown;
+    /**
+     * Forbidden
+     */
+    403: ProblemDetails;
     /**
      * Not Found
      */
@@ -398,6 +427,10 @@ export type UpdateAgentErrors = {
      */
     401: unknown;
     /**
+     * Forbidden
+     */
+    403: ProblemDetails;
+    /**
      * Not Found
      */
     404: ProblemDetails;
@@ -431,6 +464,10 @@ export type RunAgentErrors = {
      */
     401: unknown;
     /**
+     * Forbidden
+     */
+    403: ProblemDetails;
+    /**
      * Not Found
      */
     404: ProblemDetails;
@@ -463,6 +500,10 @@ export type StreamAgentErrors = {
      * The resource is protected and requires an authentication token
      */
     401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
     /**
      * Not Found
      */
@@ -499,6 +540,10 @@ export type StreamAgentAGUIErrors = {
      */
     401: unknown;
     /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
      * Not Found
      */
     404: ProblemDetails;
@@ -534,6 +579,10 @@ export type SuggestStartersErrors = {
      */
     401: unknown;
     /**
+     * Forbidden
+     */
+    403: ProblemDetails;
+    /**
      * Not Found
      */
     404: ProblemDetails;
@@ -564,6 +613,10 @@ export type GetSuggestStartersAvailabilityErrors = {
      * The resource is protected and requires an authentication token
      */
     401: unknown;
+    /**
+     * Forbidden
+     */
+    403: ProblemDetails;
     /**
      * Not Found
      */

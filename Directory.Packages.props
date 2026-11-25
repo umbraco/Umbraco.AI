@@ -30,7 +30,7 @@
 
   <!-- Umbraco Automate -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.Automate.Core" Version="[17.0.0, 17.999.999)" />
+    <PackageVersion Include="Umbraco.Automate.Core" Version="[17.5.0, 17.999.999)" />
   </ItemGroup>
 
   <!-- Umbraco Search -->
@@ -49,20 +49,23 @@
     <PackageVersion Include="System.ClientModel" Version="[1.5.0, 1.999.999)" />
   </ItemGroup>
 
-  <!-- Inter-product dependencies (version ranges for NuGet packages) -->
+  <!-- Inter-product dependencies (version ranges for NuGet packages).
+       The Umbraco.AI Core/Web/Startup (17.8.3), Agent* (17.4.5) and Prompt.Startup (17.4.3) floors
+       are the first releases with granular permissions. Add-ons and Deploy packages use internal
+       contracts shared via InternalsVisibleTo, so do not lower them. -->
   <ItemGroup>
-    <PackageVersion Include="Umbraco.AI.Core" Version="[17.8.2, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Web" Version="[17.8.2, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Core" Version="[17.8.3, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Web" Version="[17.8.3, 17.999.999)" />
     <PackageVersion Include="Umbraco.AI.AGUI" Version="[17.4.4, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Startup" Version="[17.8.2, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent" Version="[17.4.4, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent.Core" Version="[17.4.4, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Agent.Startup" Version="[17.4.4, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Startup" Version="[17.8.3, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent" Version="[17.4.5, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent.Core" Version="[17.4.5, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Agent.Startup" Version="[17.4.5, 17.999.999)" />
     <PackageVersion Include="Umbraco.AI.Agent.UI" Version="[17.4.0, 17.999.999)" />
     <PackageVersion Include="Umbraco.AI.Agent.Copilot" Version="[17.2.2, 17.999.999)" />
     <PackageVersion Include="Umbraco.AI.Deploy" Version="[17.4.0, 17.999.999)" />
     <PackageVersion Include="Umbraco.AI.Automate" Version="[17.2.1, 17.999.999)" />
-    <PackageVersion Include="Umbraco.AI.Prompt.Startup" Version="[17.4.2, 17.999.999)" />
+    <PackageVersion Include="Umbraco.AI.Prompt.Startup" Version="[17.4.3, 17.999.999)" />
   </ItemGroup>
 
   <!-- Microsoft AI Agent packages -->

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.Versioning;
 
 namespace Umbraco.AI.Core.Tests;
@@ -19,6 +20,9 @@ internal sealed class AITestVersionableEntityAdapter : AIVersionableEntityAdapte
     {
         _testService = testService;
     }
+
+    /// <inheritdoc />
+    public override string? RollbackPermission => AIPermissions.ManageTests;
 
     /// <inheritdoc />
     protected override string CreateSnapshot(AITest entity)

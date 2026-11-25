@@ -1,12 +1,16 @@
 using Asp.Versioning;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 
 using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.AI.Web.Api.Management.Common.Models;
 using Umbraco.AI.Web.Authorization;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Mapping;
 
 namespace Umbraco.AI.Web.Api.Management.Versioning.Controllers;
@@ -25,18 +29,38 @@ public class EntityVersionHistoryController : VersioningControllerBase
     private readonly IAIEntityVersionService _versionService;
     private readonly AIVersionableEntityAdapterCollection _entityTypes;
     private readonly IUmbracoMapper _umbracoMapper;
+    private readonly IAuthorizationService _authorizationService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="EntityVersionHistoryController"/> class.
     /// </summary>
+    [Obsolete("Use the constructor that accepts an IAuthorizationService so rollback can check the owning area's right. Will be removed in v20.")]
     public EntityVersionHistoryController(
         IAIEntityVersionService versionService,
         AIVersionableEntityAdapterCollection entityTypes,
         IUmbracoMapper umbracoMapper)
+        : this(versionService, entityTypes, umbracoMapper, StaticServiceProvider.Instance.GetRequiredService<IAuthorizationService>())
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="EntityVersionHistoryController"/> class.
+    /// </summary>
+    /// <remarks>
+    /// Marked as the activation constructor so <c>ActivatorUtilities</c> does not find two applicable
+    /// constructors while the obsolete overload is kept for compatibility.
+    /// </remarks>
+    [ActivatorUtilitiesConstructor]
+    public EntityVersionHistoryController(
+        IAIEntityVersionService versionService,
+        AIVersionableEntityAdapterCollection entityTypes,
+        IUmbracoMapper umbracoMapper,
+        IAuthorizationService authorizationService)
     {
         _versionService = versionService;
         _entityTypes = entityTypes;
         _umbracoMapper = umbracoMapper;
+        _authorizationService = authorizationService;
     }
 
     /// <summary>
@@ -71,10 +95,8 @@ public class EntityVersionHistoryController : VersioningControllerBase
         var currentEntity = await handler.GetEntityAsync(entityId, cancellationToken);
         if (currentEntity is not IAIAuditableEntity auditable)
         {
-            // Entity not found or doesn't implement IAIAuditableEntity
-            return NotFound(CreateProblemDetails(
-                "Entity not found",
-                $"The {entityType} with ID {entityId} was not found."));
+            // Entity not found, hidden from this user, or doesn't implement IAIAuditableEntity
+            return EntityNotFound(entityType, entityId);
         }
 
         // Create the current version entry from the live entity
@@ -144,13 +166,19 @@ public class EntityVersionHistoryController : VersioningControllerBase
         [FromRoute] int entityVersion,
         CancellationToken cancellationToken = default)
     {
-        // Normalize entity type (case-insensitive)
-        var normalizedType = NormalizeEntityType(entityType);
-        if (normalizedType is null)
+        // Get the entity type handler (case-insensitive)
+        var handler = _entityTypes.GetByTypeName(entityType);
+        if (handler is null)
         {
             return UnknownEntityType(entityType);
         }
 
+        if (!await EntityIsVisibleAsync(handler, entityId, cancellationToken))
+        {
+            return EntityNotFound(entityType, entityId);
+        }
+
+        var normalizedType = handler.EntityTypeName;
         var versionRecord = await _versionService.GetVersionAsync(entityId, normalizedType, entityVersion, cancellationToken);
         if (versionRecord is null)
         {
@@ -181,13 +209,19 @@ public class EntityVersionHistoryController : VersioningControllerBase
         [FromRoute] int toEntityVersion,
         CancellationToken cancellationToken = default)
     {
-        // Normalize entity type (case-insensitive)
-        var normalizedType = NormalizeEntityType(entityType);
-        if (normalizedType is null)
+        // Get the entity type handler (case-insensitive)
+        var handler = _entityTypes.GetByTypeName(entityType);
+        if (handler is null)
         {
             return UnknownEntityType(entityType);
         }
 
+        if (!await EntityIsVisibleAsync(handler, entityId, cancellationToken))
+        {
+            return EntityNotFound(entityType, entityId);
+        }
+
+        var normalizedType = handler.EntityTypeName;
         var comparison = await _versionService.CompareVersionsAsync(entityId, normalizedType, fromEntityVersion, toEntityVersion, cancellationToken);
         if (comparison is null)
         {
@@ -234,6 +268,7 @@ public class EntityVersionHistoryController : VersioningControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    // No explicit 403: the CMS adds it itself because this controller injects IAuthorizationService.
     public async Task<IActionResult> RollbackToVersion(
         [FromRoute] string entityType,
         [FromRoute] Guid entityId,
@@ -247,10 +282,26 @@ public class EntityVersionHistoryController : VersioningControllerBase
             return UnknownEntityType(entityType);
         }
 
+        // Rollback is a write, so it needs the right the adapter declares for its entity type: the AI
+        // section plus that right, the same requirements the named policies on the other write endpoints
+        // use. An adapter that declares none is refused rather than left open.
+        var verb = handler.RollbackPermission;
+        if (verb is null || !(await _authorizationService.AuthorizeAsync(
+                User,
+                null,
+                [new AISectionRequirement(), new AIPermissionRequirement(verb)])).Succeeded)
+        {
+            return Forbidden($"You do not have permission to roll back a {handler.EntityTypeName}.");
+        }
+
         try
         {
             await handler.RollbackAsync(entityId, entityVersion, cancellationToken);
             return NoContent();
+        }
+        catch (AIPermissionDeniedException ex)
+        {
+            return Forbidden(ex.Message);
         }
         catch (InvalidOperationException ex)
         {
@@ -258,10 +309,19 @@ public class EntityVersionHistoryController : VersioningControllerBase
         }
     }
 
-    private string? NormalizeEntityType(string entityType)
-    {
-        // Try to find by case-insensitive match
-        var handler = _entityTypes.GetByTypeName(entityType);
-        return handler?.EntityTypeName;
-    }
+    private ObjectResult Forbidden(string detail)
+        => StatusCode(StatusCodes.Status403Forbidden, CreateProblemDetails("Forbidden", detail));
+
+    // The adapter's GetEntityAsync is the visibility rule: it returns null for an entity the current user
+    // may not see, so a hidden entity reads as missing for the history, a snapshot and a comparison alike.
+    private static async Task<bool> EntityIsVisibleAsync(
+        IAIVersionableEntityAdapter handler,
+        Guid entityId,
+        CancellationToken cancellationToken)
+        => await handler.GetEntityAsync(entityId, cancellationToken) is not null;
+
+    private NotFoundObjectResult EntityNotFound(string entityType, Guid entityId)
+        => NotFound(CreateProblemDetails(
+            "Entity not found",
+            $"The {entityType} with ID {entityId} was not found."));
 }

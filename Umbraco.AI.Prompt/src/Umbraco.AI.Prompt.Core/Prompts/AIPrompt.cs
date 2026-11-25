@@ -72,6 +72,11 @@ public sealed class AIPrompt : IAIVersionableEntity
     public IReadOnlyList<Guid> GuardrailIds { get; set; } = [];
 
     /// <summary>
+    /// Keys of the user groups allowed to use this prompt. Empty means everyone can use it.
+    /// </summary>
+    public IReadOnlyList<Guid> AllowedUserGroupIds { get; set; } = [];
+
+    /// <summary>
     /// Tags for categorization and filtering.
     /// </summary>
     public IReadOnlyList<string> Tags { get; set; } = [];

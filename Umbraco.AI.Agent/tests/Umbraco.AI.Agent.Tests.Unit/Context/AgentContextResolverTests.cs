@@ -1,10 +1,14 @@
 using Moq;
+
 using Shouldly;
+
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Core.Context;
 using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Core.RuntimeContext;
+
 using Xunit;
+
 using AgentConstants = Umbraco.AI.Agent.Core.Constants;
 using CoreConstants = Umbraco.AI.Core.Constants;
 
@@ -18,7 +22,7 @@ namespace Umbraco.AI.Agent.Tests.Unit.Context;
 public class AgentContextResolverTests
 {
     private readonly Mock<IAIContextService> _contextServiceMock = new();
-    private readonly Mock<IAIAgentService> _agentServiceMock = new();
+    private readonly Mock<IAIAgentUnrestrictedReader> _agentServiceMock = new();
     private readonly Mock<IAIRuntimeContextAccessor> _runtimeContextAccessorMock = new();
 
     [Fact]
@@ -40,7 +44,7 @@ public class AgentContextResolverTests
         result.Resources.ShouldBeEmpty();
         result.Sources.ShouldBeEmpty();
         _agentServiceMock.Verify(
-            x => x.GetAgentAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            x => x.GetAgentUnrestrictedAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
             Times.Never);
         _contextServiceMock.Verify(
             x => x.GetContextAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),

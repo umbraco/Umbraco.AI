@@ -543,7 +543,7 @@ How `advisory-fix` handles a reported vulnerability in this package.
 - Reports arrive as: a work item in the InfoSec project on Azure DevOps, which names the GitHub security advisory when there is one
 - Read with: the Azure DevOps MCP server
 - Updates go to: a private Slack channel per advisory, named dxp-security-{ticket}
-- Security team needs: affected and fixed version ranges for each package, and the advisory text before release (description and impact, affected and patched versions, workarounds); InfoSec requests the CVE from it
+- Security team needs: affected and fixed version ranges for each package, and everything gathered for the advisory before release (description and impact, affected and patched versions, workarounds, severity, anything else known); InfoSec uses what they need, including to request the CVE
 - Approves release: the release date is approved in advance; the dev team pushes the release on that date
 - Release timing: InfoSec decides the severity (CVSS 3.1), sometimes asking the team for a view. Critical or High: fix every supported version as soon as possible; a blog post goes out on the Thursday and the release on the following Tuesday, or at once if the issue is under active exploitation. Moderate: fix every supported version within a reasonable time, with a blog post on release day. Low: decide whether to fix; if so, it ships in the next minor, with LTS versions patched the same day, and a short note in the release blog post. If, on a Cloud site with the product installed, the issue could affect Cloud's infrastructure or other sites on the same shared resources, InfoSec invites the Cloud team, who need to know before 14:00 CEST on the Thursday before release.
 - Advisory published by: InfoSec, once the release is out

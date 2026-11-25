@@ -15,7 +15,7 @@ namespace Umbraco.AI.Web.Api.Management.Context.Controllers;
 /// Controller to create a new context.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ManageContextsAI)]
 public class CreateContextController : ContextControllerBase
 {
     private readonly IAIContextService _contextService;

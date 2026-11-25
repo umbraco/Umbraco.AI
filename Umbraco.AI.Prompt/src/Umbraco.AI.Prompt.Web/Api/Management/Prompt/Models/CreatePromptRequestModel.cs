@@ -56,6 +56,11 @@ public class CreatePromptRequestModel
     public IEnumerable<string>? Tags { get; init; }
 
     /// <summary>
+    /// Keys of the user groups allowed to use this prompt. Empty or missing means everyone.
+    /// </summary>
+    public IEnumerable<Guid>? AllowedUserGroupIds { get; init; }
+
+    /// <summary>
     /// Determines where this prompt is displayed: as a property action or as a TipTap toolbar tool.
     /// </summary>
     public AIPromptDisplayMode DisplayMode { get; init; } = AIPromptDisplayMode.PropertyAction;

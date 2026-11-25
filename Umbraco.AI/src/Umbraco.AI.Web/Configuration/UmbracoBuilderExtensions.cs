@@ -1,9 +1,10 @@
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.Extensions.DependencyInjection;
-using OpenIddict.Validation.AspNetCore;
+
 using Umbraco.AI.Web;
 using Umbraco.AI.Web.Api.Common.Configuration;
 using Umbraco.AI.Web.Api.Common.Mapping;
@@ -47,14 +48,8 @@ public static class UmbracoBuilderExtensions
 
         // Security
         builder.Services.AddSingleton<IAuthorizationHandler, AISectionAuthorizationHandler>();
-        builder.Services.AddAuthorization(o =>
-        {
-            o.AddPolicy(AIAuthorizationPolicies.SectionAccessAI, policy =>
-            {
-                policy.AuthenticationSchemes.Add(OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme);
-                policy.Requirements.Add(new AISectionRequirement());
-            });
-        });
+        builder.Services.AddSingleton<IAuthorizationHandler, AIPermissionAuthorizationHandler>();
+        builder.Services.AddAuthorization(AIAuthorizationPolicies.Register);
 
         return builder;
     }

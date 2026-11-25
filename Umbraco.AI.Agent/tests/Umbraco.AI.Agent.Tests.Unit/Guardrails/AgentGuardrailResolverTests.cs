@@ -1,10 +1,14 @@
 using Moq;
+
 using Shouldly;
+
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Core.Guardrails;
 using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.RuntimeContext;
+
 using Xunit;
+
 using AgentConstants = Umbraco.AI.Agent.Core.Constants;
 using CoreConstants = Umbraco.AI.Core.Constants;
 
@@ -18,7 +22,7 @@ namespace Umbraco.AI.Agent.Tests.Unit.Guardrails;
 public class AgentGuardrailResolverTests
 {
     private readonly Mock<IAIGuardrailService> _guardrailServiceMock = new();
-    private readonly Mock<IAIAgentService> _agentServiceMock = new();
+    private readonly Mock<IAIAgentUnrestrictedReader> _agentServiceMock = new();
     private readonly Mock<IAIRuntimeContextAccessor> _runtimeContextAccessorMock = new();
 
     [Fact]
@@ -39,7 +43,7 @@ public class AgentGuardrailResolverTests
 
         result.GuardrailIds.ShouldBeEmpty();
         _agentServiceMock.Verify(
-            x => x.GetAgentAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            x => x.GetAgentUnrestrictedAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
             Times.Never);
         _guardrailServiceMock.Verify(
             x => x.GetGuardrailsByIdsAsync(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()),

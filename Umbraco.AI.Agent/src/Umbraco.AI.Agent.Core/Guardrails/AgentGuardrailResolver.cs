@@ -2,6 +2,7 @@ using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Guardrails.Resolvers;
 using Umbraco.AI.Core.RuntimeContext;
+
 using CoreConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Agent.Core.Guardrails;
@@ -18,12 +19,12 @@ internal sealed class AgentGuardrailResolver : IAIGuardrailResolver
 {
     private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAIGuardrailService _guardrailService;
-    private readonly IAIAgentService _agentService;
+    private readonly IAIAgentUnrestrictedReader _agentService;
 
     public AgentGuardrailResolver(
         IAIRuntimeContextAccessor runtimeContextAccessor,
         IAIGuardrailService guardrailService,
-        IAIAgentService agentService)
+        IAIAgentUnrestrictedReader agentService)
     {
         _runtimeContextAccessor = runtimeContextAccessor;
         _guardrailService = guardrailService;
@@ -45,7 +46,7 @@ internal sealed class AgentGuardrailResolver : IAIGuardrailResolver
             return AIGuardrailResolverResult.Empty;
         }
 
-        var agent = await _agentService.GetAgentAsync(agentId.Value, cancellationToken);
+        var agent = await _agentService.GetAgentUnrestrictedAsync(agentId.Value, cancellationToken);
         if (agent is null || agent.GuardrailIds.Count == 0)
         {
             return AIGuardrailResolverResult.Empty;

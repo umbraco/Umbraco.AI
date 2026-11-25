@@ -32,7 +32,7 @@ public class ByIdOrAliasPromptController : PromptControllerBase
     /// </summary>
     /// <param name="promptIdOrAlias">The prompt ID (GUID) or alias (string).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The prompt if found.</returns>
+    /// <returns>The prompt if found and visible to the caller.</returns>
     [HttpGet($"{{{nameof(promptIdOrAlias)}}}")]
     [MapToApiVersion("1.0")]
     [ProducesResponseType(typeof(PromptResponseModel), StatusCodes.Status200OK)]
@@ -41,7 +41,8 @@ public class ByIdOrAliasPromptController : PromptControllerBase
         IdOrAlias promptIdOrAlias,
         CancellationToken cancellationToken = default)
     {
-        var prompt = await _aiPromptService.GetPromptAsync(promptIdOrAlias, cancellationToken);
+        // Managed access: a user with Manage prompts sees a prompt they can't use, to edit it.
+        var prompt = await _aiPromptService.GetPromptAsync(promptIdOrAlias, includeRestricted: true, cancellationToken);
         if (prompt is null)
         {
             return PromptNotFound();

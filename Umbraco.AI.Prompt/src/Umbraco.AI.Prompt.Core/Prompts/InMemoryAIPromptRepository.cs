@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Versioning;
 using Umbraco.Cms.Core.Models;
@@ -28,8 +29,15 @@ internal sealed class InMemoryAIPromptRepository : IAIPromptRepository
     }
 
     /// <inheritdoc />
-    public Task<IEnumerable<AIPrompt>> GetAllAsync(CancellationToken cancellationToken = default)
-        => Task.FromResult<IEnumerable<AIPrompt>>(_prompts.Values.ToList());
+    public Task<IEnumerable<AIPrompt>> GetAllAsync(
+        IReadOnlyCollection<Guid>? usableByGroupKeys = null,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult<IEnumerable<AIPrompt>>(_prompts.Values.Where(p => IsUsableBy(p, usableByGroupKeys)).ToList());
+
+    private static bool IsUsableBy(AIPrompt prompt, IReadOnlyCollection<Guid>? groupKeys)
+        => groupKeys is null
+           || prompt.AllowedUserGroupIds.Count == 0
+           || prompt.AllowedUserGroupIds.Any(groupKeys.Contains);
 
     /// <inheritdoc />
     public Task<IEnumerable<AIPrompt>> GetByProfileAsync(Guid profileId, CancellationToken cancellationToken = default)
@@ -46,9 +54,10 @@ internal sealed class InMemoryAIPromptRepository : IAIPromptRepository
         int take,
         string? filter = null,
         Guid? profileId = null,
+        IReadOnlyCollection<Guid>? usableByGroupKeys = null,
         CancellationToken cancellationToken = default)
     {
-        var query = _prompts.Values.AsEnumerable();
+        var query = _prompts.Values.Where(p => IsUsableBy(p, usableByGroupKeys));
 
         if (!string.IsNullOrWhiteSpace(filter))
         {

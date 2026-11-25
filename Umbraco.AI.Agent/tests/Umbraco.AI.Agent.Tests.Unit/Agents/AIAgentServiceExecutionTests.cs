@@ -1,18 +1,25 @@
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
+
 using Moq;
+
 using Shouldly;
-using Umbraco.AI.AGUI.Events.Lifecycle;
+
 using Umbraco.AI.Agent.Core;
-using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Agents;
+using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
 using Umbraco.AI.AGUI.Events;
+using Umbraco.AI.AGUI.Events.Lifecycle;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.Tools;
 using Umbraco.Cms.Core.Events;
+using Umbraco.Cms.Core.Security;
+
 using Xunit;
+
 using AIAgent = Umbraco.AI.Agent.Core.Agents.AIAgent;
 using MsAIAgent = Microsoft.Agents.AI.AIAgent;
 
@@ -192,6 +199,7 @@ public class AIAgentServiceExecutionTests
             null!, // IAIGuardrailService
             null!, // IAIContextService
             eventAggregator,
+            new AIPermissionService(Mock.Of<IBackOfficeSecurityAccessor>()),
             null); // IBackOfficeSecurityAccessor
 
     [Fact]

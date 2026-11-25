@@ -1,8 +1,11 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+
 using Umbraco.AI.Core.Analytics;
 using Umbraco.AI.Core.Analytics.Usage;
 using Umbraco.AI.Core.Telemetry;
 using Umbraco.AI.Prompt.Core.Prompts;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Infrastructure.Telemetry.Interfaces;
 
@@ -21,7 +24,6 @@ public sealed class AIPromptUsageTelemetryProvider : IDetailedTelemetryProvider
 {
     private readonly IOptionsMonitor<AIUsageTelemetryOptions> _telemetryOptions;
     private readonly IOptionsMonitor<AIAnalyticsOptions> _analyticsOptions;
-    private readonly IAIPromptService _promptService;
     private readonly IAIUsageAnalyticsService _usageAnalyticsService;
 
     /// <summary>
@@ -30,12 +32,11 @@ public sealed class AIPromptUsageTelemetryProvider : IDetailedTelemetryProvider
     public AIPromptUsageTelemetryProvider(
         IOptionsMonitor<AIUsageTelemetryOptions> telemetryOptions,
         IOptionsMonitor<AIAnalyticsOptions> analyticsOptions,
-        IAIPromptService promptService,
+        IAIPromptService promptService, // no longer used; kept so the public constructor doesn't change
         IAIUsageAnalyticsService usageAnalyticsService)
     {
         _telemetryOptions = telemetryOptions;
         _analyticsOptions = analyticsOptions;
-        _promptService = promptService;
         _usageAnalyticsService = usageAnalyticsService;
     }
 
@@ -53,8 +54,10 @@ public sealed class AIPromptUsageTelemetryProvider : IDetailedTelemetryProvider
 
         try
         {
-            AIPrompt[] prompts = _promptService
-                .GetPromptsAsync()
+            // Telemetry runs in a background job with no user: count every prompt, not just the unlimited ones.
+            // The reader is internal, and this class's public constructor can't take it, so it is resolved here.
+            AIPrompt[] prompts = StaticServiceProvider.Instance.GetRequiredService<IAIPromptUnrestrictedReader>()
+                .GetPromptsUnrestrictedAsync()
                 .ConfigureAwait(false)
                 .GetAwaiter()
                 .GetResult()

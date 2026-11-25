@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Umbraco.AI.Core.EditableModels;
 using Umbraco.AI.Core.Providers;
+using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.Versioning;
 
 namespace Umbraco.AI.Core.Connections;
@@ -32,6 +33,9 @@ internal sealed class AIConnectionVersionableEntityAdapter : AIVersionableEntity
         _providers = providers;
         _connectionService = connectionService;
     }
+
+    /// <inheritdoc />
+    public override string? RollbackPermission => AIPermissions.ManageConnections;
 
     /// <inheritdoc />
     protected override string CreateSnapshot(AIConnection entity)

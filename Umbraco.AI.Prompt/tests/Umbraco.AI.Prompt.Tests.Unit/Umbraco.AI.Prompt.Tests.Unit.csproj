@@ -32,6 +32,8 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\Umbraco.AI.Prompt.Core\Umbraco.AI.Prompt.Core.csproj" />
+        <ProjectReference Include="..\..\src\Umbraco.AI.Prompt.Persistence\Umbraco.AI.Prompt.Persistence.csproj" />
+        <ProjectReference Include="..\..\src\Umbraco.AI.Prompt.Persistence.Sqlite\Umbraco.AI.Prompt.Persistence.Sqlite.csproj" />
         <ProjectReference Include="..\..\src\Umbraco.AI.Prompt.Web\Umbraco.AI.Prompt.Web.csproj" />
     </ItemGroup>
 

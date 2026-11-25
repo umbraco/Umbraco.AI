@@ -32,22 +32,23 @@ export class UaiAgentDetailServerDataSource implements UmbDetailDataSource<UaiAg
             agentType,
             profileId: null,
             surfaceIds: [],
+            allowedUserGroupIds: [],
             scope: null,
             config:
                 agentType === "orchestrated"
                     ? {
-                            $type: "orchestrated",
-                            workflowId: null,
-                            settings: null,
+                          $type: "orchestrated",
+                          workflowId: null,
+                          settings: null,
                       }
                     : {
-                            $type: "standard",
-                            contextIds: [],
-                            instructions: null,
-                            allowedToolIds: [],
-                            allowedToolScopeIds: [],
-                            outputSchema: null,
-                            userGroupPermissions: {},
+                          $type: "standard",
+                          contextIds: [],
+                          instructions: null,
+                          allowedToolIds: [],
+                          allowedToolScopeIds: [],
+                          outputSchema: null,
+                          userGroupPermissions: {},
                       },
             guardrailIds: [],
             starterPrompts: [],

@@ -2,6 +2,7 @@ import { css, html, customElement, state, nothing } from "@umbraco-cms/backoffic
 import { UmbLitElement } from "@umbraco-cms/backoffice/lit-element";
 import { UmbTextStyles } from "@umbraco-cms/backoffice/style";
 import { UmbChangeEvent } from "@umbraco-cms/backoffice/event";
+import { UMB_CURRENT_USER_CONTEXT } from "@umbraco-cms/backoffice/current-user";
 import { createExtensionApiByAlias } from "@umbraco-cms/backoffice/extension-registry";
 import type { UaiFrontendToolRepositoryApi, UaiFrontendToolData } from "@umbraco-ai/core";
 import { UaiPartialUpdateCommand } from "@umbraco-ai/core";
@@ -23,8 +24,20 @@ export class UaiAgentGovernanceWorkspaceViewElement extends UmbLitElement {
     @state()
     private _frontendTools: UaiFrontendToolData[] = [];
 
+    /**
+     * Groups whose tool rules the current user may change. Undefined for admins (all rows editable).
+     * Starts empty so a non-admin never sees editable rows before the current user has loaded.
+     */
+    @state()
+    private _editableUserGroupIds?: string[] = [];
+
     constructor() {
         super();
+        this.consumeContext(UMB_CURRENT_USER_CONTEXT, (context) => {
+            this.observe(context?.currentUser, (user) => {
+                this._editableUserGroupIds = user?.isAdmin ? undefined : (user?.userGroupUniques ?? []);
+            });
+        });
         this.consumeContext(UAI_AGENT_WORKSPACE_CONTEXT, (context) => {
             if (context) {
                 this.#workspaceContext = context;
@@ -126,8 +139,9 @@ export class UaiAgentGovernanceWorkspaceViewElement extends UmbLitElement {
                         .value=${config.userGroupPermissions}
                         .agentDefaults=${{
                             allowedToolIds: config.allowedToolIds,
-                            allowedToolScopeIds: config.allowedToolScopeIds
+                            allowedToolScopeIds: config.allowedToolScopeIds,
                         }}
+                        .editableUserGroupIds=${this._editableUserGroupIds}
                         @change=${this.#onUserGroupPermissionsChange}
                     ></uai-user-group-tool-permissions>
                 </umb-property-layout>

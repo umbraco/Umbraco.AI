@@ -46,6 +46,11 @@ internal class AIPromptEntity
     public string? GuardrailIds { get; set; }
 
     /// <summary>
+    /// JSON-serialized array of the user group keys allowed to use the prompt. Null or empty means everyone.
+    /// </summary>
+    public string? AllowedUserGroupIds { get; set; }
+
+    /// <summary>
     /// Tags array serialized as a comma-separated string.
     /// </summary>
     public string? Tags { get; set; }

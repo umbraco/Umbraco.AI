@@ -5,6 +5,34 @@ export default {
         notice: "Responses are AI-generated and may be inaccurate.",
         dismiss: "Dismiss",
     },
+    actionCategories: {
+        uaiConfiguration: "Configuration",
+        uaiMonitoring: "Monitoring",
+        uaiAddOns: "Add-ons",
+    },
+    user: {
+        "permissionsEntityGroup_uai-permission": "AI",
+    },
+    uaiPermissions: {
+        connectionManageLabel: "Manage connections",
+        connectionManageDescription: "Create, edit and delete connections to AI providers",
+        profileManageLabel: "Manage profiles",
+        profileManageDescription: "Create, edit and delete profiles",
+        contextManageLabel: "Manage contexts",
+        contextManageDescription: "Create, edit and delete contexts",
+        knowledgeSetManageLabel: "Manage knowledge sets",
+        knowledgeSetManageDescription: "Create, edit and delete knowledge sets",
+        guardrailManageLabel: "Manage guardrails",
+        guardrailManageDescription: "Create, edit and delete guardrails",
+        settingsManageLabel: "Manage settings",
+        settingsManageDescription: "Change the settings of the AI section",
+        auditLogViewLabel: "View logs",
+        auditLogViewDescription: "See the AI audit log, including prompts and responses",
+        analyticsViewLabel: "View analytics",
+        analyticsViewDescription: "See AI usage and token analytics",
+        testManageLabel: "Manage tests",
+        testManageDescription: "Create, edit, delete and run tests",
+    },
     uaiGeneral: {
         select: "Select",
         close: "Close",
@@ -290,6 +318,14 @@ export default {
     },
     uaiUserGroupPermissions: {
         headline: "User Group Permissions",
+    },
+    uaiUserGroupAccess: {
+        headline: "Access",
+        description: "Only members of these groups can use this. Leave empty to let every backoffice user use it.",
+        readonlyDescription:
+            "Only members of these groups can use this. You aren't in any of them, so you can't change this list.",
+        deletedUserGroup: "Deleted user group",
+        deletedUserGroupDetail: "This group was deleted, so it matches no one.",
     },
     uaiTest: {
         graderInput: "Input",

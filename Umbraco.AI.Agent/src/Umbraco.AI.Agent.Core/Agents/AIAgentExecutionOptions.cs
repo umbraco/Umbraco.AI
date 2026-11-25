@@ -36,6 +36,9 @@ public class AIAgentExecutionOptions
     /// <summary>
     /// Optional user group IDs for permission resolution in headless contexts where
     /// no BackOffice user is available. When null, falls back to the current BackOffice user's groups.
+    /// The same groups decide whether the caller may run an agent that is limited to user groups: a run by
+    /// someone outside them throws <see cref="AIAgentNotAvailableException"/>, and no groups at all means
+    /// only unlimited agents can run.
     /// </summary>
     public IEnumerable<Guid>? UserGroupIds { get; init; }
 

@@ -22,10 +22,14 @@ export class UaiPropertyEditorUIAgentPickerElement
     @state()
     private _surfaceId?: string;
 
+    @state()
+    private _workspaceId?: string;
+
     public set config(config: UmbPropertyEditorConfigCollection | undefined) {
         if (!config) return;
 
         this._surfaceId = config.getValueByAlias<string>("surfaceId");
+        this._workspaceId = config.getValueByAlias<string>("workspaceId");
     }
 
     #onChange(e: UmbChangeEvent) {
@@ -39,6 +43,7 @@ export class UaiPropertyEditorUIAgentPickerElement
             <uai-agent-picker
                 .value=${this.value}
                 .surfaceId=${this._surfaceId}
+                .workspaceId=${this._workspaceId}
                 ?readonly=${this.readonly}
                 @change=${this.#onChange}
             >

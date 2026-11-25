@@ -18,7 +18,7 @@ namespace Umbraco.AI.Web.Api.Management.Profile.Controllers;
 /// Controller to create a new profile.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ManageProfilesAI)]
 public class CreateProfileController : ProfileControllerBase
 {
     private readonly IAIProfileService _profileService;

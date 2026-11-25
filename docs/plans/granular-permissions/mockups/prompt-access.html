@@ -1,0 +1,112 @@
+<!doctype html>
+<!--
+  Prompt editor, Availability view, with the new "Access" box, in its empty state (open to
+  everyone, as every prompt is after upgrade). Built from editor.html. The Scope box is the
+  existing one (prompt-availability-workspace-view.element.ts), drawn as backdrop only.
+-->
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Mockup: Prompt access</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@umbraco-ui/uui@2/dist/themes/light.css">
+	<link rel="stylesheet" href="_mockup.css">
+	<link rel="stylesheet" href="granular-permissions.css">
+	<script type="module" src="_mockup.js"></script>
+</head>
+<body class="uui-font uui-text">
+	<header class="app-header">
+		<span class="logo">Umbraco</span>
+		<uui-tab-group class="sections">
+			<uui-tab label="Content">Content</uui-tab>
+			<uui-tab label="Media">Media</uui-tab>
+			<uui-tab label="Settings">Settings</uui-tab>
+			<uui-tab label="AI" active>AI</uui-tab>
+			<uui-tab label="Users">Users</uui-tab>
+		</uui-tab-group>
+		<div class="apps">
+			<uui-button look="primary" compact label="Search"><uui-icon name="icon-search"></uui-icon></uui-button>
+			<uui-button look="primary" compact label="Help"><uui-icon name="icon-help-alt"></uui-icon></uui-button>
+			<uui-button look="primary" compact label="User"><uui-avatar name="Matt Brailsford"></uui-avatar></uui-button>
+		</div>
+	</header>
+
+	<div class="section">
+		<nav class="section-sidebar">
+			<h3>Add-ons</h3> <!-- mockup-ok: editor.html starter section-sidebar heading -->
+			<uui-menu-item label="Agents">
+				<uui-icon slot="icon" name="icon-folder"></uui-icon>
+			</uui-menu-item>
+			<uui-menu-item label="Prompts" has-children show-children>
+				<uui-icon slot="icon" name="icon-folder"></uui-icon>
+				<uui-menu-item label="Summarise page">
+					<uui-icon slot="icon" name="icon-command"></uui-icon>
+				</uui-menu-item>
+				<uui-menu-item label="Write SEO meta description" active>
+					<uui-icon slot="icon" name="icon-command"></uui-icon>
+				</uui-menu-item>
+				<uui-menu-item label="Translate to Danish">
+					<uui-icon slot="icon" name="icon-command"></uui-icon>
+				</uui-menu-item>
+			</uui-menu-item>
+		</nav>
+
+		<main class="section-main">
+			<div class="body-layout">
+				<div class="header">
+					<div class="header-content workspace-header">
+						<uui-button compact class="back" label="Back"><uui-icon name="icon-arrow-left"></uui-icon></uui-button>
+						<uui-icon class="entity-icon" name="icon-command"></uui-icon>
+						<uui-input class="name" label="Name" value="Write SEO meta description"></uui-input>
+					</div>
+					<div class="navigation">
+						<uui-tab-group class="view-tabs">
+							<uui-tab label="Settings"><uui-icon slot="icon" name="icon-settings"></uui-icon>Settings</uui-tab>
+							<uui-tab label="Availability" active><uui-icon slot="icon" name="icon-locate"></uui-icon>Availability</uui-tab>
+							<uui-tab label="Governance"><uui-icon slot="icon" name="icon-shield"></uui-icon>Governance</uui-tab>
+							<uui-tab label="Info"><uui-icon slot="icon" name="icon-info"></uui-icon>Info</uui-tab>
+						</uui-tab-group>
+					</div>
+				</div>
+
+				<div class="main">
+					<!-- Replace from here -->
+
+						<uui-box class="group" headline="Scope">
+							<div class="property">
+								<div>
+									<uui-label>Allow Rules</uui-label>
+									<div class="description">Prompt appears where ANY rule matches (OR logic between rules)</div>
+								</div>
+								<div><uui-button class="choose" look="placeholder" label="Add Allow Rule">Add Allow Rule</uui-button></div>
+							</div>
+						</uui-box>
+
+						<uui-box class="group" headline="Access">
+							<div class="property">
+								<div>
+									<uui-label>User groups</uui-label>
+									<div class="description">Only members of these groups can see and run this prompt. Leave empty to let every backoffice user use it.</div>
+								</div>
+								<div class="picker">
+									<uui-button class="choose" look="placeholder" label="Choose">Choose</uui-button>
+								</div>
+							</div>
+						</uui-box>
+					<!-- Replace to here -->
+				</div>
+
+				<div class="footer">
+					<uui-breadcrumbs>
+						<uui-breadcrumb-item href="#">Prompts</uui-breadcrumb-item>
+						<uui-breadcrumb-item last-item>Write SEO meta description</uui-breadcrumb-item>
+					</uui-breadcrumbs>
+					<div class="actions">
+						<uui-button look="primary" color="positive" label="Save">Save</uui-button>
+					</div>
+				</div>
+			</div>
+		</main>
+	</div>
+
+</body>
+</html>

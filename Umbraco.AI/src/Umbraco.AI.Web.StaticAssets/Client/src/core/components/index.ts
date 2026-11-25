@@ -7,3 +7,4 @@ export * from "./polling-button/polling-button.element.js";
 export * from "./workspace-editor-layout/workspace-editor-layout.element.js";
 export * from "./status-selector/status-selector.element.js";
 export * from "./user-group-settings-list/user-group-settings-list.element.js";
+export * from "./user-group-access-input/user-group-access-input.element.js";

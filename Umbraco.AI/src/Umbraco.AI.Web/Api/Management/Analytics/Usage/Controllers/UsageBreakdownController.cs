@@ -14,7 +14,7 @@ namespace Umbraco.AI.Web.Api.Management.Analytics.Usage.Controllers;
 /// Controller to get usage breakdown by dimension.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ViewAnalyticsAI)]
 public class UsageBreakdownController : AnalyticsControllerBase
 {
     private readonly IAIUsageAnalyticsService _analyticsService;

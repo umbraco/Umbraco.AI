@@ -11,7 +11,7 @@ namespace Umbraco.AI.Web.Api.Management.TestRun.Controllers;
 /// Controller to delete a test run.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ManageTestsAI)]
 public class DeleteTestRunController : TestRunControllerBase
 {
     private readonly IAITestRunService _runService;

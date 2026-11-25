@@ -14,6 +14,7 @@ export * from "./tool/exports.js";
 export * from "./workspace-registry/exports.js";
 export * from "./section/exports.js";
 export * from "./test/exports.js";
+export * from "./permissions/exports.js";
 export * from "./constants.js";
 
 // Property value operation API surface — needed by add-on packages (e.g. agent-copilot's

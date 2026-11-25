@@ -52,6 +52,11 @@ internal class AIAgentEntity
     public string? SurfaceIds { get; set; }
 
     /// <summary>
+    /// JSON-serialized array of the user group keys allowed to use the agent. Null or empty means everyone.
+    /// </summary>
+    public string? AllowedUserGroupIds { get; set; }
+
+    /// <summary>
     /// JSON-serialized scope (AllowRules and DenyRules).
     /// Defines where the agent is available (section, entity type, workspace).
     /// Null means available everywhere (backwards compatible).

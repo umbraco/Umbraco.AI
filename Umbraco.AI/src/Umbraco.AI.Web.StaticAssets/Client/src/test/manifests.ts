@@ -5,13 +5,17 @@ import { testRepositoryManifests } from "./repository/manifests.js";
 import { testCollectionManifests } from "./collection/manifests.js";
 import { testModalManifests } from "./modals/manifests.js";
 import { mockEntityManifests } from "./components/mock-entity/manifests.js";
+import { withAreaPermission } from "../permissions/area-conditions.js";
+import { UAI_PERMISSION_VERB_MANAGE_TESTS } from "../permissions/constants.js";
 
 export const testManifests: Array<UmbExtensionManifest> = [
-	...testMenuManifests,
-	...testRepositoryManifests,
-	...testCollectionManifests,
-	...testWorkspaceManifests,
-	...testEntityActionManifests,
-	...testModalManifests,
-	...mockEntityManifests,
+    ...withAreaPermission(UAI_PERMISSION_VERB_MANAGE_TESTS, [
+        ...testMenuManifests,
+        ...testCollectionManifests,
+        ...testWorkspaceManifests,
+        ...testEntityActionManifests,
+    ]),
+    ...testRepositoryManifests,
+    ...testModalManifests,
+    ...mockEntityManifests,
 ];

@@ -15,7 +15,7 @@ namespace Umbraco.AI.Web.Api.Management.Connection.Controllers;
 /// Controller to delete a connection.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ManageConnectionsAI)]
 public class DeleteConnectionController : ConnectionControllerBase
 {
     private readonly IAIConnectionService _connectionService;

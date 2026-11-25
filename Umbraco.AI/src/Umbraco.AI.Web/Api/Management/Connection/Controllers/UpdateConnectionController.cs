@@ -16,7 +16,7 @@ namespace Umbraco.AI.Web.Api.Management.Connection.Controllers;
 /// Controller to update an existing connection.
 /// </summary>
 [ApiVersion("1.0")]
-[Authorize(Policy = AIAuthorizationPolicies.SectionAccessAI)]
+[Authorize(Policy = AIAuthorizationPolicies.ManageConnectionsAI)]
 public class UpdateConnectionController : ConnectionControllerBase
 {
     private readonly IAIConnectionService _connectionService;

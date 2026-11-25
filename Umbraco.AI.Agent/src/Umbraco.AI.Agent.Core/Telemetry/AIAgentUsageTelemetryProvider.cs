@@ -1,9 +1,12 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Core.Surfaces;
 using Umbraco.AI.Core.Analytics;
 using Umbraco.AI.Core.Analytics.Usage;
 using Umbraco.AI.Core.Telemetry;
+using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Infrastructure.Telemetry.Interfaces;
 
@@ -22,7 +25,6 @@ public sealed class AIAgentUsageTelemetryProvider : IDetailedTelemetryProvider
 {
     private readonly IOptionsMonitor<AIUsageTelemetryOptions> _telemetryOptions;
     private readonly IOptionsMonitor<AIAnalyticsOptions> _analyticsOptions;
-    private readonly IAIAgentService _agentService;
     private readonly AIAgentSurfaceCollection _surfaces;
     private readonly IAIUsageAnalyticsService _usageAnalyticsService;
 
@@ -32,13 +34,12 @@ public sealed class AIAgentUsageTelemetryProvider : IDetailedTelemetryProvider
     public AIAgentUsageTelemetryProvider(
         IOptionsMonitor<AIUsageTelemetryOptions> telemetryOptions,
         IOptionsMonitor<AIAnalyticsOptions> analyticsOptions,
-        IAIAgentService agentService,
+        IAIAgentService agentService, // no longer used; kept so the public constructor doesn't change
         AIAgentSurfaceCollection surfaces,
         IAIUsageAnalyticsService usageAnalyticsService)
     {
         _telemetryOptions = telemetryOptions;
         _analyticsOptions = analyticsOptions;
-        _agentService = agentService;
         _surfaces = surfaces;
         _usageAnalyticsService = usageAnalyticsService;
     }
@@ -57,8 +58,10 @@ public sealed class AIAgentUsageTelemetryProvider : IDetailedTelemetryProvider
 
         try
         {
-            AIAgent[] agents = _agentService
-                .GetAgentsAsync()
+            // Telemetry runs in a background job with no user: count every agent, not just the unlimited ones.
+            // The reader is internal, and this class's public constructor can't take it, so it is resolved here.
+            AIAgent[] agents = StaticServiceProvider.Instance.GetRequiredService<IAIAgentUnrestrictedReader>()
+                .GetAgentsUnrestrictedAsync()
                 .ConfigureAwait(false)
                 .GetAwaiter()
                 .GetResult()

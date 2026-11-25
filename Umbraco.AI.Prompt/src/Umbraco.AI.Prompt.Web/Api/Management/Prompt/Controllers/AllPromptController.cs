@@ -1,6 +1,8 @@
 using Asp.Versioning;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+
 using Umbraco.AI.Prompt.Core.Prompts;
 using Umbraco.AI.Prompt.Web.Api.Management.Prompt.Models;
 using Umbraco.Cms.Api.Common.ViewModels.Pagination;
@@ -33,6 +35,10 @@ public class AllPromptController : PromptControllerBase
     /// <param name="take">Number of items to take.</param>
     /// <param name="filter">Optional filter for name/alias.</param>
     /// <param name="profileId">Optional profile ID filter.</param>
+    /// <param name="includeRestricted">
+    /// Ask for every prompt, including ones limited to user groups the caller is not in. Only honoured when the
+    /// caller has the Manage prompts right.
+    /// </param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Paged list of prompts.</returns>
     [HttpGet]
@@ -43,9 +49,10 @@ public class AllPromptController : PromptControllerBase
         int take = 100,
         string? filter = null,
         Guid? profileId = null,
+        bool includeRestricted = false,
         CancellationToken cancellationToken = default)
     {
-        var result = await _aiPromptService.GetPromptsPagedAsync(skip, take, filter, profileId, cancellationToken);
+        var result = await _aiPromptService.GetPromptsPagedAsync(skip, take, filter, profileId, includeRestricted, cancellationToken);
 
         var viewModel = new PagedViewModel<PromptItemResponseModel>
         {
@@ -55,4 +62,17 @@ public class AllPromptController : PromptControllerBase
 
         return Ok(viewModel);
     }
+
+    /// <summary>
+    /// Gets all prompts with optional paging and filtering.
+    /// </summary>
+    [NonAction]
+    [Obsolete("Use the overload that accepts includeRestricted. Will be removed in v20.")]
+    public Task<IActionResult> GetAllPrompts(
+        int skip,
+        int take,
+        string? filter,
+        Guid? profileId,
+        CancellationToken cancellationToken)
+        => GetAllPrompts(skip, take, filter, profileId, false, cancellationToken);
 }

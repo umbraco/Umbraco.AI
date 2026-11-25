@@ -17,7 +17,7 @@ namespace Umbraco.AI.Prompt.Persistence.SqlServer.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.0")
+                .HasAnnotation("ProductVersion", "10.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -32,6 +32,9 @@ namespace Umbraco.AI.Prompt.Persistence.SqlServer.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("AllowedUserGroupIds")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ContextIds")
                         .HasMaxLength(4000)

@@ -157,6 +157,7 @@ public class StreamAgentAGUIController : AgentControllerBase
     [Produces("text/event-stream")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IResult> StreamAgentAGUI(
         IdOrAlias agentIdOrAlias,
@@ -214,8 +215,17 @@ public class StreamAgentAGUIController : AgentControllerBase
         }
         else
         {
-            // Resolve agent ID from ID or alias
-            agentId = await _agentService.TryGetAgentIdAsync(agentIdOrAlias, cancellationToken);
+            // Resolve agent ID from ID or alias. A limited agent is refused here (403), before the SSE
+            // response starts: the stream only throws once it is enumerated, which is too late for a status code.
+            try
+            {
+                agentId = await _agentService.TryGetAgentIdForUseAsync(agentIdOrAlias, cancellationToken);
+            }
+            catch (AIAgentNotAvailableException)
+            {
+                return Results.Problem(AgentNotAvailableProblem());
+            }
+
             if (agentId is null)
             {
                 return Results.NotFound(new ProblemDetails

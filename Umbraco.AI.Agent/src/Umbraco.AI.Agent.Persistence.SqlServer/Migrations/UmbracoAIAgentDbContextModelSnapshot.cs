@@ -38,6 +38,9 @@ namespace Umbraco.AI.Agent.Persistence.SqlServer.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("AllowedUserGroupIds")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Config")
                         .HasColumnType("nvarchar(max)");
 

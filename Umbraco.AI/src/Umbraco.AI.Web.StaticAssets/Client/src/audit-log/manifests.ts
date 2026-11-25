@@ -2,6 +2,8 @@ import { auditLogCollectionManifests } from "./collection/manifests.js";
 import { auditLogRepositoryManifests } from "./repository/manifests.js";
 import { auditLogWorkspaceManifests } from "./workspace/manifests.js";
 import { auditLogMenuManifests } from "./menu/manifests.js";
+import { withAreaPermission } from "../permissions/area-conditions.js";
+import { UAI_PERMISSION_VERB_VIEW_AUDIT_LOGS } from "../permissions/constants.js";
 
 /**
  * Manifests for the AuditLog feature.
@@ -19,7 +21,9 @@ import { auditLogMenuManifests } from "./menu/manifests.js";
  */
 export const auditLogManifests = [
     ...auditLogRepositoryManifests,
-    ...auditLogCollectionManifests,
-    ...auditLogWorkspaceManifests,
-    ...auditLogMenuManifests,
+    ...withAreaPermission(UAI_PERMISSION_VERB_VIEW_AUDIT_LOGS, [
+        ...auditLogCollectionManifests,
+        ...auditLogWorkspaceManifests,
+        ...auditLogMenuManifests,
+    ]),
 ];

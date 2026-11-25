@@ -15,7 +15,7 @@ namespace Umbraco.AI.Prompt.Persistence.Sqlite.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.7");
 
             modelBuilder.Entity("Umbraco.AI.Prompt.Persistence.Prompts.AIPromptEntity", b =>
                 {
@@ -26,6 +26,9 @@ namespace Umbraco.AI.Prompt.Persistence.Sqlite.Migrations
                     b.Property<string>("Alias")
                         .IsRequired()
                         .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AllowedUserGroupIds")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ContextIds")

@@ -1,6 +1,10 @@
 import type { UmbLocalizationDictionary } from "@umbraco-cms/backoffice/localization-api";
 
 export default {
+    uaiAgentPermissions: {
+        manageLabel: "Manage agents",
+        manageDescription: "Create, edit and delete agents, and choose which user groups can use them",
+    },
     uaiAgent: {
         deleteConfirm: "Are you sure you want to delete this agent?",
         bulkDeleteConfirm: (count: number) => `Are you sure you want to delete ${count} agent(s)?`,

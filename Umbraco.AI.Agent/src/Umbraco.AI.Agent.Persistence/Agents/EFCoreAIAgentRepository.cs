@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Persistence.EFCore.Scoping;
@@ -45,12 +46,14 @@ internal sealed class EFCoreAIAgentRepository : IAIAgentRepository
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<Core.Agents.AIAgent>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Core.Agents.AIAgent>> GetAllAsync(
+        IReadOnlyCollection<Guid>? usableByGroupKeys = null,
+        CancellationToken cancellationToken = default)
     {
         using IEFCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
 
         var entities = await scope.ExecuteWithContextAsync(async db =>
-            await db.Agents.AsNoTracking().OrderBy(e => e.Name).ToListAsync(cancellationToken));
+            await db.Agents.AsNoTracking().WhereUsableBy(usableByGroupKeys).OrderBy(e => e.Name).ToListAsync(cancellationToken));
 
         scope.Complete();
 
@@ -66,13 +69,14 @@ internal sealed class EFCoreAIAgentRepository : IAIAgentRepository
         string? surfaceId = null,
         bool? isActive = null,
         Core.Agents.AIAgentType? agentType = null,
+        IReadOnlyCollection<Guid>? usableByGroupKeys = null,
         CancellationToken cancellationToken = default)
     {
         using IEFCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
 
         var result = await scope.ExecuteWithContextAsync(async db =>
         {
-            IQueryable<AIAgentEntity> query = db.Agents.AsNoTracking();
+            IQueryable<AIAgentEntity> query = db.Agents.AsNoTracking().WhereUsableBy(usableByGroupKeys);
 
             if (!string.IsNullOrWhiteSpace(filter))
             {
@@ -122,7 +126,10 @@ internal sealed class EFCoreAIAgentRepository : IAIAgentRepository
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<Core.Agents.AIAgent>> GetBySurfaceAsync(string surfaceId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Core.Agents.AIAgent>> GetBySurfaceAsync(
+        string surfaceId,
+        IReadOnlyCollection<Guid>? usableByGroupKeys = null,
+        CancellationToken cancellationToken = default)
     {
         using IEFCoreScope<UmbracoAIAgentDbContext> scope = _scopeProvider.CreateScope();
 
@@ -131,6 +138,7 @@ internal sealed class EFCoreAIAgentRepository : IAIAgentRepository
             // Filter agents that have the surfaceId in their SurfaceIds JSON array
             var surfacePattern = $"\"{surfaceId}\"";
             return await db.Agents.AsNoTracking()
+                .WhereUsableBy(usableByGroupKeys)
                 .Where(e => e.SurfaceIds != null && e.SurfaceIds.Contains(surfacePattern))
                 .OrderBy(e => e.Name)
                 .ToListAsync(cancellationToken);

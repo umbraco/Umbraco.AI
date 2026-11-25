@@ -1,18 +1,24 @@
 using System.Text.Json;
+
 using Json.Schema;
+
 using Moq;
+
 using Shouldly;
+
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Automate.Actions;
 using Umbraco.AI.Automate.Helpers;
+
 using Xunit;
+
 using AIAgent = Umbraco.AI.Agent.Core.Agents.AIAgent;
 
 namespace Umbraco.AI.Automate.Tests.Unit.Helpers;
 
 public class AgentOutputSchemaHelperTests
 {
-    private readonly Mock<IAIAgentService> _agentServiceMock = new();
+    private readonly Mock<IAIAgentUnrestrictedReader> _agentServiceMock = new();
     private static readonly Guid TestAgentId = Guid.Parse("22222222-2222-2222-2222-222222222222");
 
     [Fact]
@@ -21,7 +27,7 @@ public class AgentOutputSchemaHelperTests
         // Arrange
         var agent = new AIAgent { Alias = "a", Name = "A", Config = new AIStandardAgentConfig() };
         _agentServiceMock
-            .Setup(s => s.GetAgentAsync(TestAgentId, It.IsAny<CancellationToken>()))
+            .Setup(s => s.GetAgentUnrestrictedAsync(TestAgentId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(agent);
 
         // Act
@@ -47,7 +53,7 @@ public class AgentOutputSchemaHelperTests
         };
 
         _agentServiceMock
-            .Setup(s => s.GetAgentAsync(TestAgentId, It.IsAny<CancellationToken>()))
+            .Setup(s => s.GetAgentUnrestrictedAsync(TestAgentId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(agent);
 
         // Act

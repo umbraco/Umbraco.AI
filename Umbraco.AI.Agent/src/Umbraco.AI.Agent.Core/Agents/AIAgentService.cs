@@ -1,16 +1,19 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Umbraco.AI.Agent.Extensions;
-using Umbraco.AI.Agent.Core.AGUI;
+
 using Umbraco.AI.Agent.Core.Agents.Selection;
+using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Chat;
 using Umbraco.AI.Agent.Core.InlineAgents;
+using Umbraco.AI.Agent.Core.Security;
+using Umbraco.AI.Agent.Extensions;
 using Umbraco.AI.AGUI.Events;
 using Umbraco.AI.AGUI.Events.Lifecycle;
 using Umbraco.AI.AGUI.Models;
@@ -19,10 +22,11 @@ using Umbraco.AI.Core.Contexts;
 using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Models;
 using Umbraco.AI.Core.Profiles;
-using Umbraco.AI.Extensions;
 using Umbraco.AI.Core.RuntimeContext;
+using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.Tools;
 using Umbraco.AI.Core.Versioning;
+using Umbraco.AI.Extensions;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.Events;
 using Umbraco.Cms.Core.Models;
@@ -38,7 +42,7 @@ namespace Umbraco.AI.Agent.Core.Agents;
 /// <summary>
 /// Service implementation for agent management operations.
 /// </summary>
-internal sealed class AIAgentService : IAIAgentService
+internal sealed class AIAgentService : IAIAgentService, IAIAgentUnrestrictedReader, IAIAgentUnrestrictedWriter
 {
     /// <summary>
     /// Maximum number of starter prompts an agent can carry. Also the chip window, so a single
@@ -57,6 +61,7 @@ internal sealed class AIAgentService : IAIAgentService
     private readonly IAGUIStreamingService _streamingService;
     private readonly IAGUIContextConverter _contextConverter;
     private readonly IAGUIMessageConverter _messageConverter;
+    private readonly IAIPermissionService _permissionService;
     private readonly IBackOfficeSecurityAccessor? _backOfficeSecurityAccessor;
     private readonly AIToolCollection _toolCollection;
     private readonly IAIProfileService _profileService;
@@ -78,6 +83,7 @@ internal sealed class AIAgentService : IAIAgentService
         IAIGuardrailService guardrailService,
         IAIContextService contextService,
         IEventAggregator eventAggregator,
+        IAIPermissionService permissionService,
         IBackOfficeSecurityAccessor? backOfficeSecurityAccessor = null,
         ILoggerFactory? loggerFactory = null)
     {
@@ -92,6 +98,7 @@ internal sealed class AIAgentService : IAIAgentService
         _guardrailService = guardrailService;
         _contextService = contextService;
         _eventAggregator = eventAggregator;
+        _permissionService = permissionService;
         _backOfficeSecurityAccessor = backOfficeSecurityAccessor;
         _loggerFactory = loggerFactory;
         _logger = (ILogger?)loggerFactory?.CreateLogger<AIAgentService>() ?? NullLogger.Instance;
@@ -99,15 +106,55 @@ internal sealed class AIAgentService : IAIAgentService
 
     /// <inheritdoc />
     public Task<AIAgent?> GetAgentAsync(Guid id, CancellationToken cancellationToken = default)
-        => _repository.GetByIdAsync(id, cancellationToken);
+        => GetAgentAsync(id, includeRestricted: false, cancellationToken);
+
+    /// <inheritdoc />
+    public async Task<AIAgent?> GetAgentAsync(Guid id, bool includeRestricted, CancellationToken cancellationToken = default)
+    {
+        var agent = await _repository.GetByIdAsync(id, cancellationToken);
+        return agent is not null && IsVisible(agent, includeRestricted) ? agent : null;
+    }
+
+    /// <inheritdoc />
+    public async Task<AIAgent?> GetAgentAsync(Guid id, IReadOnlyCollection<Guid> userGroupIds, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(userGroupIds);
+
+        var agent = await _repository.GetByIdAsync(id, cancellationToken);
+        return agent is not null && _permissionService.CanUse(agent.AllowedUserGroupIds, userGroupIds) ? agent : null;
+    }
+
+    /// <inheritdoc />
+    public async Task<AIAgent?> GetAgentForUseAsync(Guid id, CancellationToken cancellationToken = default)
+        => EnsureAvailableForCurrentUser(await _repository.GetByIdAsync(id, cancellationToken));
 
     /// <inheritdoc />
     public Task<AIAgent?> GetAgentByAliasAsync(string alias, CancellationToken cancellationToken = default)
-        => _repository.GetByAliasAsync(alias, cancellationToken);
+        => GetAgentByAliasAsync(alias, includeRestricted: false, cancellationToken);
+
+    /// <inheritdoc />
+    public async Task<AIAgent?> GetAgentByAliasAsync(string alias, bool includeRestricted, CancellationToken cancellationToken = default)
+    {
+        var agent = await _repository.GetByAliasAsync(alias, cancellationToken);
+        return agent is not null && IsVisible(agent, includeRestricted) ? agent : null;
+    }
+
+    /// <inheritdoc />
+    public async Task<AIAgent?> GetAgentByAliasAsync(string alias, IReadOnlyCollection<Guid> userGroupIds, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(userGroupIds);
+
+        var agent = await _repository.GetByAliasAsync(alias, cancellationToken);
+        return agent is not null && _permissionService.CanUse(agent.AllowedUserGroupIds, userGroupIds) ? agent : null;
+    }
+
+    /// <inheritdoc />
+    public async Task<AIAgent?> GetAgentForUseByAliasAsync(string alias, CancellationToken cancellationToken = default)
+        => EnsureAvailableForCurrentUser(await _repository.GetByAliasAsync(alias, cancellationToken));
 
     /// <inheritdoc />
     public Task<IEnumerable<AIAgent>> GetAgentsAsync(CancellationToken cancellationToken = default)
-        => _repository.GetAllAsync(cancellationToken);
+        => _repository.GetAllAsync(GetUsableByGroupKeys(includeRestricted: false), cancellationToken);
 
     /// <inheritdoc />
     public Task<(IEnumerable<AIAgent> Items, int Total)> GetAgentsPagedAsync(
@@ -119,14 +166,101 @@ internal sealed class AIAgentService : IAIAgentService
         bool? isActive = null,
         AIAgentType? agentType = null,
         CancellationToken cancellationToken = default)
-        => _repository.GetPagedAsync(skip, take, filter, profileId, surfaceId, isActive, agentType, cancellationToken);
+        => GetAgentsPagedAsync(skip, take, filter, profileId, surfaceId, isActive, agentType, includeRestricted: false, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<(IEnumerable<AIAgent> Items, int Total)> GetAgentsPagedAsync(
+        int skip,
+        int take,
+        string? filter,
+        Guid? profileId,
+        string? surfaceId,
+        bool? isActive,
+        AIAgentType? agentType,
+        bool includeRestricted,
+        CancellationToken cancellationToken = default)
+        => _repository.GetPagedAsync(
+            skip, take, filter, profileId, surfaceId, isActive, agentType,
+            GetUsableByGroupKeys(includeRestricted), cancellationToken);
+
+    /// <inheritdoc />
+    public Task<(IEnumerable<AIAgent> Items, int Total)> GetAgentsPagedAsync(
+        int skip,
+        int take,
+        string? filter,
+        Guid? profileId,
+        string? surfaceId,
+        bool? isActive,
+        AIAgentType? agentType,
+        IReadOnlyCollection<Guid> userGroupIds,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(userGroupIds);
+
+        return _repository.GetPagedAsync(skip, take, filter, profileId, surfaceId, isActive, agentType, userGroupIds, cancellationToken);
+    }
 
     /// <inheritdoc />
     public Task<IEnumerable<AIAgent>> GetAgentsBySurfaceAsync(string surfaceId, CancellationToken cancellationToken = default)
-        => _repository.GetBySurfaceAsync(surfaceId, cancellationToken);
+        => _repository.GetBySurfaceAsync(surfaceId, GetUsableByGroupKeys(includeRestricted: false), cancellationToken);
 
     /// <inheritdoc />
-    public async Task<AIAgent> SaveAgentAsync(AIAgent agent, CancellationToken cancellationToken = default)
+    public Task<AIAgent?> GetAgentUnrestrictedAsync(Guid id, CancellationToken cancellationToken = default)
+        => _repository.GetByIdAsync(id, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<IEnumerable<AIAgent>> GetAgentsUnrestrictedAsync(CancellationToken cancellationToken = default)
+        => _repository.GetAllAsync(usableByGroupKeys: null, cancellationToken);
+
+    /// <summary>
+    /// The group keys to filter a list by, or null when managed access (the Manage agents right) lifts the limit.
+    /// </summary>
+    private IReadOnlyCollection<Guid>? GetUsableByGroupKeys(bool includeRestricted)
+        => _permissionService.GetListFilter(AIAgentPermissions.Manage, includeRestricted);
+
+    private bool IsVisible(AIAgent agent, bool includeRestricted)
+        => _permissionService.IsVisible(agent.AllowedUserGroupIds, AIAgentPermissions.Manage, includeRestricted);
+
+    /// <summary>
+    /// Refuses an agent the caller may not use. Groups come from <see cref="AIAgentExecutionOptions.UserGroupIds"/>
+    /// when set (headless callers such as Automate), otherwise from the current backoffice user. Managing agents
+    /// does not lift the limit when running one.
+    /// </summary>
+    /// <exception cref="AIAgentNotAvailableException">Thrown if the agent is limited to other user groups.</exception>
+    private void EnsureAgentAvailable(AIAgent agent, AIAgentExecutionOptions options)
+    {
+        var available = options.UserGroupIds switch
+        {
+            IReadOnlyCollection<Guid> collection => _permissionService.CanUse(agent.AllowedUserGroupIds, collection),
+            { } groups => _permissionService.CanUse(agent.AllowedUserGroupIds, groups.ToArray()),
+            _ => _permissionService.CanCurrentUserUse(agent.AllowedUserGroupIds),
+        };
+
+        if (!available)
+        {
+            throw new AIAgentNotAvailableException(agent.Id);
+        }
+    }
+
+    private AIAgent? EnsureAvailableForCurrentUser(AIAgent? agent)
+    {
+        if (agent is not null)
+        {
+            EnsureAgentAvailable(agent, new AIAgentExecutionOptions());
+        }
+
+        return agent;
+    }
+
+    /// <inheritdoc />
+    public Task<AIAgent> SaveAgentAsync(AIAgent agent, CancellationToken cancellationToken = default)
+        => SaveAgentCoreAsync(agent, enforceUserGroupRule: true, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<AIAgent> SaveAgentUnrestrictedAsync(AIAgent agent, CancellationToken cancellationToken = default)
+        => SaveAgentCoreAsync(agent, enforceUserGroupRule: false, cancellationToken);
+
+    private async Task<AIAgent> SaveAgentCoreAsync(AIAgent agent, bool enforceUserGroupRule, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(agent);
         ArgumentException.ThrowIfNullOrWhiteSpace(agent.Alias);
@@ -163,6 +297,25 @@ internal sealed class AIAgentService : IAIAgentService
 
         var userId = _backOfficeSecurityAccessor?.BackOfficeSecurity?.CurrentUser?.Key;
 
+        var existing = await _repository.GetByIdAsync(agent.Id, cancellationToken);
+
+        // Group list rule. Like the CMS, a save with no current user (Deploy import, startup) is not checked,
+        // and a Deploy import (unrestricted save) skips it whoever started it.
+        if (enforceUserGroupRule && userId is not null)
+        {
+            AIUserGroupChangeRule.EnsureCanChangeList(
+                _permissionService,
+                existing?.AllowedUserGroupIds ?? [],
+                agent.AllowedUserGroupIds,
+                $"agent '{agent.Alias}'");
+
+            // Tool rules follow the same rule per group (R22).
+            AIUserGroupChangeRule.EnsureCanChangeGroupEntries(
+                _permissionService,
+                AIAgentToolRuleChanges.GetChangedGroupKeys(existing?.Config, agent.Config),
+                $"agent '{agent.Alias}'");
+        }
+
         // Publish saving notification (before save)
         var messages = new EventMessages();
         var savingNotification = new AIAgentSavingNotification(agent, messages);
@@ -176,8 +329,6 @@ internal sealed class AIAgentService : IAIAgentService
         }
 
         // Save version snapshot of existing entity before update
-        var existing = await _repository.GetByIdAsync(agent.Id, cancellationToken);
-
         // Enforce type immutability
         if (existing is not null && existing.AgentType != agent.AgentType)
         {
@@ -322,7 +473,9 @@ internal sealed class AIAgentService : IAIAgentService
         AIAgentExecutionOptions? options = null,
         CancellationToken cancellationToken = default)
     {
-        var agent = await GetAgentByAliasAsync(agentAlias, cancellationToken)
+        // Resolved without the user limit so a limited agent is refused as "not available" (by the
+        // persisted run below) instead of looking like it doesn't exist.
+        var agent = await _repository.GetByAliasAsync(agentAlias, cancellationToken)
             ?? throw new InvalidOperationException($"Agent with alias '{agentAlias}' not found.");
 
         return await RunPersistedAgentAsync(agent.Id, messages, options ?? new AIAgentExecutionOptions(), cancellationToken);
@@ -343,7 +496,8 @@ internal sealed class AIAgentService : IAIAgentService
         AIAgentExecutionOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var agent = await GetAgentByAliasAsync(agentAlias, cancellationToken)
+        // Resolved without the user limit, as in RunAgentAsync by alias.
+        var agent = await _repository.GetByAliasAsync(agentAlias, cancellationToken)
             ?? throw new InvalidOperationException($"Agent with alias '{agentAlias}' not found.");
 
         await foreach (var update in StreamPersistedAgentAsync(agent.Id, messages, options ?? new AIAgentExecutionOptions(), cancellationToken))
@@ -370,8 +524,8 @@ internal sealed class AIAgentService : IAIAgentService
     {
         ArgumentNullException.ThrowIfNull(options);
 
-        // 1. Resolve agent
-        var agent = await GetAgentAsync(agentId, cancellationToken);
+        // 1. Resolve agent (without the user limit, so a limited agent is refused below, not reported as missing)
+        var agent = await _repository.GetByIdAsync(agentId, cancellationToken);
 
         if (agent is null)
         {
@@ -382,6 +536,8 @@ internal sealed class AIAgentService : IAIAgentService
 
             yield break;
         }
+
+        EnsureAgentAvailable(agent, options);
 
         if (!agent.IsActive)
         {
@@ -618,10 +774,10 @@ internal sealed class AIAgentService : IAIAgentService
                 stopwatch.Elapsed,
                 isSuccess,
                 eventMessages)
-                {
-                    ResponseText = responseText,
-                    Exception = capturedException,
-                }
+            {
+                ResponseText = responseText,
+                Exception = capturedException,
+            }
                 .WithStateFrom(executingNotification);
 
             await _eventAggregator.PublishAsync(executedNotification, cancellationToken);
@@ -990,7 +1146,7 @@ internal sealed class AIAgentService : IAIAgentService
         AIAgentExecutionOptions options,
         CancellationToken cancellationToken)
     {
-        var agent = await ResolveActiveAgentAsync(agentId, cancellationToken);
+        var agent = await ResolveActiveAgentAsync(agentId, options, cancellationToken);
         var chatMessages = AsReadOnlyList(messages);
 
         // Load the persisted session state before PrepareAgentExecutionAsync below — see the comment in
@@ -1069,7 +1225,7 @@ internal sealed class AIAgentService : IAIAgentService
         AIAgentExecutionOptions options,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var agent = await ResolveActiveAgentAsync(agentId, cancellationToken);
+        var agent = await ResolveActiveAgentAsync(agentId, options, cancellationToken);
         var chatMessages = AsReadOnlyList(messages);
 
         // Load the persisted session state before PrepareAgentExecutionAsync below — see the comment in
@@ -1123,11 +1279,14 @@ internal sealed class AIAgentService : IAIAgentService
     /// <summary>
     /// Resolves a persisted agent by ID and validates it is active.
     /// </summary>
+    /// <exception cref="AIAgentNotAvailableException">Thrown if the agent is limited to user groups the caller is not in.</exception>
     /// <exception cref="InvalidOperationException">Thrown if agent not found or inactive.</exception>
-    private async Task<AIAgent> ResolveActiveAgentAsync(Guid agentId, CancellationToken cancellationToken)
+    private async Task<AIAgent> ResolveActiveAgentAsync(Guid agentId, AIAgentExecutionOptions options, CancellationToken cancellationToken)
     {
-        var agent = await GetAgentAsync(agentId, cancellationToken)
+        var agent = await _repository.GetByIdAsync(agentId, cancellationToken)
             ?? throw new InvalidOperationException($"Agent with ID '{agentId}' not found.");
+
+        EnsureAgentAvailable(agent, options);
 
         if (!agent.IsActive)
         {
@@ -1277,11 +1436,11 @@ internal sealed class AIAgentService : IAIAgentService
             context.Stopwatch.Elapsed,
             isSuccess,
             context.EventMessages)
-            {
-                ResponseText = responseText,
-                Exception = exception,
-                ConversationId = context.ExecutingNotification.ConversationId,
-            }
+        {
+            ResponseText = responseText,
+            Exception = exception,
+            ConversationId = context.ExecutingNotification.ConversationId,
+        }
             .WithStateFrom(context.ExecutingNotification);
 
         await _eventAggregator.PublishAsync(executedNotification);

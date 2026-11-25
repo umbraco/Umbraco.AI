@@ -1,20 +1,23 @@
 using Asp.Versioning;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
+
 using Umbraco.AI.Agent.Conversations.Core.Conversations;
 using Umbraco.AI.Agent.Conversations.Core.Projects;
 using Umbraco.AI.Agent.Copilot.Workspace.Core.Surfaces;
 using Umbraco.AI.Agent.Copilot.Workspace.Web.Agents;
-using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Agents;
 using Umbraco.AI.Agent.Core.Agents.Selection;
+using Umbraco.AI.Agent.Core.AGUI;
 using Umbraco.AI.Agent.Core.Surfaces;
 using Umbraco.AI.AGUI.Models;
 using Umbraco.AI.AGUI.Streaming;
 using Umbraco.AI.Core.Contexts.Resolvers;
 using Umbraco.Cms.Core.DependencyInjection;
+
 using CoreConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Agent.Copilot.Workspace.Web.Api.Management.Stream.Controllers;
@@ -124,6 +127,7 @@ public class StreamConversationAGUIController : CopilotWorkspaceStreamController
     [MapToApiVersion("1.0")]
     [Produces("text/event-stream")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IResult> StreamAgentAGUI(
         Guid id,
@@ -156,7 +160,24 @@ public class StreamConversationAGUIController : CopilotWorkspaceStreamController
 
         // Resolve the agent (explicit choice stored on the conversation, else auto-select for the
         // Workspace surface). Defined fallback (S10): fail cleanly here rather than mid-stream.
-        var explicitAgent = await TryGetExplicitAvailableAgentAsync(conversation.AgentIdOrAlias, cancellationToken);
+        // A named agent the user may no longer use is refused (403) here, before the SSE response starts:
+        // the run only throws once its stream is enumerated, which is too late for a status code. Reading
+        // the conversation never gets this far, so an old chat stays readable.
+        AIAgent? explicitAgent;
+        try
+        {
+            explicitAgent = await TryGetExplicitAvailableAgentAsync(conversation.AgentIdOrAlias, cancellationToken);
+        }
+        catch (AIAgentNotAvailableException)
+        {
+            return Results.Problem(new ProblemDetails
+            {
+                Type = "Error",
+                Title = AIAgentNotAvailableProblem.Title,
+                Detail = AIAgentNotAvailableProblem.Detail,
+                Status = StatusCodes.Status403Forbidden,
+            });
+        }
 
         Guid agentId;
         AIAgentSelectionResult? selection = null;
@@ -239,7 +260,7 @@ public class StreamConversationAGUIController : CopilotWorkspaceStreamController
 
     /// <summary>
     /// Resolves the conversation's explicitly stored agent (by id or alias), when it names one that can
-    /// still run in Workspace: active, opted in to the <c>copilot-workspace</c> surface, and allowed by its
+    /// still run in Workspace: usable by the current user, active, opted in to the <c>copilot-workspace</c> surface, and allowed by its
     /// scope rules. Returns null for an unset/"auto" conversation, or a named agent that is missing or
     /// unavailable - every such case falls back to auto-selection (SPEC "Copilot Workspace" 1-2).
     /// </summary>
@@ -250,7 +271,7 @@ public class StreamConversationAGUIController : CopilotWorkspaceStreamController
             return null;
         }
 
-        var agent = await CopilotWorkspaceAgentAvailability.FindAgentAsync(_agentService, idOrAlias!, cancellationToken);
+        var agent = await CopilotWorkspaceAgentAvailability.FindAgentForUseAsync(_agentService, idOrAlias!, cancellationToken);
 
         return agent is not null && CopilotWorkspaceAgentAvailability.IsAvailable(agent, _scopeValidator, _surfaces)
             ? agent

@@ -55,6 +55,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
         target.GuardrailIds = source.GuardrailIds?.ToList() ?? [];
+        target.AllowedUserGroupIds = source.AllowedUserGroupIds?.Distinct().ToList() ?? [];
         target.SurfaceIds = source.SurfaceIds?.ToList() ?? [];
         target.Scope = MapScopeFromRequest(source.Scope);
         target.StarterPrompts = MapStarterPromptsFromRequest(source.StarterPrompts);
@@ -70,6 +71,12 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.Description = source.Description;
         target.ProfileId = source.ProfileId;
         target.GuardrailIds = source.GuardrailIds?.ToList() ?? [];
+        // Missing keeps the stored list; an empty array opens the agent to everyone.
+        if (source.AllowedUserGroupIds is not null)
+        {
+            target.AllowedUserGroupIds = source.AllowedUserGroupIds.Distinct().ToList();
+        }
+
         target.SurfaceIds = source.SurfaceIds?.ToList() ?? [];
         target.Scope = MapScopeFromRequest(source.Scope);
         target.StarterPrompts = MapStarterPromptsFromRequest(source.StarterPrompts);
@@ -87,6 +94,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.AgentType = FormatAgentType(source.AgentType);
         target.ProfileId = source.ProfileId;
         target.GuardrailIds = source.GuardrailIds;
+        target.AllowedUserGroupIds = source.AllowedUserGroupIds;
         target.SurfaceIds = source.SurfaceIds;
         target.Scope = MapScopeToResponse(source.Scope);
         target.StarterPrompts = MapStarterPromptsToResponse(source.StarterPrompts);
@@ -97,7 +105,7 @@ internal class AgentMapDefinition(IShortStringHelper shortStringHelper) : IMapDe
         target.Version = source.Version;
     }
 
-    // Umbraco.Code.MapAll -Config -Version -CreatedByUserId -ModifiedByUserId
+    // Umbraco.Code.MapAll -Config -Version -CreatedByUserId -ModifiedByUserId -AllowedUserGroupIds
     private static void MapToItemResponse(AIAgent source, AgentItemResponseModel target, MapperContext context)
     {
         target.Id = source.Id;

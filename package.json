@@ -45,7 +45,9 @@
         "format": "prettier --write .",
         "format:check": "prettier --check .",
         "test:core": "npm run test -w @umbraco-ai/core",
-        "test": "npm run test:core && npm run test:agent-ui && npm run test:copilot && npm run test:copilot-workspace"
+        "test:prompt": "npm run test -w @umbraco-ai/prompt",
+        "test:agent": "npm run test -w @umbraco-ai/agent",
+        "test": "npm run test:core && npm run test:agent && npm run test:prompt &&npm run test:agent-ui && npm run test:copilot && npm run test:copilot-workspace"
     },
     "devDependencies": {
         "@commitlint/cli": "^20.3.1",

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Umbraco.AI.Core.Models;
+using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.Versioning;
 
 namespace Umbraco.AI.Core.Profiles;
@@ -19,6 +20,9 @@ internal sealed class AIProfileVersionableEntityAdapter : AIVersionableEntityAda
     {
         _profileService = profileService;
     }
+
+    /// <inheritdoc />
+    public override string? RollbackPermission => AIPermissions.ManageProfiles;
 
     /// <inheritdoc />
     protected override string CreateSnapshot(AIProfile entity)

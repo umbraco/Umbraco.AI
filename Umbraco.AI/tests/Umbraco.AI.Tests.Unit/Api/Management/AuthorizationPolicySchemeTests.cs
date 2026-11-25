@@ -14,7 +14,7 @@ public class AuthorizationPolicySchemeTests
     private static AuthorizationPolicy GetPolicy()
     {
         var options = new AuthorizationOptions();
-        AIAuthorizationPolicyConfiguration.Configure(options);
+        AIAuthorizationPolicies.Register(options);
         return options.GetPolicy(AIAuthorizationPolicies.SectionAccessAI).ShouldNotBeNull();
     }
 
@@ -30,5 +30,27 @@ public class AuthorizationPolicySchemeTests
     public void SectionAccessAI_RequiresAISection()
     {
         GetPolicy().Requirements.ShouldContain(r => r is AISectionRequirement);
+    }
+
+    [Fact]
+    public void PermissionPolicy_AuthenticatesWithOpenIddictAndBackOfficeCookie()
+    {
+        var options = new AuthorizationOptions();
+        AIAuthorizationPolicies.Register(options);
+
+        options.GetPolicy(AIAuthorizationPolicies.ManageConnectionsAI).ShouldNotBeNull().AuthenticationSchemes.ShouldBe(
+            [OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme, Cms.Core.Constants.Security.BackOfficeAuthenticationType],
+            ignoreOrder: true);
+    }
+
+    [Fact]
+    public void AddPermissionPolicy_AuthenticatesWithOpenIddictAndBackOfficeCookie()
+    {
+        var options = new AuthorizationOptions();
+        AIAuthorizationPolicies.AddPermissionPolicy(options, "AddOnPolicy", "Uai.AddOn.Manage");
+
+        options.GetPolicy("AddOnPolicy").ShouldNotBeNull().AuthenticationSchemes.ShouldBe(
+            [OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme, Cms.Core.Constants.Security.BackOfficeAuthenticationType],
+            ignoreOrder: true);
     }
 }

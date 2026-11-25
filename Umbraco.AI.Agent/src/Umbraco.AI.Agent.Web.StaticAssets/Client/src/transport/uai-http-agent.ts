@@ -11,6 +11,7 @@ import {
     type AGUIResumeEntryModel,
 } from "../api/index.js";
 import type { AgentTransport } from "./types.js";
+import { createStreamRequestOptions, type UaiStreamRequestOptions } from "./stream-request-options.js";
 
 /**
  * Performs the actual AG-UI stream request for a built request body, returning the SSE stream. The
@@ -18,10 +19,13 @@ import type { AgentTransport } from "./types.js";
  * Surfaces with a different backend endpoint — e.g. the persisted Copilot Workspace
  * `POST /conversations/{id}/stream-agui` — inject a runner via {@link UaiHttpAgentConfig.runner} so
  * they reuse all of this class's AG-UI body/tool/context/resume conversion instead of duplicating it.
+ * A runner should spread `requestOptions` into its generated stream call so a refused request (4xx)
+ * ends the run with the server's message instead of being retried.
  */
 export type AGUIStreamRunner = (
     body: AGUIRunRequestModel,
     signal: AbortSignal,
+    requestOptions?: UaiStreamRequestOptions,
 ) => Promise<{ stream: AsyncIterable<unknown> }>;
 
 /**
@@ -95,12 +99,14 @@ export class UaiHttpAgent extends AbstractAgent implements AgentTransport {
             forwardedProps: input.forwardedProps,
         };
 
+        const requestOptions = createStreamRequestOptions();
         const result = this.#runner
-            ? await this.#runner(body, signal)
+            ? await this.#runner(body, signal, requestOptions)
             : await AgentsService.streamAgentAGUI({
                   path: { agentIdOrAlias: this.#agentId },
                   body,
                   signal,
+                  ...requestOptions,
               });
 
         // Iterate over the SSE stream and emit events

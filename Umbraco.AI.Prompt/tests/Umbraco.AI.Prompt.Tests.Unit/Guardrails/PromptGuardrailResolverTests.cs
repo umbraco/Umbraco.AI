@@ -1,10 +1,14 @@
 using Moq;
+
 using Shouldly;
+
 using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Prompt.Core.Guardrails;
 using Umbraco.AI.Prompt.Core.Prompts;
+
 using Xunit;
+
 using CoreConstants = Umbraco.AI.Core.Constants;
 using PromptConstants = Umbraco.AI.Prompt.Core.Constants;
 
@@ -18,7 +22,7 @@ namespace Umbraco.AI.Prompt.Tests.Unit.Guardrails;
 public class PromptGuardrailResolverTests
 {
     private readonly Mock<IAIGuardrailService> _guardrailServiceMock = new();
-    private readonly Mock<IAIPromptService> _promptServiceMock = new();
+    private readonly Mock<IAIPromptUnrestrictedReader> _promptServiceMock = new();
     private readonly Mock<IAIRuntimeContextAccessor> _runtimeContextAccessorMock = new();
 
     [Fact]
@@ -39,7 +43,7 @@ public class PromptGuardrailResolverTests
 
         result.GuardrailIds.ShouldBeEmpty();
         _promptServiceMock.Verify(
-            x => x.GetPromptAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            x => x.GetPromptUnrestrictedAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
             Times.Never);
         _guardrailServiceMock.Verify(
             x => x.GetGuardrailsByIdsAsync(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()),

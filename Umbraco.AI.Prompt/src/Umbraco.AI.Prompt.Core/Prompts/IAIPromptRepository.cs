@@ -27,9 +27,15 @@ internal interface IAIPromptRepository
     /// <summary>
     /// Gets all prompts.
     /// </summary>
+    /// <param name="usableByGroupKeys">
+    /// Keep only the prompts these user groups may use (prompts with no group limit, or limited to at least
+    /// one of them). Null applies no limit.
+    /// </param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>All prompts.</returns>
-    Task<IEnumerable<AIPrompt>> GetAllAsync(CancellationToken cancellationToken = default);
+    /// <returns>The prompts.</returns>
+    Task<IEnumerable<AIPrompt>> GetAllAsync(
+        IReadOnlyCollection<Guid>? usableByGroupKeys = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a paged list of prompts with optional filtering.
@@ -38,6 +44,9 @@ internal interface IAIPromptRepository
     /// <param name="take">Number of items to take.</param>
     /// <param name="filter">Optional filter string for name/alias.</param>
     /// <param name="profileId">Optional profile ID filter.</param>
+    /// <param name="usableByGroupKeys">
+    /// Keep only the prompts these user groups may use, in the same query so the total matches. Null applies no limit.
+    /// </param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A tuple containing the filtered/paginated prompts and the total count.</returns>
     Task<(IEnumerable<AIPrompt> Items, int Total)> GetPagedAsync(
@@ -45,6 +54,7 @@ internal interface IAIPromptRepository
         int take,
         string? filter = null,
         Guid? profileId = null,
+        IReadOnlyCollection<Guid>? usableByGroupKeys = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

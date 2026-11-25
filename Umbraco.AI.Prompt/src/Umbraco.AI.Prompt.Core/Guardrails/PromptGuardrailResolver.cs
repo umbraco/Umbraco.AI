@@ -2,6 +2,7 @@ using Umbraco.AI.Core.Guardrails;
 using Umbraco.AI.Core.Guardrails.Resolvers;
 using Umbraco.AI.Core.RuntimeContext;
 using Umbraco.AI.Prompt.Core.Prompts;
+
 using CoreConstants = Umbraco.AI.Core.Constants;
 
 namespace Umbraco.AI.Prompt.Core.Guardrails;
@@ -17,12 +18,12 @@ internal sealed class PromptGuardrailResolver : IAIGuardrailResolver
 {
     private readonly IAIRuntimeContextAccessor _runtimeContextAccessor;
     private readonly IAIGuardrailService _guardrailService;
-    private readonly IAIPromptService _promptService;
+    private readonly IAIPromptUnrestrictedReader _promptService;
 
     public PromptGuardrailResolver(
         IAIRuntimeContextAccessor runtimeContextAccessor,
         IAIGuardrailService guardrailService,
-        IAIPromptService promptService)
+        IAIPromptUnrestrictedReader promptService)
     {
         _runtimeContextAccessor = runtimeContextAccessor;
         _guardrailService = guardrailService;
@@ -44,7 +45,7 @@ internal sealed class PromptGuardrailResolver : IAIGuardrailResolver
             return AIGuardrailResolverResult.Empty;
         }
 
-        var prompt = await _promptService.GetPromptAsync(promptId.Value, cancellationToken);
+        var prompt = await _promptService.GetPromptUnrestrictedAsync(promptId.Value, cancellationToken);
         if (prompt is null || prompt.GuardrailIds.Count == 0)
         {
             return AIGuardrailResolverResult.Empty;

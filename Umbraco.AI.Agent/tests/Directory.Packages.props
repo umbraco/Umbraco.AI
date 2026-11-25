@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <!-- Enable multi-level merging - test package versions are inherited from root Directory.Packages.props -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove(Directory.Packages.props, $(MSBuildThisFileDirectory)..))" />
+
+  <!-- Test-only: the CMS SQLite syntax provider the migration integration tests run against. -->
+  <ItemGroup>
+    <PackageVersion Include="Umbraco.Cms.Persistence.Sqlite" Version="[19.0.0-rc1, 19.999.999)" />
+  </ItemGroup>
+</Project>

@@ -1,5 +1,7 @@
 using System.Text.Json;
+
 using Umbraco.AI.Core.Versioning;
+using Umbraco.AI.Prompt.Core.Security;
 
 using CoreConstants = Umbraco.AI.Core.Constants;
 
@@ -25,6 +27,9 @@ internal sealed class AIPromptVersionableEntityAdapter : AIVersionableEntityAdap
     }
 
     /// <inheritdoc />
+    public override string? RollbackPermission => AIPromptPermissions.Manage;
+
+    /// <inheritdoc />
     protected override string CreateSnapshot(AIPrompt entity)
     {
         var snapshot = new
@@ -35,6 +40,7 @@ internal sealed class AIPromptVersionableEntityAdapter : AIVersionableEntityAdap
             entity.Description,
             entity.Instructions,
             entity.ProfileId,
+            entity.AllowedUserGroupIds,
             ContextIds = entity.ContextIds.Count > 0 ? string.Join(',', entity.ContextIds) : null,
             Tags = entity.Tags.Count > 0 ? string.Join(',', entity.Tags) : null,
             entity.IsActive,
@@ -77,6 +83,14 @@ internal sealed class AIPromptVersionableEntityAdapter : AIVersionableEntityAdap
                 }
             }
 
+            IReadOnlyList<Guid> allowedUserGroupIds = Array.Empty<Guid>();
+            if (root.TryGetProperty("allowedUserGroupIds", out var allowedUserGroupIdsElement) &&
+                allowedUserGroupIdsElement.ValueKind == JsonValueKind.Array)
+            {
+                allowedUserGroupIds = allowedUserGroupIdsElement.Deserialize<IReadOnlyList<Guid>>(CoreConstants.DefaultJsonSerializerOptions)
+                    ?? Array.Empty<Guid>();
+            }
+
             IReadOnlyList<string> tags = Array.Empty<string>();
             if (root.TryGetProperty("tags", out var tagsElement) &&
                 tagsElement.ValueKind == JsonValueKind.String)
@@ -110,6 +124,7 @@ internal sealed class AIPromptVersionableEntityAdapter : AIVersionableEntityAdap
                 ProfileId = root.TryGetProperty("profileId", out var profIdEl) && profIdEl.ValueKind != JsonValueKind.Null
                     ? profIdEl.GetGuid() : null,
                 ContextIds = contextIds,
+                AllowedUserGroupIds = allowedUserGroupIds,
                 Tags = tags,
                 IsActive = root.GetProperty("isActive").GetBoolean(),
                 IncludeEntityContext = root.TryGetProperty("includeEntityContext", out var iecEl)
@@ -169,6 +184,13 @@ internal sealed class AIPromptVersionableEntityAdapter : AIVersionableEntityAdap
             changes.Add(new AIValueChange("ContextIds", fromContextIds.Length > 0 ? fromContextIds : "(none)", toContextIds.Length > 0 ? toContextIds : "(none)"));
         }
 
+        var fromAllowedUserGroupIds = string.Join(",", from.AllowedUserGroupIds);
+        var toAllowedUserGroupIds = string.Join(",", to.AllowedUserGroupIds);
+        if (fromAllowedUserGroupIds != toAllowedUserGroupIds)
+        {
+            changes.Add(new AIValueChange("AllowedUserGroupIds", fromAllowedUserGroupIds.Length > 0 ? fromAllowedUserGroupIds : "(everyone)", toAllowedUserGroupIds.Length > 0 ? toAllowedUserGroupIds : "(everyone)"));
+        }
+
         // Compare tags
         var fromTags = string.Join(",", from.Tags);
         var toTags = string.Join(",", to.Tags);
@@ -208,9 +230,12 @@ internal sealed class AIPromptVersionableEntityAdapter : AIVersionableEntityAdap
         await _promptService.SavePromptAsync(snapshot, cancellationToken);
     }
 
+    /// <remarks>
+    /// Asks for managed access: version history and rollback belong to the Manage prompts area, which sees limited prompts too.
+    /// </remarks>
     /// <inheritdoc />
     protected override Task<AIPrompt?> GetEntityAsync(Guid entityId, CancellationToken cancellationToken)
-        => _promptService.GetPromptAsync(entityId, cancellationToken);
+        => _promptService.GetPromptAsync(entityId, includeRestricted: true, cancellationToken);
 
     private static string SerializeScope(AIPromptScope scope)
     {

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Umbraco.AI.Core.Security;
 using Umbraco.AI.Core.Versioning;
 
 namespace Umbraco.AI.Core.Contexts;
@@ -18,6 +19,9 @@ internal sealed class AIContextVersionableEntityAdapter : AIVersionableEntityAda
     {
         _contextService = contextService;
     }
+
+    /// <inheritdoc />
+    public override string? RollbackPermission => AIPermissions.ManageContexts;
 
     /// <inheritdoc />
     protected override string CreateSnapshot(AIContext entity)

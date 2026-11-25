@@ -8,5 +8,8 @@
          IAIPromptUnrestrictedReader and AIPrompt.AllowedUserGroupIds. Do not lower it below the
          Umbraco.AI.Prompt version that ships granular permissions. -->
     <PackageVersion Update="Umbraco.AI.Prompt.Startup" Version="[18.4.3, 18.999.999)" />
+    <!-- Floor for the internal UmbracoAIUserGroupMapper shared from Umbraco.AI.Deploy via InternalsVisibleTo.
+         Do not lower it below the Umbraco.AI.Deploy version that ships it. -->
+    <PackageVersion Update="Umbraco.AI.Deploy" Version="[18.4.1, 18.999.999)" />
   </ItemGroup>
 </Project>

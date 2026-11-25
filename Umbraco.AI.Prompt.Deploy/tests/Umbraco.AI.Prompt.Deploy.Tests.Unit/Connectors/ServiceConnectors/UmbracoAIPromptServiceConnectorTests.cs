@@ -300,6 +300,21 @@ public class UmbracoAIPromptServiceConnectorTests
     }
 
     [Fact]
+    public async Task ProcessAsync_WithAllowedUserGroupKey_SavesTheTargetsKey()
+    {
+        var sourceKey = Guid.NewGuid();
+        var targetKey = Guid.NewGuid();
+        _userGroupServiceMock.Setup(x => x.GetAsync(sourceKey))
+            .ReturnsAsync(Mock.Of<IUserGroup>(g => g.Key == targetKey));
+        var saved = CaptureSave();
+        var state = NewState([sourceKey.ToString()]);
+
+        await _connector.ProcessAsync(state, Mock.Of<IDeployContext>(), 3);
+
+        saved().ShouldNotBeNull().AllowedUserGroupIds.ShouldBe([targetKey]);
+    }
+
+    [Fact]
     public async Task ProcessAsync_WithNoAllowedUserGroups_SavesAnEmptyList()
     {
         var saved = CaptureSave();

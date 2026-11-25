@@ -139,7 +139,7 @@ public class UmbracoAIPromptServiceConnector
             ProfileUdi = profileUdi,
             ContextIds = entity.ContextIds.ToList(),
             GuardrailIds = entity.GuardrailIds.ToList(),
-            AllowedUserGroups = await GetUserGroupAliasesAsync(entity.AllowedUserGroupIds),
+            AllowedUserGroups = await UmbracoAIUserGroupMapper.GetAliasesAsync(_userGroupService, entity.AllowedUserGroupIds),
             Tags = entity.Tags.ToList(),
             IsActive = entity.IsActive,
             IncludeEntityContext = entity.IncludeEntityContext,
@@ -185,7 +185,7 @@ public class UmbracoAIPromptServiceConnector
         }
 
         // Resolve the allowed user groups before anything is saved, so a missing group fails the import
-        var allowedUserGroupIds = await GetTargetUserGroupIdsAsync(artifact.AllowedUserGroups, artifact.Alias);
+        var allowedUserGroupIds = await UmbracoAIUserGroupMapper.GetTargetKeysAsync(_userGroupService, artifact.AllowedUserGroups, "prompt", artifact.Alias);
 
         // Get or create prompt entity
         var prompt = state.Entity
@@ -212,41 +212,5 @@ public class UmbracoAIPromptServiceConnector
         prompt.Scope = scope;
 
         state.Entity = await _promptService.SavePromptAsync(prompt, cancellationToken);
-    }
-
-    /// <summary>
-    /// Maps user group keys to aliases, for export. A key that matches no group here is kept as it is,
-    /// so the import on the other side names it in its error rather than dropping the limit.
-    /// </summary>
-    private async Task<List<string>> GetUserGroupAliasesAsync(IEnumerable<Guid> userGroupIds)
-    {
-        var aliases = new List<string>();
-        foreach (var userGroupId in userGroupIds)
-        {
-            var userGroup = await _userGroupService.GetAsync(userGroupId);
-            aliases.Add(userGroup?.Alias ?? userGroupId.ToString());
-        }
-
-        return aliases;
-    }
-
-    /// <summary>
-    /// Maps user group aliases to this environment's keys, for import. A missing group throws: skipping
-    /// it would widen who can use the prompt, which an administrator limited on purpose.
-    /// </summary>
-    private async Task<List<Guid>> GetTargetUserGroupIdsAsync(IEnumerable<string> aliases, string? promptAlias)
-    {
-        var userGroupIds = new List<Guid>();
-        foreach (var alias in aliases)
-        {
-            var userGroup = await _userGroupService.GetAsync(alias)
-                ?? throw new InvalidOperationException(
-                    $"Prompt '{promptAlias}' is limited to user group '{alias}', which doesn't exist in this environment. "
-                    + "Create a user group with that alias (or, if the value is a key, add the group to the source and export again), "
-                    + "then deploy the prompt again.");
-            userGroupIds.Add(userGroup.Key);
-        }
-
-        return userGroupIds;
     }
 }

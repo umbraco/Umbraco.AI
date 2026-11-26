@@ -1,7 +1,7 @@
 # Spec: Agent memory
 
 > [!IMPORTANT]
-> **10 guesses need your OK.**
+> **9 guesses need your OK.**
 >
 > 1. **A memory is at most 300 characters.** Short facts, not documents. No consumer product
 >    publishes a per-memory limit; this matches the one-fact-per-item lists ChatGPT and Claude
@@ -33,13 +33,9 @@
 >    switches it off or an admin sets the site to `NotAllowed`. The list says they're paused;
 >    delete is a separate, explicit action.\
 >    *If not:* switching off deletes them.
-> 9. **No site-wide switch for personal context.** Prompt and agent builders decide per prompt
->    and per agent; the memory switches in AI Settings don't touch it, since the user writes it,
->    not the agent.\
->    *If not:* a "Personal context" toggle in AI Settings that turns it off everywhere.
-> 10. **No size limit on personal resources** beyond what AI Context resources already allow.
->     `Always` resources cost prompt on every run, as they do on a context.\
->     *If not:* a cap on `Always` resources per user, such as 5 or a character total.
+> 9. **No size limit on personal resources** beyond what AI Context resources already allow.
+>    `Always` resources cost prompt on every run, as they do on a context.\
+>    *If not:* a cap on `Always` resources per user, such as 5 or a character total.
 
 ## Endpoints
 
@@ -123,6 +119,9 @@ type PersonalContext = {
 
 **Prompt:** the prompt create, update and response models gain `includePersonalContext: boolean`,
 default `false`.
+
+**Settings:** the core settings `GET`/`PUT` gain `personalContextEnabled: boolean`, default
+`true`. `GET /personal-context` also returns it, so the profile can show the admin note.
 
 ## Agent tools
 
@@ -225,11 +224,15 @@ Offered only when the agent has memory on and a backoffice user is signed in.
   personal context.
 - **R34** The personal context is always that of the user sending the turn. Today only the
   owner sends turns; this holds once shared chats become collaborative.
+- **R35** With the site's Personal Context switch off, no run loads personal context, whatever
+  each prompt or agent says. Stored contexts and resources are kept and load again once it's
+  switched back on.
 
-## AI Settings: Memory panel
+## AI Settings: Personal Context and Agent Memory
 
-Opens from AI > Settings, an "Agent memory" box after the built-in ones, added by the Agent
-package. Two fields: an "Agent memory" toggle, and a "Personal memory" dropdown (Allowed,
+Opens from AI > Settings. A new built-in "Personal Context" box (core) after "Transparency"
+holds one toggle, on by default. Then an "Agent Memory" box after the built-in ones, added by
+the Agent package. Two fields: an "Agent memory" toggle, and a "Personal memory" dropdown (Allowed,
 Allowed but off until each user turns it on, Not allowed). The dropdown is disabled while the
 toggle is off.
 
@@ -242,7 +245,8 @@ toggle is off.
 | Switched off and saved | No agent reads or saves memory from the next run; stored memories stay |
 | Personal memory set to Not allowed | No agent reads or saves "about you" from the next run; users' lists show it paused |
 | Personal memory changed between Allowed and Opt-in | Only users who never touched their switch change |
-| Agent package not installed | No panel |
+| Personal Context switched off and saved | No prompt or agent loads personal context from the next run; stored contexts and resources stay (R35) |
+| Agent package not installed | No "Agent Memory" box; the "Personal Context" box still shows |
 
 ## Agent editor: Memory setting
 
@@ -353,6 +357,7 @@ state ("paused", "memory is off for this agent") sits on its header line as plai
 | Add context clicked | The AI Context picker opens, listing contexts the user can list |
 | Add resource clicked | The resource picker and editor open, as on a project |
 | Agent package not installed | No memory switch and no memory table; contexts and resources still show |
+| Site's Personal Context switched off | The Contexts and Resources rows are hidden; a note says "Your admin has turned off personal context"; nothing stored is deleted |
 | No memories | Empty state explaining "about you" and per-agent memory |
 | An agent has memory off | Its group still shows; the header reads "memory is off for this agent" |
 | Personal switch off | The "About you" header reads "paused"; agents ignore those rows |

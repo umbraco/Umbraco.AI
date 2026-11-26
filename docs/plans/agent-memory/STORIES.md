@@ -1,6 +1,6 @@
 # Stories: Agent memory
 
-**21 stories, 183 criteria.** Story ids are used by `PLAN.md` and the spec files, so never
+**21 stories, 188 criteria.** Story ids are used by `PLAN.md` and the spec files, so never
 renumber them.
 
 > [!IMPORTANT]
@@ -49,8 +49,8 @@ renumber them.
 
 **Core: personal context**
 
-- [MEM-18](#mem-18-keep-my-own-contexts-and-resources) Keep my own contexts and resources, 13 criteria
-- [MEM-19](#mem-19-agents-and-prompts-use-my-personal-context) Agents and prompts use my personal context, 11 criteria
+- [MEM-18](#mem-18-keep-my-own-contexts-and-resources) Keep my own contexts and resources, 16 criteria
+- [MEM-19](#mem-19-agents-and-prompts-use-my-personal-context) Agents and prompts use my personal context, 13 criteria
 - [MEM-20](#mem-20-builders-choose-per-prompt-and-per-agent) Builders choose per prompt and per agent, 11 criteria
 - [MEM-21](#mem-21-personal-context-is-cleaned-up) Personal context is cleaned up, 4 criteria
 
@@ -1032,6 +1032,21 @@ so that agents know my lasting preferences and notes without me repeating them.
 - **When** a user opens Your AI
 - **Then** the box shows Contexts and Resources and no memory switch
 
+### AC14: The site switch hides the rows (R35)
+- **Given** the site's Personal Context switch off
+- **When** a user opens Your AI
+- **Then** the Contexts and Resources rows are hidden and a note reads "Your admin has turned off personal context"
+
+### AC15: The site switch keeps what's stored (R35)
+- **Given** a user with personal resources
+- **When** an admin turns the site's Personal Context switch off
+- **Then** `GET /personal-context` still returns the user's resources
+
+### AC16: The site switch starts on
+- **Given** a new install
+- **When** an admin opens AI > Settings
+- **Then** the "Personal Context" toggle is on
+
 ---
 
 ## MEM-19: Agents and prompts use my personal context
@@ -1096,6 +1111,16 @@ so that what they write fits how I work.
 - **Given** a signed-in user with an Always resource
 - **When** a run starts without `Umbraco.AI.IncludePersonalContext` set
 - **Then** the personal context resolver returns nothing
+
+### AC12: The site switch stops it (R35)
+- **Given** the site's Personal Context switch off and an agent with `includePersonalContext` on
+- **When** a user with an Always resource chats with the agent
+- **Then** the system prompt doesn't contain the resource
+
+### AC13: Switching it back on brings it back (R35)
+- **Given** the site's Personal Context switch turned off, then on again
+- **When** a user with an Always resource chats with an agent with `includePersonalContext` on
+- **Then** the system prompt contains the resource
 
 ---
 

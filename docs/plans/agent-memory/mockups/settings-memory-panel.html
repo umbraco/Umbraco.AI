@@ -178,6 +178,17 @@
 						</div>
 					</uui-box>
 
+					<!-- New built-in box (core): the personal context kill switch, default on (R35). -->
+					<uui-box class="group" headline="Personal context">
+						<div class="property">
+							<div>
+								<uui-label>Personal Context</uui-label>
+								<div class="description">Let users add their own AI Contexts and resources in their profile, for prompts and agents that include personal context. Turning this off stops every prompt and agent using them. Saved contexts and resources are kept.</div>
+							</div>
+							<div><uui-toggle label="Personal Context" checked></uui-toggle></div>
+						</div>
+					</uui-box>
+
 					<!-- New: a uaiSettingsPanel box from the Agent package, after the built-in ones.
 					     Key Agent.Memory.Enabled, default on (guess 6). Off = every agent behaves as Off (R1c).
 					     Two settings: the kill switch, then the personal-memory policy. -->

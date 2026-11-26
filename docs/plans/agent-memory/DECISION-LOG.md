@@ -122,3 +122,8 @@
   every agent and prompt run. Their arguments match the system tools' style: typed records with
   `[Description]`. Rejected: `save_memory` / `forget_memory`, and a new conditional system tool
   kind in core.
+- **Personal context gets a site-wide kill switch** (user's call, 26-11-2026). Replaces spec
+  guess 9 (per-prompt and per-agent toggles only). A built-in "Personal Context" toggle in AI
+  Settings, on by default, stops every prompt and agent loading it and keeps stored data, like
+  the memory switch. Gives admins a one-click stop for governance or cost. Rejected: off by
+  default (hides the feature until an admin finds it).

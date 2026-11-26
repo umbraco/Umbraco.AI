@@ -1,4 +1,4 @@
-// MEM-19 — Agents and prompts use my personal context (AC1-AC5, AC10, AC11)
+// MEM-19 — Agents and prompts use my personal context (AC1-AC5, AC10-AC13)
 using Xunit;
 
 namespace Umbraco.AI.Tests.Unit.Contexts.Resolvers;
@@ -120,6 +120,38 @@ public class PersonalContextResolverTests
         {
             // When: PersonalContextResolver.ResolveAsync()
             // Then: result.Resources.ShouldBeEmpty();
+        }
+    }
+
+    public class GivenTheSitePersonalContextSwitchOff
+    {
+        public GivenTheSitePersonalContextSwitchOff()
+        {
+            // Flag set; Anna has an Always resource; IAISettingsService fake returns PersonalContextEnabled = false.
+        }
+
+        // AC12
+        [Fact(Skip = "Pending")]
+        public void Resolver_ReturnsNothing()
+        {
+            // When: PersonalContextResolver.ResolveAsync()
+            // Then: result.Resources.ShouldBeEmpty();
+        }
+    }
+
+    public class GivenTheSiteSwitchTurnedOffThenOnAgain
+    {
+        public GivenTheSiteSwitchTurnedOffThenOnAgain()
+        {
+            // Flag set; Anna has an Always resource; settings fake returns false, then true.
+        }
+
+        // AC13
+        [Fact(Skip = "Pending")]
+        public void SystemPrompt_ContainsTheResourceAgain()
+        {
+            // When: context is resolved and formatted after the switch is back on
+            // Then: systemPrompt.ShouldContain("How I write product pages");
         }
     }
 

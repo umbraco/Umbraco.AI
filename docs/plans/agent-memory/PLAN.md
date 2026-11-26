@@ -1,6 +1,6 @@
 # Plan: Agent memory
 
-**42 tasks in 9 areas**, in build order. Core settings and core personal context come first
+**43 tasks in 9 areas**, in build order. Core settings and core personal context come first
 because the Agent and Prompt packages build on them; Workspace comes last because it plugs into
 the Agent package's space hook. Each task names its stories (see STORIES.md) and the specs that must go green.
 
@@ -71,9 +71,19 @@ the Agent package's space hook. Each task names its stories (see STORIES.md) and
   Acceptance: MEM-21 specs green.
   depends-on: T30
 
+- [ ] **T43** - story: MEM-18 (AC15, AC16), MEM-19 (AC12, AC13). The site kill switch:
+  `PersonalContextEnabled` on `AISettings` (default true, a built-in setting row), on the
+  settings request and response models, and read by `PersonalContextResolver` (off returns
+  nothing). Backoffice: a "Personal Context" box after "Transparency" in
+  `settings-editor.element.ts` with one toggle. Matches `mockups/settings-memory-panel.png`.
+  Same settings files as T1 and T2.
+  Acceptance: MEM-18 AC15, AC16 and MEM-19 AC12, AC13 specs green; `npm run build:core`.
+  depends-on: T2, T31
+
 - [ ] **T33** - story: MEM-18 (AC1, AC3-AC6, AC9, AC10). Management API in
   `Umbraco.AI.Web/Api/Management/PersonalContext/`: `GET` and `PUT /personal-context`, request
   and response models reusing the project's resource model shape, mapping. Signed-in user only.
+  The `GET` response also carries `personalContextEnabled`.
   Acceptance: MEM-18 API specs green.
   depends-on: T30
 
@@ -83,15 +93,15 @@ the Agent package's space hook. Each task names its stories (see STORIES.md) and
   id and a Text resource; a second user's `GET` is empty.
   depends-on: T33
 
-- [ ] **T35** - story: MEM-18 (AC2, AC7, AC8, AC11-AC13). Backoffice in
+- [ ] **T35** - story: MEM-18 (AC2, AC7, AC8, AC11-AC14). Backoffice in
   `Umbraco.AI.Web.StaticAssets/Client/src/personal-context/`: the "Your AI" user profile app
   with `uai-context-picker` and `uai-resource-list` in compact mode, saving each change at once
   (error toast and roll back on failure), the `uaiUserProfileProperty` manifest type and its
-  extension slot after Resources, the repository, all exported from `exports.ts`. Matches
-  `mockups/my-memory.png`.
-  Acceptance: MEM-18 AC2, AC7, AC11-AC13 specs green; `npm run build:core`; opens from the
+  extension slot after Resources, the repository, all exported from `exports.ts`. With the site
+  switch off, the two rows hide behind the admin note. Matches `mockups/my-memory.png`.
+  Acceptance: MEM-18 AC2, AC7, AC11-AC14 specs green; `npm run build:core`; opens from the
   avatar on the demo site.
-  depends-on: T34
+  depends-on: T34, T43
 
 ## Agent: model and data
 

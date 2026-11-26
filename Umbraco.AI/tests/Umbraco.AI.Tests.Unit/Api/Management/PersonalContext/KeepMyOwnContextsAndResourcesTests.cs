@@ -1,11 +1,11 @@
-// MEM-18 — Keep my own contexts and resources (AC1, AC3-AC6, AC9, AC10)
+// MEM-18 — Keep my own contexts and resources (AC1, AC3-AC6, AC9, AC10, AC15, AC16)
 using Xunit;
 
 namespace Umbraco.AI.Tests.Unit.Api.Management.PersonalContext;
 
 // Real entry point: the personal context Management API controllers (T33) over the real
 // AIPersonalContextService (T30) and an in-memory IAIPersonalContextRepository fake, signed in as a
-// fake backoffice user. AC2, AC7, AC8, AC11-AC13 are screen checks in
+// fake backoffice user. AC2, AC7, AC8, AC11-AC14 are screen checks in
 // your-ai-user-profile-app.element.test.ts.
 //
 // Pending specs: each body is the intended arrange/act/assert as comments, so this file compiles
@@ -91,6 +91,38 @@ public class KeepMyOwnContextsAndResourcesTests
         {
             // When: GET /personal-context
             // Then: status 200; response.ContextIds.ShouldBeEmpty(); response.Resources.ShouldBeEmpty();
+        }
+    }
+
+    public class GivenTheSiteSwitchTurnedOff
+    {
+        public GivenTheSiteSwitchTurnedOff()
+        {
+            // Anna saved a resource; then the settings PUT sets personalContextEnabled = false.
+        }
+
+        // AC15
+        [Fact(Skip = "Pending")]
+        public void Get_StillReturnsTheResources()
+        {
+            // When: GET /personal-context
+            // Then: response.Resources.ShouldNotBeEmpty();
+        }
+    }
+
+    public class GivenANewInstall
+    {
+        public GivenANewInstall()
+        {
+            // No settings rows stored.
+        }
+
+        // AC16
+        [Fact(Skip = "Pending")]
+        public void Settings_HavePersonalContextOn()
+        {
+            // When: GET the core settings
+            // Then: response.PersonalContextEnabled.ShouldBeTrue();
         }
     }
 

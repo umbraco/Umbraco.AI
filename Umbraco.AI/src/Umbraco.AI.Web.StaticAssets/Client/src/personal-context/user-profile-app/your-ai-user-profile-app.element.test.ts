@@ -1,4 +1,4 @@
-// MEM-18 — Keep my own contexts and resources (AC2, AC7, AC8, AC11-AC13)
+// MEM-18 — Keep my own contexts and resources (AC2, AC7, AC8, AC11-AC14)
 import { describe, it } from "vitest";
 
 // Real entry point: the "Your AI" user profile app element, rendered with a fake personal context
@@ -43,6 +43,15 @@ describe("Feature: keep my own contexts and resources", () => {
         // AC13
         it.skip("shows Contexts and Resources and no other rows", () => {
             // expect(propertyLabels(el)).toEqual(["Contexts", "Resources"]);
+        });
+    });
+
+    describe("Scenario: the site's Personal Context switch is off", () => {
+        // Arrange (beforeEach): the fake repository returns personalContextEnabled: false
+
+        // AC14
+        it.skip("hides the Contexts and Resources rows behind the admin note", () => {
+            // expect(noteText(el)).toBe("Your admin has turned off personal context"); // and no Contexts/Resources rows
         });
     });
 

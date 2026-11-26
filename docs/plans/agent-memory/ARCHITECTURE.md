@@ -222,6 +222,10 @@ lives in core because both agents and prompts read it.
   the memories. A "Turn into resource" bulk action can come later (DECISION-LOG).
 - **Clean-up.** A user delete removes their personal context; a context delete removes that
   context from every user's list.
+- **A site-wide kill switch.** Core's AI Settings gains a built-in `PersonalContextEnabled`
+  setting (default true) in a "Personal Context" box. When it's off the resolver returns nothing
+  and the "Your AI" box hides the Contexts and Resources rows; stored data is kept. It's a core
+  field, not an add-on setting, because core owns personal context.
 - **Not deployed.** Like memory, it's user data.
 
 ## What changes
@@ -233,7 +237,7 @@ Umbraco.AI.Core/Settings/
   AISettingDefinition.cs                key, type, default
   IAISettingsProvider.cs                lists one package's definitions
   AISettingsProviderCollection.cs       + LazyCollectionBuilderBase builder, AISettingsProviders()
-  AISettings.cs                         + Additional values map
+  AISettings.cs                         + Additional values map, + PersonalContextEnabled
   AISettingsService.cs                  + GetSettingValueAsync<T>, validates additional keys
 Umbraco.AI.Persistence/Settings/
   EFCoreAISettingsRepository.cs         reads/writes additional keys as rows
@@ -263,7 +267,8 @@ Umbraco.AI.Web/Api/Management/PersonalContext/
 extensions/uai-settings-panel.extension.ts  the uaiSettingsPanel manifest type
 workspace/settings-root/
   settings-workspace.context.ts       + get/set for additional values
-  settings-editor.element.ts          + extension slot for panels after the built-in boxes
+  settings-editor.element.ts          + "Personal Context" box, + extension slot for panels after
+                                      the built-in boxes
 exports.ts                            exports the manifest type and context token
 ```
 

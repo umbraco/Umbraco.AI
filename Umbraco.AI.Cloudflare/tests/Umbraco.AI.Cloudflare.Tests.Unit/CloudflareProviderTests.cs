@@ -33,9 +33,9 @@ public class CloudflareProviderTests
         }
 
         [Fact]
-        public void ExposesOnlyTheExtractionCapability()
+        public void ExposesTheChatAndExtractionCapabilities()
         {
-            _provider.GetCapabilities().Select(c => c.Kind).ShouldBe([AICapability.Extraction]);
+            _provider.GetCapabilities().Select(c => c.Kind).ShouldBe([AICapability.Chat, AICapability.Extraction], ignoreOrder: true);
         }
     }
 

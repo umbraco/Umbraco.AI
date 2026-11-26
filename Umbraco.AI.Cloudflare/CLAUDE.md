@@ -13,13 +13,18 @@ dotnet test Umbraco.AI.Cloudflare.slnx
 
 ## Architecture Overview
 
-Umbraco.AI.Cloudflare is a provider plugin for Umbraco.AI that connects Cloudflare's Clairic model, a
-model purpose-built for extracting typed values from text. It exposes only the experimental Extraction
-capability; there is no chat or embedding model to wrap.
+Umbraco.AI.Cloudflare is a provider plugin for Umbraco.AI that connects Cloudflare Workers AI. It exposes
+a Chat capability (any Text Generation model) and the experimental Extraction capability (Cloudflare's
+Clairic model, purpose-built for extracting typed values from text).
 
-There is no SDK involved: the provider calls Cloudflare directly over HTTP (`IHttpClientFactory` +
-`System.Text.Json`), the same approach `Umbraco.AI.TypeSafe` uses. It is named after the company so
-other Cloudflare capabilities can be added later.
+**Chat** (`CloudflareChatCapability`) uses the official OpenAI client against Workers AI's OpenAI-compatible
+route, `{Endpoint}/accounts/{AccountId}/ai/v1`, authenticated with the Cloudflare API token. Cloudflare has no
+`/models` route there, so the model list comes from the account's model search
+(`ai/models/search?task=Text Generation`, paged and cached for an hour) in `CloudflareProvider.GetChatModelIdsAsync`.
+A failed lookup throws with Cloudflare's message, so "Test connection" reports why.
+
+Model search, the connection check and Extraction call Cloudflare directly over HTTP (`IHttpClientFactory` +
+`System.Text.Json`), the same approach `Umbraco.AI.TypeSafe` uses.
 
 ### Project Structure
 

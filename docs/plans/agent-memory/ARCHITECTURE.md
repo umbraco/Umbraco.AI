@@ -6,13 +6,18 @@ changes made since the chat started into the volatile tail, and hands the agent 
 `forget` tools. The *space* comes from a pluggable resolver: Copilot Workspace plugs in projects
 and shared chats, and anything unclaimed falls back to "you + this agent".
 
+Lasting knowledge is the user's *personal context*: AI Contexts and resources they pick in
+their profile, owned by core and loaded by a new step in core's context resolver chain, but
+only when the agent or prompt running allows it. See "Personal context".
+
 ![Memory flow for one run](./diagrams/memory-run-flow.svg)
 
 > [!IMPORTANT]
-> **6 guesses need your OK.**
+> **8 guesses need your OK.**
 >
 > 1. **No `recall` tool in v1.** Every active memory in both layers goes into the prompt, capped
->    per space (see SPEC's limits). A `recall` search tool comes when the caps start to bite.\
+>    per space (see SPEC's limits). Lasting knowledge moves to personal resources, which
+>    already load on demand, so `recall` only comes if memories alone outgrow the caps.\
 >    *If not:* add `recall` now and inject only the newest few; costs a tool round trip before
 >    the agent knows anything.
 > 2. **`forget` is a tool too**, so "forget that" works in chat, not only in the lists.\
@@ -33,6 +38,14 @@ and shared chats, and anything unclaimed falls back to "you + this agent".
 > 6. **A chat that has ever been shared counts as shared**, read from the existing share rows
 >    (revoked rows are kept with `DateRevoked`). No new column on the conversation.\
 >    *If not:* a `MemorySpaceLockedAt` column on the conversation, set on first share.
+> 7. **Personal context has its own two core tables**, shaped like a Workspace project's
+>    context ids and resources, not a hidden AI Context owned by the user.\
+>    *If not:* a user-owned `AIContext` with an owner column. It reuses versioning, but every
+>    context list, picker, Deploy export and permission check must then filter it out.
+> 8. **The caller opts in with a runtime-context flag.** The personal context resolver does
+>    nothing unless the run sets `Umbraco.AI.UsePersonalContext`, so core features that don't
+>    know about it (tests, Search, Automate) never pick it up.\
+>    *If not:* it loads for every run with a user, and each feature opts out instead.
 
 ## Decisions
 
@@ -107,7 +120,7 @@ and shared chats, and anything unclaimed falls back to "you + this agent".
   stays a per-agent choice.
 - **The AI Settings screen becomes extensible** (a core change), so the Agent package can add
   its switch without core knowing about memory. See "Settings extension".
-- **A personal switch** in "Your AI memory" ("Let agents remember things about me") turns
+- **A personal switch** in the "Your AI" box ("Let agents remember things about me") turns
   "about you" off for that user only, stored with the CMS's `IUserDataService`. It is stored
   only once the user flips it, so an untouched switch follows the site policy (`Allowed` on,
   `OptIn` off). Under `NotAllowed` the switch is hidden.
@@ -116,6 +129,8 @@ and shared chats, and anything unclaimed falls back to "you + this agent".
   `AIMemorySavedNotification`, `AIMemoryDeletingNotification` (cancelable),
   `AIMemoryDeletedNotification`, matching the agent and project notifications.
 - **Memory is user data, not config.** It is never deployed between environments.
+- **Personal context is core's, not the Agent package's**, because prompts use it too. Memory
+  doesn't depend on it. See "Personal context".
 
 ## Settings extension
 
@@ -169,6 +184,41 @@ The rules check:
 A held memory is stored with status `Held` and is never injected. It turns active only when a
 person clicks Keep.
 
+## Personal context
+
+A user's own AI Contexts and resources, picked in the "Your AI" box of the user profile. It
+lives in core because both agents and prompts read it.
+
+- **Loaded by a new context resolver**, `PersonalContextResolver`, inserted into core's
+  `AIContextResolvers()` chain before `AdditionalResourcesContextResolver`. It resolves the
+  picked contexts and the user's own resources through the same resolve, format and inject
+  path as every other source, so `Always` resources go in the system prompt and `OnDemand`
+  ones become the existing lookup tool. A context already resolved from the agent or prompt is
+  loaded once (the chain already drops duplicate ids).
+- **Gated by the caller.** The resolver reads `Constants.ContextKeys.UsePersonalContext` (bool)
+  from the runtime context and the signed-in backoffice user. Without both it returns nothing
+  (guess 8).
+- **Agents opt out, prompts opt in.** `AIStandardAgentConfig` gains `UsePersonalContext`
+  (default true, and a missing value reads as true), carried by the config JSON like
+  `MemoryMode`. `AIPrompt` gains a `UsePersonalContext` column (default false), wired the way
+  `IncludeEntityContext` is: entity, factory, migrations, version history adapter, API models,
+  editor and the Prompt Deploy artifact. Each product's run sets the runtime flag from it.
+- **Stored per user** in two core tables (see "Data model"), behind `IAIPersonalContextService`.
+  The whole set is read and saved as one document, the way a project saves its contexts and
+  resources.
+- **Saved straight away.** The profile panel has no Save button, so each add, edit or remove
+  saves at once.
+- **The "Your AI" profile app is core's**, with the context picker and the resource list in
+  compact mode (`uai-context-picker`, `uai-resource-list`), and an extension slot for a new
+  `uaiUserProfileProperty` manifest type. The Agent package adds the personal memory switch
+  there, so it sits in the same box; the memory table stays the Agent package's own profile
+  app, below it.
+- **Moving memories into a resource is manual in v1.** The user adds a resource and deletes
+  the memories. A "Turn into resource" bulk action can come later (DECISION-LOG).
+- **Clean-up.** A user delete removes their personal context; a context delete removes that
+  context from every user's list.
+- **Not deployed.** Like memory, it's user data.
+
 ## What changes
 
 **Server: core** (`Umbraco.AI/src/`)
@@ -184,6 +234,22 @@ Umbraco.AI.Persistence/Settings/
   EFCoreAISettingsRepository.cs         reads/writes additional keys as rows
 Umbraco.AI.Web/Api/Management/Settings/
   Models/                               + additional map on request/response
+Umbraco.AI.Core/PersonalContext/
+  AIPersonalContext.cs                  UserKey, ContextIds, Resources (AIContextResource)
+  IAIPersonalContextService.cs          get / save the signed-in user's set
+  AIPersonalContextService.cs           validates context ids and resource types
+  IAIPersonalContextRepository.cs       internal
+  PersonalContextResolver.cs            IAIContextResolver, gated by UsePersonalContext
+  UserDeletedPersonalContextHandler.cs  deletes the user's set
+  ContextDeletedPersonalContextHandler.cs  drops a deleted context from every user's list
+Umbraco.AI.Core/Constants.cs            + ContextKeys.UsePersonalContext
+Umbraco.AI.Core/Configuration/          + PersonalContextResolver in the resolver chain
+Umbraco.AI.Persistence/PersonalContext/
+  AIPersonalContextEntity.cs, AIPersonalContextResourceEntity.cs, EFCoreAIPersonalContextRepository.cs
+Umbraco.AI.Persistence.SqlServer/Migrations/  UmbracoAI_AddPersonalContext
+Umbraco.AI.Persistence.Sqlite/Migrations/     UmbracoAI_AddPersonalContext
+Umbraco.AI.Web/Api/Management/PersonalContext/
+  Controllers/, Models/, Mapping/       GET and PUT /personal-context
 ```
 
 **Backoffice: core** (`Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client/src/settings/`)
@@ -194,6 +260,15 @@ workspace/settings-root/
   settings-workspace.context.ts       + get/set for additional values
   settings-editor.element.ts          + extension slot for panels after the built-in boxes
 exports.ts                            exports the manifest type and context token
+```
+
+**Backoffice: core, personal context** (`.../Client/src/personal-context/`)
+
+```text
+user-profile-app/your-ai-user-profile-app.element.ts  "Your AI": contexts, resources, property slot
+extensions/uai-user-profile-property.extension.ts     the uaiUserProfileProperty manifest type
+repository/                                           personal context API calls
+exports.ts                                            repository and manifest type
 ```
 
 **Server: Agent package** (`Umbraco.AI.Agent/src/`)
@@ -224,7 +299,8 @@ Umbraco.AI.Agent.Core/
     Notifications/                      Saving, Saved, Deleting, Deleted
     UserDeletedMemoryHandler.cs         deletes the user's own layers
     AgentDeletedMemoryHandler.cs        deletes user-agent memories for that agent
-  Agents/AIStandardAgentConfig.cs       + MemoryMode (Off, Work, WorkAndPerson)
+  Agents/AIStandardAgentConfig.cs       + MemoryMode (Off, Work, WorkAndPerson), + UsePersonalContext
+  Chat/                                 run sets ContextKeys.UsePersonalContext from the config
   Memory/AIMemorySettings.cs            IAISettingsProvider: Agent.Memory.Enabled (default true) and
                                         Agent.Memory.PersonalMemory (default Allowed)
   Memory/AIPersonalMemoryPolicy.cs      Allowed, OptIn, NotAllowed
@@ -237,9 +313,24 @@ Umbraco.AI.Agent.Persistence.SqlServer/Migrations/  UmbracoAIAgent_AddMemory
 Umbraco.AI.Agent.Persistence.Sqlite/Migrations/     UmbracoAIAgent_AddMemory
 Umbraco.AI.Agent.Web/Api/Management/
   Memory/Controllers/, Models/, Mapping/
-  Agent/Models/AgentConfigModel.cs      + memoryMode
+  Agent/Models/AgentConfigModel.cs      + memoryMode, + usePersonalContext
   Agent/Mapping/AgentMapDefinition.cs   maps it
 Umbraco.AI.Agent.Startup/               registers the above
+```
+
+**Server: Prompt package** (`Umbraco.AI.Prompt/src/`), mirroring `IncludeEntityContext`
+
+```text
+Umbraco.AI.Prompt.Core/Prompts/
+  AIPrompt.cs                           + UsePersonalContext (default false)
+  AIPromptVersionableEntityAdapter.cs   + the field in version history
+  AIPromptService.cs                    run sets ContextKeys.UsePersonalContext
+Umbraco.AI.Prompt.Persistence/          entity, factory, DbContext
+Umbraco.AI.Prompt.Persistence.SqlServer/Migrations/  UmbracoAIPrompt_AddUsePersonalContext
+Umbraco.AI.Prompt.Persistence.Sqlite/Migrations/     UmbracoAIPrompt_AddUsePersonalContext
+Umbraco.AI.Prompt.Web/Api/Management/Prompt/  create, update, response models and mapping
+Umbraco.AI.Prompt.Web.StaticAssets/.../prompt-details-workspace-view.element.ts  + toggle
+Umbraco.AI.Prompt.Deploy/  AIPromptArtifact + UmbracoAIPromptServiceConnector carry the field
 ```
 
 **Server: Copilot Workspace** (`Umbraco.AI.Agent.Copilot.Workspace/src/`)
@@ -259,14 +350,16 @@ Umbraco.AI.Agent.Copilot.Workspace.Startup/  InsertBefore<UserAgentMemorySpaceRe
 
 ```text
 agent/workspace/agent/views/
-  agent-details-workspace-view.element.ts  + Memory toggle in "Agent Behavior"
+  agent-details-workspace-view.element.ts  + Memory dropdown and "Use personal context" toggle
+                                           in "Agent Behavior"
 memory/
   settings-panel/memory-settings-panel.element.ts  uaiSettingsPanel: kill switch + personal policy
   repository/                              memory API calls
   components/memory-list.element.ts        shared list: text, who, when, actions
   modals/edit-memory-modal.*               edit one memory's text
   user-profile-app/
-    my-memory-user-profile-app.element.ts  "Your AI memory"
+    memory-switch.user-profile-property.ts uaiUserProfileProperty: the personal switch in "Your AI"
+    my-memory-user-profile-app.element.ts  the memory table
   exports.ts                               list + repository for Workspace to reuse
 ```
 
@@ -296,11 +389,14 @@ conversation/modal/share-picker-modal.*     warning mentions memory
 - **Prompt cache:** the memory block is frozen per Workspace chat; changes ride in the
   volatile tail.
 
-- **Cross-product floor:** the Agent package needs the core version that ships the settings
-  extension, so its core range floor moves up with this release.
+- **Cross-product floor:** the Agent and Prompt packages need the core version that ships the
+  settings extension and personal context, so their core range floors move up with this
+  release. Prompt.Deploy needs the Prompt version with the new field.
 
-Not touched: Deploy (memory is user data; `MemoryMode` already travels in the config JSON; the
-site-wide switch is a setting, which core Deploy doesn't move today),
+Deploy: the prompt's `UsePersonalContext` is added to the Prompt Deploy artifact and
+connector. Not touched: the rest of Deploy (memory and personal context are user data;
+`MemoryMode` and `UsePersonalContext` already travel in the agent config JSON; the site-wide
+switch is a setting, which core Deploy doesn't move today),
 search index (memory isn't searchable content), cache refreshers (read from the database once
 per run, small and per user), audit log (tool calls are already logged by the run).
 
@@ -334,3 +430,28 @@ umbracoAIAgentMemory
   clean-up runs from their delete notifications.
 - "About you" is `SpaceType = user, SpaceKey = <user key>`. "You + this agent" adds `AgentId`.
 - The company layer would be `SpaceType = site` with a fixed key. No schema change.
+
+Two new tables in the core DbContext, migration `UmbracoAI_AddPersonalContext` for SQL Server
+and SQLite. The resource table copies `umbracoAIContextResource`'s columns, keyed by user.
+
+```text
+umbracoAIPersonalContext
+  Column            Type            Null  Notes
+  UserKey           Guid            no    PK
+  ContextIds        nvarchar(4000)  no    the user's order, stored like a project's ContextIds
+  DateModified      datetime        no
+
+umbracoAIPersonalContextResource
+  Column            Type            Null  Notes
+  Id                Guid            no    PK
+  UserKey           Guid            no    FK to umbracoAIPersonalContext, cascade delete
+  ResourceTypeId    nvarchar(255)   no    an [AIContextResourceType]
+  Name              nvarchar(255)   no
+  Description       nvarchar(1000)  yes
+  SortOrder         int             no
+  Settings          nvarchar(max)   no    the resource type's settings JSON
+  InjectionMode     int             no    0 Always, 1 OnDemand
+  Index: (UserKey, SortOrder)
+```
+
+The Prompt table gains `UsePersonalContext bit not null default 0`.

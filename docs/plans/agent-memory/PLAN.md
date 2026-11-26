@@ -1,8 +1,8 @@
 # Plan: Agent memory
 
-**29 tasks in 7 areas**, in build order. Core settings come first because the Agent package's
-settings panel needs them; Workspace comes last because it plugs into the Agent package's space
-hook. Each task names its stories (see STORIES.md) and the specs that must go green.
+**42 tasks in 9 areas**, in build order. Core settings and core personal context come first
+because the Agent and Prompt packages build on them; Workspace comes last because it plugs into
+the Agent package's space hook. Each task names its stories (see STORIES.md) and the specs that must go green.
 
 > [!IMPORTANT]
 > **2 guesses need your OK.**
@@ -42,6 +42,56 @@ hook. Each task names its stories (see STORIES.md) and the specs that must go gr
   Acceptance: a real `PUT` then `GET` on the demo site round-trips the value; the panel shows
   after "Transparency". Remove the test panel before commit.
   depends-on: T2
+
+## Core: personal context
+
+- [ ] **T30** - story: MEM-18 (AC1, AC3-AC6, AC9, AC10). Domain and persistence in
+  `Umbraco.AI/src`: `AIPersonalContext` (UserKey, ContextIds, Resources as `AIContextResource`),
+  `IAIPersonalContextService` / `AIPersonalContextService` (get and save the signed-in user's
+  set; refuse context ids the user can't list and unknown resource types), internal
+  `IAIPersonalContextRepository`, `AIPersonalContextEntity`, `AIPersonalContextResourceEntity`
+  (columns as ARCHITECTURE "Data model", shaped like the project tables),
+  `EFCoreAIPersonalContextRepository`, migration `UmbracoAI_AddPersonalContext` for SQL Server
+  and SQLite. Follows ARCHITECTURE "Personal context".
+  Acceptance: MEM-18 AC1, AC3-AC6, AC9, AC10 service specs green; `dotnet build
+  Umbraco.AI/Umbraco.AI.slnx`.
+  depends-on: none. parallel-group: A
+
+- [ ] **T31** - story: MEM-19 (AC1-AC5, AC10, AC11). `PersonalContextResolver :
+  IAIContextResolver`, inserted before `AdditionalResourcesContextResolver` in core's
+  `AIContextResolvers()` chain, and `Constants.ContextKeys.UsePersonalContext`. Returns nothing
+  without the flag or a backoffice user; resolves picked contexts and the user's resources
+  through the normal resolve, format and inject path.
+  Acceptance: MEM-19 AC1-AC5, AC10, AC11 resolver specs green.
+  depends-on: T30
+
+- [ ] **T32** - story: MEM-21 (all). `UserDeletedPersonalContextHandler` and
+  `ContextDeletedPersonalContextHandler`, plus a spec in `Umbraco.AI.Deploy`'s tests that a
+  context export carries no personal resources.
+  Acceptance: MEM-21 specs green.
+  depends-on: T30
+
+- [ ] **T33** - story: MEM-18 (AC1, AC3-AC6, AC9, AC10). Management API in
+  `Umbraco.AI.Web/Api/Management/PersonalContext/`: `GET` and `PUT /personal-context`, request
+  and response models reusing the project's resource model shape, mapping. Signed-in user only.
+  Acceptance: MEM-18 API specs green.
+  depends-on: T30
+
+- [ ] **T34** - **wire: personal context API into the Management API.** story: MEM-18 (AC1,
+  AC6). Register the controllers; regenerate the core OpenAPI client.
+  Acceptance: a real `PUT` then `GET /personal-context` on the demo site round-trips a context
+  id and a Text resource; a second user's `GET` is empty.
+  depends-on: T33
+
+- [ ] **T35** - story: MEM-18 (AC2, AC7, AC8, AC11-AC13). Backoffice in
+  `Umbraco.AI.Web.StaticAssets/Client/src/personal-context/`: the "Your AI" user profile app
+  with `uai-context-picker` and `uai-resource-list` in compact mode, saving each change at once
+  (error toast and roll back on failure), the `uaiUserProfileProperty` manifest type and its
+  extension slot after Resources, the repository, all exported from `exports.ts`. Matches
+  `mockups/my-memory.png`.
+  Acceptance: MEM-18 AC2, AC7, AC11-AC13 specs green; `npm run build:core`; opens from the
+  avatar on the demo site.
+  depends-on: T34
 
 ## Agent: model and data
 
@@ -175,12 +225,13 @@ hook. Each task names its stories (see STORIES.md) and the specs that must go gr
   Acceptance: MEM-13 specs green; `npm run build:agent`.
   depends-on: T15. parallel-group: C
 
-- [ ] **T19** - story: MEM-12 (all). "Your AI memory" user profile app: the personal switch in
-  a box (hidden with a note under `NotAllowed`), then the list grouped by "About you" and each
-  agent, "paused" and "memory is off for this agent" on group headers, empty state. Matches
-  `mockups/my-memory.png` and `my-memory-paused.png`.
-  Acceptance: MEM-12 specs green; opens from the avatar on the demo site.
-  depends-on: T18
+- [ ] **T19** - story: MEM-12 (all), MEM-18 (AC8). The personal switch as a
+  `uaiUserProfileProperty` in core's "Your AI" box (hidden with a note under `NotAllowed`), and
+  the memory table as the Agent package's own profile app below it, grouped by "About you" and
+  each agent, "paused" and "memory is off for this agent" on group headers, empty state.
+  Matches `mockups/my-memory.png` and `my-memory-paused.png`.
+  Acceptance: MEM-12 and MEM-18 AC8 specs green; opens from the avatar on the demo site.
+  depends-on: T18, T35
 
 - [ ] **T20** - story: MEM-11 (all). `remember-tool.element.ts` and `forget-tool.element.ts`
   plus `uaiAgentToolRenderer` manifests in Agent.UI `chat/tools/memory/`: saved, learned,
@@ -190,6 +241,54 @@ hook. Each task names its stories (see STORIES.md) and the specs that must go gr
   Acceptance: MEM-11 specs green; `npm run build:agent-ui`; notes render in the sidebar and in
   Workspace on the demo site.
   depends-on: T15. parallel-group: C
+
+## Personal context in agents and prompts
+
+- [ ] **T36** - story: MEM-20 (AC1-AC3), MEM-19 (AC7, AC8). `UsePersonalContext` on
+  `AIStandardAgentConfig` (default true; a missing value reads true), `usePersonalContext` on
+  the agent config API model and mapping, and the agent run setting
+  `ContextKeys.UsePersonalContext` from it. Same files as T5's `MemoryMode`.
+  Acceptance: MEM-20 AC1-AC3 and MEM-19 AC7, AC8 specs green.
+  depends-on: T5, T31
+
+- [ ] **T37** - story: MEM-20 (AC4). "Use personal context" toggle after the Memory dropdown in
+  "Agent Behavior", `agent-details-workspace-view.element.ts`. Matches
+  `mockups/agent-memory-setting.png`.
+  Acceptance: MEM-20 AC4 spec green; `npm run build:agent`.
+  depends-on: T16, T36
+
+- [ ] **T38** - **wire: personal context into agent runs.** story: MEM-19 (AC1, AC8). On the
+  demo site, give a user an Always resource and chat in the Copilot sidebar.
+  Acceptance: the logged system prompt holds the resource; after turning the agent's toggle
+  off, the next run's doesn't.
+  depends-on: T35, T37
+
+- [ ] **T39** - story: MEM-20 (AC5-AC7, AC9), MEM-19 (AC6, AC9). `UsePersonalContext` on
+  `AIPrompt` (default false), wired like `IncludeEntityContext`: `AIPromptEntity`, factory,
+  DbContext, migration `UmbracoAIPrompt_AddUsePersonalContext` (SQL Server and SQLite, default
+  0), `AIPromptVersionableEntityAdapter`, create, update and response models and mapping, and
+  the prompt run setting `ContextKeys.UsePersonalContext` from it.
+  Acceptance: MEM-20 AC5-AC7, AC9 and MEM-19 AC6, AC9 specs green; `dotnet build
+  Umbraco.AI.Prompt/Umbraco.AI.Prompt.slnx`.
+  depends-on: T31. parallel-group: C
+
+- [ ] **T40** - story: MEM-20 (AC8). "Use personal context" toggle after "Include Entity
+  Context" in `prompt-details-workspace-view.element.ts`; regenerate the Prompt OpenAPI client.
+  Matches `mockups/prompt-personal-context.png`.
+  Acceptance: MEM-20 AC8 spec green; `npm run build:prompt`.
+  depends-on: T39
+
+- [ ] **T41** - story: MEM-20 (AC10, AC11). `AIPromptArtifact` and
+  `UmbracoAIPromptServiceConnector` carry `UsePersonalContext`, with connector tests alongside
+  the `IncludeEntityContext` ones.
+  Acceptance: MEM-20 AC10, AC11 specs green; `dotnet build
+  Umbraco.AI.Prompt.Deploy/Umbraco.AI.Prompt.Deploy.slnx`.
+  depends-on: T39
+
+- [ ] **T42** - **wire: personal context into prompt runs.** story: MEM-19 (AC6, AC9). On the
+  demo site, run a prompt with the toggle on, then off, for a user with an Always resource.
+  Acceptance: the logged system prompt holds the resource only while the toggle is on.
+  depends-on: T35, T40
 
 ## Copilot Workspace
 
@@ -233,15 +332,16 @@ hook. Each task names its stories (see STORIES.md) and the specs that must go gr
 
 ## Shipping
 
-- [ ] **T27** - story: MEM-01 (all). Cross-product floors: the Agent package's
-  `Umbraco.AI.Core` range floor moves to the core version with the settings extension, and
-  Workspace's Agent floor moves to the version with the space hook. Test with
+- [ ] **T27** - story: MEM-01 (all). Cross-product floors: the Agent and Prompt packages'
+  `Umbraco.AI.Core` range floors move to the core version with the settings extension and
+  personal context, Workspace's Agent floor moves to the version with the space hook, and
+  Prompt.Deploy's Prompt floor moves to the version with `UsePersonalContext`. Test with
   `UseProjectReferences=false`.
   Acceptance: each product's slnx builds with ranges.
-  depends-on: T24, T25, T26
+  depends-on: T24, T25, T26, T38, T41, T42
 
 - [ ] **T28** - story: MEM-04 (AC1). Full smoke test on the demo site with Anthropic: every
   screen, the five moments (first run, mistake, wait, finish, return), Workspace prompt cache
-  hits across turns.
+  hits across turns, and personal context in an agent chat and a prompt.
   Acceptance: smoke-tester PASS with screenshots.
   depends-on: T27

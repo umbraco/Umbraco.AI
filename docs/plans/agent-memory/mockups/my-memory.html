@@ -1,14 +1,17 @@
 <!doctype html>
 <!--
-  Agent memory: "Your AI memory", a new user profile app in the CMS current-user panel (opens
-  from the avatar). Copied from the modal-sidebar.html starter, medium width. The panel's shell
-  mirrors current-user-modal.element.ts: profile apps stacked, Close and Log out in the footer.
-  States: default, and #paused (the personal switch is off).
+  Agent memory: the "Your AI" profile app in the CMS current-user panel (opens from the avatar).
+  Copied from the modal-sidebar.html starter, medium width; the shell mirrors
+  current-user-modal.element.ts. The "Your AI" box is core's: Contexts and Resources reuse
+  uai-context-picker and uai-resource-list in compact mode (resource-list.element.ts
+  #renderCompactItem), and the memory switch row is added by the Agent package. The memory
+  table below is the Agent package's own profile app.
+  States: default, #paused (personal switch off).
 -->
 <html lang="en">
 <head>
 	<meta charset="utf-8">
-	<title>Mockup: Your AI memory</title>
+	<title>Mockup: Your AI</title>
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@umbraco-ui/uui@2/dist/themes/light.css">
 	<link rel="stylesheet" href="_mockup.css">
 	<link rel="stylesheet" href="agent-memory.css">
@@ -16,7 +19,7 @@
 </head>
 <body class="uui-font uui-text">
 	<span class="mockup-anchor" id="paused"></span>
-	<header class="app-header">
+		<header class="app-header">
 		<span class="logo">Umbraco</span>
 		<uui-tab-group class="sections">
 			<uui-tab label="Content" active>Content</uui-tab>
@@ -50,9 +53,51 @@
 						</div>
 					</uui-box>
 
-					<!-- New profile app: the personal switch in a box (forms never sit on the grey background),
-					     then every memory the user owns as a list-view table ("about you", then one group per agent). -->
-					<uui-box class="group" headline="Your AI memory">
+					<!-- New core profile app. Each change saves at once: the panel has no Save button. -->
+					<uui-box class="group" headline="Your AI">
+						<div class="property">
+							<div>
+								<uui-label>Contexts</uui-label>
+								<div class="description">AI Contexts your agents and prompts can use.</div>
+							</div>
+							<div>
+								<uui-ref-list>
+									<uui-ref-node name="Nordhem brand voice" detail="nordhemBrandVoice">
+										<uui-icon slot="icon" name="icon-wand"></uui-icon>
+										<uui-tag slot="tag" look="secondary">4 resources</uui-tag>
+										<uui-action-bar slot="actions"><uui-button label="Remove"><uui-icon name="icon-trash"></uui-icon></uui-button></uui-action-bar>
+									</uui-ref-node>
+								</uui-ref-list>
+								<uui-button class="add-full" look="placeholder" label="Add context"><uui-icon name="icon-add"></uui-icon> Add</uui-button>
+							</div>
+						</div>
+						<div class="property">
+							<div>
+								<uui-label>Resources</uui-label>
+								<div class="description">Your own notes and files. Always: read every time. On-Demand: looked up when needed.</div>
+							</div>
+							<div>
+								<uui-ref-list>
+									<uui-ref-node name="How I write product pages" detail="Text">
+										<uui-icon slot="icon" name="icon-document"></uui-icon>
+										<uui-tag slot="tag" color="positive">Always</uui-tag>
+										<uui-action-bar slot="actions"><uui-button label="Remove"><uui-icon name="icon-trash"></uui-icon></uui-button></uui-action-bar>
+									</uui-ref-node>
+									<uui-ref-node name="Webshop launch notes 2026" detail="Turned from 6 memories, 18-11-2026">
+										<uui-icon slot="icon" name="icon-document"></uui-icon>
+										<uui-tag slot="tag" color="default">On-Demand</uui-tag>
+										<uui-action-bar slot="actions"><uui-button label="Remove"><uui-icon name="icon-trash"></uui-icon></uui-button></uui-action-bar>
+									</uui-ref-node>
+									<uui-ref-node name="Spring catalogue 2027" detail="Content">
+										<uui-icon slot="icon" name="icon-document-dashed-line"></uui-icon>
+										<uui-tag slot="tag" color="default">On-Demand</uui-tag>
+										<uui-action-bar slot="actions"><uui-button label="Remove"><uui-icon name="icon-trash"></uui-icon></uui-button></uui-action-bar>
+									</uui-ref-node>
+								</uui-ref-list>
+								<uui-button class="add-full" look="placeholder" label="Add resource"><uui-icon name="icon-add"></uui-icon> Add</uui-button>
+							</div>
+						</div>
+						<!-- Added by the Agent package through a uaiUserProfileProperty manifest. -->
 						<!-- New: the personal switch. Covers "about you" only (R1d, guesses 7-8). Starts on under
 						     the site's Allowed policy, off under Opt-in; hidden under Not allowed (R1e, R1f). -->
 						<div class="property">
@@ -67,6 +112,7 @@
 							</div>
 						</div>
 					</uui-box>
+
 						<uui-table class="collection-table">
 							<uui-table-head>
 								<uui-table-head-cell>Memory</uui-table-head-cell>

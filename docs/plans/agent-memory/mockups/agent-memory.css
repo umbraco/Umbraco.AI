@@ -175,3 +175,9 @@ body:has(.mockup-anchor:target) .when-default { /* mockup-ok: mockup plumbing, s
 uui-table-row.group-row { /* mockup-ok: new component; UUI surface-alt token, the light grey used for alt surfaces */
 	background: var(--uui-color-surface-alt);
 }
+
+uui-button.add-full { /* mockup-ok: copied from core resource-list.element.ts #btn-add-compact */
+	display: block;
+	width: 100%;
+}
+

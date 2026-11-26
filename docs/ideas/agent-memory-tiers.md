@@ -1,10 +1,11 @@
 # Agent Memory Tiers - Future Consideration
 
-## Status: Under Consideration
+## Status: Partly answered in v1
 
-Raised 26-11-2026 while planning agent memory v1 (`docs/plans/agent-memory/`). Not needed for v1:
-v1 loads every memory into the prompt under small caps. This note keeps the idea and the
-approaches found, for when the caps start to bite.
+Raised 26-11-2026 while planning agent memory v1 (`docs/plans/agent-memory/`). v1 answers the
+main question with **personal context** (approach 4 below): memories are the short-term tier,
+and the user moves what lasts into their own resources, loaded Always or On-Demand. This note
+keeps the other approaches for if memories alone outgrow their caps.
 
 Sources for the products named below are in the agent memory plan's `RESEARCH.md`, gathered
 26-11-2026. The Generative Agents paper is cited from memory and not re-checked.
@@ -87,7 +88,19 @@ Each memory is ranked by how recent, how important and how relevant it is. Old, 
 - **Good:** no hard tiers; fading handles demotion.
 - **Bad:** "important" needs a model call or a guess when saving. Same caching cost as approach 2.
 
-## Leaning
+### 4. The user decides: personal resources (chosen for v1)
+
+Users keep their own AI Contexts and resources in their profile, the same parts a Workspace
+project uses, each set to Always or On-Demand. When memories pile up, the user writes the
+lasting ones into a resource and deletes the memories.
+
+- **Good:** no usage measure needed; a person decides what lasts.
+- **Good:** On-Demand already gives a lookup tool, so long-term knowledge costs nothing until
+  needed.
+- **Good:** user-written text is safer than agent-written memory.
+- **Bad:** it's manual. A "Turn into resource" bulk action could help later.
+
+## Leaning (before approach 4)
 
 Approach 2 fits best when this is picked up: load the top few by relevance, keep a small pinned
 set always loaded (rules and the user's own facts), and keep `recall` for the rest. The v1 table

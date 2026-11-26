@@ -75,15 +75,40 @@
 - **Two wire tasks for the provider** (T12 sidebar, T23 Workspace). The sidebar path proves the
   provider alone; Workspace needs the resolver and runtime context ids, a separate failure.
 - **Undo and Discard reuse `DELETE`** (plan guess 1 and 2). Fewer routes; Undo's restore of
-  replaced memories (R22) lives in the service's delete.- **Suspect checks are pluggable, with a Decision check** (user's call, 26-11-2026). Replaces
+  replaced memories (R22) lives in the service's delete.
+- **Suspect checks are pluggable, with a Decision check** (user's call, 26-11-2026). Replaces
   "rules only, no extra AI call". The check uses the default Decision profile the same way auto
   agent selection does, so a site can point it at TypeSafe's Jev without the Agent package
   knowing about TypeSafe. Rejected: a TypeSafe-only check (ties the hook to one provider) and a
-  separate memory profile setting (not needed yet; the default profile is enough to start).- **Hooks use Umbraco collection builders** (user's call, 26-11-2026). Space resolvers and save
+  separate memory profile setting (not needed yet; the default profile is enough to start).
+- **Hooks use Umbraco collection builders** (user's call, 26-11-2026). Space resolvers and save
   checks are ordered (`OrderedCollectionBuilderBase`, like `AIAgentSelectors()`), so packages
   place theirs with `InsertBefore`/`Append`. Settings providers are unordered
-  (`LazyCollectionBuilderBase`, like `AIGuardrailEvaluators()`).- **Short ids are just long enough, and ambiguous ids are refused** (user's call, 26-11-2026).
+  (`LazyCollectionBuilderBase`, like `AIGuardrailEvaluators()`).
+- **Short ids are just long enough, and ambiguous ids are refused** (user's call, 26-11-2026).
   Replaces architecture guess 7 (a fixed 8-character prefix), which left a small chance of the
   agent forgetting or merging the wrong memory. Rejected: per-run numbers like m1 (shift between
   sidebar runs, so older turns point at the wrong memory) and a stored short-code column (only
   works for tables that add it). Recorded as a project decision so other tools adopt it later.
+- **Personal context joins phase 1 as the long-term tier** (user's call, 26-11-2026). Users pick
+  their own AI Contexts and resources in a "Your AI" profile box, each loaded Always or
+  On-Demand, the same parts a Workspace project uses. Memories stay the short-term tier. This
+  answers how memories move to long-term storage: the user decides, instead of a usage measure
+  nobody can take (the model reads every loaded memory, so nothing shows which one it used).
+  Rejected: a `recall` tool with promotion and demotion by use, and the search-before-each-turn
+  approach (kept in `docs/ideas/agent-memory-tiers.md` for later).
+- **Personal context lives in core, behind a caller flag** (user's call, 26-11-2026). Prompts
+  use it as well as agents, so it's a core context resolver, loaded only when the run sets
+  `Umbraco.AI.UsePersonalContext`. Rejected: Agent package only (prompts couldn't use it).
+- **Builders choose per prompt and per agent; agents default on, prompts off** (user's call,
+  26-11-2026). Prompts often have a fixed output format that one user's preferences would break;
+  agents are conversations where it helps, but builders of content-writing agents can switch it
+  off. Rejected: on for both (existing prompts change output after upgrade), prompts only.
+- **The memory switch moves into the "Your AI" box** (user's call, 26-11-2026). One box holds
+  contexts, resources and the switch; the memory table sits below it. Core owns the box and
+  adds a `uaiUserProfileProperty` slot so the Agent package can add its switch.
+- **"Turn into resource" left out of v1** (user's call, 26-11-2026). Users write the resource
+  and delete the memories themselves. A bulk action can come later.
+- **Company memory not planned** (user's call, 26-11-2026). AI Contexts already carry
+  company-wide facts; what's missing is a way for users to propose additions. Wait until someone
+  asks.

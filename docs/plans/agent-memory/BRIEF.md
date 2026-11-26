@@ -77,6 +77,13 @@ would reach everyone, so it needs a gate: the agent *proposes* a company memory,
 approves it before anyone sees it. Until then, that knowledge lives in agent instructions and AI
 Contexts. v1 should leave room for this layer without building it.
 
+**Personal context: the long-term tier.** Memories are short facts the agent saves, loaded in
+full and capped. Longer, lasting knowledge belongs to the user: their own AI Contexts and
+resources, picked in the profile the same way a Workspace project picks them, each loaded
+always or only when the agent asks. When memories pile up, the user writes the lasting ones
+into a resource themselves and deletes the memories, so the user, not a usage measure, decides
+what lasts. A prompt or agent builder decides whether their prompt or agent uses it.
+
 ## Risks
 
 | Risk | What goes wrong | What limits it |
@@ -106,6 +113,8 @@ Contexts. v1 should leave room for this layer without building it.
 - Saving never asks the user, except for something personal said in a shared space.
 - Each save says where it went, and can be moved or undone in one click.
 - A user can see every memory they own, and edit or delete any of them.
+- A user adds their own AI Contexts and resources once, and every agent chat (and every prompt
+  that allows it) uses them.
 
 ## Must work with
 - Copilot Workspace projects and conversations (`Umbraco.AI.Agent.Copilot.Workspace`).
@@ -118,8 +127,8 @@ Contexts. v1 should leave room for this layer without building it.
 ## Unknowns
 - Whether models sort "about you" from "about the work" reliably enough that the move/undo note
   is rarely needed.
-- Whether the memories fit in the system prompt every turn, or whether it needs a search
-  ("recall") step once there are many.
+- Whether the memories fit in the system prompt every turn. Personal resources are the answer
+  for lasting knowledge; a search ("recall") step is only needed if memories alone outgrow it.
 - Whether models save the *right* things without being told to, or save too much.
 - How to tell a person's own words from text a tool returned, so poisoned saves can be blocked.
 - A project chat shared with someone outside the project: they see replies shaped by project

@@ -1,7 +1,7 @@
 # Spec: Agent memory
 
 > [!IMPORTANT]
-> **8 guesses need your OK.**
+> **10 guesses need your OK.**
 >
 > 1. **A memory is at most 300 characters.** Short facts, not documents. No consumer product
 >    publishes a per-memory limit; this matches the one-fact-per-item lists ChatGPT and Claude
@@ -19,7 +19,7 @@
 > 4. **A recipient outside the project never sees the project's memory list.** They only see
 >    replies, the same as attachments today, and the share warning says so.\
 >    *If not:* the shared chat shows the project's memory read-only to them.
-> 5. **"Your AI memory" lives in the user profile** (the panel that opens from your avatar), so
+> 5. **"Your AI" lives in the user profile** (the panel that opens from your avatar), so
 >    sidebar-only users can reach it.\
 >    *If not:* a page in the Copilot Workspace section, which sidebar-only users can't open.
 > 6. **New agents default to `Off`; the site's memory switch defaults to on, and personal
@@ -33,6 +33,13 @@
 >    switches it off or an admin sets the site to `NotAllowed`. The list says they're paused;
 >    delete is a separate, explicit action.\
 >    *If not:* switching off deletes them.
+> 9. **No site-wide switch for personal context.** Prompt and agent builders decide per prompt
+>    and per agent; the memory switches in AI Settings don't touch it, since the user writes it,
+>    not the agent.\
+>    *If not:* a "Personal context" toggle in AI Settings that turns it off everywhere.
+> 10. **No size limit on personal resources** beyond what AI Context resources already allow.
+>     `Always` resources cost prompt on every run, as they do on a context.\
+>     *If not:* a cap on `Always` resources per user, such as 5 or a character total.
 
 ## Endpoints
 
@@ -90,6 +97,32 @@ registered add-on setting. An unknown key or a wrong type is a **400**.
 
 **`GET /mine`** also returns `aboutYouEnabled: boolean`, and **`PUT /mine/preferences`**
 `{ aboutYouEnabled }` sets the personal switch (**204**).
+
+### Personal context (core)
+
+Base path: `/umbraco/ai/management/api/v1/personal-context`. Every route needs a signed-in
+backoffice user and only ever reads or writes that user's own set.
+
+**`GET`**
+- **200** `PersonalContext` (empty lists when the user never saved one)
+
+**`PUT`** `{ contextIds: string[], resources: ResourceModel[] }` replaces the whole set
+- **200** `PersonalContext`
+- **400** a context id the user can't list, an unknown resource type, or resource settings the
+  type rejects
+
+```ts
+type PersonalContext = {
+  contextIds: string[];       // in the user's order
+  resources: ResourceModel[]; // the same model a project's resources use
+};
+```
+
+**Agent config:** `StandardAgentConfigModel` also gains `usePersonalContext: boolean`, default
+`true`; a missing value reads as `true`.
+
+**Prompt:** the prompt create, update and response models gain `usePersonalContext: boolean`,
+default `false`.
 
 ## Agent tools
 
@@ -175,6 +208,24 @@ Offered only when the agent has memory on and a backoffice user is signed in.
   against the cap. Expired rows are deleted when their layer needs room for a new save, or
   when the list is next read.
 
+**Personal context**
+
+- **R26** A run loads the user's personal context only when the feature running allows it: an
+  agent with `usePersonalContext` on, or a prompt with it on. Anything else never loads it.
+- **R27** A run with no backoffice user gets no personal context.
+- **R28** `Always` personal resources go into the system prompt; `On-Demand` ones are offered
+  through the same lookup tool as AI Context resources.
+- **R29** A context picked by the user that the agent or prompt already uses loads once.
+- **R30** A user can pick only AI Contexts they can list. A context deleted later drops out of
+  every user's personal context.
+- **R31** Deleting a user deletes their personal context.
+- **R32** Personal context is never deployed between environments. A prompt's
+  `usePersonalContext` is, with the prompt.
+- **R33** The site memory switches (R1c, R1e) and the personal memory switch (R1d) don't affect
+  personal context.
+- **R34** The personal context is always that of the user sending the turn. Today only the
+  owner sends turns; this holds once shared chats become collaborative.
+
 ## AI Settings: Memory panel
 
 Opens from AI > Settings, an "Agent memory" box after the built-in ones, added by the Agent
@@ -196,7 +247,8 @@ toggle is off.
 ## Agent editor: Memory setting
 
 Opens from AI > Agents > an agent > Settings, in the "Agent Behavior" box. A dropdown: Off,
-Work only, Work and person.
+Work only, Work and person. Below it, a "Use personal context" toggle, on by default, with the
+description "Adds each user's own AI Contexts and resources from their profile".
 
 ![Agent editor with the Memory setting](./mockups/agent-memory-setting.png)
 
@@ -207,6 +259,23 @@ Work only, Work and person.
 | Mode saved | Takes effect from the agent's next run |
 | Set to Off | Existing memories are kept but not read; picking a mode again brings them back |
 | Site-wide switch off | The setting shows a note: "Memory is turned off for all agents in AI Settings" |
+| "Use personal context" off | From the next run, users' personal contexts and resources aren't loaded |
+
+## Prompt editor: Use personal context
+
+Opens from AI > Prompts > a prompt > Settings, beside "Include entity context". A "Use personal
+context" toggle, off by default, with the description "Adds the user's own AI Contexts and
+resources from their profile. Leave off for prompts with a fixed output format".
+
+![Prompt editor with Use personal context](./mockups/prompt-personal-context.png)
+
+[Mockup source](./mockups/prompt-personal-context.html)
+
+| When | The screen |
+|---|---|
+| Saved on | From the next run, the prompt loads the user's personal context |
+| Existing prompts after upgrade | Off; nothing changes until a builder turns it on |
+| Deployed | The toggle's value travels with the prompt |
 
 ## Chat: memory notes
 
@@ -265,18 +334,25 @@ icon next to the heading explains, as a tooltip, who can see and edit this memor
 | No memories yet | One line: "Nothing remembered in this chat yet" |
 | Long memory | Rows reuse the context panel's one-line rows, so long text is cut; hover shows the full text |
 
-## Your AI memory
+## Your AI
 
-Opens from the user profile panel (click your avatar). A "Your AI memory" box holding the
-personal switch, then one list-view table grouped by "About you" and each agent. A group's
+Opens from the user profile panel (click your avatar). A "Your AI" box (core) with three
+property rows: Contexts (the AI Context picker), Resources (the resource list, each row tagged
+Always or On-Demand), and the personal memory switch (added by the Agent package). Below the
+box, the memory table: one list-view table grouped by "About you" and each agent. A group's
 state ("paused", "memory is off for this agent") sits on its header line as plain text.
 
-![Your AI memory in the user profile](./mockups/my-memory.png)
+![Your AI in the user profile](./mockups/my-memory.png)
 
 [Mockup source](./mockups/my-memory.html)
 
 | When | The screen |
 |---|---|
+| No contexts or resources | Each row shows only its Add button |
+| Context or resource added, edited or removed | Saved at once (the panel has no Save button); a failed save shows an error toast and the list goes back |
+| Add context clicked | The AI Context picker opens, listing contexts the user can list |
+| Add resource clicked | The resource picker and editor open, as on a project |
+| Agent package not installed | No memory switch and no memory table; contexts and resources still show |
 | No memories | Empty state explaining "about you" and per-agent memory |
 | An agent has memory off | Its group still shows; the header reads "memory is off for this agent" |
 | Personal switch off | The "About you" header reads "paused"; agents ignore those rows |
@@ -301,5 +377,7 @@ state ("paused", "memory is off for this agent") sits on its header line as plai
 - The memory block for a full layer (50 × 300 characters) stays under 5,000 tokens.
 - Within a Workspace chat, the cached prompt prefix is byte-identical from turn 2 on unless the
   agent, its instructions or its AI Contexts change (R16).
+- Loading personal context adds at most one database query per run, plus one per picked
+  context the resolver chain hasn't already loaded.
 - Every new screen works by keyboard and has labelled buttons (Move, Undo, Keep, Discard,
   Edit, Delete).

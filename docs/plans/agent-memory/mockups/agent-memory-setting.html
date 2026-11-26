@@ -8,7 +8,7 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8">
-	<title>Mockup: Agent editor, Memory setting</title>
+	<title>Mockup: Agent editor, Memory and personal context</title>
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@umbraco-ui/uui@2/dist/themes/light.css">
 	<link rel="stylesheet" href="_mockup.css">
 	<link rel="stylesheet" href="agent-memory.css">
@@ -180,6 +180,14 @@
 										<!-- State #site-off: the site-wide switch in AI Settings is off (R1c). The mode stays saved. -->
 										<div class="when-target"><uui-tag look="secondary" color="warning">Memory is turned off for all agents in AI Settings</uui-tag></div>
 									</div>
+								</div>
+								<!-- New: Use personal context, on by default for agents (R26). -->
+								<div class="property">
+									<div>
+										<uui-label>Use personal context</uui-label>
+										<div class="description">Adds each user's own AI Contexts and resources from their profile</div>
+									</div>
+									<div><uui-toggle label="Use personal context" checked></uui-toggle></div>
 								</div>
 							</uui-box>
 

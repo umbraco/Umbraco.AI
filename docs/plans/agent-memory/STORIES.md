@@ -1,6 +1,6 @@
 # Stories: Agent memory
 
-**17 stories, 144 criteria.** Story ids are used by `PLAN.md` and the spec files, so never
+**21 stories, 183 criteria.** Story ids are used by `PLAN.md` and the spec files, so never
 renumber them.
 
 > [!IMPORTANT]
@@ -46,6 +46,13 @@ renumber them.
 **Clean-up**
 
 - [MEM-16](#mem-16-memory-is-cleaned-up-with-what-it-belongs-to) Memory is cleaned up with what it belongs to, 7 criteria
+
+**Core: personal context**
+
+- [MEM-18](#mem-18-keep-my-own-contexts-and-resources) Keep my own contexts and resources, 13 criteria
+- [MEM-19](#mem-19-agents-and-prompts-use-my-personal-context) Agents and prompts use my personal context, 11 criteria
+- [MEM-20](#mem-20-builders-choose-per-prompt-and-per-agent) Builders choose per prompt and per agent, 11 criteria
+- [MEM-21](#mem-21-personal-context-is-cleaned-up) Personal context is cleaned up, 4 criteria
 
 <details>
 <summary>Ready and Done</summary>
@@ -624,21 +631,21 @@ so that I stay in control of my personal data.
 
 ### AC1: The list groups my memories
 - **Given** a user with "about you" memories and private memories with two agents
-- **When** they open Your AI memory from their profile
+- **When** they open Your AI from their profile
 - **Then** the table shows an "About you" group and one group per agent
 
 ### AC2: Each row shows its kind
 - **Given** a user with a lesson
-- **When** they open Your AI memory
+- **When** they open Your AI
 - **Then** the lesson's Kind column reads "Lesson"
 
 ### AC3: Delete removes it
-- **Given** a user on Your AI memory
+- **Given** a user on Your AI
 - **When** they delete a memory and confirm
 - **Then** the row is gone
 
 ### AC4: The memory is no longer stored
-- **Given** a user on Your AI memory
+- **Given** a user on Your AI
 - **When** they delete a memory and confirm
 - **Then** the memory is no longer stored
 
@@ -649,7 +656,7 @@ so that I stay in control of my personal data.
 
 ### AC6: Switch off marks the group paused (guess 8)
 - **Given** a user with the personal switch off
-- **When** they open Your AI memory
+- **When** they open Your AI
 - **Then** the "About you" group header reads "paused"
 
 ### AC7: Switch off keeps the memories (guess 8)
@@ -659,7 +666,7 @@ so that I stay in control of my personal data.
 
 ### AC8: Opt-in starts the switch off (R1f)
 - **Given** personal memory set to `OptIn` and a user who never touched the switch
-- **When** they open Your AI memory
+- **When** they open Your AI
 - **Then** the switch is off
 
 ### AC9: A user's own choice survives a policy change (R1f)
@@ -669,22 +676,22 @@ so that I stay in control of my personal data.
 
 ### AC10: Not allowed hides the switch (R1e)
 - **Given** personal memory set to `NotAllowed`
-- **When** a user opens Your AI memory
+- **When** a user opens Your AI
 - **Then** the switch is hidden
 
 ### AC11: A note says the admin turned it off
 - **Given** personal memory set to `NotAllowed`
-- **When** a user opens Your AI memory
+- **When** a user opens Your AI
 - **Then** a note reads "Your admin has turned off personal memory"
 
 ### AC12: An agent with memory off is marked
 - **Given** a user with private memories with an agent now set to `Off`
-- **When** they open Your AI memory
+- **When** they open Your AI
 - **Then** that agent's group header reads "memory is off for this agent"
 
 ### AC13: Nothing saved shows an empty state
 - **Given** a user with no memories
-- **When** they open Your AI memory
+- **When** they open Your AI
 - **Then** an empty state explains "about you" and per-agent memory
 
 ---
@@ -949,3 +956,234 @@ Out of scope: a separate memory-check profile setting.
 - **Given** a default Decision profile whose call throws
 - **When** the agent saves a plain fact
 - **Then** a warning is logged
+
+---
+
+## MEM-18: Keep my own contexts and resources
+
+As a **backoffice editor**,
+I want to add my own AI Contexts and resources in my profile,
+so that agents know my lasting preferences and notes without me repeating them.
+
+### AC1: A picked context is saved at once
+- **Given** a user on Your AI
+- **When** they pick "Nordhem brand voice" in the Contexts picker
+- **Then** `GET /personal-context` returns its id
+
+### AC2: An added resource shows its mode
+- **Given** a user on Your AI
+- **When** they add a Text resource "How I write product pages" set to Always
+- **Then** it shows under Resources tagged "Always"
+
+### AC3: An added resource is stored
+- **Given** a user on Your AI
+- **When** they add a Text resource set to Always
+- **Then** `GET /personal-context` returns it with `injectionMode` Always
+
+### AC4: A removed resource is gone
+- **Given** a user with a resource "Spring catalogue 2027"
+- **When** they remove it
+- **Then** `GET /personal-context` no longer returns it
+
+### AC5: Users only see their own
+- **Given** two users who each saved a personal context
+- **When** one calls `GET /personal-context`
+- **Then** only their own contexts and resources come back
+
+### AC6: Nothing saved returns empty lists
+- **Given** a user who never saved a personal context
+- **When** they call `GET /personal-context`
+- **Then** it returns 200 with empty `contextIds` and `resources`
+
+### AC7: Nothing saved shows only Add buttons
+- **Given** a user who never saved a personal context
+- **When** they open Your AI
+- **Then** the Contexts and Resources rows show only their Add buttons
+
+### AC8: The memory switch sits in the same box
+- **Given** the Agent package installed
+- **When** a user opens Your AI
+- **Then** "Let agents remember things about me" is the last row of the "Your AI" box
+
+### Sad path
+
+### AC9: A context the user can't list is refused (R30)
+- **Given** a context the user can't list
+- **When** they `PUT` it in `contextIds`
+- **Then** the response is 400
+
+### AC10: An unknown resource type is refused
+- **Given** a user saving a resource
+- **When** its `resourceTypeId` isn't a registered resource type
+- **Then** the response is 400
+
+### AC11: A failed save shows an error
+- **Given** a user on Your AI and a server that fails the save
+- **When** they add a resource
+- **Then** an error toast shows
+
+### AC12: A failed save puts the list back
+- **Given** a user on Your AI and a server that fails the save
+- **When** they add a resource
+- **Then** the Resources list shows what it showed before
+
+### AC13: Without the Agent package, contexts and resources still show
+- **Given** a site without the Agent package
+- **When** a user opens Your AI
+- **Then** the box shows Contexts and Resources and no memory switch
+
+---
+
+## MEM-19: Agents and prompts use my personal context
+
+As a **backoffice editor**,
+I want agents, and prompts that allow it, to use my personal context,
+so that what they write fits how I work.
+
+### AC1: Always resources go in the system prompt (R28)
+- **Given** a user with an Always resource and an agent with `usePersonalContext` on
+- **When** the user chats with the agent
+- **Then** the system prompt contains the resource
+
+### AC2: On-Demand resources are offered to look up (R28)
+- **Given** a user with an On-Demand resource and an agent with `usePersonalContext` on
+- **When** the user chats with the agent
+- **Then** the resource lookup tool lists it
+
+### AC3: On-Demand resources stay out of the system prompt (R28)
+- **Given** a user with an On-Demand resource and an agent with `usePersonalContext` on
+- **When** the user chats with the agent
+- **Then** the system prompt doesn't contain it
+
+### AC4: Picked contexts load
+- **Given** a user who picked "Nordhem brand voice" and an agent with `usePersonalContext` on
+- **When** the user chats with the agent
+- **Then** the context's Always resources are in the system prompt
+
+### AC5: A context the agent already has loads once (R29)
+- **Given** an agent with "Nordhem brand voice" and a user who also picked it
+- **When** the user chats with the agent
+- **Then** its resources appear once in the system prompt
+
+### AC6: A prompt that allows it loads it (R26)
+- **Given** a prompt with `usePersonalContext` on and a user with an Always resource
+- **When** the user runs the prompt
+- **Then** the system prompt contains the resource
+
+### AC7: Memory switches don't affect it (R33)
+- **Given** the site's memory switch off and a user with an Always resource
+- **When** the user chats with an agent with `usePersonalContext` on
+- **Then** the system prompt contains the resource
+
+### Sad path
+
+### AC8: An agent with it off doesn't load it (R26)
+- **Given** an agent with `usePersonalContext` off and a user with an Always resource
+- **When** the user chats with the agent
+- **Then** the system prompt doesn't contain the resource
+
+### AC9: A prompt with it off doesn't load it (R26)
+- **Given** a prompt with `usePersonalContext` off and a user with an Always resource
+- **When** the user runs the prompt
+- **Then** the system prompt doesn't contain the resource
+
+### AC10: No user, no personal context (R27)
+- **Given** an Automate run of an agent with `usePersonalContext` on
+- **When** the run starts
+- **Then** no personal resource is resolved
+
+### AC11: A caller without the flag never gets it (R26)
+- **Given** a signed-in user with an Always resource
+- **When** a run starts without `Umbraco.AI.UsePersonalContext` set
+- **Then** the personal context resolver returns nothing
+
+---
+
+## MEM-20: Builders choose per prompt and per agent
+
+As an **AI admin**,
+I want to decide whether each prompt and agent uses personal context,
+so that one user's preferences don't change output that must follow a set format.
+
+### AC1: New agents default on
+- **Given** an admin creating an agent
+- **When** they save it without touching the toggle
+- **Then** its config has `usePersonalContext` true
+
+### AC2: Existing agents read as on
+- **Given** an agent whose stored config has no `usePersonalContext`
+- **When** it's read
+- **Then** `usePersonalContext` is true
+
+### AC3: The agent toggle saves
+- **Given** an agent with "Use personal context" on
+- **When** the admin turns it off and saves
+- **Then** the agent's config has `usePersonalContext` false
+
+### AC4: The agent editor shows the toggle
+- **Given** a new agent
+- **When** the admin opens its Settings view
+- **Then** "Use personal context" shows in "Agent Behavior", switched on
+
+### AC5: New prompts default off
+- **Given** an admin creating a prompt
+- **When** they save it without touching the toggle
+- **Then** the prompt has `usePersonalContext` false
+
+### AC6: Existing prompts stay off after upgrade
+- **Given** a prompt saved before this release
+- **When** the migration runs
+- **Then** the prompt has `usePersonalContext` false
+
+### AC7: The prompt toggle saves
+- **Given** a prompt with "Use personal context" off
+- **When** the admin turns it on and saves
+- **Then** `GET` on the prompt returns `usePersonalContext` true
+
+### AC8: The prompt editor shows the toggle
+- **Given** a new prompt
+- **When** the admin opens its Settings view
+- **Then** "Use personal context" shows after "Include Entity Context", switched off
+
+### AC9: The change is in version history
+- **Given** a prompt with "Use personal context" off
+- **When** the admin turns it on and saves
+- **Then** the new version records `usePersonalContext` true
+
+### AC10: Deploy exports it (R32)
+- **Given** a prompt with `usePersonalContext` true
+- **When** Deploy exports it
+- **Then** the artifact has `usePersonalContext` true
+
+### AC11: Deploy imports it (R32)
+- **Given** a prompt artifact with `usePersonalContext` true
+- **When** Deploy imports it
+- **Then** the saved prompt has `usePersonalContext` true
+
+---
+
+## MEM-21: Personal context is cleaned up
+
+As a **site owner**,
+I want personal context removed with what it belongs to,
+so that no personal data or broken links are left behind.
+
+### AC1: Deleting a user deletes their personal context (R31)
+- **Given** a user with personal contexts and resources
+- **When** the user is deleted
+- **Then** none of their personal context is stored
+
+### AC2: Deleting a context drops it from every list (R30)
+- **Given** two users who both picked "Nordhem brand voice"
+- **When** the context is deleted
+- **Then** neither user's `contextIds` contains it
+
+### AC3: Other users keep theirs
+- **Given** two users with personal resources
+- **When** one user is deleted
+- **Then** the other user's resources are still stored
+
+### AC4: Personal context is never deployed (R32)
+- **Given** a user with personal resources
+- **When** Deploy exports AI Contexts
+- **Then** the export has no personal resources

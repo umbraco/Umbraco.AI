@@ -135,3 +135,12 @@
   named for the agent: other agents see only its name. Rejected for now: a "Use with" setting
   per resource (all agents or picked ones), which adds an agent picker per resource and another
   visibility rule nobody has asked for yet. Kept as the follow-up in the memory tiers idea.
+- **Memory and personal context settings move with Deploy** (user's call, 26-11-2026). Replaces
+  MEM-01's "out of scope: moving settings with Deploy" and fixes the architecture's wrong claim
+  that core Deploy doesn't move settings (it has `AISettingsArtifact`, which already carries the
+  disclosure notice mode). Core's settings artifact gains `PersonalContextEnabled` and an
+  `Additional` map for every registered add-on setting, so add-ons need no connector of their
+  own; import skips keys the target doesn't know or values of the wrong type, and a missing
+  value keeps the target's, matching `DisclosureNoticeMode`. Agent config fields already travel;
+  Agent.Deploy only gains specs. Rejected: a per-definition "deployable" flag (no setting needs
+  to stay put yet) and an Agent.Deploy settings connector (duplicates core's).

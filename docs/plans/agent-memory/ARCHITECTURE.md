@@ -157,6 +157,12 @@ add-on settings need no new table.
   its keys through the settings workspace context, so the one Save button saves everything.
 - **Backoffice, tabs:** a package can already add a whole tab with a `workspaceView` manifest
   on the settings workspace. It gets the same context, so its values save with the same button.
+- **Deploy:** core's AI Settings artifact gains an `Additional` map carrying every registered
+  add-on value, so an add-on's settings move with Deploy without a connector of its own. On
+  import only keys the target has registered, with a value of the right type, are saved; the
+  rest are skipped, so a target without the add-on still imports. A missing map keeps the
+  target's values, the way a missing `DisclosureNoticeMode` does today. What gets carried: SPEC
+  R36-R37.
 
 Memory uses a panel: one switch doesn't earn a tab.
 
@@ -227,7 +233,8 @@ lives in core because both agents and prompts read it.
 - **A site-wide kill switch.** Core's AI Settings gains a built-in `PersonalContextEnabled`
   setting (default true) in a "Personal Context" box. When it's off the resolver returns nothing
   and the "Your AI" box hides the Contexts and Resources rows; stored data is kept. It's a core
-  field, not an add-on setting, because core owns personal context.
+  field, not an add-on setting, because core owns personal context. It deploys with AI
+  Settings, like the disclosure notice mode.
 - **Not deployed.** Like memory, it's user data.
 
 ## What changes
@@ -261,6 +268,10 @@ Umbraco.AI.Persistence.SqlServer/Migrations/  UmbracoAI_AddPersonalContext
 Umbraco.AI.Persistence.Sqlite/Migrations/     UmbracoAI_AddPersonalContext
 Umbraco.AI.Web/Api/Management/PersonalContext/
   Controllers/, Models/, Mapping/       GET and PUT /personal-context
+Umbraco.AI.Deploy/
+  Artifacts/AISettingsArtifact.cs       + PersonalContextEnabled, + Additional map
+  Connectors/ServiceConnectors/UmbracoAISettingsServiceConnector.cs
+                                        exports both; import skips unregistered or mistyped keys
 ```
 
 **Backoffice: core** (`Umbraco.AI/src/Umbraco.AI.Web.StaticAssets/Client/src/settings/`)
@@ -403,12 +414,15 @@ conversation/modal/share-picker-modal.*     warning mentions memory
 
 - **Cross-product floor:** the Agent and Prompt packages need the core version that ships the
   settings extension and personal context, so their core range floors move up with this
-  release. Prompt.Deploy needs the Prompt version with the new field.
+  release. Prompt.Deploy needs the Prompt version with the new field, and Umbraco.AI.Deploy
+  the core version with the new settings fields.
 
 Deploy: the prompt's `IncludePersonalContext` is added to the Prompt Deploy artifact and
-connector. Not touched: the rest of Deploy (memory and personal context are user data;
-`MemoryMode` and `IncludePersonalContext` already travel in the agent config JSON; the site-wide
-switch is a setting, which core Deploy doesn't move today),
+connector. Core's AI Settings artifact carries `PersonalContextEnabled` and the add-on settings
+map, which takes the site memory switch and personal memory policy with it (see "Settings
+extension"). The agent's `MemoryMode` and `IncludePersonalContext` already travel in the agent
+config JSON, so Agent.Deploy only gains specs. Not touched: memories and personal context,
+which are user data and never deployed;
 search index (memory isn't searchable content), cache refreshers (read from the database once
 per run, small and per user), audit log (tool calls are already logged by the run).
 

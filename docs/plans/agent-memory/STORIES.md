@@ -1,6 +1,6 @@
 # Stories: Agent memory
 
-**21 stories, 188 criteria.** Story ids are used by `PLAN.md` and the spec files, so never
+**22 stories, 200 criteria.** Story ids are used by `PLAN.md` and the spec files, so never
 renumber them.
 
 <details>
@@ -56,6 +56,10 @@ renumber them.
 - [MEM-20](#mem-20-builders-choose-per-prompt-and-per-agent) Builders choose per prompt and per agent, 11 criteria
 - [MEM-21](#mem-21-personal-context-is-cleaned-up) Personal context is cleaned up, 4 criteria
 
+**Deploy**
+
+- [MEM-22](#mem-22-memory-and-personal-context-settings-move-with-deploy) Memory and personal context settings move with Deploy, 12 criteria
+
 <details>
 <summary>Ready and Done</summary>
 
@@ -75,8 +79,6 @@ the port is agreed as a separate PR).
 As a **developer of an Umbraco.AI add-on package**,
 I want to register my own settings and show them as a box on the AI Settings screen,
 so that admins configure my package in the same place, with the same Save button.
-
-Out of scope: moving settings with Deploy.
 
 ### AC1: A registered setting is returned with its default
 - **Given** an add-on registered `Test.Flag` (bool, default `true`) and nothing is saved
@@ -1214,3 +1216,79 @@ so that no personal data or broken links are left behind.
 - **Given** a user with personal resources
 - **When** Deploy exports AI Contexts
 - **Then** the export has no personal resources
+
+---
+
+## MEM-22: Memory and personal context settings move with Deploy
+
+As a **site admin with more than one environment**,
+I want the memory and personal context settings to move with Deploy,
+so that what I set up and test on staging behaves the same on live.
+
+Out of scope: deploying memories or personal context, which are user data (R32, R39).
+
+### AC1: Export carries the Personal Context switch (R36)
+- **Given** the site's Personal Context switch is off
+- **When** Deploy exports AI Settings
+- **Then** the artifact has `personalContextEnabled` false
+
+### AC2: Import sets the Personal Context switch (R36)
+- **Given** an AI Settings artifact with `personalContextEnabled` false
+- **When** Deploy imports it
+- **Then** the target's `personalContextEnabled` is false
+
+### AC3: Export carries add-on settings (R36)
+- **Given** `Agent.Memory.Enabled` is saved as `false`
+- **When** Deploy exports AI Settings
+- **Then** the artifact's `additional["Agent.Memory.Enabled"]` is `false`
+
+### AC4: Import saves add-on settings (R36)
+- **Given** an AI Settings artifact with `additional: { "Agent.Memory.PersonalMemory": "OptIn" }`
+  and a target with the Agent package
+- **When** Deploy imports it
+- **Then** `GetSettingValueAsync<string>("Agent.Memory.PersonalMemory")` returns `OptIn`
+
+### AC5: An agent's memory mode travels (R38)
+- **Given** an agent with `memoryMode` `Work`
+- **When** Deploy exports it and imports the artifact
+- **Then** the imported agent has `memoryMode` `Work`
+
+### AC6: An agent's Include Personal Context travels (R38)
+- **Given** an agent with `includePersonalContext` false
+- **When** Deploy exports it and imports the artifact
+- **Then** the imported agent has `includePersonalContext` false
+
+### Sad path
+
+### AC7: An older artifact keeps the target's switch (R37)
+- **Given** an AI Settings artifact with no `personalContextEnabled` and a target with the
+  switch off
+- **When** Deploy imports it
+- **Then** the target's `personalContextEnabled` is still false
+
+### AC8: A setting the target doesn't know is skipped (R37)
+- **Given** an AI Settings artifact with `additional: { "Agent.Memory.Enabled": false }` and a
+  target without the Agent package
+- **When** Deploy imports it
+- **Then** no value is stored for `Agent.Memory.Enabled`
+
+### AC9: The rest still import when one is skipped (R37)
+- **Given** the artifact from AC8, also setting a default chat profile
+- **When** Deploy imports it
+- **Then** the target's default chat profile is the artifact's
+
+### AC10: A value of the wrong type is skipped (R37)
+- **Given** a target with `Agent.Memory.Enabled` registered as a bool and saved as `true`, and an
+  artifact with `additional: { "Agent.Memory.Enabled": "yes" }`
+- **When** Deploy imports it
+- **Then** the target's `Agent.Memory.Enabled` is still `true`
+
+### AC11: An older agent artifact reads as on (R38)
+- **Given** an agent artifact whose config has no `includePersonalContext`
+- **When** Deploy imports it
+- **Then** the imported agent has `includePersonalContext` true
+
+### AC12: Memories don't travel (R39)
+- **Given** an agent with "you + this agent" memories
+- **When** Deploy exports it
+- **Then** the artifact contains none of the memories' text

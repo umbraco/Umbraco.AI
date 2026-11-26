@@ -1,6 +1,6 @@
 # Plan: Agent memory
 
-**43 tasks in 9 areas**, in build order. Core settings and core personal context come first
+**45 tasks in 10 areas**, in build order. Core settings and core personal context come first
 because the Agent and Prompt packages build on them; Workspace comes last because it plugs into
 the Agent package's space hook. Each task names its stories (see STORIES.md) and the specs that must go green.
 
@@ -342,15 +342,37 @@ the Agent package's space hook. Each task names its stories (see STORIES.md) and
   Acceptance: the listed specs green; both show on the demo site.
   depends-on: T18, T23. parallel-group: D
 
+## Deploy
+
+- [ ] **T44** - story: MEM-22 (AC1-AC4, AC7-AC10). In `Umbraco.AI.Deploy`: `AISettingsArtifact`
+  gains `PersonalContextEnabled` (nullable) and an `Additional` map. `UmbracoAISettingsServiceConnector`
+  exports both; on import it sets `PersonalContextEnabled` only when the artifact has a value, and
+  saves each additional value through `IAISettingsService`, skipping keys the target hasn't
+  registered or whose value has the wrong type. No new registration: the connector exists. Follows
+  ARCHITECTURE "Settings extension".
+  Acceptance: MEM-22 AC1-AC4, AC7-AC10 specs green; `dotnet build
+  Umbraco.AI.Deploy/Umbraco.AI.Deploy.slnx`.
+  depends-on: T1, T43. parallel-group: E
+
+- [ ] **T45** - story: MEM-22 (AC5, AC6, AC11, AC12). In `Umbraco.AI.Agent.Deploy`: connector
+  specs that `memoryMode` and `includePersonalContext` round-trip in the agent config JSON, that a
+  missing `includePersonalContext` imports as true, and that the export holds no memories.
+  `UmbracoAIAgentServiceConnector` already serialises the config, so this should need no
+  production change; fix the connector if a spec shows otherwise.
+  Acceptance: MEM-22 AC5, AC6, AC11, AC12 specs green; `dotnet build
+  Umbraco.AI.Agent.Deploy/Umbraco.AI.Agent.Deploy.slnx`.
+  depends-on: T5, T36. parallel-group: E
+
 ## Shipping
 
 - [ ] **T27** - story: MEM-01 (all). Cross-product floors: the Agent and Prompt packages'
   `Umbraco.AI.Core` range floors move to the core version with the settings extension and
   personal context, Workspace's Agent floor moves to the version with the space hook, and
-  Prompt.Deploy's Prompt floor moves to the version with `IncludePersonalContext`. Test with
+  Prompt.Deploy's Prompt floor moves to the version with `IncludePersonalContext`, and
+  Umbraco.AI.Deploy's core floor moves to the version with the new settings fields. Test with
   `UseProjectReferences=false`.
   Acceptance: each product's slnx builds with ranges.
-  depends-on: T24, T25, T26, T38, T41, T42
+  depends-on: T24, T25, T26, T38, T41, T42, T44, T45
 
 - [ ] **T28** - story: MEM-04 (AC1). Full smoke test on the demo site with Anthropic: every
   screen, the five moments (first run, mistake, wait, finish, return), Workspace prompt cache

@@ -234,6 +234,17 @@ Personal context is the same for every agent and prompt the user runs; nothing s
 resource to one agent. Notes meant for one agent go in an `On-Demand` resource named for it
 ("SEO agent: how I like meta descriptions"), so other agents see only its name.
 
+**Deploy**
+
+- **R36** Deploying AI Settings carries `personalContextEnabled` and every registered add-on
+  setting, which includes the site memory switch and the personal memory policy.
+- **R37** On import, an add-on setting the target hasn't registered, or whose value has the
+  wrong type, is skipped; the rest still import. A setting the artifact has no value for keeps
+  the target's value.
+- **R38** An agent's `memoryMode` and `includePersonalContext` travel with the agent. An agent
+  artifact with no `includePersonalContext` imports as `true`.
+- **R39** Memories are never deployed, like personal context (R32).
+
 ## AI Settings: Personal Context and Agent Memory
 
 Opens from AI > Settings. A new built-in "Personal Context" box (core) after "Transparency"

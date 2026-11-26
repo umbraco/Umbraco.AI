@@ -12,40 +12,42 @@ only when the agent or prompt running allows it. See "Personal context".
 
 ![Memory flow for one run](./diagrams/memory-run-flow.svg)
 
-> [!IMPORTANT]
-> **8 guesses need your OK.**
->
-> 1. **No `recall` tool in v1.** Every active memory in both layers goes into the prompt, capped
->    per space (see SPEC's limits). Lasting knowledge moves to personal resources, which
->    already load on demand, so `recall` only comes if memories alone outgrow the caps.\
->    *If not:* add `recall` now and inject only the newest few; costs a tool round trip before
->    the agent knows anything.
-> 2. **`forget` is a tool too**, so "forget that" works in chat, not only in the lists.\
->    *If not:* `remember` only; forgetting happens in the UI.
-> 3. **The sidebar has no frozen snapshot.** Its runs keep no session state, so the memory block
->    is rebuilt each run. It still only changes when memory changes, so the cost is one cache
->    miss after a save.\
->    *If not:* store the sidebar snapshot server-side, keyed by thread id, with an expiry.
-> 4. **The Decision check can only make a verdict stricter.** It can hold or refuse a save the
->    rules passed, never pass one the rules held or refused. If it errors or has no answer, the
->    rules' verdict stands (see "Suspect check").\
->    *If not:* the Decision check can also pass a save the rules held, trusting the model over
->    the rules.
-> 5. **Held memories expire after 7 days** if nobody keeps them, and replaced memories are
->    purged 7 days after being replaced. Both are cleared when the list is next read. No
->    background job.\
->    *If not:* they wait forever, or a scheduled job clears them.
-> 6. **A chat that has ever been shared counts as shared**, read from the existing share rows
->    (revoked rows are kept with `DateRevoked`). No new column on the conversation.\
->    *If not:* a `MemorySpaceLockedAt` column on the conversation, set on first share.
-> 7. **Personal context has its own two core tables**, shaped like a Workspace project's
->    context ids and resources, not a hidden AI Context owned by the user.\
->    *If not:* a user-owned `AIContext` with an owner column. It reuses versioning, but every
->    context list, picker, Deploy export and permission check must then filter it out.
-> 8. **The caller opts in with a runtime-context flag.** The personal context resolver does
->    nothing unless the run sets `Umbraco.AI.IncludePersonalContext`, so core features that don't
->    know about it (tests, Search, Automate) never pick it up.\
->    *If not:* it loads for every run with a user, and each feature opts out instead.
+<details>
+<summary>8 guesses, agreed 26-11-2026</summary>
+
+1. **No `recall` tool in v1.** Every active memory in both layers goes into the prompt, capped
+   per space (see SPEC's limits). Lasting knowledge moves to personal resources, which
+   already load on demand, so `recall` only comes if memories alone outgrow the caps.\
+   *If not:* add `recall` now and inject only the newest few; costs a tool round trip before
+   the agent knows anything.
+2. **`forget` is a tool too**, so "forget that" works in chat, not only in the lists.\
+   *If not:* `remember` only; forgetting happens in the UI.
+3. **The sidebar has no frozen snapshot.** Its runs keep no session state, so the memory block
+   is rebuilt each run. It still only changes when memory changes, so the cost is one cache
+   miss after a save.\
+   *If not:* store the sidebar snapshot server-side, keyed by thread id, with an expiry.
+4. **The Decision check can only make a verdict stricter.** It can hold or refuse a save the
+   rules passed, never pass one the rules held or refused. If it errors or has no answer, the
+   rules' verdict stands (see "Suspect check").\
+   *If not:* the Decision check can also pass a save the rules held, trusting the model over
+   the rules.
+5. **Held memories expire after 7 days** if nobody keeps them, and replaced memories are
+   purged 7 days after being replaced. Both are cleared when the list is next read. No
+   background job.\
+   *If not:* they wait forever, or a scheduled job clears them.
+6. **A chat that has ever been shared counts as shared**, read from the existing share rows
+   (revoked rows are kept with `DateRevoked`). No new column on the conversation.\
+   *If not:* a `MemorySpaceLockedAt` column on the conversation, set on first share.
+7. **Personal context has its own two core tables**, shaped like a Workspace project's
+   context ids and resources, not a hidden AI Context owned by the user.\
+   *If not:* a user-owned `AIContext` with an owner column. It reuses versioning, but every
+   context list, picker, Deploy export and permission check must then filter it out.
+8. **The caller opts in with a runtime-context flag.** The personal context resolver does
+   nothing unless the run sets `Umbraco.AI.IncludePersonalContext`, so core features that don't
+   know about it (tests, Search, Automate) never pick it up.\
+   *If not:* it loads for every run with a user, and each feature opts out instead.
+
+</details>
 
 ## Decisions
 

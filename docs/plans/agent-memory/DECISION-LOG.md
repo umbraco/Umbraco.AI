@@ -127,3 +127,6 @@
   Settings, on by default, stops every prompt and agent loading it and keeps stored data, like
   the memory switch. Gives admins a one-click stop for governance or cost. Rejected: off by
   default (hides the feature until an admin finds it).
+- **Every open guess agreed** (user's call, 26-11-2026). The brief's 10, architecture's 8,
+  spec's 9, stories' 2 and plan's 2 guesses stand as written. Each file keeps its list in a
+  collapsed "agreed" section, so body references like "(guess 4)" still resolve.

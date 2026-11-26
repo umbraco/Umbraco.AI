@@ -3,17 +3,19 @@
 **21 stories, 188 criteria.** Story ids are used by `PLAN.md` and the spec files, so never
 renumber them.
 
-> [!IMPORTANT]
-> **2 guesses need your OK.**
->
-> 1. **Ready and Done use the plugin's starting points** (below), plus "ported to v17" in Done,
->    since the brief targets both lines.\
->    *If not:* tell me your team's versions and I'll swap them in.
-> 2. **MEM-06's text checks are matched on fixed phrases** (a 40-character shared run with a
->    tool result, words like "always" or "ignore" at the start, a link, an email address or a
->    code fence), so specs can pin them. The exact list is the builder's to tune inside those
->    shapes.\
->    *If not:* the specs only check the outcome on one clear example of each.
+<details>
+<summary>2 guesses, agreed 26-11-2026</summary>
+
+1. **Ready and Done use the plugin's starting points** (below), plus "ported to v17" in Done,
+   since the brief targets both lines.\
+   *If not:* tell me your team's versions and I'll swap them in.
+2. **MEM-06's text checks are matched on fixed phrases** (a 40-character shared run with a
+   tool result, words like "always" or "ignore" at the start, a link, an email address or a
+   code fence), so specs can pin them. The exact list is the builder's to tune inside those
+   shapes.\
+   *If not:* the specs only check the outcome on one clear example of each.
+
+</details>
 
 **Core: settings**
 

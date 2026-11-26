@@ -4,16 +4,18 @@
 because the Agent and Prompt packages build on them; Workspace comes last because it plugs into
 the Agent package's space hook. Each task names its stories (see STORIES.md) and the specs that must go green.
 
-> [!IMPORTANT]
-> **2 guesses need your OK.**
->
-> 1. **Undo is `DELETE /{id}`.** Deleting a memory that replaced others within the last 7 days
->    makes them active again (R22), from the chat note and from the lists alike. No separate
->    undo route.\
->    *If not:* a `POST /{id}/undo` route, and list deletes don't restore anything.
-> 2. **Discard on a held note is `DELETE /{id}` too.** A held memory never replaced anything,
->    so nothing comes back.\
->    *If not:* a `POST /{id}/discard` route that keeps a record of the discard.
+<details>
+<summary>2 guesses, agreed 26-11-2026</summary>
+
+1. **Undo is `DELETE /{id}`.** Deleting a memory that replaced others within the last 7 days
+   makes them active again (R22), from the chat note and from the lists alike. No separate
+   undo route.\
+   *If not:* a `POST /{id}/undo` route, and list deletes don't restore anything.
+2. **Discard on a held note is `DELETE /{id}` too.** A held memory never replaced anything,
+   so nothing comes back.\
+   *If not:* a `POST /{id}/discard` route that keeps a record of the discard.
+
+</details>
 
 ## Core: settings extension
 

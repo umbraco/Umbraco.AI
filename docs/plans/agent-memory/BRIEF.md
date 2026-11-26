@@ -6,44 +6,46 @@ rebrand") in every new conversation. Agents should be able to save a fact and us
 later chat, without that fact turning up somewhere it doesn't belong, and without asking the
 user where to put it every time.
 
-> [!IMPORTANT]
-> **10 guesses need you.**
->
-> 1. **"About you" is read on your turns everywhere**, including projects and shared chats.
->    It only holds preferences about you, so it shapes *how* the agent answers you, not *what*
->    it knows about the work.\
->    *If not:* shared spaces skip "about you", and your preferences stop working there.
-> 2. **"About you" is shared by every agent you talk to**, not kept per agent. Your language and
->    tone don't change between agents.\
->    *If not:* each agent keeps its own "about you", and you repeat preferences per agent.
-> 3. **In a private chat outside a project, the space is "you + this agent".** That's where a
->    specialized agent learns how you work with it.\
->    *If not:* private chats share one space across all agents, so a specialized agent's
->    learning mixes with every other agent's.
-> 4. **Project and shared-chat memory belongs to the space, not to whoever saved it.** Everyone
->    in the space reads it and can edit or delete it. Each memory shows who saved it and when,
->    and it stays when that person leaves.\
->    *If not:* only the owner can edit or delete, and members can only add.
-> 5. **Once a chat is shared, its space switches to the chat's own memory for good**, even after
->    the share is revoked. What the agent learned before sharing stays in "you + this agent".\
->    *If not:* the chat flips back to "you + this agent" when the last share goes, and the agent
->    may suddenly know things the chat never showed.
-> 6. **The agent picks the layer itself.** If unsure, it saves to the most private place. Each
->    save shows a short note saying where it went, with a one-click move or undo. It only asks
->    when something that sounds personal is said in a shared space.\
->    *If not:* the agent asks before every save, which is safer but tiring.
-> 7. **You can see, edit and delete every memory you own**, and they're deleted when your user
->    is. Hidden memory is not acceptable for GDPR (right of access and erasure) or for trust.\
->    *If not:* memory is write-only from the agent's side, and we need another answer for
->    erasure requests.
-> 8. **v1 covers Copilot Workspace and the Copilot sidebar.** Automate runs have no user, so
->    "about you" and "you + this agent" have no owner there.\
->    *If not:* Automate needs its own space (per automation?), with its own risks.
-> 9. **Ships on v18 and v17 together**, per the keep-versions-in-sync policy.\
->    *If not:* v18 first, v17 later.
-> 10. **Memory is opt-in per agent.** An admin turns it on for an agent; it's off by default.\
->     *If not:* on for every agent, which makes the injection risk (risk 2) everyone's problem
->     on upgrade.
+<details>
+<summary>10 guesses, agreed 26-11-2026</summary>
+
+1. **"About you" is read on your turns everywhere**, including projects and shared chats.
+   It only holds preferences about you, so it shapes *how* the agent answers you, not *what*
+   it knows about the work.\
+   *If not:* shared spaces skip "about you", and your preferences stop working there.
+2. **"About you" is shared by every agent you talk to**, not kept per agent. Your language and
+   tone don't change between agents.\
+   *If not:* each agent keeps its own "about you", and you repeat preferences per agent.
+3. **In a private chat outside a project, the space is "you + this agent".** That's where a
+   specialized agent learns how you work with it.\
+   *If not:* private chats share one space across all agents, so a specialized agent's
+   learning mixes with every other agent's.
+4. **Project and shared-chat memory belongs to the space, not to whoever saved it.** Everyone
+   in the space reads it and can edit or delete it. Each memory shows who saved it and when,
+   and it stays when that person leaves.\
+   *If not:* only the owner can edit or delete, and members can only add.
+5. **Once a chat is shared, its space switches to the chat's own memory for good**, even after
+   the share is revoked. What the agent learned before sharing stays in "you + this agent".\
+   *If not:* the chat flips back to "you + this agent" when the last share goes, and the agent
+   may suddenly know things the chat never showed.
+6. **The agent picks the layer itself.** If unsure, it saves to the most private place. Each
+   save shows a short note saying where it went, with a one-click move or undo. It only asks
+   when something that sounds personal is said in a shared space.\
+   *If not:* the agent asks before every save, which is safer but tiring.
+7. **You can see, edit and delete every memory you own**, and they're deleted when your user
+   is. Hidden memory is not acceptable for GDPR (right of access and erasure) or for trust.\
+   *If not:* memory is write-only from the agent's side, and we need another answer for
+   erasure requests.
+8. **v1 covers Copilot Workspace and the Copilot sidebar.** Automate runs have no user, so
+   "about you" and "you + this agent" have no owner there.\
+   *If not:* Automate needs its own space (per automation?), with its own risks.
+9. **Ships on v18 and v17 together**, per the keep-versions-in-sync policy.\
+   *If not:* v18 first, v17 later.
+10. **Memory is opt-in per agent.** An admin turns it on for an agent; it's off by default.\
+    *If not:* on for every agent, which makes the injection risk (risk 2) everyone's problem
+    on upgrade.
+
+</details>
 
 ## The layers
 

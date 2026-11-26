@@ -1,41 +1,43 @@
 # Spec: Agent memory
 
-> [!IMPORTANT]
-> **9 guesses need your OK.**
->
-> 1. **A memory is at most 300 characters.** Short facts, not documents. No consumer product
->    publishes a per-memory limit; this matches the one-fact-per-item lists ChatGPT and Claude
->    show (RESEARCH.md, "Published limits").\
->    *If not:* up to 500 (the column's size), which costs more prompt per memory.
-> 2. **Caps: 30 "about you" memories per user, 50 per space.** Full, that's 24,000 characters
->    loaded each run, in line with the 25 KB Claude Code loads from its memory file, the only
->    published always-loaded budget we found. A full layer makes `remember`
->    fail with "memory is full: merge or forget something first", and the agent does that or
->    tells the user.\
->    *If not:* bigger caps, which brings `recall` forward.
-> 3. **Shared-chat recipients can read the chat's memory but not change it**, matching today's
->    read-only shares. They get edit rights when collaborative chats ship.\
->    *If not:* they can delete memories now, before they can even reply.
-> 4. **A recipient outside the project never sees the project's memory list.** They only see
->    replies, the same as attachments today, and the share warning says so.\
->    *If not:* the shared chat shows the project's memory read-only to them.
-> 5. **"Your AI" lives in the user profile** (the panel that opens from your avatar), so
->    sidebar-only users can reach it.\
->    *If not:* a page in the Copilot Workspace section, which sidebar-only users can't open.
-> 6. **New agents default to `Off`; the site's memory switch defaults to on, and personal
->    memory to `Allowed`.** Memory starts only when an admin picks a mode for an agent.\
->    *If not:* new agents default to `Work`, or personal memory defaults to `OptIn`.
-> 7. **The personal switch only covers "about you".** Turned off, agents stop reading and saving
->    "about you" for that user; project, chat and "you + this agent" memory carry on.\
->    *If not:* it turns off every layer for that user, which leaves shared projects learning
->    from everyone but them.
-> 8. **Turning personal memory off keeps the stored "about you" memories,** whether the user
->    switches it off or an admin sets the site to `NotAllowed`. The list says they're paused;
->    delete is a separate, explicit action.\
->    *If not:* switching off deletes them.
-> 9. **No size limit on personal resources** beyond what AI Context resources already allow.
->    `Always` resources cost prompt on every run, as they do on a context.\
->    *If not:* a cap on `Always` resources per user, such as 5 or a character total.
+<details>
+<summary>9 guesses, agreed 26-11-2026</summary>
+
+1. **A memory is at most 300 characters.** Short facts, not documents. No consumer product
+   publishes a per-memory limit; this matches the one-fact-per-item lists ChatGPT and Claude
+   show (RESEARCH.md, "Published limits").\
+   *If not:* up to 500 (the column's size), which costs more prompt per memory.
+2. **Caps: 30 "about you" memories per user, 50 per space.** Full, that's 24,000 characters
+   loaded each run, in line with the 25 KB Claude Code loads from its memory file, the only
+   published always-loaded budget we found. A full layer makes `remember`
+   fail with "memory is full: merge or forget something first", and the agent does that or
+   tells the user.\
+   *If not:* bigger caps, which brings `recall` forward.
+3. **Shared-chat recipients can read the chat's memory but not change it**, matching today's
+   read-only shares. They get edit rights when collaborative chats ship.\
+   *If not:* they can delete memories now, before they can even reply.
+4. **A recipient outside the project never sees the project's memory list.** They only see
+   replies, the same as attachments today, and the share warning says so.\
+   *If not:* the shared chat shows the project's memory read-only to them.
+5. **"Your AI" lives in the user profile** (the panel that opens from your avatar), so
+   sidebar-only users can reach it.\
+   *If not:* a page in the Copilot Workspace section, which sidebar-only users can't open.
+6. **New agents default to `Off`; the site's memory switch defaults to on, and personal
+   memory to `Allowed`.** Memory starts only when an admin picks a mode for an agent.\
+   *If not:* new agents default to `Work`, or personal memory defaults to `OptIn`.
+7. **The personal switch only covers "about you".** Turned off, agents stop reading and saving
+   "about you" for that user; project, chat and "you + this agent" memory carry on.\
+   *If not:* it turns off every layer for that user, which leaves shared projects learning
+   from everyone but them.
+8. **Turning personal memory off keeps the stored "about you" memories,** whether the user
+   switches it off or an admin sets the site to `NotAllowed`. The list says they're paused;
+   delete is a separate, explicit action.\
+   *If not:* switching off deletes them.
+9. **No size limit on personal resources** beyond what AI Context resources already allow.
+   `Always` resources cost prompt on every run, as they do on a context.\
+   *If not:* a cap on `Always` resources per user, such as 5 or a character total.
+
+</details>
 
 ## Endpoints
 

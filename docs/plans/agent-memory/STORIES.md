@@ -1,6 +1,6 @@
 # Stories: Agent memory
 
-**16 stories, 131 criteria.** Story ids are used by `PLAN.md` and the spec files, so never
+**17 stories, 141 criteria.** Story ids are used by `PLAN.md` and the spec files, so never
 renumber them.
 
 > [!IMPORTANT]
@@ -26,6 +26,7 @@ renumber them.
 - [MEM-04](#mem-04-the-agent-remembers-between-private-chats) The agent remembers between private chats, 12 criteria
 - [MEM-05](#mem-05-merge-instead-of-repeat) Merge instead of repeat, 9 criteria
 - [MEM-06](#mem-06-suspect-saves-are-held) Suspect saves are held, 9 criteria
+- [MEM-17](#mem-17-plug-in-extra-memory-checks) Plug in extra memory checks, 10 criteria
 - [MEM-07](#mem-07-forget-in-chat) Forget in chat, 4 criteria
 - [MEM-08](#mem-08-memory-keeps-the-prompt-cache-warm) Memory keeps the prompt cache warm, 7 criteria
 - [MEM-09](#mem-09-other-packages-add-their-own-memory-spaces) Other packages add their own memory spaces, 4 criteria
@@ -870,3 +871,66 @@ so that no orphaned personal data is left behind.
 - **Given** a memory replaced 8 days ago
 - **When** its layer's list is read
 - **Then** the replaced row is deleted
+
+---
+
+## MEM-17: Plug in extra memory checks
+
+As a **site admin who wants stronger protection against poisoned memories**,
+I want saves also checked by an AI classifier, such as TypeSafe's Jev, through the default
+Decision profile,
+so that suspect saves the fixed rules miss are held too.
+
+Out of scope: a separate memory-check profile setting.
+
+### AC1: A registered check can hold a save
+- **Given** a registered `IAIMemorySaveCheck` that answers held for any text
+- **When** the agent saves a plain fact the rules pass
+- **Then** the result is `held`
+
+### AC2: A not saved stops later checks
+- **Given** a registered check after the rules check that records whether it ran
+- **When** the agent saves text that looks like a secret
+- **Then** the later check didn't run
+
+### AC3: Decision can hold a save the rules passed (R9a)
+- **Given** the Decision feature on, a default Decision profile that answers "an order to the agent"
+- **When** the agent saves a plain fact the rules pass
+- **Then** the result is `held` with reason `instruction-like`
+
+### AC4: Decision can refuse a secret the rules missed (R9a)
+- **Given** the Decision feature on, a default Decision profile that answers "a secret"
+- **When** the agent saves a plain fact the rules pass
+- **Then** the result is `not_saved`
+
+### AC5: Decision answering safe changes nothing
+- **Given** the Decision feature on, a default Decision profile that answers "safe"
+- **When** the agent saves a plain fact the rules pass
+- **Then** the result is `saved`
+
+### Sad path
+
+### AC6: Decision can't pass what the rules held (R9a)
+- **Given** the Decision feature on, a default Decision profile that answers "safe"
+- **When** the agent saves text the rules hold as `echoes-content`
+- **Then** the result is `held`
+
+### AC7: No default Decision profile, rules only
+- **Given** the Decision feature on and no default Decision profile
+- **When** the agent saves a plain fact
+- **Then** the result is `saved`
+
+### AC8: Decision feature off, rules only
+- **Given** the Decision feature off
+- **When** the agent saves a plain fact
+- **Then** the Decision service isn't called
+
+### AC9: A failing Decision call falls back to the rules
+- **Given** a default Decision profile whose call throws
+- **When** the agent saves a plain fact
+- **Then** the result is `saved`
+
+### AC10: A failing Decision call is logged
+- **Given** a default Decision profile whose call throws
+- **When** the agent saves a plain fact
+- **Then** a warning is logged

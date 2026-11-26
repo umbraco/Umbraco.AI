@@ -141,6 +141,9 @@ Offered only when the agent has memory on and a backoffice user is signed in.
 - **R7** Held memories are never injected. They expire 7 days after saving unless kept.
 - **R8** A save that looks like a secret is never stored, and the tool says why.
 - **R9** The suspect check (ARCHITECTURE) holds a save; it never blocks the run.
+- **R9a** With the Decision feature on and a default Decision profile set, every save is also
+  asked of that profile. Its answer can hold or refuse a save, never pass one the rules held or
+  refused. Without either, or if the call fails, saving works on the rules alone.
 - **R10** The user can read and change only their own "about you" and "you + this agent"
   memories.
 - **R11** In a project, only the project's owner can change its memories (members later).

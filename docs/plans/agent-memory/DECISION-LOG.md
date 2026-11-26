@@ -75,5 +75,11 @@
 - **Two wire tasks for the provider** (T12 sidebar, T23 Workspace). The sidebar path proves the
   provider alone; Workspace needs the resolver and runtime context ids, a separate failure.
 - **Undo and Discard reuse `DELETE`** (plan guess 1 and 2). Fewer routes; Undo's restore of
-  replaced memories (R22) lives in the service's delete.
-
+  replaced memories (R22) lives in the service's delete.- **Suspect checks are pluggable, with a Decision check** (user's call, 26-11-2026). Replaces
+  "rules only, no extra AI call". The check uses the default Decision profile the same way auto
+  agent selection does, so a site can point it at TypeSafe's Jev without the Agent package
+  knowing about TypeSafe. Rejected: a TypeSafe-only check (ties the hook to one provider) and a
+  separate memory profile setting (not needed yet; the default profile is enough to start).- **Hooks use Umbraco collection builders** (user's call, 26-11-2026). Space resolvers and save
+  checks are ordered (`OrderedCollectionBuilderBase`, like `AIAgentSelectors()`), so packages
+  place theirs with `InsertBefore`/`Append`. Settings providers are unordered
+  (`LazyCollectionBuilderBase`, like `AIGuardrailEvaluators()`).

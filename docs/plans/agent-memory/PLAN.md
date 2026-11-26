@@ -1,6 +1,6 @@
 # Plan: Agent memory
 
-**28 tasks in 7 areas**, in build order. Core settings come first because the Agent package's
+**29 tasks in 7 areas**, in build order. Core settings come first because the Agent package's
 settings panel needs them; Workspace comes last because it plugs into the Agent package's space
 hook. Each task names its stories (see STORIES.md) and the specs that must go green.
 
@@ -18,8 +18,9 @@ hook. Each task names its stories (see STORIES.md) and the specs that must go gr
 ## Core: settings extension
 
 - [ ] **T1** - story: MEM-01 (AC1-AC4, AC7, AC8). Server side of the settings extension in
-  `Umbraco.AI/src`: `AISettingDefinition` (key, type, default), `AISettingDefinitionCollection`
-  + builder + `AISettingDefinitions()` extension, `AISettings` gains an additional-values map,
+  `Umbraco.AI/src`: `AISettingDefinition` (key, type, default), `IAISettingsProvider`,
+  `AISettingsProviderCollection` + `LazyCollectionBuilderBase` builder + `AISettingsProviders()`
+  extension (mirror `AIGuardrailEvaluators()`), `AISettings` gains an additional-values map,
   `IAISettingsService.GetSettingValueAsync<T>(key)` with validation of unknown keys and types,
   `EFCoreAISettingsRepository` reads and writes additional keys as `AISettingsEntity` rows,
   settings request/response models gain `additional`. Follows ARCHITECTURE "Settings extension".
@@ -59,22 +60,36 @@ hook. Each task names its stories (see STORIES.md) and the specs that must go gr
   Acceptance: MEM-03 AC1, AC2 specs green.
   depends-on: none. parallel-group: A
 
-- [ ] **T6** - story: MEM-04 (AC9, AC10), MEM-06 (AC1-AC4). `AIMemorySuspectCheck`: secret shapes →
-  not saved; echoes a tool result → held `echoes-content`; instruction-like or link/email/code
-  after tool output → held `instruction-like`; shared space after tool output → held
-  `shared-after-content`. Pure function over the text, the run's messages and the target space.
-  Acceptance: MEM-04 AC9, AC10 and MEM-06 AC1-AC4 specs green.
+- [ ] **T6** - story: MEM-04 (AC9, AC10), MEM-06 (AC1-AC4), MEM-17 (AC1, AC2). The check hook
+  and the rules: public `IAIMemorySaveCheck`, `AIMemorySaveCheckCollection` +
+  `OrderedCollectionBuilderBase` builder + `AIMemorySaveChecks()` (mirror `AIAgentSelectors()`) (strictest answer wins; not saved stops the rest), and
+  `AIMemoryRulesCheck` first: secret shapes → not saved; echoes a tool result → held
+  `echoes-content`; instruction-like or link/email/code after tool output → held
+  `instruction-like`; shared space after tool output → held `shared-after-content`. Follows
+  ARCHITECTURE "Suspect check".
+  Acceptance: MEM-04 AC9, AC10, MEM-06 AC1-AC4 and MEM-17 AC1, AC2 specs green.
   depends-on: T4. parallel-group: B
 
+- [ ] **T29** - story: MEM-17 (AC3-AC10). `DecisionMemorySaveCheck`, second in the collection:
+  one `AIChoiceDecisionQuestion` (safe, an order to the agent, copied from content, a secret)
+  through `IAIDecisionService` on the default Decision profile, mapped to held
+  `instruction-like`, held `echoes-content` or not saved; no opinion when the Decision feature
+  is off, no default profile is set, or the call throws (warning logged). Mirrors
+  `DecisionAgentSelector`.
+  Acceptance: MEM-17 AC3-AC10 specs green; on the demo site with a TypeSafe (Jev) default
+  Decision profile, an order-like save the rules pass comes back held.
+  depends-on: T6
+
 - [ ] **T7** - story: MEM-09 (AC1, AC2). The space hook: public `IAIMemorySpaceResolver`
-  (claim a run; can read; can write), `AIMemorySpaceResolverCollection` + builder, built-in
+  (claim a run; can read; can write), `AIMemorySpaceResolverCollection` + `OrderedCollectionBuilderBase` builder +
+  `AIMemorySpaceResolvers()` (mirror `AIAgentSelectors()`), built-in
   `UserAgentMemorySpaceResolver` always last.
   Acceptance: MEM-09 AC1, AC2 specs green.
   depends-on: T4. parallel-group: B
 
 - [ ] **T8** - story: MEM-02 (AC3-AC6), MEM-12 (AC5, AC7-AC9), MEM-03 (AC3, AC5, AC6).
   Effective memory: `AIMemorySettings` registers `Agent.Memory.Enabled` (default true) and
-  `Agent.Memory.PersonalMemory` (default `Allowed`) through T1; `AIPersonalMemoryPolicy`;
+  `Agent.Memory.PersonalMemory` (default `Allowed`) through an `IAISettingsProvider` added with `AISettingsProviders()` (T1); `AIPersonalMemoryPolicy`;
   `AIMemoryUserPreference` stores the personal switch with `IUserDataService` only once flipped.
   One method works out, for a run, which layers may be read and saved (R1-R1f).
   Acceptance: the listed specs green.
@@ -97,7 +112,7 @@ hook. Each task names its stories (see STORIES.md) and the specs that must go gr
   visible memories; reads run messages from `FunctionInvokingChatClient.CurrentContext` for the
   suspect check.
   Acceptance: the listed specs green.
-  depends-on: T9
+  depends-on: T9, T29
 
 - [ ] **T11** - story: MEM-03 (AC3-AC7), MEM-04 (AC1-AC4, AC7, AC8), MEM-08 (AC1-AC5, AC7),
   MEM-02 (AC3). `AIMemoryContextProvider` and `AIMemoryPrompt`: resolve the space, load both
@@ -189,7 +204,8 @@ hook. Each task names its stories (see STORIES.md) and the specs that must go gr
   depends-on: T7, T21
 
 - [ ] **T23** - **wire: Workspace spaces into memory.** story: MEM-14 (AC1), MEM-15 (AC1).
-  Register the resolver first in `Copilot.Workspace.Startup`; make sure the project and
+  Register the resolver in `Copilot.Workspace.Startup` with
+  `AIMemorySpaceResolvers().InsertBefore<UserAgentMemorySpaceResolver, WorkspaceMemorySpaceResolver>()`; make sure the project and
   conversation ids reach the provider through the runtime context.
   Acceptance: on the demo site, a fact saved in a project chat loads in a second project chat
   and not in a private chat.

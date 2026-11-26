@@ -21,8 +21,11 @@ and shared chats, and anything unclaimed falls back to "you + this agent".
 >    is rebuilt each run. It still only changes when memory changes, so the cost is one cache
 >    miss after a save.\
 >    *If not:* store the sidebar snapshot server-side, keyed by thread id, with an expiry.
-> 4. **The suspect check is rules only, no extra AI call** (see "Suspect check").\
->    *If not:* add a small-model check on each save; more accurate, costs a call per save.
+> 4. **The Decision check can only make a verdict stricter.** It can hold or refuse a save the
+>    rules passed, never pass one the rules held or refused. If it errors or has no answer, the
+>    rules' verdict stands (see "Suspect check").\
+>    *If not:* the Decision check can also pass a save the rules held, trusting the model over
+>    the rules.
 > 5. **Held memories expire after 7 days** if nobody keeps them, and replaced memories are
 >    purged 7 days after being replaced. Both are cleared when the list is next read. No
 >    background job.\
@@ -62,9 +65,13 @@ and shared chats, and anything unclaimed falls back to "you + this agent".
 - **Space types are strings owned by whoever defines them.** The Agent package defines `user`
   and `user-agent`; Workspace defines `project` and `conversation`. The Agent package never
   knows what a project is.
-- **`IAIMemorySpaceResolver` is the hook**, an ordered collection. Each resolver gets the run's
-  context and either claims the space or passes. Workspace's runs first; the built-in
-  `user-agent` resolver is last and always claims. It also answers "can this user read or
+- **`IAIMemorySpaceResolver` is the hook**, an Umbraco ordered collection
+  (`AIMemorySpaceResolverCollectionBuilder : OrderedCollectionBuilderBase`, reached with
+  `builder.AIMemorySpaceResolvers()`, like `AIAgentSelectors()`). Each resolver gets the run's
+  context and either claims the space or passes. The Agent package appends the built-in
+  `user-agent` resolver, which always claims; Workspace adds its own with
+  `InsertBefore<UserAgentMemorySpaceResolver, WorkspaceMemorySpaceResolver>()`, so the fallback
+  stays last. It also answers "can this user read or
   change this space", so access checks stay with the package that owns the space.
 - **Scope comes from the server, never from the model.** The user is the signed-in user, the
   agent and conversation come from the runtime context. The `remember` tool only picks the
@@ -113,8 +120,10 @@ The AI Settings screen today is one workspace view with fixed boxes, saving a fi
 keys. Settings are already stored as key-value rows (`AISettingsEntity`: `Key`, `Value`), so
 add-on settings need no new table.
 
-- **Server:** add-ons register setting definitions (key, type, default) in a new
-  `AISettingDefinitions()` collection. `IAISettingsService` gains
+- **Server:** add-ons register a settings provider that lists its definitions (key, type,
+  default) in a new Umbraco lazy collection (`AISettingsProviderCollectionBuilder :
+  LazyCollectionBuilderBase`, reached with `builder.AISettingsProviders()`, like
+  `AIGuardrailEvaluators()`). Order doesn't matter, so it isn't an ordered collection. `IAISettingsService` gains
   `GetSettingValueAsync<T>(key)`, and the settings API returns and accepts the registered
   values in an `additional` map, validated against their definitions. Keys are namespaced by
   package (`Agent.Memory.Enabled`, `Agent.Memory.PersonalMemory`).
@@ -128,8 +137,23 @@ Memory uses a panel: one switch doesn't earn a tab.
 
 ## Suspect check
 
-`remember` runs these checks on the new text before saving. It reads the run's messages from
-M.E.AI's `FunctionInvokingChatClient.CurrentContext`.
+Checks are pluggable: `IAIMemorySaveCheck` is an Umbraco ordered collection
+(`AIMemorySaveCheckCollectionBuilder : OrderedCollectionBuilderBase`, reached with
+`builder.AIMemorySaveChecks()`), so a package can `Append`, `InsertBefore` or `Remove` a check. Each check gets the new text, the
+target space and the run's messages (from M.E.AI's `FunctionInvokingChatClient.CurrentContext`),
+and returns saved, held or not saved with a reason, or no opinion. The strictest answer wins
+(not saved, then held, then saved), and a not saved stops the rest from running.
+
+Two checks ship, in this order:
+
+1. **`AIMemoryRulesCheck`**, the fixed rules in the table below. Free, and always runs.
+2. **`DecisionMemorySaveCheck`**, which asks the site's default Decision profile one pick-one
+   question about the text: safe, an order to the agent, copied from content, or a secret. It
+   works like auto agent selection (`DecisionAgentSelector`): no opinion when the Decision
+   feature is off, no default Decision profile is set, or the call fails (logged as a warning).
+   A TypeSafe connection with Jev is one way to fill that profile. No new setting.
+
+The rules check:
 
 | Check | Result |
 |---|---|
@@ -149,7 +173,8 @@ person clicks Keep.
 ```text
 Umbraco.AI.Core/Settings/
   AISettingDefinition.cs                key, type, default
-  AISettingDefinitionCollection.cs      + builder, AISettingDefinitions()
+  IAISettingsProvider.cs                lists one package's definitions
+  AISettingsProviderCollection.cs       + LazyCollectionBuilderBase builder, AISettingsProviders()
   AISettings.cs                         + Additional values map
   AISettingsService.cs                  + GetSettingValueAsync<T>, validates additional keys
 Umbraco.AI.Persistence/Settings/
@@ -182,17 +207,21 @@ Umbraco.AI.Agent.Core/
     AIMemoryService.cs                  caps, access checks, expiry, notifications
     IAIMemoryRepository.cs              internal
     IAIMemorySpaceResolver.cs           the hook (public)
-    AIMemorySpaceResolverCollection.cs  ordered collection + builder
+    AIMemorySpaceResolverCollection.cs  + OrderedCollectionBuilderBase builder, AIMemorySpaceResolvers()
     UserAgentMemorySpaceResolver.cs     built-in fallback, always last
     AIMemoryContextProvider.cs          MAF provider: block, delta, tools
     AIMemoryPrompt.cs                   the fixed memory rules text
-    AIMemorySuspectCheck.cs             the checks above
+    IAIMemorySaveCheck.cs               the check hook (public)
+    AIMemorySaveCheckCollection.cs      + OrderedCollectionBuilderBase builder, AIMemorySaveChecks();
+                                        strictest answer wins
+    AIMemoryRulesCheck.cs               the fixed rules
+    DecisionMemorySaveCheck.cs          asks the default Decision profile
     AIMemoryTools.cs                    remember / forget functions
     Notifications/                      Saving, Saved, Deleting, Deleted
     UserDeletedMemoryHandler.cs         deletes the user's own layers
     AgentDeletedMemoryHandler.cs        deletes user-agent memories for that agent
   Agents/AIStandardAgentConfig.cs       + MemoryMode (Off, Work, WorkAndPerson)
-  Memory/AIMemorySettings.cs            registers Agent.Memory.Enabled (default true) and
+  Memory/AIMemorySettings.cs            IAISettingsProvider: Agent.Memory.Enabled (default true) and
                                         Agent.Memory.PersonalMemory (default Allowed)
   Memory/AIPersonalMemoryPolicy.cs      Allowed, OptIn, NotAllowed
   Memory/AIMemoryUserPreference.cs      the personal switch, via IUserDataService
@@ -219,7 +248,7 @@ Umbraco.AI.Agent.Copilot.Workspace.Core/Memory/
   ConversationDeletedMemoryHandler.cs   deletes the chat's memories
 Umbraco.AI.Agent.Conversations.Core/Conversations/
   IAIConversationShareService.cs        + ConversationHasEverBeenSharedAsync
-Umbraco.AI.Agent.Copilot.Workspace.Startup/  registers the resolver first
+Umbraco.AI.Agent.Copilot.Workspace.Startup/  InsertBefore<UserAgentMemorySpaceResolver, ...>
 ```
 
 **Backoffice: Agent package** (`Umbraco.AI.Agent/src/Umbraco.AI.Agent.Web.StaticAssets/Client/src/`)

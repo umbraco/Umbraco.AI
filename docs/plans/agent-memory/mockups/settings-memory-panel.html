@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  Agent memory: the AI Settings screen (AI > Settings) with a new "Agent memory" box after the
+  Agent memory: the AI Settings screen (AI > Settings) with a new "Agent Memory" box after the
   built-in ones, added by the Agent package through the new uaiSettingsPanel manifest
   (ARCHITECTURE "Settings extension"). Copied from the editor.html starter.
   Mirrors Umbraco.AI settings-editor.element.ts: one workspace view (so no view tabs), headline
@@ -179,7 +179,7 @@
 					</uui-box>
 
 					<!-- New built-in box (core): the personal context kill switch, default on (R35). -->
-					<uui-box class="group" headline="Personal context">
+					<uui-box class="group" headline="Personal Context">
 						<div class="property">
 							<div>
 								<uui-label>Personal Context</uui-label>
@@ -192,21 +192,21 @@
 					<!-- New: a uaiSettingsPanel box from the Agent package, after the built-in ones.
 					     Key Agent.Memory.Enabled, default on (guess 6). Off = every agent behaves as Off (R1c).
 					     Two settings: the kill switch, then the personal-memory policy. -->
-					<uui-box class="group" headline="Agent memory">
+					<uui-box class="group" headline="Agent Memory">
 						<div class="property">
 							<div>
-								<uui-label>Agent memory</uui-label>
+								<uui-label>Agent Memory</uui-label>
 								<div class="description">Let agents that have memory turned on remember facts between chats. Turning this off stops every agent using memory. Saved memories are kept.</div>
 							</div>
-							<div><uui-toggle label="Agent memory" checked></uui-toggle></div>
+							<div><uui-toggle label="Agent Memory" checked></uui-toggle></div>
 						</div>
 						<!-- Key Agent.Memory.PersonalMemory, default Allowed (R1e, R1f). -->
 						<div class="property">
 							<div>
-								<uui-label>Personal memory</uui-label>
+								<uui-label>Personal Memory</uui-label>
 								<div class="description">Whether agents may remember things about each person, like their preferences and role. Only agents set to "Work and person" use it. Turning it off keeps saved memories, paused.</div>
 							</div>
-							<div><uui-select id="personal-memory" label="Personal memory"></uui-select></div>
+							<div><uui-select id="personal-memory" label="Personal Memory"></uui-select></div>
 						</div>
 					</uui-box>
 					<!-- Replace to here. -->

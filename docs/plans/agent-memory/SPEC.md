@@ -232,7 +232,7 @@ Offered only when the agent has memory on and a backoffice user is signed in.
 
 Opens from AI > Settings. A new built-in "Personal Context" box (core) after "Transparency"
 holds one toggle, on by default. Then an "Agent Memory" box after the built-in ones, added by
-the Agent package. Two fields: an "Agent memory" toggle, and a "Personal memory" dropdown (Allowed,
+the Agent package. Two fields: an "Agent Memory" toggle, and a "Personal Memory" dropdown (Allowed,
 Allowed but off until each user turns it on, Not allowed). The dropdown is disabled while the
 toggle is off.
 

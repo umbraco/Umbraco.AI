@@ -223,7 +223,7 @@ the Agent package's space hook. Each task names its stories (see STORIES.md) and
   depends-on: T5, T15. parallel-group: C
 
 - [ ] **T17** - story: MEM-02 (AC1, AC2, AC7). `memory-settings-panel.element.ts` as a
-  `uaiSettingsPanel`: "Agent memory" toggle and "Personal memory" dropdown, disabled while the
+  `uaiSettingsPanel`: "Agent Memory" toggle and "Personal Memory" dropdown, disabled while the
   toggle is off. Matches `mockups/settings-memory-panel.png`.
   Acceptance: specs green; the box shows and saves on the demo site.
   depends-on: T3, T8, T15. parallel-group: C

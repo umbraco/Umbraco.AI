@@ -131,12 +131,12 @@ Out of scope: per-user-group policies.
 ### AC1: Memory is on by default
 - **Given** a fresh install with the Agent package
 - **When** an admin opens AI > Settings
-- **Then** the "Agent memory" toggle is on
+- **Then** the "Agent Memory" toggle is on
 
 ### AC2: Personal memory is Allowed by default
 - **Given** a fresh install with the Agent package
 - **When** an admin opens AI > Settings
-- **Then** the "Personal memory" dropdown shows "Allowed"
+- **Then** the "Personal Memory" dropdown shows "Allowed"
 
 ### AC3: The kill switch stops every agent (R1c)
 - **Given** an agent set to `WorkAndPerson` and the site's memory switch saved off
@@ -160,8 +160,8 @@ Out of scope: per-user-group policies.
 
 ### AC7: The policy is disabled while memory is off
 - **Given** an admin on AI > Settings
-- **When** they turn the "Agent memory" toggle off
-- **Then** the "Personal memory" dropdown is disabled
+- **When** they turn the "Agent Memory" toggle off
+- **Then** the "Personal Memory" dropdown is disabled
 
 ### AC8: The agent editor shows the site switch is off
 - **Given** the site's memory switch is off

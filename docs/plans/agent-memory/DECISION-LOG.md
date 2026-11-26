@@ -144,3 +144,7 @@
   value keeps the target's, matching `DisclosureNoticeMode`. Agent config fields already travel;
   Agent.Deploy only gains specs. Rejected: a per-definition "deployable" flag (no setting needs
   to stay put yet) and an Agent.Deploy settings connector (duplicates core's).
+- **Docs are part of the plan** (user's call, 26-11-2026). Three tasks after the smoke test:
+  v18 screenshots (8 new, up to 3 re-taken), v18 pages (4 new, about a dozen updated) as a
+  draft UmbracoDocs PR held until release, then the v17 copy with v17 screenshots after the
+  port. Screenshots come after the smoke test so they show the finished screens, not mockups.

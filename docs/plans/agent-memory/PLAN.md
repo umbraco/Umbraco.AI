@@ -1,6 +1,6 @@
 # Plan: Agent memory
 
-**45 tasks in 10 areas**, in build order. Core settings and core personal context come first
+**48 tasks in 11 areas**, in build order. Core settings and core personal context come first
 because the Agent and Prompt packages build on them; Workspace comes last because it plugs into
 the Agent package's space hook. Each task names its stories (see STORIES.md) and the specs that must go green.
 
@@ -379,3 +379,70 @@ the Agent package's space hook. Each task names its stories (see STORIES.md) and
   hits across turns, and personal context in an agent chat and a prompt.
   Acceptance: smoke-tester PASS with screenshots.
   depends-on: T27
+
+## Docs
+
+Docs live in `umbraco/UmbracoDocs` under `<major>/ai-in-umbraco/`, never in this repo, and go
+in as their own PR through `umbraco-docs-pr`, kept as a draft until the release ships. Pull the
+docs clone first: the page list below was read from a copy dated 16-09-2026. Paths are relative
+to `18/ai-in-umbraco/`.
+
+- [ ] **T46** - story: MEM-02, MEM-11, MEM-12, MEM-13, MEM-14, MEM-15, MEM-18, MEM-20 (docs).
+  Screenshots on the v18 demo site with Anthropic, following the `docs-screenshots` skill: 1440x900,
+  Chromium, light theme, realistic Nordhem data (no "test" names), saved to `.gitbook/assets/`.
+  New:
+  - `backoffice-ai-settings-personal-context-memory.png`: the "Personal Context" and "Agent
+    Memory" boxes on AI Settings
+  - `agent-memory-setting.png`: the agent editor's Memory mode and "Include Personal Context"
+  - `agent-memory-chat-notes.png`: a Copilot chat with a saved note and a held note
+  - `your-ai-profile.png`: the "Your AI" box (Contexts, Resources, memory switch) and the
+    memory table
+  - `agent-memory-edit.png`: the edit memory dialog
+  - `prompt-include-personal-context.png`: the prompt editor's "Include Personal Context"
+  - `copilot-workspace-project-memory.png`: a project's Memory tab
+  - `copilot-workspace-shared-chat-memory.png`: a shared chat's Memory section
+  Re-taken, same file name, so existing pages pick them up:
+  - `copilot-workspace-project.png`: the project editor now shows the Memory tab
+  - `copilot-workspace-chat.png`: the context panel now shows the chat's memory
+  - `backoffice-ai-settings-page.png`: only if the new boxes show in its frame
+  Acceptance: each image checked against its mockup in `mockups/`; no placeholder text, keys or
+  real customer data visible.
+  depends-on: T28
+
+- [ ] **T47** - story: as T46 (docs). v18 pages, written with `plain-writing`:
+  New:
+  - `add-ons/agent/memory.md`: what memory is, the three modes, the layers ("about you" and
+    the space), `remember` and `forget`, held saves, the site switch and personal memory policy,
+    managing memories in "Your AI". Uses the agent, chat, profile and edit screenshots.
+  - `concepts/personal-context.md`: personal contexts and resources, Always and On-Demand,
+    "Include Personal Context" (agents on, prompts off), the site switch, notes for one agent as
+    an On-Demand resource named for it. Uses `your-ai-profile.png`.
+  - `extending/settings/README.md`: add-on settings (`IAISettingsProvider`,
+    `builder.AISettingsProviders()`, `GetSettingValueAsync<T>`, the `uaiSettingsPanel` manifest),
+    and that they deploy with AI Settings.
+  - `add-ons/agent/extending-memory.md`: memory spaces (`IAIMemorySpaceResolver`), save checks
+    (`builder.AIMemorySaveChecks()`), and the memory notifications.
+  Updated:
+  - `backoffice/managing-settings.md`: "Personal Context" and "Agent Memory" sections.
+  - `concepts/settings.md`, `reference/models/ai-settings.md`,
+    `reference/services/ai-settings-service.md`: `PersonalContextEnabled`, the additional
+    values, `GetSettingValueAsync<T>`.
+  - `concepts/contexts.md`: a line linking to personal context.
+  - `add-ons/agent/concepts.md`: `MemoryMode` and `IncludePersonalContext` in the standard
+    agent configuration; the agent API create and update pages to match.
+  - `add-ons/prompt/concepts.md`, `add-ons/prompt/reference/ai-prompt.md`, the prompt API
+    create and update pages: `IncludePersonalContext`.
+  - `add-ons/copilot-workspace/copilot-workspace.md`: project memory and shared chat memory.
+  - `add-ons/deploy/deploying-entities.md`: Settings now carry the disclosure notice mode,
+    the Personal Context switch and add-on settings; Prompts and Agents carry "Include Personal
+    Context" and the memory mode; memories and personal context are never deployed.
+  - `SUMMARY.md`: the four new pages.
+  Acceptance: draft PR open on `umbraco/UmbracoDocs` through `umbraco-docs-pr`, linked from this
+  PR; every link and image on the changed pages resolves in the GitBook preview.
+  depends-on: T46
+
+- [ ] **T48** - story: as T46 (docs). The same pages under `17/ai-in-umbraco/`, with screenshots
+  re-taken on the v17 demo site (its look differs), once the v17 port has merged. Same docs PR
+  or a second one, whichever `umbraco-docs-pr` prefers.
+  Acceptance: as T47, for the v17 pages.
+  depends-on: T47

@@ -16,7 +16,7 @@ public class PromptPersonalContextDeployTests
     {
         public GivenAPromptWithItOn()
         {
-            // Prompt UsePersonalContext = true.
+            // Prompt IncludePersonalContext = true.
         }
 
         // AC10
@@ -24,7 +24,7 @@ public class PromptPersonalContextDeployTests
         public void Artifact_HasTrue()
         {
             // When: the connector exports it
-            // Then: artifact.UsePersonalContext.ShouldBeTrue();
+            // Then: artifact.IncludePersonalContext.ShouldBeTrue();
         }
     }
 
@@ -32,7 +32,7 @@ public class PromptPersonalContextDeployTests
     {
         public GivenAnArtifactWithItOn()
         {
-            // AIPromptArtifact UsePersonalContext = true.
+            // AIPromptArtifact IncludePersonalContext = true.
         }
 
         // AC11
@@ -40,7 +40,7 @@ public class PromptPersonalContextDeployTests
         public void SavedPrompt_HasTrue()
         {
             // When: the connector imports it
-            // Then: savedPrompt.UsePersonalContext.ShouldBeTrue();
+            // Then: savedPrompt.IncludePersonalContext.ShouldBeTrue();
         }
     }
 

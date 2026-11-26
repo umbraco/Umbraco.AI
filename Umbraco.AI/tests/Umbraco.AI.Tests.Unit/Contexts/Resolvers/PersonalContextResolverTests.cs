@@ -5,7 +5,7 @@ namespace Umbraco.AI.Tests.Unit.Contexts.Resolvers;
 
 // Real entry point: IAIContextResolutionService with the real resolver chain (Profile, Content,
 // KnowledgeSet, PersonalContextResolver, AdditionalResources), the runtime context accessor holding
-// ContextKeys.UsePersonalContext = true unless the scenario says otherwise, and a fake backoffice
+// ContextKeys.IncludePersonalContext = true unless the scenario says otherwise, and a fake backoffice
 // user. "The system prompt" is the formatted Always block; "the lookup tool" is the OnDemand tool list.
 // AC6-AC9 are in the Agent and Prompt test projects (they set the flag).
 //
@@ -111,7 +111,7 @@ public class PersonalContextResolverTests
     {
         public GivenASignedInUserButNoFlag()
         {
-            // Anna has an Always resource; ContextKeys.UsePersonalContext not set.
+            // Anna has an Always resource; ContextKeys.IncludePersonalContext not set.
         }
 
         // AC11

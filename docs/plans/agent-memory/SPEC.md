@@ -118,10 +118,10 @@ type PersonalContext = {
 };
 ```
 
-**Agent config:** `StandardAgentConfigModel` also gains `usePersonalContext: boolean`, default
+**Agent config:** `StandardAgentConfigModel` also gains `includePersonalContext: boolean`, default
 `true`; a missing value reads as `true`.
 
-**Prompt:** the prompt create, update and response models gain `usePersonalContext: boolean`,
+**Prompt:** the prompt create, update and response models gain `includePersonalContext: boolean`,
 default `false`.
 
 ## Agent tools
@@ -211,7 +211,7 @@ Offered only when the agent has memory on and a backoffice user is signed in.
 **Personal context**
 
 - **R26** A run loads the user's personal context only when the feature running allows it: an
-  agent with `usePersonalContext` on, or a prompt with it on. Anything else never loads it.
+  agent with `includePersonalContext` on, or a prompt with it on. Anything else never loads it.
 - **R27** A run with no backoffice user gets no personal context.
 - **R28** `Always` personal resources go into the system prompt; `On-Demand` ones are offered
   through the same lookup tool as AI Context resources.
@@ -220,7 +220,7 @@ Offered only when the agent has memory on and a backoffice user is signed in.
   every user's personal context.
 - **R31** Deleting a user deletes their personal context.
 - **R32** Personal context is never deployed between environments. A prompt's
-  `usePersonalContext` is, with the prompt.
+  `includePersonalContext` is, with the prompt.
 - **R33** The site memory switches (R1c, R1e) and the personal memory switch (R1d) don't affect
   personal context.
 - **R34** The personal context is always that of the user sending the turn. Today only the
@@ -247,7 +247,7 @@ toggle is off.
 ## Agent editor: Memory setting
 
 Opens from AI > Agents > an agent > Settings, in the "Agent Behavior" box. A dropdown: Off,
-Work only, Work and person. Below it, a "Use personal context" toggle, on by default, with the
+Work only, Work and person. Below it, a "Include Personal Context" toggle, on by default, with the
 description "Adds each user's own AI Contexts and resources from their profile".
 
 ![Agent editor with the Memory setting](./mockups/agent-memory-setting.png)
@@ -259,15 +259,15 @@ description "Adds each user's own AI Contexts and resources from their profile".
 | Mode saved | Takes effect from the agent's next run |
 | Set to Off | Existing memories are kept but not read; picking a mode again brings them back |
 | Site-wide switch off | The setting shows a note: "Memory is turned off for all agents in AI Settings" |
-| "Use personal context" off | From the next run, users' personal contexts and resources aren't loaded |
+| "Include Personal Context" off | From the next run, users' personal contexts and resources aren't loaded |
 
-## Prompt editor: Use personal context
+## Prompt editor: Include Personal Context
 
 Opens from AI > Prompts > a prompt > Settings, beside "Include entity context". A "Use personal
 context" toggle, off by default, with the description "Adds the user's own AI Contexts and
 resources from their profile. Leave off for prompts with a fixed output format".
 
-![Prompt editor with Use personal context](./mockups/prompt-personal-context.png)
+![Prompt editor with Include Personal Context](./mockups/prompt-personal-context.png)
 
 [Mockup source](./mockups/prompt-personal-context.html)
 

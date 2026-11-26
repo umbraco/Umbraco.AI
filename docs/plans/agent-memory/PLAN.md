@@ -59,7 +59,7 @@ the Agent package's space hook. Each task names its stories (see STORIES.md) and
 
 - [ ] **T31** - story: MEM-19 (AC1-AC5, AC10, AC11). `PersonalContextResolver :
   IAIContextResolver`, inserted before `AdditionalResourcesContextResolver` in core's
-  `AIContextResolvers()` chain, and `Constants.ContextKeys.UsePersonalContext`. Returns nothing
+  `AIContextResolvers()` chain, and `Constants.ContextKeys.IncludePersonalContext`. Returns nothing
   without the flag or a backoffice user; resolves picked contexts and the user's resources
   through the normal resolve, format and inject path.
   Acceptance: MEM-19 AC1-AC5, AC10, AC11 resolver specs green.
@@ -244,14 +244,14 @@ the Agent package's space hook. Each task names its stories (see STORIES.md) and
 
 ## Personal context in agents and prompts
 
-- [ ] **T36** - story: MEM-20 (AC1-AC3), MEM-19 (AC7, AC8). `UsePersonalContext` on
-  `AIStandardAgentConfig` (default true; a missing value reads true), `usePersonalContext` on
+- [ ] **T36** - story: MEM-20 (AC1-AC3), MEM-19 (AC7, AC8). `IncludePersonalContext` on
+  `AIStandardAgentConfig` (default true; a missing value reads true), `includePersonalContext` on
   the agent config API model and mapping, and the agent run setting
-  `ContextKeys.UsePersonalContext` from it. Same files as T5's `MemoryMode`.
+  `ContextKeys.IncludePersonalContext` from it. Same files as T5's `MemoryMode`.
   Acceptance: MEM-20 AC1-AC3 and MEM-19 AC7, AC8 specs green.
   depends-on: T5, T31
 
-- [ ] **T37** - story: MEM-20 (AC4). "Use personal context" toggle after the Memory dropdown in
+- [ ] **T37** - story: MEM-20 (AC4). "Include Personal Context" toggle after the Memory dropdown in
   "Agent Behavior", `agent-details-workspace-view.element.ts`. Matches
   `mockups/agent-memory-setting.png`.
   Acceptance: MEM-20 AC4 spec green; `npm run build:agent`.
@@ -263,23 +263,23 @@ the Agent package's space hook. Each task names its stories (see STORIES.md) and
   off, the next run's doesn't.
   depends-on: T35, T37
 
-- [ ] **T39** - story: MEM-20 (AC5-AC7, AC9), MEM-19 (AC6, AC9). `UsePersonalContext` on
+- [ ] **T39** - story: MEM-20 (AC5-AC7, AC9), MEM-19 (AC6, AC9). `IncludePersonalContext` on
   `AIPrompt` (default false), wired like `IncludeEntityContext`: `AIPromptEntity`, factory,
-  DbContext, migration `UmbracoAIPrompt_AddUsePersonalContext` (SQL Server and SQLite, default
+  DbContext, migration `UmbracoAIPrompt_AddIncludePersonalContext` (SQL Server and SQLite, default
   0), `AIPromptVersionableEntityAdapter`, create, update and response models and mapping, and
-  the prompt run setting `ContextKeys.UsePersonalContext` from it.
+  the prompt run setting `ContextKeys.IncludePersonalContext` from it.
   Acceptance: MEM-20 AC5-AC7, AC9 and MEM-19 AC6, AC9 specs green; `dotnet build
   Umbraco.AI.Prompt/Umbraco.AI.Prompt.slnx`.
   depends-on: T31. parallel-group: C
 
-- [ ] **T40** - story: MEM-20 (AC8). "Use personal context" toggle after "Include Entity
+- [ ] **T40** - story: MEM-20 (AC8). "Include Personal Context" toggle after "Include Entity
   Context" in `prompt-details-workspace-view.element.ts`; regenerate the Prompt OpenAPI client.
   Matches `mockups/prompt-personal-context.png`.
   Acceptance: MEM-20 AC8 spec green; `npm run build:prompt`.
   depends-on: T39
 
 - [ ] **T41** - story: MEM-20 (AC10, AC11). `AIPromptArtifact` and
-  `UmbracoAIPromptServiceConnector` carry `UsePersonalContext`, with connector tests alongside
+  `UmbracoAIPromptServiceConnector` carry `IncludePersonalContext`, with connector tests alongside
   the `IncludeEntityContext` ones.
   Acceptance: MEM-20 AC10, AC11 specs green; `dotnet build
   Umbraco.AI.Prompt.Deploy/Umbraco.AI.Prompt.Deploy.slnx`.
@@ -335,7 +335,7 @@ the Agent package's space hook. Each task names its stories (see STORIES.md) and
 - [ ] **T27** - story: MEM-01 (all). Cross-product floors: the Agent and Prompt packages'
   `Umbraco.AI.Core` range floors move to the core version with the settings extension and
   personal context, Workspace's Agent floor moves to the version with the space hook, and
-  Prompt.Deploy's Prompt floor moves to the version with `UsePersonalContext`. Test with
+  Prompt.Deploy's Prompt floor moves to the version with `IncludePersonalContext`. Test with
   `UseProjectReferences=false`.
   Acceptance: each product's slnx builds with ranges.
   depends-on: T24, T25, T26, T38, T41, T42

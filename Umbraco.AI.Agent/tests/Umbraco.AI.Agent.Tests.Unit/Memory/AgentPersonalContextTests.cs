@@ -4,7 +4,7 @@ using Xunit;
 namespace Umbraco.AI.Agent.Tests.Unit.Memory;
 
 // AC1-AC3: AIStandardAgentConfig and AgentMapDefinition (as in AgentMemoryModeTests). AC7, AC8: the
-// agent run's runtime context builder (T36), checking ContextKeys.UsePersonalContext it sets, and
+// agent run's runtime context builder (T36), checking ContextKeys.IncludePersonalContext it sets, and
 // the site memory setting read through a fake IAISettingsService. AC4 (the toggle) is checked by
 // T37's live acceptance: the Agent client has no component tests.
 //
@@ -23,10 +23,10 @@ public class AgentPersonalContextTests
 
         // AC1
         [Fact(Skip = "Pending")]
-        public void UsePersonalContext_IsTrue()
+        public void IncludePersonalContext_IsTrue()
         {
             // When: its config is read
-            // Then: config.UsePersonalContext.ShouldBeTrue();
+            // Then: config.IncludePersonalContext.ShouldBeTrue();
         }
     }
 
@@ -34,15 +34,15 @@ public class AgentPersonalContextTests
     {
         public GivenStoredConfigWithoutTheField()
         {
-            // Deserialize agent config JSON that has no usePersonalContext.
+            // Deserialize agent config JSON that has no includePersonalContext.
         }
 
         // AC2
         [Fact(Skip = "Pending")]
-        public void UsePersonalContext_ReadsTrue()
+        public void IncludePersonalContext_ReadsTrue()
         {
             // When: it's read
-            // Then: config.UsePersonalContext.ShouldBeTrue();
+            // Then: config.IncludePersonalContext.ShouldBeTrue();
         }
     }
 
@@ -50,7 +50,7 @@ public class AgentPersonalContextTests
     {
         public GivenAnAgentWithItTurnedOff()
         {
-            // Map an update request with StandardAgentConfigModel { UsePersonalContext = false }.
+            // Map an update request with StandardAgentConfigModel { IncludePersonalContext = false }.
         }
 
         // AC3
@@ -58,7 +58,7 @@ public class AgentPersonalContextTests
         public void Config_HasFalse()
         {
             // When: the agent is saved and read
-            // Then: ((StandardAgentConfigModel)response.Config).UsePersonalContext.ShouldBeFalse();
+            // Then: ((StandardAgentConfigModel)response.Config).IncludePersonalContext.ShouldBeFalse();
         }
     }
 
@@ -66,7 +66,7 @@ public class AgentPersonalContextTests
     {
         public GivenTheSiteMemorySwitchOff()
         {
-            // Agent.Memory.Enabled = false; agent UsePersonalContext = true.
+            // Agent.Memory.Enabled = false; agent IncludePersonalContext = true.
         }
 
         // AC7
@@ -74,7 +74,7 @@ public class AgentPersonalContextTests
         public void Run_SetsTheFlag()
         {
             // When: the run's runtime context is built
-            // Then: runtimeContext.GetValue<bool>(ContextKeys.UsePersonalContext).ShouldBeTrue();
+            // Then: runtimeContext.GetValue<bool>(ContextKeys.IncludePersonalContext).ShouldBeTrue();
         }
     }
 
@@ -86,7 +86,7 @@ public class AgentPersonalContextTests
     {
         public GivenAnAgentWithItOff()
         {
-            // Agent UsePersonalContext = false.
+            // Agent IncludePersonalContext = false.
         }
 
         // AC8
@@ -94,7 +94,7 @@ public class AgentPersonalContextTests
         public void Run_DoesNotSetTheFlag()
         {
             // When: the run's runtime context is built
-            // Then: runtimeContext.GetValue<bool?>(ContextKeys.UsePersonalContext).ShouldNotBe(true);
+            // Then: runtimeContext.GetValue<bool?>(ContextKeys.IncludePersonalContext).ShouldNotBe(true);
         }
     }
 

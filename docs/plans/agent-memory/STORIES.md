@@ -1041,22 +1041,22 @@ I want agents, and prompts that allow it, to use my personal context,
 so that what they write fits how I work.
 
 ### AC1: Always resources go in the system prompt (R28)
-- **Given** a user with an Always resource and an agent with `usePersonalContext` on
+- **Given** a user with an Always resource and an agent with `includePersonalContext` on
 - **When** the user chats with the agent
 - **Then** the system prompt contains the resource
 
 ### AC2: On-Demand resources are offered to look up (R28)
-- **Given** a user with an On-Demand resource and an agent with `usePersonalContext` on
+- **Given** a user with an On-Demand resource and an agent with `includePersonalContext` on
 - **When** the user chats with the agent
 - **Then** the resource lookup tool lists it
 
 ### AC3: On-Demand resources stay out of the system prompt (R28)
-- **Given** a user with an On-Demand resource and an agent with `usePersonalContext` on
+- **Given** a user with an On-Demand resource and an agent with `includePersonalContext` on
 - **When** the user chats with the agent
 - **Then** the system prompt doesn't contain it
 
 ### AC4: Picked contexts load
-- **Given** a user who picked "Nordhem brand voice" and an agent with `usePersonalContext` on
+- **Given** a user who picked "Nordhem brand voice" and an agent with `includePersonalContext` on
 - **When** the user chats with the agent
 - **Then** the context's Always resources are in the system prompt
 
@@ -1066,35 +1066,35 @@ so that what they write fits how I work.
 - **Then** its resources appear once in the system prompt
 
 ### AC6: A prompt that allows it loads it (R26)
-- **Given** a prompt with `usePersonalContext` on and a user with an Always resource
+- **Given** a prompt with `includePersonalContext` on and a user with an Always resource
 - **When** the user runs the prompt
 - **Then** the system prompt contains the resource
 
 ### AC7: Memory switches don't affect it (R33)
 - **Given** the site's memory switch off and a user with an Always resource
-- **When** the user chats with an agent with `usePersonalContext` on
+- **When** the user chats with an agent with `includePersonalContext` on
 - **Then** the system prompt contains the resource
 
 ### Sad path
 
 ### AC8: An agent with it off doesn't load it (R26)
-- **Given** an agent with `usePersonalContext` off and a user with an Always resource
+- **Given** an agent with `includePersonalContext` off and a user with an Always resource
 - **When** the user chats with the agent
 - **Then** the system prompt doesn't contain the resource
 
 ### AC9: A prompt with it off doesn't load it (R26)
-- **Given** a prompt with `usePersonalContext` off and a user with an Always resource
+- **Given** a prompt with `includePersonalContext` off and a user with an Always resource
 - **When** the user runs the prompt
 - **Then** the system prompt doesn't contain the resource
 
 ### AC10: No user, no personal context (R27)
-- **Given** an Automate run of an agent with `usePersonalContext` on
+- **Given** an Automate run of an agent with `includePersonalContext` on
 - **When** the run starts
 - **Then** no personal resource is resolved
 
 ### AC11: A caller without the flag never gets it (R26)
 - **Given** a signed-in user with an Always resource
-- **When** a run starts without `Umbraco.AI.UsePersonalContext` set
+- **When** a run starts without `Umbraco.AI.IncludePersonalContext` set
 - **Then** the personal context resolver returns nothing
 
 ---
@@ -1108,57 +1108,57 @@ so that one user's preferences don't change output that must follow a set format
 ### AC1: New agents default on
 - **Given** an admin creating an agent
 - **When** they save it without touching the toggle
-- **Then** its config has `usePersonalContext` true
+- **Then** its config has `includePersonalContext` true
 
 ### AC2: Existing agents read as on
-- **Given** an agent whose stored config has no `usePersonalContext`
+- **Given** an agent whose stored config has no `includePersonalContext`
 - **When** it's read
-- **Then** `usePersonalContext` is true
+- **Then** `includePersonalContext` is true
 
 ### AC3: The agent toggle saves
-- **Given** an agent with "Use personal context" on
+- **Given** an agent with "Include Personal Context" on
 - **When** the admin turns it off and saves
-- **Then** the agent's config has `usePersonalContext` false
+- **Then** the agent's config has `includePersonalContext` false
 
 ### AC4: The agent editor shows the toggle
 - **Given** a new agent
 - **When** the admin opens its Settings view
-- **Then** "Use personal context" shows in "Agent Behavior", switched on
+- **Then** "Include Personal Context" shows in "Agent Behavior", switched on
 
 ### AC5: New prompts default off
 - **Given** an admin creating a prompt
 - **When** they save it without touching the toggle
-- **Then** the prompt has `usePersonalContext` false
+- **Then** the prompt has `includePersonalContext` false
 
 ### AC6: Existing prompts stay off after upgrade
 - **Given** a prompt saved before this release
 - **When** the migration runs
-- **Then** the prompt has `usePersonalContext` false
+- **Then** the prompt has `includePersonalContext` false
 
 ### AC7: The prompt toggle saves
-- **Given** a prompt with "Use personal context" off
+- **Given** a prompt with "Include Personal Context" off
 - **When** the admin turns it on and saves
-- **Then** `GET` on the prompt returns `usePersonalContext` true
+- **Then** `GET` on the prompt returns `includePersonalContext` true
 
 ### AC8: The prompt editor shows the toggle
 - **Given** a new prompt
 - **When** the admin opens its Settings view
-- **Then** "Use personal context" shows after "Include Entity Context", switched off
+- **Then** "Include Personal Context" shows after "Include Entity Context", switched off
 
 ### AC9: The change is in version history
-- **Given** a prompt with "Use personal context" off
+- **Given** a prompt with "Include Personal Context" off
 - **When** the admin turns it on and saves
-- **Then** the new version records `usePersonalContext` true
+- **Then** the new version records `includePersonalContext` true
 
 ### AC10: Deploy exports it (R32)
-- **Given** a prompt with `usePersonalContext` true
+- **Given** a prompt with `includePersonalContext` true
 - **When** Deploy exports it
-- **Then** the artifact has `usePersonalContext` true
+- **Then** the artifact has `includePersonalContext` true
 
 ### AC11: Deploy imports it (R32)
-- **Given** a prompt artifact with `usePersonalContext` true
+- **Given** a prompt artifact with `includePersonalContext` true
 - **When** Deploy imports it
-- **Then** the saved prompt has `usePersonalContext` true
+- **Then** the saved prompt has `includePersonalContext` true
 
 ---
 

@@ -99,7 +99,7 @@
   approach (kept in `docs/ideas/agent-memory-tiers.md` for later).
 - **Personal context lives in core, behind a caller flag** (user's call, 26-11-2026). Prompts
   use it as well as agents, so it's a core context resolver, loaded only when the run sets
-  `Umbraco.AI.UsePersonalContext`. Rejected: Agent package only (prompts couldn't use it).
+  `Umbraco.AI.IncludePersonalContext`. Rejected: Agent package only (prompts couldn't use it).
 - **Builders choose per prompt and per agent; agents default on, prompts off** (user's call,
   26-11-2026). Prompts often have a fixed output format that one user's preferences would break;
   agents are conversations where it helps, but builders of content-writing agents can switch it
@@ -112,3 +112,7 @@
 - **Company memory not planned** (user's call, 26-11-2026). AI Contexts already carry
   company-wide facts; what's missing is a way for users to propose additions. Wait until someone
   asks.
+- **"Include Personal Context", not "Use personal context"** (user's call, 26-11-2026). Matches
+  the prompt editor's existing "Include Entity Context" in verb and title casing. The property is
+  `IncludePersonalContext` and the runtime key `Umbraco.AI.IncludePersonalContext`, mirroring
+  `IncludeEntityContext`.

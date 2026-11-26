@@ -18,15 +18,15 @@ public class PromptPersonalContextTests
     {
         public GivenANewPrompt()
         {
-            // Create a prompt without setting UsePersonalContext.
+            // Create a prompt without setting IncludePersonalContext.
         }
 
         // MEM-20 AC5
         [Fact(Skip = "Pending")]
-        public void UsePersonalContext_IsFalse()
+        public void IncludePersonalContext_IsFalse()
         {
             // When: it's saved and read
-            // Then: prompt.UsePersonalContext.ShouldBeFalse();
+            // Then: prompt.IncludePersonalContext.ShouldBeFalse();
         }
     }
 
@@ -34,7 +34,7 @@ public class PromptPersonalContextTests
     {
         public GivenAPromptSavedBeforeThisRelease()
         {
-            // SQLite database with a prompt row from before UmbracoAIPrompt_AddUsePersonalContext.
+            // SQLite database with a prompt row from before UmbracoAIPrompt_AddIncludePersonalContext.
         }
 
         // MEM-20 AC6
@@ -42,7 +42,7 @@ public class PromptPersonalContextTests
         public void AfterMigration_IsFalse()
         {
             // When: the migration runs and the prompt is read
-            // Then: prompt.UsePersonalContext.ShouldBeFalse();
+            // Then: prompt.IncludePersonalContext.ShouldBeFalse();
         }
     }
 
@@ -50,7 +50,7 @@ public class PromptPersonalContextTests
     {
         public GivenAnAdminWhoTurnsItOn()
         {
-            // Update request with UsePersonalContext = true.
+            // Update request with IncludePersonalContext = true.
         }
 
         // MEM-20 AC7
@@ -58,7 +58,7 @@ public class PromptPersonalContextTests
         public void Get_ReturnsTrue()
         {
             // When: GET the prompt
-            // Then: response.UsePersonalContext.ShouldBeTrue();
+            // Then: response.IncludePersonalContext.ShouldBeTrue();
         }
 
         // MEM-20 AC9
@@ -66,7 +66,7 @@ public class PromptPersonalContextTests
         public void NewVersion_RecordsTrue()
         {
             // When: the version history is read
-            // Then: latestVersion snapshot has UsePersonalContext true
+            // Then: latestVersion snapshot has IncludePersonalContext true
         }
     }
 
@@ -74,7 +74,7 @@ public class PromptPersonalContextTests
     {
         public GivenAPromptWithItOn()
         {
-            // Prompt UsePersonalContext = true; run it.
+            // Prompt IncludePersonalContext = true; run it.
         }
 
         // MEM-19 AC6
@@ -82,7 +82,7 @@ public class PromptPersonalContextTests
         public void Run_SetsTheFlag()
         {
             // When: the prompt runs
-            // Then: runtimeContext.GetValue<bool>(ContextKeys.UsePersonalContext).ShouldBeTrue();
+            // Then: runtimeContext.GetValue<bool>(ContextKeys.IncludePersonalContext).ShouldBeTrue();
         }
     }
 
@@ -94,7 +94,7 @@ public class PromptPersonalContextTests
     {
         public GivenAPromptWithItOff()
         {
-            // Prompt UsePersonalContext = false; run it.
+            // Prompt IncludePersonalContext = false; run it.
         }
 
         // MEM-19 AC9
@@ -102,7 +102,7 @@ public class PromptPersonalContextTests
         public void Run_DoesNotSetTheFlag()
         {
             // When: the prompt runs
-            // Then: runtimeContext.GetValue<bool?>(ContextKeys.UsePersonalContext).ShouldNotBe(true);
+            // Then: runtimeContext.GetValue<bool?>(ContextKeys.IncludePersonalContext).ShouldNotBe(true);
         }
     }
 

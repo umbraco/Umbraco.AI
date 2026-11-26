@@ -99,6 +99,10 @@ lasting ones into a resource and deletes the memories.
   needed.
 - **Good:** user-written text is safer than agent-written memory.
 - **Bad:** it's manual. A "Turn into resource" bulk action could help later.
+- **Bad:** personal resources reach every agent, so "you + this agent" memories have no
+  agent-only long-term home. v1's answer is an `On-Demand` resource named for the agent. If
+  that's not enough, add a "Use with" setting per resource (all agents, or picked agents);
+  prompts would only get "All agents" ones.
 
 ## Leaning (before approach 4)
 

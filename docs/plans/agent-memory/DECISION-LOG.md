@@ -130,3 +130,8 @@
 - **Every open guess agreed** (user's call, 26-11-2026). The brief's 10, architecture's 8,
   spec's 9, stories' 2 and plan's 2 guesses stand as written. Each file keeps its list in a
   collapsed "agreed" section, so body references like "(guess 4)" still resolve.
+- **No per-agent personal resources in v1** (user's call, 26-11-2026). Personal context reaches
+  every agent, so the long-term home for "you + this agent" learning is an `On-Demand` resource
+  named for the agent: other agents see only its name. Rejected for now: a "Use with" setting
+  per resource (all agents or picked ones), which adds an agent picker per resource and another
+  visibility rule nobody has asked for yet. Kept as the follow-up in the memory tiers idea.

@@ -230,6 +230,10 @@ Offered only when the agent has memory on and a backoffice user is signed in.
   each prompt or agent says. Stored contexts and resources are kept and load again once it's
   switched back on.
 
+Personal context is the same for every agent and prompt the user runs; nothing scopes a
+resource to one agent. Notes meant for one agent go in an `On-Demand` resource named for it
+("SEO agent: how I like meta descriptions"), so other agents see only its name.
+
 ## AI Settings: Personal Context and Agent Memory
 
 Opens from AI > Settings. A new built-in "Personal Context" box (core) after "Transparency"

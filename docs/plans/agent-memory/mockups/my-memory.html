@@ -1,0 +1,212 @@
+<!doctype html>
+<!--
+  Agent memory: "Your AI memory", a new user profile app in the CMS current-user panel (opens
+  from the avatar). Copied from the modal-sidebar.html starter, medium width. The panel's shell
+  mirrors current-user-modal.element.ts: profile apps stacked, Close and Log out in the footer.
+  States: default, and #paused (the personal switch is off).
+-->
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Mockup: Your AI memory</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@umbraco-ui/uui@2/dist/themes/light.css">
+	<link rel="stylesheet" href="_mockup.css">
+	<link rel="stylesheet" href="agent-memory.css">
+	<script type="module" src="_mockup.js"></script>
+</head>
+<body class="uui-font uui-text">
+	<span class="mockup-anchor" id="paused"></span>
+	<header class="app-header">
+		<span class="logo">Umbraco</span>
+		<uui-tab-group class="sections">
+			<uui-tab label="Content" active>Content</uui-tab>
+			<uui-tab label="Media">Media</uui-tab>
+			<uui-tab label="Settings">Settings</uui-tab>
+		</uui-tab-group>
+		<div class="apps">
+			<uui-button look="primary" compact label="User"><uui-avatar name="Anna Holm"></uui-avatar></uui-button>
+		</div>
+	</header>
+	<div class="section">
+		<nav class="section-sidebar"><h3>Content</h3></nav>
+		<main class="section-main"></main>
+	</div>
+
+	<div class="modal-backdrop"></div>
+	<aside class="modal-sidebar">
+		<div class="body-layout">
+			<div class="header">
+				<h3 class="headline">Anna Holm</h3>
+			</div>
+
+			<div class="main">
+				<!-- Replace from here: the modal's content. -->
+				<div class="profile-apps">
+					<!-- Existing profile app, unchanged. -->
+					<uui-box headline="Your profile">
+						<div class="profile-actions">
+							<uui-button look="secondary" label="Edit"><uui-icon name="icon-edit"></uui-icon> Edit</uui-button>
+							<uui-button look="secondary" label="Change password"><uui-icon name="icon-lock"></uui-icon> Change password</uui-button>
+						</div>
+					</uui-box>
+
+					<!-- New profile app: the personal switch in a box (forms never sit on the grey background),
+					     then every memory the user owns as a list-view table ("about you", then one group per agent). -->
+					<uui-box class="group" headline="Your AI memory">
+						<!-- New: the personal switch. Covers "about you" only (R1d, guesses 7-8). Starts on under
+						     the site's Allowed policy, off under Opt-in; hidden under Not allowed (R1e, R1f). -->
+						<div class="property">
+							<div>
+								<uui-label>Let agents remember things about me</uui-label>
+								<div class="description">Turns off 'About you' for every agent. Project and chat memory carry on.</div>
+							</div>
+							<div>
+								<uui-toggle class="when-default" label="Let agents remember things about me" checked></uui-toggle>
+								<!-- State #paused: switched off. Stored "about you" memories stay, marked paused. -->
+								<uui-toggle class="when-target" label="Let agents remember things about me"></uui-toggle>
+							</div>
+						</div>
+					</uui-box>
+						<uui-table class="collection-table">
+							<uui-table-head>
+								<uui-table-head-cell>Memory</uui-table-head-cell>
+								<uui-table-head-cell>Kind</uui-table-head-cell>
+								<uui-table-head-cell>Until</uui-table-head-cell>
+								<uui-table-head-cell>Saved</uui-table-head-cell>
+								<uui-table-head-cell></uui-table-head-cell>
+							</uui-table-head>
+
+							<uui-table-row class="group-row">
+								<uui-table-cell><strong>About you</strong> · used by every agent<span class="when-target"> · paused</span></uui-table-cell>
+								<uui-table-cell></uui-table-cell>
+								<uui-table-cell></uui-table-cell>
+								<uui-table-cell></uui-table-cell>
+								<uui-table-cell></uui-table-cell>
+							</uui-table-row>
+							<uui-table-row>
+								<uui-table-cell>On leave over Christmas; Sophie Berg reviews drafts</uui-table-cell>
+								<uui-table-cell>Fact</uui-table-cell>
+								<uui-table-cell>06&#8209;01&#8209;2027</uui-table-cell>
+								<uui-table-cell>25&#8209;11&#8209;2026</uui-table-cell>
+								<uui-table-cell>
+									<uui-action-bar>
+										<uui-button compact label="Edit"><uui-icon name="icon-edit"></uui-icon></uui-button>
+										<uui-button compact label="Delete"><uui-icon name="icon-trash"></uui-icon></uui-button>
+									</uui-action-bar>
+								</uui-table-cell>
+							</uui-table-row>
+							<uui-table-row>
+								<uui-table-cell>Prefers short answers with bullet points</uui-table-cell>
+								<uui-table-cell>Fact</uui-table-cell>
+								<uui-table-cell></uui-table-cell>
+								<uui-table-cell>21&#8209;11&#8209;2026</uui-table-cell>
+								<uui-table-cell>
+									<uui-action-bar>
+										<uui-button compact label="Edit"><uui-icon name="icon-edit"></uui-icon></uui-button>
+										<uui-button compact label="Delete"><uui-icon name="icon-trash"></uui-icon></uui-button>
+									</uui-action-bar>
+								</uui-table-cell>
+							</uui-table-row>
+							<uui-table-row>
+								<uui-table-cell>Writes in British English</uui-table-cell>
+								<uui-table-cell>Fact</uui-table-cell>
+								<uui-table-cell></uui-table-cell>
+								<uui-table-cell>14&#8209;11&#8209;2026</uui-table-cell>
+								<uui-table-cell>
+									<uui-action-bar>
+										<uui-button compact label="Edit"><uui-icon name="icon-edit"></uui-icon></uui-button>
+										<uui-button compact label="Delete"><uui-icon name="icon-trash"></uui-icon></uui-button>
+									</uui-action-bar>
+								</uui-table-cell>
+							</uui-table-row>
+							<uui-table-row>
+								<uui-table-cell>Works on the Nordhem webshop team</uui-table-cell>
+								<uui-table-cell>Fact</uui-table-cell>
+								<uui-table-cell></uui-table-cell>
+								<uui-table-cell>03&#8209;11&#8209;2026</uui-table-cell>
+								<uui-table-cell>
+									<uui-action-bar>
+										<uui-button compact label="Edit"><uui-icon name="icon-edit"></uui-icon></uui-button>
+										<uui-button compact label="Delete"><uui-icon name="icon-trash"></uui-icon></uui-button>
+									</uui-action-bar>
+								</uui-table-cell>
+							</uui-table-row>
+
+							<uui-table-row class="group-row">
+								<uui-table-cell><strong>Nordhem Brand Writer</strong> · your private chats</uui-table-cell>
+								<uui-table-cell></uui-table-cell>
+								<uui-table-cell></uui-table-cell>
+								<uui-table-cell></uui-table-cell>
+								<uui-table-cell></uui-table-cell>
+							</uui-table-row>
+							<uui-table-row>
+								<uui-table-cell>Anna wants product names in bold the first time they appear</uui-table-cell>
+								<uui-table-cell>Fact</uui-table-cell>
+								<uui-table-cell></uui-table-cell>
+								<uui-table-cell>24&#8209;11&#8209;2026</uui-table-cell>
+								<uui-table-cell>
+									<uui-action-bar>
+										<uui-button compact label="Edit"><uui-icon name="icon-edit"></uui-icon></uui-button>
+										<uui-button compact label="Delete"><uui-icon name="icon-trash"></uui-icon></uui-button>
+									</uui-action-bar>
+								</uui-table-cell>
+							</uui-table-row>
+							<uui-table-row>
+								<uui-table-cell>Anna likes three headline options to choose from</uui-table-cell>
+								<uui-table-cell>Lesson</uui-table-cell>
+								<uui-table-cell></uui-table-cell>
+								<uui-table-cell>22&#8209;11&#8209;2026</uui-table-cell>
+								<uui-table-cell>
+									<uui-action-bar>
+										<uui-button compact label="Edit"><uui-icon name="icon-edit"></uui-icon></uui-button>
+										<uui-button compact label="Delete"><uui-icon name="icon-trash"></uui-icon></uui-button>
+									</uui-action-bar>
+								</uui-table-cell>
+							</uui-table-row>
+							<uui-table-row>
+								<uui-table-cell>Drafts go to Sophie Berg for review before publishing</uui-table-cell>
+								<uui-table-cell>Fact</uui-table-cell>
+								<uui-table-cell></uui-table-cell>
+								<uui-table-cell>19&#8209;11&#8209;2026</uui-table-cell>
+								<uui-table-cell>
+									<uui-action-bar>
+										<uui-button compact label="Edit"><uui-icon name="icon-edit"></uui-icon></uui-button>
+										<uui-button compact label="Delete"><uui-icon name="icon-trash"></uui-icon></uui-button>
+									</uui-action-bar>
+								</uui-table-cell>
+							</uui-table-row>
+
+							<uui-table-row class="group-row">
+								<uui-table-cell><strong>SEO Helper</strong> · memory is off for this agent</uui-table-cell>
+								<uui-table-cell></uui-table-cell>
+								<uui-table-cell></uui-table-cell>
+								<uui-table-cell></uui-table-cell>
+								<uui-table-cell></uui-table-cell>
+							</uui-table-row>
+							<uui-table-row>
+								<uui-table-cell>Meta descriptions should stay under 155 characters</uui-table-cell>
+								<uui-table-cell>Fact</uui-table-cell>
+								<uui-table-cell></uui-table-cell>
+								<uui-table-cell>02&#8209;11&#8209;2026</uui-table-cell>
+								<uui-table-cell>
+									<uui-action-bar>
+										<uui-button compact label="Edit"><uui-icon name="icon-edit"></uui-icon></uui-button>
+										<uui-button compact label="Delete"><uui-icon name="icon-trash"></uui-icon></uui-button>
+									</uui-action-bar>
+								</uui-table-cell>
+							</uui-table-row>
+						</uui-table>
+				</div>
+				<!-- Replace to here. -->
+			</div>
+
+			<div class="footer">
+				<div class="actions">
+					<uui-button look="secondary" label="Close">Close</uui-button>
+					<uui-button look="primary" color="danger" label="Log out">Log out</uui-button>
+				</div>
+			</div>
+		</div>
+	</aside>
+</body>
+</html>

@@ -1,0 +1,230 @@
+# Plan: Agent memory
+
+**28 tasks in 7 areas**, in build order. Core settings come first because the Agent package's
+settings panel needs them; Workspace comes last because it plugs into the Agent package's space
+hook. Each task names its stories (see STORIES.md) and the specs that must go green.
+
+> [!IMPORTANT]
+> **2 guesses need your OK.**
+>
+> 1. **Undo is `DELETE /{id}`.** Deleting a memory that replaced others within the last 7 days
+>    makes them active again (R22), from the chat note and from the lists alike. No separate
+>    undo route.\
+>    *If not:* a `POST /{id}/undo` route, and list deletes don't restore anything.
+> 2. **Discard on a held note is `DELETE /{id}` too.** A held memory never replaced anything,
+>    so nothing comes back.\
+>    *If not:* a `POST /{id}/discard` route that keeps a record of the discard.
+
+## Core: settings extension
+
+- [ ] **T1** - story: MEM-01 (AC1-AC4, AC7, AC8). Server side of the settings extension in
+  `Umbraco.AI/src`: `AISettingDefinition` (key, type, default), `AISettingDefinitionCollection`
+  + builder + `AISettingDefinitions()` extension, `AISettings` gains an additional-values map,
+  `IAISettingsService.GetSettingValueAsync<T>(key)` with validation of unknown keys and types,
+  `EFCoreAISettingsRepository` reads and writes additional keys as `AISettingsEntity` rows,
+  settings request/response models gain `additional`. Follows ARCHITECTURE "Settings extension".
+  Acceptance: MEM-01 AC1-AC4, AC7, AC8 specs green; `dotnet build Umbraco.AI/Umbraco.AI.slnx`.
+  depends-on: none. parallel-group: A
+
+- [ ] **T2** - story: MEM-01 (AC5, AC6). Backoffice side in
+  `Umbraco.AI.Web.StaticAssets/Client/src/settings/`: the `uaiSettingsPanel` manifest type
+  (`extensions/uai-settings-panel.extension.ts`), get/set for additional values on
+  `settings-workspace.context.ts`, an extension slot after the built-in boxes in
+  `settings-editor.element.ts`, both exported from `exports.ts`. Regenerate the core OpenAPI
+  client for `additional`.
+  Acceptance: MEM-01 AC5, AC6 specs green; `npm run build:core`.
+  depends-on: T1
+
+- [ ] **T3** - **wire: settings extension into the AI Settings screen.** story: MEM-01 (AC2,
+  AC6). Register a throwaway test panel and setting on the demo site, change it in the browser
+  and save.
+  Acceptance: a real `PUT` then `GET` on the demo site round-trips the value; the panel shows
+  after "Transparency". Remove the test panel before commit.
+  depends-on: T2
+
+## Agent: model and data
+
+- [ ] **T4** - story: MEM-04 (AC1), MEM-16 (AC6, AC7). Domain and persistence: `AIMemory`,
+  `AIMemoryStatus`, `AIMemoryKind`, `AIMemorySpace`, `AIMemorySpaceTypes`, internal
+  `IAIMemoryRepository`, `AIMemoryEntity`, `EFCoreAIMemoryRepository`, `Memories` on
+  `UmbracoAIAgentDbContext`, migration `UmbracoAIAgent_AddMemory` for SQL Server and SQLite with
+  the table and two indexes in ARCHITECTURE "Data model". Follows `ef-core-data`.
+  Acceptance: repository specs green against SQLite and SQL Server; the migration applies on a
+  fresh demo site.
+  depends-on: none. parallel-group: A
+
+- [ ] **T5** - story: MEM-03 (AC1, AC2). `MemoryMode` (`Off`, `Work`, `WorkAndPerson`, default
+  `Off`) on `AIStandardAgentConfig`, `memoryMode` on `AgentConfigModel`, mapped in
+  `AgentMapDefinition`.
+  Acceptance: MEM-03 AC1, AC2 specs green.
+  depends-on: none. parallel-group: A
+
+- [ ] **T6** - story: MEM-04 (AC9, AC10), MEM-06 (AC1-AC4). `AIMemorySuspectCheck`: secret shapes →
+  not saved; echoes a tool result → held `echoes-content`; instruction-like or link/email/code
+  after tool output → held `instruction-like`; shared space after tool output → held
+  `shared-after-content`. Pure function over the text, the run's messages and the target space.
+  Acceptance: MEM-04 AC9, AC10 and MEM-06 AC1-AC4 specs green.
+  depends-on: T4. parallel-group: B
+
+- [ ] **T7** - story: MEM-09 (AC1, AC2). The space hook: public `IAIMemorySpaceResolver`
+  (claim a run; can read; can write), `AIMemorySpaceResolverCollection` + builder, built-in
+  `UserAgentMemorySpaceResolver` always last.
+  Acceptance: MEM-09 AC1, AC2 specs green.
+  depends-on: T4. parallel-group: B
+
+- [ ] **T8** - story: MEM-02 (AC3-AC6), MEM-12 (AC5, AC7-AC9), MEM-03 (AC3, AC5, AC6).
+  Effective memory: `AIMemorySettings` registers `Agent.Memory.Enabled` (default true) and
+  `Agent.Memory.PersonalMemory` (default `Allowed`) through T1; `AIPersonalMemoryPolicy`;
+  `AIMemoryUserPreference` stores the personal switch with `IUserDataService` only once flipped.
+  One method works out, for a run, which layers may be read and saved (R1-R1f).
+  Acceptance: the listed specs green.
+  depends-on: T1, T5. parallel-group: B
+
+- [ ] **T9** - story: MEM-04 (AC12), MEM-05 (AC2-AC9), MEM-06 (AC5-AC9), MEM-09 (AC3,
+  AC4), MEM-10 (all), MEM-16 (AC6, AC7). `IAIMemoryService`/`AIMemoryService`: list, save,
+  update, move, keep, delete; caps (30 "about you", 50 per space); 300-character limit; expired,
+  held-after-7-days and replaced-after-7-days rows cleared on read or when room is needed;
+  `replaces` checks; delete restores replaced memories within 7 days (plan guess 1); access
+  through the owning resolver; the four notifications.
+  Acceptance: the listed specs green.
+  depends-on: T6, T7, T8
+
+## Agent: in the run
+
+- [ ] **T10** - story: MEM-04 (AC5, AC6, AC9-AC12), MEM-05 (AC1, AC5-AC9), MEM-07 (all).
+  `AIMemoryTools`: `remember` and `forget` as plain functions with the argument and result
+  shapes in SPEC "Agent tools"; short ids (first 8 characters) mapped back within the run's
+  visible memories; reads run messages from `FunctionInvokingChatClient.CurrentContext` for the
+  suspect check.
+  Acceptance: the listed specs green.
+  depends-on: T9
+
+- [ ] **T11** - story: MEM-03 (AC3-AC7), MEM-04 (AC1-AC4, AC7, AC8), MEM-08 (AC1-AC5, AC7),
+  MEM-02 (AC3). `AIMemoryContextProvider` and `AIMemoryPrompt`: resolve the space, load both
+  layers, append the block as a text resource to `Umbraco.AI.AdditionalResources`, freeze the
+  injected list in the `AgentSession` state, append the "changed since this chat started" note
+  to `PendingSystemMessage`, offer the tools through `AIContext.Tools`; nothing when memory is
+  off for the run or there's no backoffice user.
+  Acceptance: the listed specs green.
+  depends-on: T10
+
+- [ ] **T12** - **wire: memory provider into agent runs.** story: MEM-04 (AC1, AC2), MEM-08
+  (AC6). Attach the provider in `AIAgentFactory`; register the service, repository, resolver
+  collection, settings and tools in `Umbraco.AI.Agent.Startup`.
+  Acceptance: on the demo site with Anthropic, an agent set to `WorkAndPerson` saves a fact in
+  the Copilot sidebar and recalls it in a new chat; the run log shows the block after the AI
+  Context.
+  depends-on: T11
+
+- [ ] **T13** - story: MEM-16 (AC1-AC3). `UserDeletedMemoryHandler` (own layers only) and
+  `AgentDeletedMemoryHandler`, registered in Startup.
+  Acceptance: MEM-16 AC1-AC3 specs green; deleting a test user on the demo site removes their
+  rows.
+  depends-on: T12
+
+## Agent: Management API
+
+- [ ] **T14** - story: MEM-12 (AC1, AC3, AC4), MEM-13 (AC1, AC2, AC6), MEM-15 (AC6, AC7), MEM-09
+  (AC3, AC4). Memory controllers, models and mapping under
+  `Umbraco.AI.Agent.Web/Api/Management/Memory/`: `GET /mine`, `PUT /mine/preferences`,
+  `GET ?spaceType=&spaceKey=`, `PUT /{id}`, `POST /{id}/move`, `POST /{id}/keep`,
+  `DELETE /{id}`, with the status codes in SPEC "Endpoints".
+  Acceptance: the listed specs green.
+  depends-on: T9
+
+- [ ] **T15** - **wire: memory API into the Management API.** story: MEM-12 (AC1). Register the
+  controllers, regenerate the Agent OpenAPI client (`npm run generate-client`).
+  Acceptance: real `GET /mine` and `DELETE /{id}` calls on the demo site return the documented
+  codes.
+  depends-on: T12, T14
+
+## Agent: screens
+
+- [ ] **T16** - story: MEM-03 (AC1, AC2), MEM-02 (AC8). Memory dropdown (Off, Work only, Work
+  and person) in "Agent Behavior" on `agent-details-workspace-view.element.ts`, with the
+  site-off warning tag. Matches `mockups/agent-memory-setting.png`.
+  Acceptance: specs green; `npm run build:agent`; the setting saves on the demo site.
+  depends-on: T5, T15. parallel-group: C
+
+- [ ] **T17** - story: MEM-02 (AC1, AC2, AC7). `memory-settings-panel.element.ts` as a
+  `uaiSettingsPanel`: "Agent memory" toggle and "Personal memory" dropdown, disabled while the
+  toggle is off. Matches `mockups/settings-memory-panel.png`.
+  Acceptance: specs green; the box shows and saves on the demo site.
+  depends-on: T3, T8, T15. parallel-group: C
+
+- [ ] **T18** - story: MEM-13 (all). Memory repository, shared `memory-list.element.ts` (Memory,
+  Kind, Status, Until, Saved by, Saved, actions; group header rows on light grey), centred
+  `edit-memory-modal` (300-character counter, "Forget after" date), and `memory/exports.ts` for
+  Workspace. Matches `mockups/edit-memory.png`.
+  Acceptance: MEM-13 specs green; `npm run build:agent`.
+  depends-on: T15. parallel-group: C
+
+- [ ] **T19** - story: MEM-12 (all). "Your AI memory" user profile app: the personal switch in
+  a box (hidden with a note under `NotAllowed`), then the list grouped by "About you" and each
+  agent, "paused" and "memory is off for this agent" on group headers, empty state. Matches
+  `mockups/my-memory.png` and `my-memory-paused.png`.
+  Acceptance: MEM-12 specs green; opens from the avatar on the demo site.
+  depends-on: T18
+
+- [ ] **T20** - story: MEM-11 (all). `remember-tool.element.ts` and `forget-tool.element.ts`
+  plus `uaiAgentToolRenderer` manifests in Agent.UI `chat/tools/memory/`: saved, learned,
+  updated/merged, held, not saved, forgot; Move, Undo, Keep, Discard calling the memory API;
+  errors in place; reopened notes show the memory's current state. Matches
+  `mockups/chat-memory-notes.png` and `-moved.png`.
+  Acceptance: MEM-11 specs green; `npm run build:agent-ui`; notes render in the sidebar and in
+  Workspace on the demo site.
+  depends-on: T15. parallel-group: C
+
+## Copilot Workspace
+
+- [ ] **T21** - story: MEM-15 (AC1, AC2). `IAIConversationShareService.ConversationHasEverBeenSharedAsync`,
+  read from share rows including revoked ones.
+  Acceptance: MEM-15 AC1, AC2 service specs green.
+  depends-on: none. parallel-group: A
+
+- [ ] **T22** - story: MEM-14 (AC1, AC2, AC8, AC9), MEM-15 (AC1-AC3, AC6, AC7).
+  `WorkspaceMemorySpaceResolver` (project, then ever-shared chat; owner writes, recipients read
+  shared chats, recipients outside a project never list it) and `WorkspaceMemorySpaceTypes`.
+  Acceptance: the listed specs green.
+  depends-on: T7, T21
+
+- [ ] **T23** - **wire: Workspace spaces into memory.** story: MEM-14 (AC1), MEM-15 (AC1).
+  Register the resolver first in `Copilot.Workspace.Startup`; make sure the project and
+  conversation ids reach the provider through the runtime context.
+  Acceptance: on the demo site, a fact saved in a project chat loads in a second project chat
+  and not in a private chat.
+  depends-on: T12, T22
+
+- [ ] **T24** - story: MEM-16 (AC4, AC5). `ProjectDeletedMemoryHandler` and
+  `ConversationDeletedMemoryHandler`, registered in Startup.
+  Acceptance: MEM-16 AC4, AC5 specs green.
+  depends-on: T23
+
+- [ ] **T25** - story: MEM-14 (AC3-AC7). Project "Memory" workspace view
+  (`project-memory-workspace-view.element.ts`, weight 150) reusing the shared list, held rows
+  first, tab badge counting held only, empty state. Matches `mockups/project-memory.png` and
+  `-empty.png`.
+  Acceptance: MEM-14 AC3-AC7 specs green; the tab shows on the demo site.
+  depends-on: T18, T23. parallel-group: D
+
+- [ ] **T26** - story: MEM-15 (AC4, AC5, AC8), MEM-14 (AC10). Memory section after "Shared
+  with" in `conversation-context-panel.element.ts` with the info tooltip and read-only rows for
+  recipients; the share picker warning mentions memory. Matches
+  `mockups/conversation-memory.png` and `-recipient.png`.
+  Acceptance: the listed specs green; both show on the demo site.
+  depends-on: T18, T23. parallel-group: D
+
+## Shipping
+
+- [ ] **T27** - story: MEM-01 (all). Cross-product floors: the Agent package's
+  `Umbraco.AI.Core` range floor moves to the core version with the settings extension, and
+  Workspace's Agent floor moves to the version with the space hook. Test with
+  `UseProjectReferences=false`.
+  Acceptance: each product's slnx builds with ranges.
+  depends-on: T24, T25, T26
+
+- [ ] **T28** - story: MEM-04 (AC1). Full smoke test on the demo site with Anthropic: every
+  screen, the five moments (first run, mistake, wait, finish, return), Workspace prompt cache
+  hits across turns.
+  Acceptance: smoke-tester PASS with screenshots.
+  depends-on: T27

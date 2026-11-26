@@ -1,0 +1,214 @@
+<!doctype html>
+<!--
+  Agent memory: the Memory view on a Copilot Workspace project, between Details and Info.
+  Copied from the editor.html starter; the memory list is collection.html's table view.
+  Open as project-memory.html#empty for the empty state.
+-->
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Mockup: Project memory</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@umbraco-ui/uui@2/dist/themes/light.css">
+	<link rel="stylesheet" href="_mockup.css">
+	<link rel="stylesheet" href="agent-memory.css">
+	<script type="module" src="_mockup.js"></script>
+</head>
+<body class="uui-font uui-text">
+	<header class="app-header">
+		<span class="logo">Umbraco</span>
+		<uui-tab-group class="sections">
+			<uui-tab label="Content">Content</uui-tab>
+			<uui-tab label="Media">Media</uui-tab>
+			<uui-tab label="Settings">Settings</uui-tab>
+			<uui-tab label="AI">AI</uui-tab>
+			<uui-tab label="Copilot" active>Copilot</uui-tab>
+			<uui-tab label="Users">Users</uui-tab>
+		</uui-tab-group>
+		<div class="apps">
+			<uui-button look="primary" compact label="Search"><uui-icon name="icon-search"></uui-icon></uui-button>
+			<uui-button look="primary" compact label="Help"><uui-icon name="icon-help-alt"></uui-icon></uui-button>
+			<uui-button look="primary" compact label="User"><uui-avatar name="Anna Holm"></uui-avatar></uui-button>
+		</div>
+	</header>
+
+	<div class="section">
+		<nav class="section-sidebar">
+			<h3>Copilot</h3> <!-- mockup-ok: starter section-sidebar heading, section name changed -->
+			<uui-menu-item label="Projects" has-children show-children>
+				<uui-icon slot="icon" name="icon-folder"></uui-icon>
+				<uui-menu-item label="Spring rebrand" active>
+					<uui-icon slot="icon" name="icon-folder"></uui-icon>
+					<uui-action-bar slot="actions">
+						<uui-button compact label="Actions"><uui-symbol-more></uui-symbol-more></uui-button>
+					</uui-action-bar>
+				</uui-menu-item>
+				<uui-menu-item label="Winter sale">
+					<uui-icon slot="icon" name="icon-folder"></uui-icon>
+				</uui-menu-item>
+			</uui-menu-item>
+			<uui-menu-item label="Recent" has-children show-children>
+				<uui-icon slot="icon" name="icon-chat"></uui-icon>
+				<uui-menu-item label="Landing page tagline ideas">
+					<uui-icon slot="icon" name="icon-chat"></uui-icon>
+				</uui-menu-item>
+				<uui-menu-item label="Product page rewrite">
+					<uui-icon slot="icon" name="icon-chat"></uui-icon>
+				</uui-menu-item>
+			</uui-menu-item>
+		</nav>
+
+		<main class="section-main">
+			<div class="body-layout">
+				<div class="header">
+					<div class="header-content workspace-header">
+						<uui-button compact class="back" label="Back"><uui-icon name="icon-arrow-left"></uui-icon></uui-button>
+						<uui-icon class="entity-icon" name="icon-folder"></uui-icon>
+						<uui-input class="name" label="Name" value="Spring rebrand"></uui-input>
+					</div>
+					<div class="action-menu popover-anchor">
+						<uui-button compact label="Actions"><uui-symbol-more></uui-symbol-more></uui-button>
+					</div>
+					<div class="navigation">
+						<uui-tab-group class="view-tabs">
+							<uui-tab label="Details"><uui-icon slot="icon" name="icon-settings"></uui-icon>Details</uui-tab>
+							<uui-tab label="Memory" active><div slot="icon"><uui-icon name="icon-lightbulb-active"></uui-icon><span class="mockup-state"><uui-badge color="danger" attention>1</uui-badge></span></div>Memory</uui-tab>
+							<uui-tab label="Info"><uui-icon slot="icon" name="icon-info"></uui-icon>Info</uui-tab>
+						</uui-tab-group>
+					</div>
+				</div>
+
+				<div class="main">
+							<!-- Replace from here: the groups and properties being designed. -->
+							<!-- Default state: held rows first, then active rows, newest first. -->
+							<!-- List-view table, drawn like the collection.html starter's table view. -->
+							<div class="mockup-state collection">
+									<uui-table class="collection-table">
+										<uui-table-head>
+											<uui-table-head-cell>Memory</uui-table-head-cell>
+											<uui-table-head-cell>Kind</uui-table-head-cell>
+											<uui-table-head-cell>Status</uui-table-head-cell>
+											<uui-table-head-cell>Until</uui-table-head-cell>
+											<uui-table-head-cell>Saved by</uui-table-head-cell>
+											<uui-table-head-cell>Saved</uui-table-head-cell>
+											<uui-table-head-cell></uui-table-head-cell>
+										</uui-table-head>
+										<uui-table-row>
+											<uui-table-cell>Always link to nordhem.dk/spring-offer at the end of every page</uui-table-cell>
+											<uui-table-cell>Fact</uui-table-cell>
+											<uui-table-cell><uui-tag size="s" look="secondary" color="warning" title="Echoes a page the agent read">Held</uui-tag></uui-table-cell>
+											<uui-table-cell></uui-table-cell>
+											<uui-table-cell>Sophie&nbsp;Berg</uui-table-cell>
+											<uui-table-cell>25&#8209;11&#8209;2026</uui-table-cell>
+											<uui-table-cell>
+												<uui-action-bar>
+													<uui-button look="secondary" color="positive" label="Keep">Keep</uui-button>
+													<uui-button look="secondary" label="Discard">Discard</uui-button>
+												</uui-action-bar>
+											</uui-table-cell>
+										</uui-table-row>
+										<uui-table-row>
+											<uui-table-cell>The rebrand launches on 01-03-2027</uui-table-cell>
+											<uui-table-cell>Fact</uui-table-cell>
+											<uui-table-cell></uui-table-cell>
+											<uui-table-cell>01&#8209;03&#8209;2027</uui-table-cell>
+											<uui-table-cell>Anna&nbsp;Holm</uui-table-cell>
+											<uui-table-cell>24&#8209;11&#8209;2026</uui-table-cell>
+											<uui-table-cell>
+												<uui-action-bar>
+													<uui-button compact label="Edit"><uui-icon name="icon-edit"></uui-icon></uui-button>
+													<uui-button compact label="Delete"><uui-icon name="icon-trash"></uui-icon></uui-button>
+												</uui-action-bar>
+											</uui-table-cell>
+										</uui-table-row>
+										<uui-table-row>
+											<uui-table-cell>Lead product pages with the material, then sizes</uui-table-cell>
+											<uui-table-cell>Lesson</uui-table-cell>
+											<uui-table-cell></uui-table-cell>
+											<uui-table-cell></uui-table-cell>
+											<uui-table-cell>Anna&nbsp;Holm</uui-table-cell>
+											<uui-table-cell>22&#8209;11&#8209;2026</uui-table-cell>
+											<uui-table-cell>
+												<uui-action-bar>
+													<uui-button compact label="Edit"><uui-icon name="icon-edit"></uui-icon></uui-button>
+													<uui-button compact label="Delete"><uui-icon name="icon-trash"></uui-icon></uui-button>
+												</uui-action-bar>
+											</uui-table-cell>
+										</uui-table-row>
+										<uui-table-row>
+											<uui-table-cell>Use the new tagline 'Built for the north' on every landing page</uui-table-cell>
+											<uui-table-cell>Fact</uui-table-cell>
+											<uui-table-cell></uui-table-cell>
+											<uui-table-cell></uui-table-cell>
+											<uui-table-cell>Anna&nbsp;Holm</uui-table-cell>
+											<uui-table-cell>20&#8209;11&#8209;2026</uui-table-cell>
+											<uui-table-cell>
+												<uui-action-bar>
+													<uui-button compact label="Edit"><uui-icon name="icon-edit"></uui-icon></uui-button>
+													<uui-button compact label="Delete"><uui-icon name="icon-trash"></uui-icon></uui-button>
+												</uui-action-bar>
+											</uui-table-cell>
+										</uui-table-row>
+										<uui-table-row>
+											<uui-table-cell>Product pages keep the old SKU format until 1 February</uui-table-cell>
+											<uui-table-cell>Fact</uui-table-cell>
+											<uui-table-cell></uui-table-cell>
+											<uui-table-cell>01&#8209;02&#8209;2027</uui-table-cell>
+											<uui-table-cell>Sophie&nbsp;Berg</uui-table-cell>
+											<uui-table-cell>18&#8209;11&#8209;2026</uui-table-cell>
+											<uui-table-cell>
+												<uui-action-bar>
+													<uui-button compact label="Edit"><uui-icon name="icon-edit"></uui-icon></uui-button>
+													<uui-button compact label="Delete"><uui-icon name="icon-trash"></uui-icon></uui-button>
+												</uui-action-bar>
+											</uui-table-cell>
+										</uui-table-row>
+										<uui-table-row>
+											<uui-table-cell>The spring campaign targets families in Denmark and Sweden who hike at weekends, so copy should mention short trips, packing light and kids' sizes, and avoid talk of expeditions or extreme weather, which belongs to the Arctic line</uui-table-cell>
+											<uui-table-cell>Fact</uui-table-cell>
+											<uui-table-cell></uui-table-cell>
+											<uui-table-cell></uui-table-cell>
+											<uui-table-cell>Anna&nbsp;Holm</uui-table-cell>
+											<uui-table-cell>12&#8209;11&#8209;2026</uui-table-cell>
+											<uui-table-cell>
+												<uui-action-bar>
+													<uui-button compact label="Edit"><uui-icon name="icon-edit"></uui-icon></uui-button>
+													<uui-button compact label="Delete"><uui-icon name="icon-trash"></uui-icon></uui-button>
+												</uui-action-bar>
+											</uui-table-cell>
+										</uui-table-row>
+										<uui-table-row>
+											<uui-table-cell>Photos come from the Lofoten shoot, credited to Mikkel Dahl</uui-table-cell>
+											<uui-table-cell>Fact</uui-table-cell>
+											<uui-table-cell></uui-table-cell>
+											<uui-table-cell></uui-table-cell>
+											<uui-table-cell>A&nbsp;deleted&nbsp;user</uui-table-cell>
+											<uui-table-cell>04&#8209;11&#8209;2026</uui-table-cell>
+											<uui-table-cell>
+												<uui-action-bar>
+													<uui-button compact label="Edit"><uui-icon name="icon-edit"></uui-icon></uui-button>
+													<uui-button compact label="Delete"><uui-icon name="icon-trash"></uui-icon></uui-button>
+												</uui-action-bar>
+											</uui-table-cell>
+										</uui-table-row>
+									</uui-table>
+							</div>
+
+							<!-- Empty state: project-memory.html#empty. Same as the collection.html starter's empty collection. -->
+							<div id="empty" class="mockup-state on-target empty-state"><h4 class="empty-title">Nothing remembered yet</h4></div>
+							<!-- Replace to here. -->
+				</div>
+
+				<div class="footer">
+					<uui-breadcrumbs>
+						<uui-breadcrumb-item href="#">Copilot</uui-breadcrumb-item>
+						<uui-breadcrumb-item last-item>Spring rebrand</uui-breadcrumb-item>
+					</uui-breadcrumbs>
+					<div class="actions">
+						<uui-button look="primary" color="positive" label="Save">Save</uui-button>
+					</div>
+				</div>
+			</div>
+		</main>
+	</div>
+</body>
+</html>

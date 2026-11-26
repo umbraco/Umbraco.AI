@@ -69,7 +69,12 @@ only when the agent or prompt running allows it. See "Personal context".
 - **The tools are plain functions the provider supplies through `AIContext.Tools`**, not
   `[AITool]` classes. So they never show in the agent's tool picker, admins can't half-enable
   them, and turning memory off removes them. The spike proved provider tools run through our
-  function-invoking middleware and stream out as normal tool calls.
+  function-invoking middleware and stream out as normal tool calls. They aren't system tools
+  (`IAISystemTool`, like `get_context_resource`): those are offered on every agent and prompt
+  run, so memory tools would show with memory off and leak into prompts. Their arguments are
+  typed records with `[Description]` on each field, created through the same function factory
+  as the system tools, so the model sees the same style. The names stay `remember` and
+  `forget`, which read more naturally to a model than `save_memory`.
 - **One table with a space type and key**, not a table per layer. A new layer (the company
   layer later) is a new space type, not a migration.
 - **Space types are strings owned by whoever defines them.** The Agent package defines `user`

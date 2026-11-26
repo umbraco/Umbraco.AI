@@ -116,3 +116,9 @@
   the prompt editor's existing "Include Entity Context" in verb and title casing. The property is
   `IncludePersonalContext` and the runtime key `Umbraco.AI.IncludePersonalContext`, mirroring
   `IncludeEntityContext`.
+- **Memory tools keep their names and stay provider-supplied** (user's call, 26-11-2026). They
+  don't follow the context lookup tools' `verb_noun` names (`get_context_resource`), since
+  `remember` and `forget` read more naturally. They aren't system tools, which are offered on
+  every agent and prompt run. Their arguments match the system tools' style: typed records with
+  `[Description]`. Rejected: `save_memory` / `forget_memory`, and a new conditional system tool
+  kind in core.

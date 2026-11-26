@@ -1,6 +1,6 @@
 # Stories: Agent memory
 
-**17 stories, 141 criteria.** Story ids are used by `PLAN.md` and the spec files, so never
+**17 stories, 144 criteria.** Story ids are used by `PLAN.md` and the spec files, so never
 renumber them.
 
 > [!IMPORTANT]
@@ -27,7 +27,7 @@ renumber them.
 - [MEM-05](#mem-05-merge-instead-of-repeat) Merge instead of repeat, 9 criteria
 - [MEM-06](#mem-06-suspect-saves-are-held) Suspect saves are held, 9 criteria
 - [MEM-17](#mem-17-plug-in-extra-memory-checks) Plug in extra memory checks, 10 criteria
-- [MEM-07](#mem-07-forget-in-chat) Forget in chat, 4 criteria
+- [MEM-07](#mem-07-forget-in-chat) Forget in chat, 7 criteria
 - [MEM-08](#mem-08-memory-keeps-the-prompt-cache-warm) Memory keeps the prompt cache warm, 7 criteria
 - [MEM-09](#mem-09-other-packages-add-their-own-memory-spaces) Other packages add their own memory spaces, 4 criteria
 - [MEM-10](#mem-10-hooks-around-saving-and-deleting) Hooks around saving and deleting, 5 criteria
@@ -424,6 +424,21 @@ so that I don't have to open a list to remove a memory.
 - **Given** a short id that matches another user's memory
 - **When** the agent calls `forget` with it
 - **Then** the result is `not_found`
+
+### AC5: Ids that would clash are lengthened
+- **Given** two of the run's memories whose ids share their first 8 characters
+- **When** the memory block is built
+- **Then** the two ids differ
+
+### AC6: An ambiguous id is refused (R20a)
+- **Given** a short id that matches two of the run's memories
+- **When** the agent calls `forget` with it
+- **Then** the result is `not_found` with a reason
+
+### AC7: An ambiguous id forgets nothing (R20a)
+- **Given** a short id that matches two of the run's memories
+- **When** the agent calls `forget` with it
+- **Then** both memories are still stored
 
 ---
 

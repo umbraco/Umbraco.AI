@@ -9,7 +9,7 @@ and shared chats, and anything unclaimed falls back to "you + this agent".
 ![Memory flow for one run](./diagrams/memory-run-flow.svg)
 
 > [!IMPORTANT]
-> **7 guesses need your OK.**
+> **6 guesses need your OK.**
 >
 > 1. **No `recall` tool in v1.** Every active memory in both layers goes into the prompt, capped
 >    per space (see SPEC's limits). A `recall` search tool comes when the caps start to bite.\
@@ -33,9 +33,6 @@ and shared chats, and anything unclaimed falls back to "you + this agent".
 > 6. **A chat that has ever been shared counts as shared**, read from the existing share rows
 >    (revoked rows are kept with `DateRevoked`). No new column on the conversation.\
 >    *If not:* a `MemorySpaceLockedAt` column on the conversation, set on first share.
-> 7. **Memory ids in the prompt are the first 8 characters of the id.** The provider maps them
->    back, scoped to the memories it injected.\
->    *If not:* full ids, about 28 more characters per memory.
 
 ## Decisions
 
@@ -73,6 +70,12 @@ and shared chats, and anything unclaimed falls back to "you + this agent".
   `InsertBefore<UserAgentMemorySpaceResolver, WorkspaceMemorySpaceResolver>()`, so the fallback
   stays last. It also answers "can this user read or
   change this space", so access checks stay with the package that owns the space.
+- **Short ids in the prompt, just long enough to be unique.** Each memory shows the model an
+  id that starts as the first 8 characters of its Guid. Ids that would clash within one run's
+  memories are lengthened until they differ. The provider maps them back only among the
+  memories it injected or saved this run, and an id that matches more than one is refused,
+  never guessed. The helper is `AIShortIdMap` (internal), a shared design for any tool that
+  lists entities to a model (project decision `short-ids-for-models`).
 - **Scope comes from the server, never from the model.** The user is the signed-in user, the
   agent and conversation come from the runtime context. The `remember` tool only picks the
   layer ("about you" or "this space"), never a key.
@@ -217,6 +220,7 @@ Umbraco.AI.Agent.Core/
     AIMemoryRulesCheck.cs               the fixed rules
     DecisionMemorySaveCheck.cs          asks the default Decision profile
     AIMemoryTools.cs                    remember / forget functions
+  Tools/AIShortIdMap.cs                 internal: Guid <-> shortest unique id (min 8) for a run
     Notifications/                      Saving, Saved, Deleting, Deleted
     UserDeletedMemoryHandler.cs         deletes the user's own layers
     AgentDeletedMemoryHandler.cs        deletes user-agent memories for that agent

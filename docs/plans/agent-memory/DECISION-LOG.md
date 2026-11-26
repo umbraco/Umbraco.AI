@@ -82,4 +82,8 @@
   separate memory profile setting (not needed yet; the default profile is enough to start).- **Hooks use Umbraco collection builders** (user's call, 26-11-2026). Space resolvers and save
   checks are ordered (`OrderedCollectionBuilderBase`, like `AIAgentSelectors()`), so packages
   place theirs with `InsertBefore`/`Append`. Settings providers are unordered
-  (`LazyCollectionBuilderBase`, like `AIGuardrailEvaluators()`).
+  (`LazyCollectionBuilderBase`, like `AIGuardrailEvaluators()`).- **Short ids are just long enough, and ambiguous ids are refused** (user's call, 26-11-2026).
+  Replaces architecture guess 7 (a fixed 8-character prefix), which left a small chance of the
+  agent forgetting or merging the wrong memory. Rejected: per-run numbers like m1 (shift between
+  sidebar runs, so older turns point at the wrong memory) and a stored short-code column (only
+  works for tables that add it). Recorded as a project decision so other tools adopt it later.

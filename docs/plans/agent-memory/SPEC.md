@@ -112,6 +112,8 @@ Offered only when the agent has memory on and a backoffice user is signed in.
   the user's personal switch is off, so no Move button shows.
 
 **`forget`** `{ id }` (short id)
+- Short ids are at least 8 characters, longer only where two of the run's memories would
+  otherwise share one.
 - Returns `{ status: "forgotten", memory }`, or `{ status: "not_found" }`.
 
 ## Rules
@@ -161,6 +163,8 @@ Offered only when the agent has memory on and a backoffice user is signed in.
   `replaces` rather than save a near-copy.
 - **R20** `replaces` ids outside the run's visible memories, or in another layer, fail the
   save with a reason; nothing is changed.
+- **R20a** A short id that matches more than one of the run's memories is refused with a
+  reason (`forget` and `replaces` alike); nothing is changed.
 - **R21** A merge counts against the cap as one memory: replaced ones stop counting at once.
 - **R22** Undo on a merge deletes the new memory and makes the replaced ones active again, if
   they're still within 7 days.

@@ -108,8 +108,9 @@ hook. Each task names its stories (see STORIES.md) and the specs that must go gr
 
 - [ ] **T10** - story: MEM-04 (AC5, AC6, AC9-AC12), MEM-05 (AC1, AC5-AC9), MEM-07 (all).
   `AIMemoryTools`: `remember` and `forget` as plain functions with the argument and result
-  shapes in SPEC "Agent tools"; short ids (first 8 characters) mapped back within the run's
-  visible memories; reads run messages from `FunctionInvokingChatClient.CurrentContext` for the
+  shapes in SPEC "Agent tools"; short ids through internal `AIShortIdMap` (first 8 characters,
+  lengthened only where two would clash, ambiguous ids refused; ARCHITECTURE "Short ids") mapped
+  back within the run's visible memories; reads run messages from `FunctionInvokingChatClient.CurrentContext` for the
   suspect check.
   Acceptance: the listed specs green.
   depends-on: T9, T29

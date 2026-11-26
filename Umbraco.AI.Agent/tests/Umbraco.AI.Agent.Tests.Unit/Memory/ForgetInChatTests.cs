@@ -1,4 +1,4 @@
-// MEM-07 — Forget in chat (AC1-AC4)
+// MEM-07 — Forget in chat (AC1-AC7)
 using Xunit;
 
 namespace Umbraco.AI.Agent.Tests.Unit.Memory;
@@ -70,6 +70,46 @@ public class ForgetInChatTests
         {
             // When: forget { id }
             // Then: result.Status.ShouldBe("not_found");
+        }
+    }
+
+    public class GivenTwoMemoriesWhoseIdsShareTheirFirst8Characters
+    {
+        public GivenTwoMemoriesWhoseIdsShareTheirFirst8Characters()
+        {
+            // Two of the run's memories with Guids that share their first 8 hex characters.
+        }
+
+        // AC5
+        [Fact(Skip = "Pending")]
+        public void TheirShortIds_Differ()
+        {
+            // When: the memory block is built (AIShortIdMap over the run's memories)
+            // Then: shortIdA.ShouldNotBe(shortIdB);
+        }
+    }
+
+    public class GivenAShortIdThatMatchesTwoOfTheRunsMemories
+    {
+        public GivenAShortIdThatMatchesTwoOfTheRunsMemories()
+        {
+            // An 8-character id that is a prefix of two memories this run can see.
+        }
+
+        // AC6
+        [Fact(Skip = "Pending")]
+        public void Forget_ReturnsNotFound()
+        {
+            // When: forget { id }
+            // Then: result.Status.ShouldBe("not_found");
+        }
+
+        // AC7
+        [Fact(Skip = "Pending")]
+        public void Forget_LeavesBothMemoriesStored()
+        {
+            // When: forget { id }
+            // Then: repository.Count().ShouldBe(2);
         }
     }
 

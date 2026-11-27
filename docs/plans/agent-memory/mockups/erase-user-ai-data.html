@@ -1,0 +1,56 @@
+<!doctype html>
+<!--
+  Erase AI data: the confirm dialog behind the new "Erase AI memory and personal context"
+  entity action on a user (Users > a user > Actions). Copied from the modal-dialog starter.
+  Destructive, so the confirm button is danger.
+-->
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Mockup: Erase AI memory and personal context</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@umbraco-ui/uui@2/dist/themes/light.css">
+	<link rel="stylesheet" href="_mockup.css">
+	<script type="module" src="_mockup.js"></script>
+</head>
+<body class="uui-font uui-text">
+	<header class="app-header">
+		<span class="logo">Umbraco</span>
+		<uui-tab-group class="sections">
+			<uui-tab label="Content">Content</uui-tab>
+			<uui-tab label="Media">Media</uui-tab>
+			<uui-tab label="Settings">Settings</uui-tab>
+			<uui-tab label="AI">AI</uui-tab>
+			<uui-tab label="Users" active>Users</uui-tab>
+		</uui-tab-group>
+		<div class="apps">
+			<uui-button look="primary" compact label="User"><uui-avatar name="Anna Holm"></uui-avatar></uui-button>
+		</div>
+	</header>
+	<div class="section">
+		<nav class="section-sidebar">
+			<h3>Users</h3> <!-- mockup-ok: the modal-dialog starter's own sidebar heading, renamed -->
+			<uui-menu-item label="Users" active>
+				<uui-icon slot="icon" name="icon-user"></uui-icon>
+			</uui-menu-item>
+			<uui-menu-item label="User groups">
+				<uui-icon slot="icon" name="icon-users"></uui-icon>
+			</uui-menu-item>
+		</nav>
+		<main class="section-main"></main>
+	</div>
+
+	<div class="modal-backdrop"></div>
+	<div class="modal-dialog">
+		<uui-dialog>
+			<uui-dialog-layout class="uui-text" headline="Erase AI memory and personal context">
+				<!-- Replace from here: the dialog's message. -->
+				<p>Erase AI data for <strong>Sophie Larsen</strong>? This permanently deletes their "About you" and agent memories, and their personal contexts and resources.</p>
+				<p>Memories they saved in projects and shared chats stay with those spaces. This can't be undone.</p>
+				<!-- Replace to here. -->
+				<uui-button slot="actions" label="Cancel">Cancel</uui-button>
+				<uui-button slot="actions" look="primary" color="danger" label="Erase">Erase</uui-button>
+			</uui-dialog-layout>
+		</uui-dialog>
+	</div>
+</body>
+</html>

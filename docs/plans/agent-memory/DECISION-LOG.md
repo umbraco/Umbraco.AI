@@ -239,3 +239,25 @@ refuted, 24 survived (11 significant, 13 minor, none blocking). Decisions are th
 - Not put to the skeptics: the YAGNI review's points against the settings extension, the
   switch layering, `uaiUserProfileProperty`, the save-check collection, `LastConfirmedAt` and
   short ids. Each was an earlier user call in this log.
+
+## Design folded in from the interrogation (27-11-2026)
+
+- **Unattended runs get a marker, not a user check.** New `Constants.ContextKeys.UnattendedRun`,
+  set by Automate's `RunAgentAction` and the agent and prompt test features. `ContextIdsOverride`
+  was rejected as the marker because inline agents set it too. Amends R2, R27.
+- **Frozen block keeps a fingerprint.** Space, agent, effective mode and the three switches are
+  stored with the list; a mismatch rebuilds it, and dead ids drop out every turn (R16a).
+- **Erase lives in core, each package erases on a notification.** Core can't know what other
+  packages store; a notification plus a `uaiUserDataEraseItem` manifest keeps both the delete and
+  the dialog wording in step with what's installed. Rejected: a core hard-coded list.
+- **Resolver order:** Agent and Prompt insert their resolvers before `PersonalContextResolver`
+  instead of appending, giving Profile, Content, KnowledgeSet, Agent/Prompt, Personal,
+  AdditionalResources. One cache miss on upgrade.
+- **`Forgotten` status** for `forget`, purged after 7 days like replaced rows, with a restore
+  route. Caps count active rows only.
+- **Recipients read memory only through an active Live share** (R12). The ever-shared test stays
+  for picking the space.
+- **Settings get a distributed cache refresher**; memories and personal context still don't.
+- **`GET /{id}`** added so a reopened chat note can show the memory's current state.
+- **F06 restore cap check:** R22 was touched anyway, so merge-undo now checks the cap too.
+

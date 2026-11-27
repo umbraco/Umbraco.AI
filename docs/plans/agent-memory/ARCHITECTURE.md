@@ -179,10 +179,15 @@ Two checks ship, in this order:
 
 1. **`AIMemoryRulesCheck`**, the fixed rules in the table below. Free, and always runs.
 2. **`DecisionMemorySaveCheck`**, which asks the site's default Decision profile one pick-one
-   question about the text: safe, an order to the agent, copied from content, or a secret. It
+   question about the text: safe, an order to the agent, copied from content, a secret, or a
+   personal detail about someone. A personal detail is held (`personal-in-shared`) only when
+   it's going to a shared space, meaning the `space` layer in anything but "you + this agent";
+   in "about you" or a private chat it's no opinion. It
    works like auto agent selection (`DecisionAgentSelector`): no opinion when the Decision
    feature is off, no default Decision profile is set, or the call fails (logged as a warning).
-   A TypeSafe connection with Jev is one way to fill that profile. No new setting.
+   A TypeSafe connection with Jev is one way to fill that profile. No new setting. Without a
+   Decision profile, the memory rules text still tells the agent to ask before saving something
+   personal to a shared space, but nothing enforces it.
 
 The rules check:
 
@@ -441,7 +446,8 @@ umbracoAIAgentMemory
   Text              nvarchar(500)   no
   Kind              int             no    0 Fact, 1 Lesson
   Status            int             no    0 Active, 1 Held, 2 Replaced
-  HoldReason        nvarchar(64)    yes   "echoes-content", "instruction-like", "shared-after-content"
+  HoldReason        nvarchar(64)    yes   "echoes-content", "instruction-like", "shared-after-content",
+                                          "personal-in-shared"
   ReplacedById      Guid            yes   the memory that merged or updated this one
   ExpiresAt         datetime        yes   stops loading after this
   LastConfirmedAt   datetime        no    last save, merge, edit or keep; for fading later

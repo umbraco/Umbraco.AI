@@ -148,3 +148,11 @@
   v18 screenshots (8 new, up to 3 re-taken), v18 pages (4 new, about a dozen updated) as a
   draft UmbracoDocs PR held until release, then the v17 copy with v17 screenshots after the
   port. Screenshots come after the smoke test so they show the finished screens, not mockups.
+- **Personal details bound for a shared space are held by the Decision check** (user's call,
+  27-11-2026). The brief promised the agent asks before saving something personal in a shared
+  space, but only the memory rules text said so: no rule, story or test. The Decision question
+  gains "a personal detail", held as `personal-in-shared` only for projects and shared chats;
+  holding is the asking, since someone must click Keep. Without a Decision profile the rules
+  text is the only guard. Rejected: a fixed-rules check for personal details (names and life
+  events don't have reliable shapes). Layer choice and merging stay with the agent's model,
+  which has the whole chat; a second model call per save isn't worth it there.

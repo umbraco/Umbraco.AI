@@ -1,10 +1,10 @@
-// MEM-17 — Plug in extra memory checks (AC1-AC10)
+// MEM-17 — Plug in extra memory checks (AC1-AC13)
 using Xunit;
 
 namespace Umbraco.AI.Agent.Tests.Unit.Memory;
 
 // AC1-AC2: AIMemorySaveCheckCollection with AIMemoryRulesCheck first and a test IAIMemorySaveCheck after it.
-// AC3-AC10: DecisionMemorySaveCheck over a fake IAIDecisionService, experimental-features flag and
+// AC3-AC13: DecisionMemorySaveCheck over a fake IAIDecisionService, experimental-features flag and
 // profile service (mirrors DecisionAgentSelector's setup). Entry point: AIMemoryTools.remember.
 //
 // Pending specs: each body is the intended arrange/act/assert as comments, so this file compiles
@@ -65,6 +65,37 @@ public class MemorySaveChecksTests
         public void PlainFact_IsSaved()
         {
             // When: remember a plain fact the rules pass
+            // Then: result.Status.ShouldBe("saved");
+        }
+    }
+
+    public class GivenDecisionAnswersAPersonalDetail
+    {
+        // Decision feature on; default Decision profile answers "a personal detail"
+
+        // AC11
+        [Fact(Skip = "Pending")]
+        public void SaveToAProjectSpace_IsHeldAsPersonalInShared()
+        {
+            // Given: a chat in a project
+            // When: remember "Sophie is on parental leave until March" with layer "space"
+            // Then: (result.Status, result.Reason).ShouldBe(("held", "personal-in-shared"));
+        }
+
+        // AC12
+        [Fact(Skip = "Pending")]
+        public void SaveAboutYou_IsSaved()
+        {
+            // When: remember "I'm on leave until March" with layer "user"
+            // Then: result.Status.ShouldBe("saved");
+        }
+
+        // AC13
+        [Fact(Skip = "Pending")]
+        public void SaveInAPrivateChat_IsSaved()
+        {
+            // Given: a private chat outside a project (space type user-agent)
+            // When: remember "Sophie reviews my product pages" with layer "space"
             // Then: result.Status.ShouldBe("saved");
         }
     }

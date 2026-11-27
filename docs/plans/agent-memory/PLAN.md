@@ -132,14 +132,16 @@ the Agent package's space hook. Each task names its stories (see STORIES.md) and
   Acceptance: MEM-04 AC9, AC10, MEM-06 AC1-AC4 and MEM-17 AC1, AC2 specs green.
   depends-on: T4. parallel-group: B
 
-- [ ] **T29** - story: MEM-17 (AC3-AC10). `DecisionMemorySaveCheck`, second in the collection:
-  one `AIChoiceDecisionQuestion` (safe, an order to the agent, copied from content, a secret)
-  through `IAIDecisionService` on the default Decision profile, mapped to held
-  `instruction-like`, held `echoes-content` or not saved; no opinion when the Decision feature
+- [ ] **T29** - story: MEM-17 (AC3-AC13). `DecisionMemorySaveCheck`, second in the collection:
+  one `AIChoiceDecisionQuestion` (safe, an order to the agent, copied from content, a secret, a
+  personal detail) through `IAIDecisionService` on the default Decision profile, mapped to held
+  `instruction-like`, held `echoes-content`, not saved, or held `personal-in-shared` when the
+  target is a shared space (the `space` layer, not `user-agent`); no opinion when the Decision feature
   is off, no default profile is set, or the call throws (warning logged). Mirrors
   `DecisionAgentSelector`.
-  Acceptance: MEM-17 AC3-AC10 specs green; on the demo site with a TypeSafe (Jev) default
-  Decision profile, an order-like save the rules pass comes back held.
+  Acceptance: MEM-17 AC3-AC13 specs green; on the demo site with a TypeSafe (Jev) default
+  Decision profile, an order-like save the rules pass comes back held, and so does a
+  colleague's personal detail saved in a project chat.
   depends-on: T6
 
 - [ ] **T7** - story: MEM-09 (AC1, AC2). The space hook: public `IAIMemorySpaceResolver`

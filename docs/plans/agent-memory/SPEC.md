@@ -79,7 +79,7 @@ type Memory = {
   kind: "fact" | "lesson";
   status: "active" | "held"; // replaced and expired rows are never returned
   expiresAt: string | null;
-  holdReason: "echoes-content" | "instruction-like" | "shared-after-content" | null;
+  holdReason: "echoes-content" | "instruction-like" | "shared-after-content" | "personal-in-shared" | null;
   createdBy: { key: string; name: string } | null; // null when the user was deleted
   dateCreated: string;
   dateModified: string;
@@ -180,6 +180,9 @@ Offered only when the agent has memory on and a backoffice user is signed in.
 - **R9a** With the Decision feature on and a default Decision profile set, every save is also
   asked of that profile. Its answer can hold or refuse a save, never pass one the rules held or
   refused. Without either, or if the call fails, saving works on the rules alone.
+- **R9b** When the Decision profile calls a save a personal detail about someone, it's held
+  with reason `personal-in-shared` if it's going to a project or shared chat, and saved as
+  usual if it's going to "about you" or "you + this agent".
 - **R10** The user can read and change only their own "about you" and "you + this agent"
   memories.
 - **R11** In a project, only the project's owner can change its memories (members later).
@@ -320,6 +323,15 @@ Shows in the Copilot sidebar and in Copilot Workspace, wherever the agent calls 
 | Forgotten | "Forgot: <text>" |
 | Button fails | The note shows the error in place; the button stays |
 | Reopened later | The note shows the memory's current state, not the state at save time |
+
+Held reasons, as the note words them:
+
+| Reason | Text |
+|---|---|
+| `echoes-content` | "This looks like it came from the page, not from you." |
+| `instruction-like` | "This reads like an instruction to the agent." |
+| `shared-after-content` | "This would be shared, and the agent read other content first." |
+| `personal-in-shared` | "This is about a person, and everyone in this space would see it." |
 
 ## Project: Memory tab
 

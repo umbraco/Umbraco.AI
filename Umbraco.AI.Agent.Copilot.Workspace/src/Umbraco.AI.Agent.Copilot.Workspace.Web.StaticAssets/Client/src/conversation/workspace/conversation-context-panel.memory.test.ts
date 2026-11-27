@@ -1,4 +1,4 @@
-// MEM-15 — Shared chat memory (AC4, AC5, AC8)
+// MEM-15 — Shared chat memory (AC4, AC5, AC8, AC11)
 import { describe, it } from "vitest";
 
 // Real entry point: the Memory section of the conversation context panel (T26) and the helpers it
@@ -34,6 +34,15 @@ describe("Feature: shared chat memory section", () => {
         // AC8
         it.skip("reads Nothing remembered in this chat yet", () => {
             // expect(memorySectionText(el)).toBe("Nothing remembered in this chat yet");
+        });
+    });
+
+    describe("Scenario: a chat shared as a Snapshot, opened by the recipient", () => {
+        // Arrange (beforeEach): conversation opened by a recipient of a Snapshot share
+
+        // AC11
+        it.skip("shows no Memory section", () => {
+            // expect(sectionHeadings(el)).not.toContain("Memory");
         });
     });
 });

@@ -1,4 +1,4 @@
-// MEM-19 — Agents and prompts use my personal context (AC1-AC5, AC10-AC13)
+// MEM-19 — Agents and prompts use my personal context (AC1-AC5, AC10-AC14)
 using Xunit;
 
 namespace Umbraco.AI.Tests.Unit.Contexts.Resolvers;
@@ -71,11 +71,11 @@ public class PersonalContextResolverTests
         }
     }
 
-    public class GivenTheSameContextFromTheAgentAndTheUser
+    public class GivenTheSameContextFromTheProfileAndTheUser
     {
-        public GivenTheSameContextFromTheAgentAndTheUser()
+        public GivenTheSameContextFromTheProfileAndTheUser()
         {
-            // AgentId set to an agent with "Nordhem brand voice"; Anna picked it too.
+            // The profile has context "Nordhem brand voice"; Anna picked it too.
         }
 
         // AC5
@@ -120,6 +120,23 @@ public class PersonalContextResolverTests
         {
             // When: PersonalContextResolver.ResolveAsync()
             // Then: result.Resources.ShouldBeEmpty();
+        }
+    }
+
+    public class GivenAnUnattendedRunWithTheFlagSet
+    {
+        public GivenAnUnattendedRunWithTheFlagSet()
+        {
+            // Anna has an Always resource; ContextKeys.IncludePersonalContext = true and
+            // ContextKeys.UnattendedRun set (an Automate action or a test run).
+        }
+
+        // AC14
+        [Fact(Skip = "Pending")]
+        public void SystemPrompt_DoesNotContainTheResource()
+        {
+            // When: context is resolved and formatted
+            // Then: systemPrompt.ShouldNotContain("How I write product pages");
         }
     }
 

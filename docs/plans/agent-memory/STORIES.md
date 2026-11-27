@@ -1,6 +1,6 @@
 # Stories: Agent memory
 
-**22 stories, 203 criteria.** Story ids are used by `PLAN.md` and the spec files, so never
+**24 stories, 265 criteria.** Story ids are used by `PLAN.md` and the spec files, so never
 renumber them.
 
 <details>
@@ -19,46 +19,51 @@ renumber them.
 
 **Core: settings**
 
-- [MEM-01](#mem-01-add-on-settings-on-the-ai-settings-screen) Add-on settings on the AI Settings screen, 8 criteria
+- [MEM-01](#mem-01-add-on-settings-on-the-ai-settings-screen) Add-on settings on the AI Settings screen, 12 criteria
 - [MEM-02](#mem-02-site-wide-memory-settings) Site-wide memory settings, 8 criteria
 
 **Agent: memory engine**
 
 - [MEM-03](#mem-03-memory-mode-per-agent) Memory mode per agent, 8 criteria
-- [MEM-04](#mem-04-the-agent-remembers-between-private-chats) The agent remembers between private chats, 12 criteria
-- [MEM-05](#mem-05-merge-instead-of-repeat) Merge instead of repeat, 9 criteria
-- [MEM-06](#mem-06-suspect-saves-are-held) Suspect saves are held, 9 criteria
+- [MEM-04](#mem-04-the-agent-remembers-between-private-chats) The agent remembers between private chats, 14 criteria
+- [MEM-05](#mem-05-merge-instead-of-repeat) Merge instead of repeat, 10 criteria
+- [MEM-06](#mem-06-suspect-saves-are-held) Suspect saves are held, 15 criteria
 - [MEM-17](#mem-17-plug-in-extra-memory-checks) Plug in extra memory checks, 13 criteria
-- [MEM-07](#mem-07-forget-in-chat) Forget in chat, 7 criteria
-- [MEM-08](#mem-08-memory-keeps-the-prompt-cache-warm) Memory keeps the prompt cache warm, 7 criteria
-- [MEM-09](#mem-09-other-packages-add-their-own-memory-spaces) Other packages add their own memory spaces, 4 criteria
+- [MEM-07](#mem-07-forget-in-chat) Forget in chat, 11 criteria
+- [MEM-08](#mem-08-memory-keeps-the-prompt-cache-warm) Memory keeps the prompt cache warm, 12 criteria
+- [MEM-09](#mem-09-other-packages-add-their-own-memory-spaces) Other packages add their own memory spaces, 6 criteria
 - [MEM-10](#mem-10-hooks-around-saving-and-deleting) Hooks around saving and deleting, 5 criteria
 
 **Agent: screens**
 
-- [MEM-11](#mem-11-memory-notes-in-the-chat) Memory notes in the chat, 12 criteria
-- [MEM-12](#mem-12-your-ai-memory) Your AI memory, 13 criteria
+- [MEM-11](#mem-11-memory-notes-in-the-chat) Memory notes in the chat, 16 criteria
+- [MEM-12](#mem-12-your-ai-memory) Your AI memory, 16 criteria
 - [MEM-13](#mem-13-edit-a-memory) Edit a memory, 7 criteria
 
 **Copilot Workspace**
 
-- [MEM-14](#mem-14-project-memory) Project memory, 10 criteria
-- [MEM-15](#mem-15-shared-chat-memory) Shared chat memory, 8 criteria
+- [MEM-14](#mem-14-project-memory) Project memory, 12 criteria
+- [MEM-15](#mem-15-shared-chat-memory) Shared chat memory, 11 criteria
 
 **Clean-up**
 
-- [MEM-16](#mem-16-memory-is-cleaned-up-with-what-it-belongs-to) Memory is cleaned up with what it belongs to, 7 criteria
+- [MEM-16](#mem-16-memory-is-cleaned-up-with-what-it-belongs-to) Memory is cleaned up with what it belongs to, 8 criteria
 
 **Core: personal context**
 
-- [MEM-18](#mem-18-keep-my-own-contexts-and-resources) Keep my own contexts and resources, 16 criteria
-- [MEM-19](#mem-19-agents-and-prompts-use-my-personal-context) Agents and prompts use my personal context, 13 criteria
+- [MEM-18](#mem-18-keep-my-own-contexts-and-resources) Keep my own contexts and resources, 17 criteria
+- [MEM-19](#mem-19-agents-and-prompts-use-my-personal-context) Agents and prompts use my personal context, 17 criteria
 - [MEM-20](#mem-20-builders-choose-per-prompt-and-per-agent) Builders choose per prompt and per agent, 11 criteria
 - [MEM-21](#mem-21-personal-context-is-cleaned-up) Personal context is cleaned up, 4 criteria
 
 **Deploy**
 
-- [MEM-22](#mem-22-memory-and-personal-context-settings-move-with-deploy) Memory and personal context settings move with Deploy, 12 criteria
+- [MEM-22](#mem-22-memory-and-personal-context-settings-move-with-deploy) Memory and personal context settings move with Deploy, 13 criteria
+
+**Admin and moves**
+
+- [MEM-23](#mem-23-moving-a-memory-follows-the-save-rules) Moving a memory follows the save rules, 7 criteria
+- [MEM-24](#mem-24-an-admin-erases-a-users-ai-data) An admin erases a user's AI data, 12 criteria
 
 <details>
 <summary>Ready and Done</summary>
@@ -121,6 +126,27 @@ so that admins configure my package in the same place, with the same Save button
 - **Given** `Test.Flag` is registered as a bool
 - **When** `PUT` settings sends `additional: { "Test.Flag": "yes" }`
 - **Then** the response is **400**
+
+
+### AC9: Reads leave out unregistered rows
+- **Given** a stored row `Old.Addon.Flag` that no installed package registers
+- **When** an admin calls `GET` settings
+- **Then** `additional` doesn't hold `Old.Addon.Flag`
+
+### AC10: Saving leaves unregistered rows alone
+- **Given** a stored row `Old.Addon.Flag`
+- **When** an admin saves settings
+- **Then** the save succeeds and the row is unchanged
+
+### AC11: A save refreshes every server (R1g)
+- **Given** two servers sharing one database, both with settings cached
+- **When** settings are saved on the first
+- **Then** the second server's next read returns the new value
+
+### AC12: Older implementations still compile
+- **Given** a class implementing `IAISettingsService` written before this release
+- **When** `GetSettingValueAsync<T>` is called on it
+- **Then** it throws `NotSupportedException` instead of failing to build
 
 ---
 
@@ -272,7 +298,7 @@ Out of scope: projects and shared chats (MEM-14, MEM-15), and Automate runs.
 ### Sad path
 
 ### AC8: No user, no memory (R2)
-- **Given** an agent with memory on run by Automate with no backoffice user
+- **Given** an agent with memory on, run with no backoffice user
 - **When** the run starts
 - **Then** it has no memory block and no memory tools
 
@@ -295,6 +321,16 @@ Out of scope: projects and shared chats (MEM-14, MEM-15), and Automate runs.
 - **Given** the user's "about you" layer holds 30 active memories
 - **When** the agent calls `remember` with `layer: "about_you"`
 - **Then** the result is `not_saved` with "memory is full: merge or forget something first"
+
+### AC13: An Automate run gets no memory (R2)
+- **Given** an agent with memory on, run by Automate's Run AI Agent action under the workspace service account
+- **When** the run starts
+- **Then** it has no memory block and no memory tools
+
+### AC14: A test run gets no memory (R2)
+- **Given** an agent with memory on and a user with memories
+- **When** the user runs an agent test
+- **Then** the run has no memory block and no memory tools
 
 ---
 
@@ -351,6 +387,11 @@ so that my memory stays short and current.
 - **When** the agent calls `remember` replacing all 11
 - **Then** the result is `not_saved` with a reason
 
+### AC10: Undo into a full layer is refused (R22)
+- **Given** a merge that replaced 3 memories, and the layer has since filled to its cap
+- **When** the user clicks Undo
+- **Then** the response is **400** "memory is full" and nothing changes
+
 ---
 
 ## MEM-06: Suspect saves are held
@@ -406,6 +447,36 @@ so that a poisoned page can't plant instructions in my agent's memory.
 - **When** its list is read
 - **Then** it isn't listed
 
+### AC10: The open page counts as outside content (R9c)
+- **Given** a sidebar turn sent with the open page, no tool called
+- **When** the agent saves a 40-character run copied from the page
+- **Then** the save is held `echoes-content`
+
+### AC11: An attachment counts as outside content (R9c)
+- **Given** a turn whose user message has an attached document
+- **When** the agent saves an order-like text
+- **Then** the save is held `instruction-like`
+
+### AC12: A resource counts as outside content (R9c)
+- **Given** a Workspace turn with an Always resource and no tool called
+- **When** the agent saves to a shared space
+- **Then** the save is held `shared-after-content`
+
+### AC13: Earlier turns don't count (R9c)
+- **Given** a chat whose first turn read a tool result
+- **When** on the second turn, with no tool called, the agent saves an order-like text
+- **Then** the save is saved, not held
+
+### AC14: Held rows don't fill the layer (R7)
+- **Given** a space holding 49 active and 5 held memories
+- **When** the agent saves to the space
+- **Then** the save succeeds
+
+### AC15: Keep into a full layer is refused (R7)
+- **Given** a space holding 50 active memories and 1 held
+- **When** the user clicks Keep on the held one
+- **Then** the response is **400** "memory is full" and it stays held
+
 ---
 
 ## MEM-07: Forget in chat
@@ -419,10 +490,10 @@ so that I don't have to open a list to remove a memory.
 - **When** the agent calls `forget` with A's short id
 - **Then** the result is `forgotten`
 
-### AC2: The memory is no longer stored
+### AC2: The memory is no longer loaded (R22a)
 - **Given** memory A is in the memory block
 - **When** the agent calls `forget` with A's short id
-- **Then** A is no longer stored
+- **Then** A has status `Forgotten` and the next run's memory block doesn't hold it
 
 ### Sad path
 
@@ -451,6 +522,26 @@ so that I don't have to open a list to remove a memory.
 - **When** the agent calls `forget` with it
 - **Then** both memories are still stored
 
+### AC8: Restore brings it back (R22a)
+- **Given** memory A forgotten 2 days ago
+- **When** the user calls `POST /{id}/restore`
+- **Then** A is active and the next run's memory block holds it
+
+### AC9: Restore into a full layer is refused (R22a)
+- **Given** memory A forgotten, and its layer now full
+- **When** the user calls `POST /{id}/restore`
+- **Then** the response is **400** and A stays forgotten
+
+### AC10: Forgotten rows go after 7 days (R22a)
+- **Given** memory A forgotten 8 days ago
+- **When** its list is read
+- **Then** A is deleted
+
+### AC11: A forgotten memory doesn't count (R22a)
+- **Given** a full layer
+- **When** the agent forgets one memory and saves a new one
+- **Then** the save succeeds
+
 ---
 
 ## MEM-08: Memory keeps the prompt cache warm
@@ -465,7 +556,7 @@ so that memory doesn't raise the cost of every turn.
 - **Then** the memory block comes after the AI Context and before the chat history
 
 ### AC2: The block doesn't change within a Workspace chat (R16)
-- **Given** a Workspace chat on its second turn
+- **Given** a Workspace chat on its second turn, with the same space, agent and switches as the first
 - **When** a memory was saved during the first turn
 - **Then** the memory block is byte-identical to the first turn's
 
@@ -494,6 +585,31 @@ so that memory doesn't raise the cost of every turn.
 - **When** an admin opens its tool list
 - **Then** `remember` and `forget` aren't listed
 
+### AC8: A new space rebuilds the block (R16a)
+- **Given** a private Workspace chat whose block holds a "you + this agent" memory
+- **When** the chat is shared and the next turn starts
+- **Then** the block no longer holds that memory
+
+### AC9: A changed mode rebuilds the block (R16a)
+- **Given** a Workspace chat whose block holds an "about you" memory
+- **When** an admin sets the agent to `Work` and the next turn starts
+- **Then** the block no longer holds that memory
+
+### AC10: A changed switch rebuilds the block (R16a)
+- **Given** a Workspace chat whose block holds an "about you" memory
+- **When** the user turns their personal switch off and the next turn starts
+- **Then** the block no longer holds that memory
+
+### AC11: A deleted memory leaves the block (R16a)
+- **Given** a Workspace chat whose frozen block holds memory A
+- **When** the user deletes A and the next turn starts
+- **Then** neither the block nor the stored session state holds A's text
+
+### AC12: An unchanged chat keeps its block (R16)
+- **Given** a Workspace chat on its third turn with nothing changed
+- **When** the turn starts
+- **Then** the block is not rebuilt
+
 ---
 
 ## MEM-09: Other packages add their own memory spaces
@@ -520,6 +636,16 @@ so that my package's chats get their own memory without the Agent package knowin
 ### AC4: The owning resolver decides write access
 - **Given** a resolver that allows read but denies write on space X
 - **When** a user calls `DELETE` on a memory in X
+- **Then** the response is **404**
+
+### AC5: Only the owner reads a user space
+- **Given** user A's "about you" memories
+- **When** user B calls `GET memories?spaceType=user&spaceKey=<A>`
+- **Then** the response is **404**
+
+### AC6: An unclaimed space type is not found
+- **Given** no resolver owns space type `team`
+- **When** a user calls `GET memories?spaceType=team&spaceKey=<any>`
 - **Then** the response is **404**
 
 ---
@@ -625,6 +751,26 @@ so that I can move or undo it on the spot.
 - **When** the user clicks Undo
 - **Then** the Undo button stays
 
+### AC13: A forgotten note offers Undo
+- **Given** the agent called `forget`
+- **When** the note renders
+- **Then** it reads "Forgot: <text>" with an Undo button
+
+### AC14: Undo on a forgotten note restores it
+- **Given** a "Forgot" note
+- **When** the user clicks Undo
+- **Then** the memory is restored and the note reads "Restored"
+
+### AC15: A reopened chat shows the current state
+- **Given** a chat with a "Saved" note whose memory was later moved
+- **When** the user reopens the chat
+- **Then** the note shows the memory's current layer, read from `GET /{id}`
+
+### AC16: A memory that's gone reads Removed
+- **Given** a chat with a note whose memory was purged
+- **When** the user reopens the chat
+- **Then** the note reads "Removed" with no buttons
+
 ---
 
 ## MEM-12: Your AI memory
@@ -697,6 +843,21 @@ so that I stay in control of my personal data.
 - **Given** a user with no memories
 - **When** they open Your AI
 - **Then** an empty state explains "about you" and per-agent memory
+
+### AC14: Site states reach users without the AI section
+- **Given** a user with no AI section access
+- **When** they call `GET /mine`
+- **Then** the response holds `siteMemoryEnabled`, `personalMemoryPolicy` and each agent's `memoryOff`
+
+### AC15: Site memory off shows a note
+- **Given** the site's Agent Memory switch is off
+- **When** the user opens "Your AI"
+- **Then** a note says "Your admin has turned off agent memory"
+
+### AC16: The switch can't be set when not allowed (R1e)
+- **Given** personal memory is `NotAllowed`
+- **When** a user calls `PUT /mine/preferences`
+- **Then** the response is **400**
 
 ---
 
@@ -805,6 +966,16 @@ Out of scope: project members (not built yet).
 - **When** the owner opens the share picker
 - **Then** the warning says the recipient will see replies shaped by the owner's memory
 
+### AC11: Without the Workspace section, no project memory
+- **Given** a project owner who has lost the Copilot Workspace section
+- **When** they call `GET memories?spaceType=project&spaceKey=<project>`
+- **Then** the response is **404**
+
+### AC12: Keep in a full project shows an error
+- **Given** a project holding 50 active memories and 1 held
+- **When** the owner clicks Keep on the Memory tab
+- **Then** a toast says "Project memory is full: delete or edit a memory first" and the row stays held
+
 ---
 
 ## MEM-15: Shared chat memory
@@ -839,8 +1010,8 @@ so that my private memory doesn't learn from a shared conversation.
 - **Then** there is no Memory section
 
 ### AC6: Recipients can read (R12)
-- **Given** a shared chat with memories
-- **When** a recipient calls `GET memories?spaceType=conversation&spaceKey=<chat>`
+- **Given** a chat with memories, shared with a Live share that's still active
+- **When** that recipient calls `GET memories?spaceType=conversation&spaceKey=<chat>`
 - **Then** the response is **200** with the memories
 
 ### Sad path
@@ -854,6 +1025,21 @@ so that my private memory doesn't learn from a shared conversation.
 - **Given** a shared chat with no memories
 - **When** the owner opens the context panel
 - **Then** the Memory section reads "Nothing remembered in this chat yet"
+
+### AC9: A Snapshot share sees no memory (R12)
+- **Given** a chat with memories, shared as a Snapshot
+- **When** the recipient calls `GET memories?spaceType=conversation&spaceKey=<chat>`
+- **Then** the response is **404**
+
+### AC10: A revoked share sees no memory (R12)
+- **Given** a chat with memories whose Live share was revoked
+- **When** the former recipient calls the same route
+- **Then** the response is **404**
+
+### AC11: A Snapshot recipient sees no section
+- **Given** a chat shared as a Snapshot
+- **When** the recipient opens it
+- **Then** the context panel has no Memory section
 
 ---
 
@@ -897,6 +1083,11 @@ so that no orphaned personal data is left behind.
 - **Given** a memory replaced 8 days ago
 - **When** its layer's list is read
 - **Then** the replaced row is deleted
+
+### AC8: Forgotten rows are purged after 7 days (R25)
+- **Given** a memory forgotten 8 days ago
+- **When** its layer's list is read
+- **Then** the row is deleted
 
 ---
 
@@ -1069,6 +1260,11 @@ so that agents know my lasting preferences and notes without me repeating them.
 - **When** an admin opens AI > Settings
 - **Then** the "Personal Context" toggle is on
 
+### AC17: Quick changes don't overwrite each other
+- **Given** the "Your AI" box
+- **When** the user adds two contexts within a second
+- **Then** the second `PUT` is sent after the first returns, and both contexts are stored
+
 ---
 
 ## MEM-19: Agents and prompts use my personal context
@@ -1097,8 +1293,8 @@ so that what they write fits how I work.
 - **When** the user chats with the agent
 - **Then** the context's Always resources are in the system prompt
 
-### AC5: A context the agent already has loads once (R29)
-- **Given** an agent with "Nordhem brand voice" and a user who also picked it
+### AC5: A context the run already has loads once (R29)
+- **Given** a profile with "Nordhem brand voice" and a user who also picked it
 - **When** the user chats with the agent
 - **Then** its resources appear once in the system prompt
 
@@ -1143,6 +1339,26 @@ so that what they write fits how I work.
 - **Given** the site's Personal Context switch turned off, then on again
 - **When** a user with an Always resource chats with an agent with `includePersonalContext` on
 - **Then** the system prompt contains the resource
+
+### AC14: An unattended run gets none (R27)
+- **Given** a user with an Always resource
+- **When** an Automate action or a test run starts an agent with `includePersonalContext` on
+- **Then** the system prompt doesn't hold the resource
+
+### AC15: Inline agents default off (R26)
+- **Given** an inline agent built in code without touching the setting
+- **When** a user with an Always resource runs it
+- **Then** the system prompt doesn't hold the resource
+
+### AC16: An inline agent can opt in (R26)
+- **Given** an inline agent whose builder turns personal context on
+- **When** a user with an Always resource runs it
+- **Then** the system prompt holds the resource
+
+### AC17: Agent contexts come first
+- **Given** an agent with an AI Context and a user with an Always resource
+- **When** the user chats
+- **Then** the agent's context comes before the personal resource in the system prompt
 
 ---
 
@@ -1310,3 +1526,128 @@ Out of scope: deploying memories or personal context, which are user data (R32, 
 - **Given** an agent with "you + this agent" memories
 - **When** Deploy exports it
 - **Then** the artifact contains none of the memories' text
+
+### AC13: An import refreshes every server (R40)
+- **Given** a load-balanced target
+- **When** AI Settings are imported
+- **Then** every server's next run uses the imported values
+
+---
+
+## MEM-23: Moving a memory follows the save rules
+
+As a **backoffice editor**,
+I want Move to check the same things a save does,
+so that a moved memory never lands where it isn't allowed.
+
+Out of scope: moving between two shared spaces (only the two layers a run can see).
+
+### AC1: A valid move works (R22b)
+- **Given** a space memory and an agent set to `WorkAndPerson`
+- **When** the user calls `POST /{id}/move` to "about you"
+- **Then** the response is **200** and the memory is in "about you"
+
+### Sad path
+
+### AC2: A lesson can't move to "about you" (R22b, R23)
+- **Given** a lesson in a space
+- **When** the user moves it to "about you"
+- **Then** the response is **400** with a reason
+
+### AC3: "About you" when switched off is refused (R22b)
+- **Given** the user's personal switch is off
+- **When** they move a space memory to "about you"
+- **Then** the response is **400** with a reason
+
+### AC4: "About you" when not allowed is refused (R22b)
+- **Given** personal memory is `NotAllowed`
+- **When** a user moves a space memory to "about you"
+- **Then** the response is **400** with a reason
+
+### AC5: A held memory can't move (R22b)
+- **Given** a held memory
+- **When** the user moves it
+- **Then** the response is **400** "Keep it first"
+
+### AC6: A full target is refused
+- **Given** "about you" holds 30 active memories
+- **When** the user moves a space memory there
+- **Then** the response is **400** "memory is full"
+
+### AC7: A moved merge drops its links (R22b)
+- **Given** memory M replaced A and B in the space, then M was moved to "about you"
+- **When** the user deletes M
+- **Then** A and B stay replaced
+
+---
+
+## MEM-24: An admin erases a user's AI data
+
+As a **site admin handling a GDPR erasure request**,
+I want to erase one user's AI memory and personal context,
+so that their personal data goes even though Umbraco won't delete a user who has logged in.
+
+Out of scope: memories the user saved into projects and shared chats, which stay with those spaces.
+
+### AC1: Erase deletes personal context (R13a, R31)
+- **Given** Sophie has picked contexts and resources
+- **When** an admin calls `DELETE /users/<Sophie>/ai-data`
+- **Then** the response is **204** and Sophie's personal context is empty
+
+### AC2: Erase deletes their own memories (R13a)
+- **Given** Sophie has "about you", "you + this agent", held and forgotten memories
+- **When** an admin erases her AI data
+- **Then** none of those rows remain
+
+### AC3: Shared-space memories stay (R13a)
+- **Given** Sophie saved a memory in a project
+- **When** an admin erases her AI data
+- **Then** the project memory stays, credited to Sophie
+
+### AC4: The action is in the user's menu
+- **Given** an admin with Users section access
+- **When** they open Sophie in Users and the actions menu
+- **Then** "Erase AI memory and personal context" is listed
+
+### AC5: The dialog names what goes
+- **Given** the Agent package is installed
+- **When** the admin clicks the action
+- **Then** the danger dialog lists personal contexts and resources, and "About you" and agent memories
+
+### AC6: Done shows a toast
+- **Given** the dialog is open
+- **When** the admin clicks Erase
+- **Then** a toast says "AI data erased for Sophie Larsen" and the dialog closes
+
+### AC7: Erasing twice is fine
+- **Given** Sophie has no AI data
+- **When** an admin erases it
+- **Then** the response is **204**
+
+### Sad path
+
+### AC8: Without Users access it's forbidden
+- **Given** a user without the Users section
+- **When** they call `DELETE /users/<Sophie>/ai-data`
+- **Then** the response is **403**
+
+### AC9: Without permission on that user it's forbidden
+- **Given** an admin whose start node or group rules don't cover Sophie
+- **When** they call the route
+- **Then** the response is **403**
+
+### AC10: An unknown user isn't found
+- **Given** no user with that key
+- **When** an admin calls the route
+- **Then** the response is **404**
+
+### AC11: A failed erase keeps the dialog open
+- **Given** the request fails
+- **When** the admin clicks Erase
+- **Then** an error toast shows and the dialog stays open
+
+### AC12: Without the Agent package, memories aren't mentioned
+- **Given** only core is installed
+- **When** the admin clicks the action
+- **Then** the dialog lists personal contexts and resources only, and the erase still succeeds
+

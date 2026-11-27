@@ -1,4 +1,4 @@
-// MEM-14 — Project memory (server side: AC1, AC2, AC8, AC9)
+// MEM-14 — Project memory (server side: AC1, AC2, AC8, AC9, AC11)
 using Xunit;
 
 namespace Umbraco.AI.Agent.Copilot.Workspace.Tests.Unit.Memory;
@@ -77,6 +77,22 @@ public class ProjectMemoryTests
         public void GetProjectMemories_ReturnsNotFound()
         {
             // When: user 2 calls GET memories?spaceType=project&spaceKey=P
+            // Then: result.ShouldBeAssignableTo<NotFoundResult>();
+        }
+    }
+
+    public class GivenAProjectOwnerWithoutTheCopilotWorkspaceSection
+    {
+        public GivenAProjectOwnerWithoutTheCopilotWorkspaceSection()
+        {
+            // The owner of project P has lost the Copilot Workspace section.
+        }
+
+        // AC11
+        [Fact(Skip = "Pending")]
+        public void GetProjectMemories_ReturnsNotFound()
+        {
+            // When: the owner calls GET memories?spaceType=project&spaceKey=P
             // Then: result.ShouldBeAssignableTo<NotFoundResult>();
         }
     }

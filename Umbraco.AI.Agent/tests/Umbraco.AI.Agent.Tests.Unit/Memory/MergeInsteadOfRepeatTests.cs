@@ -1,4 +1,4 @@
-// MEM-05 — Merge instead of repeat (AC1-AC9)
+// MEM-05 — Merge instead of repeat (AC1-AC10)
 using Xunit;
 
 namespace Umbraco.AI.Agent.Tests.Unit.Memory;
@@ -143,6 +143,30 @@ public class MergeInsteadOfRepeatTests
         {
             // When: remember replacing all 11
             // Then: (result.Status, string.IsNullOrEmpty(result.Reason)).ShouldBe(("not_saved", false));
+        }
+    }
+
+    public class GivenAMergeThatReplaced3MemoriesAndTheLayerSinceFilled
+    {
+        public GivenAMergeThatReplaced3MemoriesAndTheLayerSinceFilled()
+        {
+            // A merge replaced 3 memories; the layer has since filled to its cap with other active memories.
+        }
+
+        // AC10
+        [Fact(Skip = "Pending")]
+        public void Undo_IsRefusedWithMemoryIsFull400()
+        {
+            // When: the user clicks Undo (the undo endpoint)
+            // Then: (response.StatusCode, response.Detail).ShouldBe((400, "memory is full"));
+        }
+
+        // AC10
+        [Fact(Skip = "Pending")]
+        public void Undo_ChangesNothing()
+        {
+            // When: the user clicks Undo (the undo endpoint)
+            // Then: repository.Snapshot().ShouldBe(before);
         }
     }
 

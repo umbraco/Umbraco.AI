@@ -261,3 +261,23 @@ refuted, 24 survived (11 significant, 13 minor, none blocking). Decisions are th
 - **`GET /{id}`** added so a reopened chat note can show the memory's current state.
 - **F06 restore cap check:** R22 was touched anyway, so merge-undo now checks the cap too.
 
+## Plan updated from the interrogation (27-11-2026)
+
+- **Two new stories:** MEM-23 (moves follow the save rules) and MEM-24 (admin erase). 62 new
+  criteria in all; amended in place, same ids: MEM-04 AC8, MEM-07 AC2, MEM-08 AC2, MEM-15 AC6,
+  MEM-19 AC5.
+- **Shared files come off parallel groups.** T30 now waits for T1 (core registration file); T16,
+  T17, T18 run in order (Agent `lang/en.ts`); T26 waits for T25 (Workspace `lang/en.ts`). T6 and
+  T7 keep group B by putting their builder extensions in separate partial files.
+- **T29's live Jev check moves into T12**, the first task where memory runs at all.
+- **T9 gains bulk deletes** by space, user and agent, because the repository is internal and
+  T13, T24 and T56 live outside the service.
+- **The admin erase is five tasks** (T53-T57): core endpoint, wire, core action, Agent handler and
+  label, then a live erase. The Agent half waits for core's manifest type.
+- **Unattended runs are three tasks**, one per product (Agent test feature, Prompt test feature,
+  Automate), so each lands with its own product's build.
+- **Ports are tasks now** (T58 v17, T59 v19) through `change-backport`, after the smoke test.
+  The v17 docs (T48) wait for the v17 port.
+- **ARCHITECTURE fix:** `AIInlineAgentBuilder` lives in the Agent package, not core; the file tree
+  line moved.
+

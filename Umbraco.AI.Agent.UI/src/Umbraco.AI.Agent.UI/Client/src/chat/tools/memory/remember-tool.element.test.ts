@@ -1,4 +1,4 @@
-// MEM-11 — Memory notes in the chat (AC1-AC8, AC10-AC12)
+// MEM-11 — Memory notes in the chat (AC1-AC8, AC10-AC12, AC15, AC16)
 import { describe, it } from "vitest";
 
 // Real entry point: the `uaiAgentToolRenderer` element for `remember` rendered with a tool call's args and
@@ -125,6 +125,29 @@ describe("Feature: remember tool note", () => {
         // AC12
         it.skip("keeps the Undo button", () => {
             // expect(buttonLabels(el)).toContain("Undo");
+        });
+    });
+
+    describe("Scenario: a reopened chat whose memory was moved", () => {
+        // Arrange (beforeEach): saved note rendered from history; GET /{id} returns the memory in a new layer
+
+        // AC15
+        it.skip("reads the current layer from GET /{id}", () => {
+            // expect(text(el)).toContain(`Saved to ${currentLayerLabel}`);
+        });
+    });
+
+    describe("Scenario: a reopened chat whose memory was purged", () => {
+        // Arrange (beforeEach): saved note rendered from history; GET /{id} responds 404
+
+        // AC16
+        it.skip("reads Removed", () => {
+            // expect(text(el)).toContain("Removed");
+        });
+
+        // AC16
+        it.skip("shows no buttons", () => {
+            // expect(buttonLabels(el)).toEqual([]);
         });
     });
 });

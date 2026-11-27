@@ -359,7 +359,6 @@ Umbraco.AI.Core/UserData/
   IAIUserDataEraseService.cs, AIUserDataEraseService.cs  publishes the notification below
   AIUserDataErasingNotification.cs      user key; each package deletes its own rows
 Umbraco.AI.Core/Constants.cs            + ContextKeys.IncludePersonalContext, + ContextKeys.UnattendedRun
-Umbraco.AI.Core/InlineAgents/           AIInlineAgentBuilder: IncludePersonalContext defaults to false
 Umbraco.AI.Core/Configuration/          + PersonalContextResolver in the resolver chain
 Umbraco.AI.Persistence/PersonalContext/
   AIPersonalContextEntity.cs, AIPersonalContextResourceEntity.cs, EFCoreAIPersonalContextRepository.cs
@@ -434,6 +433,7 @@ Umbraco.AI.Agent.Core/
   Agents/AIStandardAgentConfig.cs       + MemoryMode (Off, Work, WorkAndPerson), + IncludePersonalContext
   Chat/                                 run sets ContextKeys.IncludePersonalContext from the config
   Tests/AgentTestFeature.cs             sets ContextKeys.UnattendedRun
+  InlineAgents/AIInlineAgentBuilder.cs  IncludePersonalContext defaults to false
   Configuration/UmbracoBuilderExtensions.cs  AgentContextResolver: InsertBefore<PersonalContextResolver>
   Memory/AIMemorySettings.cs            IAISettingsProvider: Agent.Memory.Enabled (default true) and
                                         Agent.Memory.PersonalMemory (default Allowed)

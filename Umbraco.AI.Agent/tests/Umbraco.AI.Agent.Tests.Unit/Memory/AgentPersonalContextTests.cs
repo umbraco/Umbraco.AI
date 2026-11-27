@@ -1,4 +1,4 @@
-// MEM-20 — Builders choose per agent (AC1-AC3); MEM-19 — agents use it (AC7, AC8)
+// MEM-20 — Builders choose per agent (AC1-AC3); MEM-19 — agents use it (AC7, AC8, AC14 agent half, AC15-AC17)
 using Xunit;
 
 namespace Umbraco.AI.Agent.Tests.Unit.Memory;
@@ -78,6 +78,38 @@ public class AgentPersonalContextTests
         }
     }
 
+    public class GivenAnInlineAgentWhoseBuilderTurnsPersonalContextOn
+    {
+        public GivenAnInlineAgentWhoseBuilderTurnsPersonalContextOn()
+        {
+            // Inline agent built with the builder's personal-context opt-in; the user has an Always resource.
+        }
+
+        // AC16
+        [Fact(Skip = "Pending")]
+        public void Run_SystemPromptHoldsTheResource()
+        {
+            // When: the user runs it
+            // Then: systemPrompt.ShouldContain(resource.Content);
+        }
+    }
+
+    public class GivenAnAgentWithAnAIContextAndAUserWithAnAlwaysResource
+    {
+        public GivenAnAgentWithAnAIContextAndAUserWithAnAlwaysResource()
+        {
+            // Agent with an AI Context; the user has an Always resource.
+        }
+
+        // AC17
+        [Fact(Skip = "Pending")]
+        public void Chat_AgentContextComesBeforeThePersonalResource()
+        {
+            // When: the user chats
+            // Then: systemPrompt.IndexOf(agentContext.Content).ShouldBeLessThan(systemPrompt.IndexOf(resource.Content));
+        }
+    }
+
     #endregion
 
     #region Sad path
@@ -95,6 +127,38 @@ public class AgentPersonalContextTests
         {
             // When: the run's runtime context is built
             // Then: runtimeContext.GetValue<bool?>(ContextKeys.IncludePersonalContext).ShouldNotBe(true);
+        }
+    }
+
+    public class GivenAnAgentTestRunWithIncludePersonalContextOn
+    {
+        public GivenAnAgentTestRunWithIncludePersonalContextOn()
+        {
+            // Agent IncludePersonalContext = true; the user has an Always resource; AgentTestFeature marks the run ContextKeys.UnattendedRun.
+        }
+
+        // AC14
+        [Fact(Skip = "Pending")]
+        public void TestRun_SystemPromptDoesNotHoldTheResource()
+        {
+            // When: the user runs an agent test
+            // Then: systemPrompt.ShouldNotContain(resource.Content);
+        }
+    }
+
+    public class GivenAnInlineAgentBuiltWithoutTouchingTheSetting
+    {
+        public GivenAnInlineAgentBuiltWithoutTouchingTheSetting()
+        {
+            // Inline agent built in code without touching personal context; the user has an Always resource.
+        }
+
+        // AC15
+        [Fact(Skip = "Pending")]
+        public void Run_SystemPromptDoesNotHoldTheResource()
+        {
+            // When: the user runs it
+            // Then: systemPrompt.ShouldNotContain(resource.Content);
         }
     }
 

@@ -1,4 +1,4 @@
-// MEM-08 — Memory keeps the prompt cache warm (AC1-AC7)
+// MEM-08 — Memory keeps the prompt cache warm (AC1-AC12)
 using Xunit;
 
 namespace Umbraco.AI.Agent.Tests.Unit.Memory;
@@ -88,6 +88,22 @@ public class MemoryPromptCacheTests
         }
     }
 
+    public class GivenAWorkspaceChatOnItsThirdTurnWithNothingChanged
+    {
+        public GivenAWorkspaceChatOnItsThirdTurnWithNothingChanged()
+        {
+            // Workspace chat, turns 1 and 2 done; same space, agent, switches; no memory changed.
+        }
+
+        // AC12
+        [Fact(Skip = "Pending")]
+        public void TurnThree_DoesNotRebuildTheBlock()
+        {
+            // When: turn 3 starts
+            // Then: blockBuildCount.ShouldBe(1);
+        }
+    }
+
     #endregion
 
     #region Sad path
@@ -121,6 +137,70 @@ public class MemoryPromptCacheTests
         {
             // When: the registered tools are listed
             // Then: toolIds.Intersect(new[] { "remember", "forget" }).ShouldBeEmpty();
+        }
+    }
+
+    public class GivenAPrivateWorkspaceChatWhoseBlockHoldsAUserAgentMemory
+    {
+        public GivenAPrivateWorkspaceChatWhoseBlockHoldsAUserAgentMemory()
+        {
+            // Block frozen on turn 1 holds a "you + this agent" memory.
+        }
+
+        // AC8
+        [Fact(Skip = "Pending")]
+        public void AfterTheChatIsShared_BlockDoesNotHoldIt()
+        {
+            // When: the chat is shared and the next turn starts
+            // Then: nextBlock.ShouldNotContain(memory.Text);
+        }
+    }
+
+    public class GivenAWorkspaceChatWhoseBlockHoldsAnAboutYouMemory
+    {
+        public GivenAWorkspaceChatWhoseBlockHoldsAnAboutYouMemory()
+        {
+            // Block frozen on turn 1 holds an "about you" memory (agent WorkAndPerson, switch on).
+        }
+
+        // AC9
+        [Fact(Skip = "Pending")]
+        public void AfterTheAgentIsSetToWork_BlockDoesNotHoldIt()
+        {
+            // When: an admin sets the agent to Work and the next turn starts
+            // Then: nextBlock.ShouldNotContain(aboutYou.Text);
+        }
+
+        // AC10
+        [Fact(Skip = "Pending")]
+        public void AfterThePersonalSwitchIsOff_BlockDoesNotHoldIt()
+        {
+            // When: the user turns their personal switch off and the next turn starts
+            // Then: nextBlock.ShouldNotContain(aboutYou.Text);
+        }
+    }
+
+    public class GivenAWorkspaceChatWhoseFrozenBlockHoldsMemoryA
+    {
+        public GivenAWorkspaceChatWhoseFrozenBlockHoldsMemoryA()
+        {
+            // Frozen block and the stored session state both hold memory A's text.
+        }
+
+        // AC11
+        [Fact(Skip = "Pending")]
+        public void AfterADelete_TheBlockDoesNotHoldIt()
+        {
+            // When: the user deletes A and the next turn starts
+            // Then: nextBlock.ShouldNotContain(A.Text);
+        }
+
+        // AC11
+        [Fact(Skip = "Pending")]
+        public void AfterADelete_SessionStateDoesNotHoldIt()
+        {
+            // When: the user deletes A and the next turn starts
+            // Then: serializedSessionState.ShouldNotContain(A.Text);
         }
     }
 

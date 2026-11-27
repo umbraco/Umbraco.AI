@@ -1,4 +1,4 @@
-// MEM-14 — Project memory (AC3-AC7)
+// MEM-14 — Project memory (AC3-AC7, AC12)
 import { describe, it } from "vitest";
 
 // Real entry point: the project Memory workspace view (T25) and the helpers it renders from, with the
@@ -48,6 +48,20 @@ describe("Feature: project memory tab", () => {
         // AC7
         it.skip("shows the empty state about saving facts about the project as you chat", () => {
             // expect(emptyStateText(el)).toContain("saves facts about the project as you chat");
+        });
+    });
+
+    describe("Scenario: Keep on a held row in a full project", () => {
+        // Arrange (beforeEach): 50 active + 1 held; repository.keep rejects with the full-layer error; click Keep
+
+        // AC12
+        it.skip("shows the toast Project memory is full: delete or edit a memory first", () => {
+            // expect(notification.message).toBe("Project memory is full: delete or edit a memory first");
+        });
+
+        // AC12
+        it.skip("leaves the row held", () => {
+            // expect(rows.find(r => r.id === heldId).status).toBe("held");
         });
     });
 });

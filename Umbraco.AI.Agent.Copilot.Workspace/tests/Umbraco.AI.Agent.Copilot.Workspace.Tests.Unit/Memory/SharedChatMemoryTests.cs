@@ -1,4 +1,4 @@
-// MEM-15 — Shared chat memory (server side: AC1-AC3, AC6, AC7)
+// MEM-15 — Shared chat memory (server side: AC1-AC3, AC6, AC7, AC9, AC10)
 using Xunit;
 
 namespace Umbraco.AI.Agent.Copilot.Workspace.Tests.Unit.Memory;
@@ -46,11 +46,11 @@ public class SharedChatMemoryTests
         }
     }
 
-    public class GivenASharedChatWithMemoriesReadByARecipient
+    public class GivenALiveSharedChatWithMemoriesReadByARecipient
     {
-        public GivenASharedChatWithMemoriesReadByARecipient()
+        public GivenALiveSharedChatWithMemoriesReadByARecipient()
         {
-            // Conversation C shared with user 2; C's space has memories.
+            // Conversation C shared with user 2 by a Live share that's still active (not revoked, not expired); C's space has memories.
         }
 
         // AC6
@@ -94,6 +94,38 @@ public class SharedChatMemoryTests
         public void RecipientDelete_ReturnsNotFound()
         {
             // When: user 2 calls DELETE memories/{id}
+            // Then: result.ShouldBeAssignableTo<NotFoundResult>();
+        }
+    }
+
+    public class GivenAChatSharedAsASnapshotWithMemories
+    {
+        public GivenAChatSharedAsASnapshotWithMemories()
+        {
+            // Conversation C shared with user 2 as a Snapshot; C's space has memories.
+        }
+
+        // AC9
+        [Fact(Skip = "Pending")]
+        public void RecipientGetConversationMemories_ReturnsNotFound()
+        {
+            // When: user 2 calls GET memories?spaceType=conversation&spaceKey=C
+            // Then: result.ShouldBeAssignableTo<NotFoundResult>();
+        }
+    }
+
+    public class GivenAChatWhoseLiveShareWasRevokedWithMemories
+    {
+        public GivenAChatWhoseLiveShareWasRevokedWithMemories()
+        {
+            // Conversation C's Live share with user 2 has DateRevoked set; C's space has memories.
+        }
+
+        // AC10
+        [Fact(Skip = "Pending")]
+        public void FormerRecipientGetConversationMemories_ReturnsNotFound()
+        {
+            // When: user 2 calls GET memories?spaceType=conversation&spaceKey=C
             // Then: result.ShouldBeAssignableTo<NotFoundResult>();
         }
     }

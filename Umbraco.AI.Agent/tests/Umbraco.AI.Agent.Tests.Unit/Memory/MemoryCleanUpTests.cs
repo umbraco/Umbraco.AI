@@ -1,4 +1,4 @@
-// MEM-16 — Memory is cleaned up with what it belongs to (AC1-AC3, AC6, AC7)
+// MEM-16 — Memory is cleaned up with what it belongs to (AC1-AC3, AC6-AC8)
 using Xunit;
 
 namespace Umbraco.AI.Agent.Tests.Unit.Memory;
@@ -89,6 +89,22 @@ public class MemoryCleanUpTests
         {
             // When: its layer's list is read
             // Then: repository.Find(replaced.Id).ShouldBeNull();
+        }
+    }
+
+    public class GivenAMemoryForgotten8DaysAgo
+    {
+        public GivenAMemoryForgotten8DaysAgo()
+        {
+            // A memory with Status Forgotten, DateModified = now - 8 days.
+        }
+
+        // AC8
+        [Fact(Skip = "Pending")]
+        public void ListRead_DeletesTheForgottenRow()
+        {
+            // When: its layer's list is read
+            // Then: repository.Find(forgotten.Id).ShouldBeNull();
         }
     }
 

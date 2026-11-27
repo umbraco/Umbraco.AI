@@ -1,4 +1,4 @@
-// MEM-22 — Memory and personal context settings move with Deploy (AC1-AC4, AC7-AC10)
+// MEM-22 — Memory and personal context settings move with Deploy (AC1-AC4, AC7-AC10, AC13)
 using Xunit;
 
 namespace Umbraco.AI.Deploy.Tests.Unit.Connectors.ServiceConnectors;
@@ -56,6 +56,18 @@ public class SettingsMemoryDeployTests
             // Given: artifact.Additional = { "Agent.Memory.PersonalMemory": "OptIn" }; target registers it
             // When: the connector imports the artifact
             // Then: (await settingsService.GetSettingValueAsync<string>("Agent.Memory.PersonalMemory")).ShouldBe("OptIn");
+        }
+    }
+
+    public class GivenALoadBalancedTarget
+    {
+        // AC13
+        [Fact(Skip = "Pending")]
+        public void Import_RefreshesEveryServersSettings()
+        {
+            // Given: two settings service instances over one store, both with settings cached
+            // When: the connector imports AI Settings through the first
+            // Then: (await secondServer.GetSettingValueAsync<bool>("Agent.Memory.Enabled")).ShouldBeFalse();
         }
     }
 

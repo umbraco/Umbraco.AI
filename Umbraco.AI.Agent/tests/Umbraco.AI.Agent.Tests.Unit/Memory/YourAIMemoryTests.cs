@@ -1,4 +1,4 @@
-// MEM-12 — Your AI memory (server side of AC1, AC2, AC4, AC5, AC7-AC9)
+// MEM-12 — Your AI memory (server side of AC1, AC2, AC4, AC5, AC7-AC9, AC14, AC16; AC15 is a screen line in memory/user-profile-app)
 using Xunit;
 
 namespace Umbraco.AI.Agent.Tests.Unit.Memory;
@@ -93,6 +93,38 @@ public class YourAIMemoryTests
         }
     }
 
+    public class GivenAUserWithNoAISectionAccess
+    {
+        public GivenAUserWithNoAISectionAccess()
+        {
+            // User has no AI section access; site memory on, personal policy OptIn, one agent with memory off.
+        }
+
+        // AC14
+        [Fact(Skip = "Pending")]
+        public void GetMine_HoldsTheSiteMemoryEnabledState()
+        {
+            // When: the user calls GET memories/mine
+            // Then: response.SiteMemoryEnabled.ShouldBeTrue();
+        }
+
+        // AC14
+        [Fact(Skip = "Pending")]
+        public void GetMine_HoldsThePersonalMemoryPolicy()
+        {
+            // When: the user calls GET memories/mine
+            // Then: response.PersonalMemoryPolicy.ShouldBe(AIPersonalMemoryPolicy.OptIn);
+        }
+
+        // AC14
+        [Fact(Skip = "Pending")]
+        public void GetMine_HoldsEachAgentsMemoryOff()
+        {
+            // When: the user calls GET memories/mine
+            // Then: response.Agents.Single().MemoryOff.ShouldBeTrue();
+        }
+    }
+
     #endregion
 
     #region Sad path
@@ -126,6 +158,22 @@ public class YourAIMemoryTests
         {
             // When: GET memories/mine
             // Then: response.AboutYouEnabled.ShouldBeFalse();
+        }
+    }
+
+    public class GivenPersonalMemoryNotAllowed
+    {
+        public GivenPersonalMemoryNotAllowed()
+        {
+            // Site personal memory policy is NotAllowed.
+        }
+
+        // AC16
+        [Fact(Skip = "Pending")]
+        public void PutPreferences_ReturnsBadRequest()
+        {
+            // When: a user calls PUT /mine/preferences { aboutYouEnabled: true }
+            // Then: response.StatusCode.ShouldBe(400);
         }
     }
 

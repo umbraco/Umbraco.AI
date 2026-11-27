@@ -1,4 +1,4 @@
-// MEM-20 — Builders choose per prompt (AC5-AC7, AC9); MEM-19 — prompts use it (AC6, AC9)
+// MEM-20 — Builders choose per prompt (AC5-AC7, AC9); MEM-19 — prompts use it (AC6, AC9, AC14 prompt half)
 using Xunit;
 
 namespace Umbraco.AI.Prompt.Tests.Unit.Prompts;
@@ -103,6 +103,22 @@ public class PromptPersonalContextTests
         {
             // When: the prompt runs
             // Then: runtimeContext.GetValue<bool?>(ContextKeys.IncludePersonalContext).ShouldNotBe(true);
+        }
+    }
+
+    public class GivenAPromptTestRunWithIncludePersonalContextOn
+    {
+        public GivenAPromptTestRunWithIncludePersonalContextOn()
+        {
+            // Prompt IncludePersonalContext = true, a user with an Always resource; run through PromptTestFeature.
+        }
+
+        // MEM-19 AC14
+        [Fact(Skip = "Pending")]
+        public void Run_SetsTheUnattendedRunKey()
+        {
+            // When: the prompt test run starts
+            // Then: runtimeContext.GetValue<bool>(ContextKeys.UnattendedRun).ShouldBeTrue();
         }
     }
 

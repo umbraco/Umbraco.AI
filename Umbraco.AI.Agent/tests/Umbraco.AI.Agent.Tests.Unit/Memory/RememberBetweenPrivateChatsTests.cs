@@ -1,4 +1,4 @@
-// MEM-04 — The agent remembers between private chats (AC1-AC12)
+// MEM-04 — The agent remembers between private chats (AC1-AC12, AC14)
 using Xunit;
 
 namespace Umbraco.AI.Agent.Tests.Unit.Memory;
@@ -207,6 +207,30 @@ public class RememberBetweenPrivateChatsTests
         {
             // When: remember with layer: "about_you"
             // Then: (result.Status, result.Reason).ShouldBe(("not_saved", "memory is full: merge or forget something first"));
+        }
+    }
+
+    public class GivenAnAgentTestRunForAUserWithMemories
+    {
+        public GivenAnAgentTestRunForAUserWithMemories()
+        {
+            // Agent with memory on; user has memories; AgentTestFeature runs the agent so the runtime context carries ContextKeys.UnattendedRun.
+        }
+
+        // AC14
+        [Fact(Skip = "Pending")]
+        public void TestRun_HasNoMemoryBlock()
+        {
+            // When: the user runs an agent test
+            // Then: memoryBlock.ShouldBeNull();
+        }
+
+        // AC14
+        [Fact(Skip = "Pending")]
+        public void TestRun_HasNoMemoryTools()
+        {
+            // When: the user runs an agent test
+            // Then: (aiContext?.Tools ?? []).ShouldBeEmpty();
         }
     }
 

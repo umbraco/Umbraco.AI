@@ -1,4 +1,4 @@
-// MEM-07 — Forget in chat (AC1-AC7)
+// MEM-07 — Forget in chat (AC1-AC11)
 using Xunit;
 
 namespace Umbraco.AI.Agent.Tests.Unit.Memory;
@@ -30,10 +30,58 @@ public class ForgetInChatTests
 
         // AC2
         [Fact(Skip = "Pending")]
-        public void Forget_RemovesItFromStorage()
+        public void Forget_SetsStatusForgotten()
         {
             // When: forget { id: A short id }
-            // Then: repository.Find(A.Id).ShouldBeNull();
+            // Then: repository.Find(A.Id).Status.ShouldBe(AIMemoryStatus.Forgotten);
+        }
+
+        // AC2
+        [Fact(Skip = "Pending")]
+        public void NextRun_MemoryBlockDoesNotHoldIt()
+        {
+            // When: forget { id: A short id }, then the next run starts
+            // Then: nextRunMemoryBlock.ShouldNotContain(A.Text);
+        }
+    }
+
+    public class GivenMemoryAForgottenTwoDaysAgo
+    {
+        public GivenMemoryAForgottenTwoDaysAgo()
+        {
+            // Memory A has status Forgotten, DateModified = now - 2 days.
+        }
+
+        // AC8
+        [Fact(Skip = "Pending")]
+        public void Restore_MakesItActive()
+        {
+            // When: the user calls POST /{id}/restore
+            // Then: repository.Find(A.Id).Status.ShouldBe(AIMemoryStatus.Active);
+        }
+
+        // AC8
+        [Fact(Skip = "Pending")]
+        public void Restore_NextRunMemoryBlockHoldsIt()
+        {
+            // When: the user calls POST /{id}/restore, then the next run starts
+            // Then: nextRunMemoryBlock.ShouldContain(A.Text);
+        }
+    }
+
+    public class GivenAFullLayerWithAForgottenMemory
+    {
+        public GivenAFullLayerWithAForgottenMemory()
+        {
+            // Active memories fill the layer to its cap; memory A (same layer) is Forgotten.
+        }
+
+        // AC11
+        [Fact(Skip = "Pending")]
+        public void ForgetOneThenSave_Succeeds()
+        {
+            // When: the agent forgets one memory and saves a new one
+            // Then: result.Status.ShouldBe("saved");
         }
     }
 
@@ -110,6 +158,46 @@ public class ForgetInChatTests
         {
             // When: forget { id }
             // Then: repository.Count().ShouldBe(2);
+        }
+    }
+
+    public class GivenAForgottenMemoryWhoseLayerIsNowFull
+    {
+        public GivenAForgottenMemoryWhoseLayerIsNowFull()
+        {
+            // Memory A is Forgotten and its layer now holds the maximum of active memories.
+        }
+
+        // AC9
+        [Fact(Skip = "Pending")]
+        public void Restore_IsRefusedWith400()
+        {
+            // When: the user calls POST /{id}/restore
+            // Then: response.StatusCode.ShouldBe(400);
+        }
+
+        // AC9
+        [Fact(Skip = "Pending")]
+        public void Restore_LeavesItForgotten()
+        {
+            // When: the user calls POST /{id}/restore
+            // Then: repository.Find(A.Id).Status.ShouldBe(AIMemoryStatus.Forgotten);
+        }
+    }
+
+    public class GivenAMemoryForgotten8DaysAgo
+    {
+        public GivenAMemoryForgotten8DaysAgo()
+        {
+            // Memory A has status Forgotten, DateModified = now - 8 days.
+        }
+
+        // AC10
+        [Fact(Skip = "Pending")]
+        public void ListRead_DeletesTheForgottenRow()
+        {
+            // When: its list is read
+            // Then: repository.Find(A.Id).ShouldBeNull();
         }
     }
 

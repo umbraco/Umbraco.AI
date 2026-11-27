@@ -1,4 +1,4 @@
-// MEM-09 — Other packages add their own memory spaces (AC1-AC4)
+// MEM-09 — Other packages add their own memory spaces (AC1-AC6)
 using Xunit;
 
 namespace Umbraco.AI.Agent.Tests.Unit.Memory;
@@ -84,6 +84,38 @@ public class MemorySpaceResolverTests
         public void DeleteMemory_ReturnsNotFound()
         {
             // When: DELETE memories/{id}
+            // Then: result.ShouldBeAssignableTo<NotFoundResult>();
+        }
+    }
+
+    public class GivenUserASAboutYouMemories
+    {
+        public GivenUserASAboutYouMemories()
+        {
+            // User A has "about you" memories; user B is signed in.
+        }
+
+        // AC5
+        [Fact(Skip = "Pending")]
+        public void GetMemoriesForAnotherUsersSpace_ReturnsNotFound()
+        {
+            // When: user B calls GET memories?spaceType=user&spaceKey=<A>
+            // Then: result.ShouldBeAssignableTo<NotFoundResult>();
+        }
+    }
+
+    public class GivenNoResolverOwningSpaceTypeTeam
+    {
+        public GivenNoResolverOwningSpaceTypeTeam()
+        {
+            // No resolver in the collection owns space type "team".
+        }
+
+        // AC6
+        [Fact(Skip = "Pending")]
+        public void GetMemoriesForTeam_ReturnsNotFound()
+        {
+            // When: a user calls GET memories?spaceType=team&spaceKey=<any>
             // Then: result.ShouldBeAssignableTo<NotFoundResult>();
         }
     }

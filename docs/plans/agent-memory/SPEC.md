@@ -487,9 +487,19 @@ state ("paused", "memory is off for this agent") sits on its header line as plai
 
 ## Users: Erase AI memory and personal context
 
-Opens from Users > a user > the "..." actions menu, as "Erase AI memory and personal context".
-Shown only to users with access to the Users section and permission on that user. Clicking it
-opens a danger confirm dialog.
+Opens from Users > a user > the "..." actions menu. Shown only to users with access to the
+Users section and permission on that user.
+
+- **The menu item:** "Erase AI memory and personal context…", with the trash icon, last in the
+  menu after the CMS's own user actions (Disable or Enable, Unlock, Configure two-factor
+  authentication).
+- **The dialog:** a danger confirm dialog headed "Erase AI memory and personal context", with
+  Cancel and a danger "Erase" button. Its text:
+  - "Erase AI data for **<name>**? This permanently deletes their <items>." The items are the
+    labels each installed package registers: core's `personal contexts and resources`, and the
+    Agent package's `"About you" and agent memories`.
+  - "Memories they saved in projects and shared chats stay with those spaces. This can't be
+    undone." The first sentence is left out when the Agent package isn't installed.
 
 ![Erase action in a user's actions menu](./mockups/erase-user-ai-data-action.png)
 

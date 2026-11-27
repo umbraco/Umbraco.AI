@@ -156,3 +156,86 @@
   text is the only guard. Rejected: a fixed-rules check for personal details (names and life
   events don't have reliable shapes). Layer choice and merging stay with the agent's model,
   which has the whole chat; a second model call per save isn't worth it there.
+
+## Plan interrogation (27-11-2026)
+
+Seven single-lens reviews (assumptions, edge cases, order, YAGNI, testability, security, blast
+radius), about 80 raw findings merged into 31, each put to a skeptic against the code. 7
+refuted, 24 survived (11 significant, 13 minor, none blocking). Decisions are the user's.
+
+**Accepted, for `feature-design` (SPEC.md / ARCHITECTURE.md):**
+
+- **F01 Frozen block goes stale** (significant). Store what the frozen list was built for
+  (space type and key, agent id, effective mode, site switch, policy, personal switch) with it in
+  session state; when any differs on a later turn, rebuild it, and drop deleted ids from it. One
+  cache miss on change. Amends R16.
+- **F02 Outside content beyond tool results** (significant). Corrected mechanism: the sidebar's
+  open page arrives as a system message part (`SerializedEntityContributor`), Workspace resources
+  as `AdditionalResources`, attachments in the user message; none are tool results. Treat all of
+  them as content for the echo and after-content rules, and judge only this turn (messages after
+  the last user message), since `CurrentContext.Messages` carries the whole history.
+- **F03 Recipients see beyond their share** (significant). Reading a chat's memory needs an
+  active (not revoked) share; Snapshot shares see no memory. The ever-shared test (T21) stays
+  for choosing the space only. Amends R12.
+- **F13 Inline agents and test runs** (significant). `AIInlineAgentBuilder` defaults
+  `IncludePersonalContext` to false; agent and prompt test runs never load personal context
+  (`PersonalContextResolver` honours `ContextIdsOverride` like the profile and agent resolvers).
+- **F14 Automate has a user** (significant). Corrected mechanism: Automate sets a workspace
+  service account as the backoffice user per action. Gate memory and personal context on an
+  explicit "interactive run" marker (or an Automate run marker that turns both off), not on the
+  presence of a user. Amends R2, R27.
+- **F15 "Your AI" can't read site settings** (significant). `GET /mine` also returns the site
+  memory switch, the personal memory policy and a per-agent memory-off flag, like
+  `GetDisclosureSettingsController`.
+- **F16 Users are rarely deleted** (significant). Umbraco refuses to delete a user with login
+  history (`CannotDeleteUserWithLoginHistory`). Add an admin "Erase AI memory and personal
+  context" user entity action in Users; keep the delete handlers for code-level deletes. GDPR
+  erasure goes through the action.
+- **F17 Workspace startup order** (significant). Workspace's composer adds
+  `[ComposeAfter(typeof(UmbracoAIAgentComposer))]`, or `InsertBefore` throws.
+- **F25 Ports** (significant). Ships to v18, v17 and v19, through the normal port workflow, with
+  identical migration ids (`UmbracoAI_AddPersonalContext`, `UmbracoAIAgent_AddMemory`,
+  `UmbracoAIPrompt_AddIncludePersonalContext`) on every line.
+- **F09 Settings cache on load-balanced sites** (minor, user asked to address). `AISettingsService`
+  caches settings with no cache refresher, so switches stay stale on other servers. Add a
+  distributed cache refresher for AI settings in core, fired on save (and Deploy import).
+- Minor, folded in: **F04** name the resolver that answers access for `user` spaces, and the
+  Workspace spaces also require the Copilot Workspace section; **F05** `forget` gets an Undo on
+  its note (soft delete for 7 days, like replaced rows); **F07** held rows don't count toward caps,
+  Keep checks the cap; **F08** the "Your AI" box sends one save at a time; **F10** settings reads
+  keep only registered add-on keys and saves leave unregistered rows alone instead of rejecting;
+  **F11** new members on `IAISettingsService` and `IAIConversationShareService` ship with default
+  interface bodies; **F12** fix the stated order (or have Agent/Prompt insert their resolvers
+  before `AdditionalResourcesContextResolver` and `PersonalContextResolver`); **F24** move applies
+  remember's layer rules, refuses held memories, and clears cross-layer replace links;
+  **F28** `uai-context-picker` needs a compact mode (no such property today).
+
+**Accepted, for `feature-plan` (PLAN.md / STORIES.md):**
+
+- **F19** T27 also raises Agent.UI's `Umbraco.AI.Agent` floor.
+- **F21** Name each screen check in its task's acceptance (T16, T17, T18, T19, T37, T40);
+  repository specs on the SQLite `EFCoreTestFixture` (drop "SQL Server" from T4); a real-DB spec
+  for the revoked-share query (T21); fix PersonalContextResolver AC5's setup (profile context or
+  fake resolver); live delete checks for T24 and T32 handlers; a criterion and data source for
+  "reopened later" chat notes (T20).
+- **F18** (minor) T29's live check moves after T12; T22 defines the project-id runtime key T23
+  sets; T33 depends on T43; client regen after T43 and T36; T20 depends on T18; split shared
+  registration and `lang/en.ts` edits out of parallel groups; T9 adds bulk delete by space,
+  user and agent for T13 and T24; T27 depends on T3, T13, T17, T19, T20, T32; T16 depends on T2.
+- **F20** (minor) add `settings/`, `personal-context/` and Agent `memory/` exports to the root
+  `exports.ts` chain in T2, T35, T18.
+- Plus tasks for F01-F03, F09, F13-F17 once `feature-design` has folded them in.
+
+**Rejected:**
+
+- **F06 Delete restores replaced memories** (survived, minor). Kept: plan guess 1 was agreed
+  with "the lists alike" in view. Add the cap re-check on restore only if `feature-design`
+  touches R22 anyway.
+- Refuted by the skeptics: F22 (settings PUT default: keep the `= true` initializer), F23
+  (purge on read is the agreed guess 5), F26 (Saving notification is the house convention),
+  F27 (no add-on setting holds ids or secrets yet), F29 (renderers keyed by tool name is the
+  existing convention), F30 (internal IAITool classes outside the collection work), F31 (the
+  Decision profile is opt-in and already sees chat content; a docs line in T47 is enough).
+- Not put to the skeptics: the YAGNI review's points against the settings extension, the
+  switch layering, `uaiUserProfileProperty`, the save-check collection, `LastConfirmedAt` and
+  short ids. Each was an earlier user call in this log.

@@ -491,6 +491,10 @@ Opens from Users > a user > the "..." actions menu, as "Erase AI memory and pers
 Shown only to users with access to the Users section and permission on that user. Clicking it
 opens a danger confirm dialog.
 
+![Erase action in a user's actions menu](./mockups/erase-user-ai-data-action.png)
+
+[Mockup source](./mockups/erase-user-ai-data-action.html)
+
 ![Erase AI data confirm dialog](./mockups/erase-user-ai-data.png)
 
 [Mockup source](./mockups/erase-user-ai-data.html)

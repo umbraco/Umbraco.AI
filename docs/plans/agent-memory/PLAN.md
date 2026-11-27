@@ -462,7 +462,8 @@ memory still exists; every other Undo is still `DELETE /{id}` as guess 1 says.
   opening `umbConfirmModal` with the danger colour, listing the labels of every
   `uaiUserDataEraseItem` manifest; the manifest type itself; core's own item ("personal contexts
   and resources"); success and error toasts. Exported from `user-data/exports.ts` and the root
-  `exports.ts`. Matches `mockups/erase-user-ai-data.png`.
+  `exports.ts`. Matches `mockups/erase-user-ai-data-action.png` and
+  `mockups/erase-user-ai-data.png`.
   Acceptance: MEM-24 AC4-AC6, AC11, AC12 specs green; `npm run build:core`; on the demo site the
   action shows in a user's actions menu and, with only core's item, the dialog leaves out
   memories.

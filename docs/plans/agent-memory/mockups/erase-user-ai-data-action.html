@@ -1,0 +1,110 @@
+<!doctype html>
+<!--
+  Erase AI data: where the action lives. Users > a user, the workspace "..." actions menu shown
+  open, with the new "Erase AI memory and personal context…" entity action last (lowest weight).
+  The other items and their order copy the CMS's own user entity actions
+  (Umbraco.Web.UI.Client/src/packages/user/user/entity-actions/manifests.ts, 18.0.0):
+  Disable (700), Configure two-factor authentication (500). Delete is hidden because Sophie has
+  logged in, which is why this action exists. Copied from the editor starter.
+  Clicking the item opens erase-user-ai-data.html.
+-->
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Mockup: Erase AI data action</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@umbraco-ui/uui@2/dist/themes/light.css">
+	<link rel="stylesheet" href="_mockup.css">
+	<script type="module" src="_mockup.js"></script>
+</head>
+<body class="uui-font uui-text">
+	<header class="app-header">
+		<span class="logo">Umbraco</span>
+		<uui-tab-group class="sections">
+			<uui-tab label="Content">Content</uui-tab>
+			<uui-tab label="Media">Media</uui-tab>
+			<uui-tab label="Settings">Settings</uui-tab>
+			<uui-tab label="AI">AI</uui-tab>
+			<uui-tab label="Users" active>Users</uui-tab>
+		</uui-tab-group>
+		<div class="apps">
+			<uui-button look="primary" compact label="User"><uui-avatar name="Anna Holm"></uui-avatar></uui-button>
+		</div>
+	</header>
+
+	<div class="section">
+		<nav class="section-sidebar">
+			<h3>Users</h3> <!-- mockup-ok: the editor starter's own sidebar heading, renamed -->
+			<uui-menu-item label="Users" active>
+				<uui-icon slot="icon" name="icon-user"></uui-icon>
+			</uui-menu-item>
+			<uui-menu-item label="User groups">
+				<uui-icon slot="icon" name="icon-users"></uui-icon>
+			</uui-menu-item>
+		</nav>
+
+		<main class="section-main">
+			<div class="body-layout">
+				<div class="header">
+					<div class="header-content workspace-header">
+						<uui-button compact class="back" label="Back"><uui-icon name="icon-arrow-left"></uui-icon></uui-button>
+						<uui-icon class="entity-icon" name="icon-user"></uui-icon>
+						<uui-input class="name" label="Name" value="Sophie Larsen"></uui-input>
+					</div>
+					<!-- Workspace "..." actions, shown open. New: the last item. -->
+					<div class="action-menu popover-anchor">
+						<uui-button compact label="Actions"><uui-symbol-more></uui-symbol-more></uui-button>
+						<div class="popover-menu below-end">
+							<uui-menu-item label="Disable"><uui-icon slot="icon" name="icon-block"></uui-icon></uui-menu-item>
+							<uui-menu-item label="Configure two-factor authentication…"><uui-icon slot="icon" name="icon-settings"></uui-icon></uui-menu-item>
+							<uui-menu-item label="Erase AI memory and personal context…"><uui-icon slot="icon" name="icon-trash"></uui-icon></uui-menu-item>
+						</div>
+					</div>
+				</div>
+
+				<div class="main">
+					<!-- Replace from here: the user's details, as the CMS user editor shows them. -->
+					<uui-box class="group" headline="Profile">
+						<div class="property">
+							<div><uui-label>Email</uui-label></div>
+							<div><uui-input label="Email" value="sophie.larsen@nordhem.example"></uui-input></div>
+						</div>
+						<div class="property">
+							<div><uui-label>UI Culture</uui-label></div>
+							<div><uui-input label="UI Culture" value="English (United Kingdom)"></uui-input></div>
+						</div>
+					</uui-box>
+
+					<uui-box class="group" headline="Assign access">
+						<div class="property">
+							<div>
+								<uui-label>Groups</uui-label>
+								<div class="description">Add groups to assign access and permissions</div>
+							</div>
+							<div class="picker">
+								<uui-ref-list>
+									<uui-ref-node name="Editors">
+										<uui-icon slot="icon" name="icon-users"></uui-icon>
+										<uui-action-bar slot="actions"><uui-button label="Remove">Remove</uui-button></uui-action-bar>
+									</uui-ref-node>
+								</uui-ref-list>
+								<uui-button class="choose" look="placeholder" label="Choose">Choose</uui-button>
+							</div>
+						</div>
+					</uui-box>
+					<!-- Replace to here. -->
+				</div>
+
+				<div class="footer">
+					<uui-breadcrumbs>
+						<uui-breadcrumb-item href="#">Users</uui-breadcrumb-item>
+						<uui-breadcrumb-item last-item>Sophie Larsen</uui-breadcrumb-item>
+					</uui-breadcrumbs>
+					<div class="actions">
+						<uui-button look="primary" color="positive" label="Save">Save</uui-button>
+					</div>
+				</div>
+			</div>
+		</main>
+	</div>
+</body>
+</html>

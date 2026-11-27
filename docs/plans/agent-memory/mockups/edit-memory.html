@@ -1,0 +1,105 @@
+<!doctype html>
+<!--
+  Agent memory: the Edit memory dialog, opened from a row's Edit button on the project Memory
+  view or in "Your AI memory". Copied from the modal-dialog.html starter.
+  Open as edit-memory.html#error for the "looks like a secret" error (a server 400).
+-->
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Mockup: Edit memory</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@umbraco-ui/uui@2/dist/themes/light.css">
+	<link rel="stylesheet" href="_mockup.css">
+	<link rel="stylesheet" href="agent-memory.css">
+	<script type="module" src="_mockup.js"></script>
+</head>
+<body class="uui-font uui-text">
+	<header class="app-header">
+		<span class="logo">Umbraco</span>
+		<uui-tab-group class="sections">
+			<uui-tab label="Content">Content</uui-tab>
+			<uui-tab label="Media">Media</uui-tab>
+			<uui-tab label="Settings">Settings</uui-tab>
+			<uui-tab label="Copilot" active>Copilot</uui-tab>
+		</uui-tab-group>
+		<div class="apps">
+			<uui-button look="primary" compact label="User"><uui-avatar name="Anna Holm"></uui-avatar></uui-button>
+		</div>
+	</header>
+	<div class="section">
+		<nav class="section-sidebar">
+			<h3>Copilot</h3> <!-- mockup-ok: starter section-sidebar heading, section name changed -->
+			<uui-menu-item label="Spring rebrand" active>
+				<uui-icon slot="icon" name="icon-folder"></uui-icon>
+			</uui-menu-item>
+		</nav>
+		<main class="section-main"></main>
+	</div>
+
+	<div class="modal-backdrop"></div>
+
+	<!-- Default state: editing a memory. -->
+	<div class="mockup-state">
+	<div class="modal-dialog">
+		<uui-dialog>
+			<uui-dialog-layout class="uui-text" headline="Edit memory">
+				<!-- Replace from here: the dialog's message. -->
+				<p>Saved by Sophie Berg on 18-11-2026 in the Spring rebrand project.</p>
+				<div class="property">
+					<div>
+						<uui-label for="memory-text">Memory</uui-label>
+						<div class="description">Keep it to one short fact. Every chat in this project reads it.</div>
+					</div>
+					<div>
+						<uui-textarea id="memory-text" label="Memory" rows="4" maxlength="300" value="Product pages keep the old SKU format until 1 February"></uui-textarea>
+						<div class="description">54 / 300</div>
+					</div>
+				</div>
+				<div class="property">
+					<div>
+						<uui-label for="memory-expires">Forget after</uui-label>
+						<div class="description">Optional. The agent stops using this memory after this date.</div>
+					</div>
+					<div><uui-input id="memory-expires" type="date" label="Forget after" value="2027-02-01"></uui-input></div>
+				</div>
+				<!-- Replace to here. -->
+				<uui-button slot="actions" label="Cancel">Cancel</uui-button>
+				<uui-button slot="actions" look="primary" color="positive" label="Save">Save</uui-button>
+			</uui-dialog-layout>
+		</uui-dialog>
+	</div>
+	</div>
+
+	<!-- Error state: edit-memory.html#error. The server said the text looks like a secret; the
+	     dialog stays open with the text as typed. -->
+	<div id="error" class="mockup-state on-target">
+	<div class="modal-dialog">
+		<uui-dialog>
+			<uui-dialog-layout class="uui-text" headline="Edit memory">
+				<p>Saved by Anna Holm on 24-11-2026 in the Spring rebrand project.</p>
+				<div class="property">
+					<div>
+						<uui-label for="memory-text-error">Memory<span class="invalid-badge"><uui-badge color="danger" attention>!</uui-badge></span></uui-label>
+						<div class="description">Keep it to one short fact. Every chat in this project reads it.</div>
+					</div>
+					<div>
+						<uui-textarea id="memory-text-error" label="Memory" rows="4" maxlength="300" value="The staging site login is anna.holm / Nordhem-Spring-2026" error></uui-textarea>
+						<div class="description">57 / 300</div>
+						<div class="validation-message">This looks like a password or key, so it can't be saved.</div>
+					</div>
+				</div>
+				<div class="property">
+					<div>
+						<uui-label for="memory-expires-error">Forget after</uui-label>
+						<div class="description">Optional. The agent stops using this memory after this date.</div>
+					</div>
+					<div><uui-input id="memory-expires-error" type="date" label="Forget after"></uui-input></div>
+				</div>
+				<uui-button slot="actions" label="Cancel">Cancel</uui-button>
+				<uui-button slot="actions" look="primary" color="positive" label="Save">Save</uui-button>
+			</uui-dialog-layout>
+		</uui-dialog>
+	</div>
+	</div>
+</body>
+</html>

@@ -1,0 +1,221 @@
+<!doctype html>
+<!--
+  Agent memory: the Memory setting on the agent editor's Settings view, in the "Agent Behavior"
+  box (agent-details-workspace-view.element.ts). Copied from the editor.html starter.
+  States: default, and #site-off (the site-wide memory switch in AI Settings is off).
+  Agents use Umbraco.AI's own icon-bot, which the mockup loader can't fetch; icon-wand stands in.
+-->
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Mockup: Agent editor, Memory and personal context</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@umbraco-ui/uui@2/dist/themes/light.css">
+	<link rel="stylesheet" href="_mockup.css">
+	<link rel="stylesheet" href="agent-memory.css">
+	<script type="module" src="_mockup.js"></script>
+	<script type="module">
+		// The real element sets uui-select's options from code; "Work and person" picked.
+		// Same approach as settings-memory-panel.html: set once the page is shown, then re-attach
+		// the element, since headless Chrome otherwise keeps the native <select> hidden.
+		await new Promise((resolve) => {
+			if (document.documentElement.dataset.mockupReady) return resolve();
+			new MutationObserver(resolve).observe(document.documentElement, { attributeFilter: ['data-mockup-ready'] });
+		});
+		const select = document.getElementById('memory-mode');
+		select.parentElement.prepend(select);
+		select.options = [
+			{ value: 'Off', name: 'Off' },
+			{ value: 'Work', name: 'Work only: learns about projects and chats, never about the person' },
+			{ value: 'WorkAndPerson', name: "Work and person: also remembers each user's preferences", selected: true },
+		];
+	</script>
+</head>
+<body class="uui-font uui-text">
+	<span class="mockup-anchor" id="site-off"></span>
+	<header class="app-header">
+		<span class="logo">Umbraco</span>
+		<uui-tab-group class="sections">
+			<uui-tab label="Content">Content</uui-tab>
+			<uui-tab label="Media">Media</uui-tab>
+			<uui-tab label="Settings">Settings</uui-tab>
+			<uui-tab label="AI" active>AI</uui-tab>
+			<uui-tab label="Copilot">Copilot</uui-tab>
+			<uui-tab label="Users">Users</uui-tab>
+		</uui-tab-group>
+		<div class="apps">
+			<uui-button look="primary" compact label="Search"><uui-icon name="icon-search"></uui-icon></uui-button>
+			<uui-button look="primary" compact label="Help"><uui-icon name="icon-help-alt"></uui-icon></uui-button>
+			<uui-button look="primary" compact label="User"><uui-avatar name="Anna Holm"></uui-avatar></uui-button>
+		</div>
+	</header>
+
+	<div class="section">
+		<nav class="section-sidebar">
+			<h3>AI</h3> <!-- mockup-ok: starter section-sidebar heading, section name changed -->
+			<uui-menu-item label="Connections">
+				<uui-icon slot="icon" name="icon-wall-plug"></uui-icon>
+			</uui-menu-item>
+			<uui-menu-item label="Profiles">
+				<uui-icon slot="icon" name="icon-equalizer"></uui-icon>
+			</uui-menu-item>
+			<uui-menu-item label="Contexts">
+				<uui-icon slot="icon" name="icon-categories"></uui-icon>
+			</uui-menu-item>
+			<uui-menu-item label="Agents" has-children show-children>
+				<uui-icon slot="icon" name="icon-wand"></uui-icon>
+				<uui-menu-item label="Nordhem Brand Writer" active>
+					<uui-icon slot="icon" name="icon-wand"></uui-icon>
+					<uui-action-bar slot="actions">
+						<uui-button compact label="Actions"><uui-symbol-more></uui-symbol-more></uui-button>
+					</uui-action-bar>
+				</uui-menu-item>
+				<uui-menu-item label="SEO Helper">
+					<uui-icon slot="icon" name="icon-wand"></uui-icon>
+				</uui-menu-item>
+			</uui-menu-item>
+			<uui-menu-item label="Guardrails">
+				<uui-icon slot="icon" name="icon-shield"></uui-icon>
+			</uui-menu-item>
+		</nav>
+
+		<main class="section-main">
+			<div class="body-layout">
+				<div class="header">
+					<div class="header-content workspace-header">
+						<uui-button compact class="back" label="Back to Agents"><uui-icon name="icon-arrow-left"></uui-icon></uui-button>
+						<uui-input class="name" label="Name" value="Nordhem Brand Writer">
+							<uui-input-lock slot="append" label="Alias" value="nordhem-brand-writer" auto-width locked></uui-input-lock>
+						</uui-input>
+					</div>
+					<div class="action-menu popover-anchor">
+						<uui-button compact label="Actions"><uui-symbol-more></uui-symbol-more></uui-button>
+					</div>
+					<div class="navigation">
+						<uui-tab-group class="view-tabs">
+							<uui-tab label="Settings" active><uui-icon slot="icon" name="icon-settings"></uui-icon>Settings</uui-tab>
+							<uui-tab label="Availability"><uui-icon slot="icon" name="icon-locate"></uui-icon>Availability</uui-tab>
+							<uui-tab label="Governance"><uui-icon slot="icon" name="icon-shield"></uui-icon>Governance</uui-tab>
+							<uui-tab label="Info"><uui-icon slot="icon" name="icon-info"></uui-icon>Info</uui-tab>
+						</uui-tab-group>
+					</div>
+				</div>
+
+				<div class="main">
+							<!-- Replace from here: the groups and properties being designed. -->
+							<uui-box class="group" headline="General">
+								<div class="property">
+									<div>
+										<uui-label>Description</uui-label>
+										<div class="description">Brief description of this agent</div>
+									</div>
+									<div><uui-input label="Description" value="Writes and rewrites copy in the Nordhem brand voice"></uui-input></div>
+								</div>
+								<div class="property">
+									<div>
+										<uui-label>AI Profile</uui-label>
+										<div class="description">Select a profile or leave empty to use the default Chat profile from Settings</div>
+									</div>
+									<div class="picker">
+										<uui-ref-list>
+											<uui-ref-node name="Default chat" detail="anthropic-demo">
+												<uui-icon slot="icon" name="icon-equalizer"></uui-icon>
+												<uui-action-bar slot="actions"><uui-button label="Remove">Remove</uui-button></uui-action-bar>
+											</uui-ref-node>
+										</uui-ref-list>
+									</div>
+								</div>
+							</uui-box>
+
+							<uui-box class="group" headline="Agent Behavior">
+								<div class="property">
+									<div>
+										<uui-label>Contexts</uui-label>
+										<div class="description">Predefined contexts to include when running this agent</div>
+									</div>
+									<div class="picker">
+										<uui-ref-list>
+											<uui-ref-node name="Nordhem brand voice" detail="nordhem-brand-voice">
+												<uui-icon slot="icon" name="icon-categories"></uui-icon>
+												<uui-action-bar slot="actions"><uui-button label="Remove">Remove</uui-button></uui-action-bar>
+											</uui-ref-node>
+										</uui-ref-list>
+										<uui-button class="choose" look="placeholder" label="Choose">Choose</uui-button>
+									</div>
+								</div>
+								<div class="property">
+									<div>
+										<uui-label required>Instructions</uui-label>
+										<div class="description">Instructions that define how this agent behaves</div>
+									</div>
+									<div><uui-textarea label="Instructions" rows="6" value="You write copy for Nordhem, a Danish outdoor clothing brand. Keep sentences short and warm. Never use exclamation marks. Prefer concrete product details over adjectives."></uui-textarea></div>
+								</div>
+								<div class="property">
+									<div>
+										<uui-label>Starter Prompts</uui-label>
+										<div class="description">Up to 4 prompts shown as clickable chips in an empty chat for this agent</div>
+									</div>
+									<div>
+										<div class="text-string-item">
+											<uui-icon class="handle" name="icon-grip"></uui-icon>
+											<uui-input label="Value" value="Rewrite this page in our brand voice"></uui-input>
+											<uui-button compact label="Remove Rewrite this page in our brand voice"><uui-icon name="icon-trash"></uui-icon></uui-button>
+										</div>
+										<div class="text-string-item">
+											<uui-icon class="handle" name="icon-grip"></uui-icon>
+											<uui-input label="Value" value="Suggest three headlines for a product page"></uui-input>
+											<uui-button compact label="Remove Suggest three headlines for a product page"><uui-icon name="icon-trash"></uui-icon></uui-button>
+										</div>
+										<div class="picker"><uui-button class="choose" look="placeholder" label="Add">Add</uui-button></div>
+									</div>
+								</div>
+								<!-- New: the Memory setting, a dropdown of three modes. New agents default to Off (R1, guess 6).
+								     Work = spaces and lessons only (R1a); Work and person = every layer (R1b). -->
+								<div class="property">
+									<div>
+										<uui-label>Memory</uui-label>
+										<div class="description">What this agent may remember between chats. Users can see and delete what it remembers.</div>
+									</div>
+									<div>
+										<uui-select id="memory-mode" label="Memory"></uui-select>
+										<!-- State #site-off: the site-wide switch in AI Settings is off (R1c). The mode stays saved. -->
+										<div class="when-target"><uui-tag look="secondary" color="warning">Memory is turned off for all agents in AI Settings</uui-tag></div>
+									</div>
+								</div>
+								<!-- New: Include Personal Context, on by default for agents (R26). -->
+								<div class="property">
+									<div>
+										<uui-label>Include Personal Context</uui-label>
+										<div class="description">Adds each user's own AI Contexts and resources from their profile</div>
+									</div>
+									<div><uui-toggle label="Include Personal Context" checked></uui-toggle></div>
+								</div>
+							</uui-box>
+
+							<uui-box class="group" headline="Output">
+								<div class="property">
+									<div>
+										<uui-label>Output Format</uui-label>
+										<div class="description">How the agent's response should be formatted</div>
+									</div>
+									<div>
+										<uui-select label="Output Format" placeholder="Text"></uui-select>
+									</div>
+								</div>
+							</uui-box>
+							<!-- Replace to here. -->
+				</div>
+
+				<div class="footer">
+					<uui-breadcrumbs>
+						<uui-breadcrumb-item href="#">Agents</uui-breadcrumb-item>
+						<uui-breadcrumb-item last-item>Nordhem Brand Writer</uui-breadcrumb-item>
+					</uui-breadcrumbs>
+					<div class="actions">
+						<uui-button look="primary" color="positive" label="Save">Save</uui-button>
+					</div>
+				</div>
+			</div>
+		</main>
+	</div>
+</body>
+</html>

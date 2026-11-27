@@ -1,0 +1,155 @@
+<!doctype html>
+<!--
+  Agent memory: the "Include Personal Context" toggle on the prompt editor's Settings view, in the
+  "General" box beside "Include Entity Context" (prompt-details-workspace-view.element.ts).
+  Copied from agent-memory-setting.html (editor.html starter). Labels and descriptions above
+  the new row are copied from the real view.
+-->
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Mockup: Prompt editor, personal context</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@umbraco-ui/uui@2/dist/themes/light.css">
+	<link rel="stylesheet" href="_mockup.css">
+	<link rel="stylesheet" href="agent-memory.css">
+	<script type="module" src="_mockup.js"></script>
+</head>
+<body class="uui-font uui-text">
+	<header class="app-header">
+		<span class="logo">Umbraco</span>
+		<uui-tab-group class="sections">
+			<uui-tab label="Content">Content</uui-tab>
+			<uui-tab label="Media">Media</uui-tab>
+			<uui-tab label="Settings">Settings</uui-tab>
+			<uui-tab label="AI" active>AI</uui-tab>
+			<uui-tab label="Copilot">Copilot</uui-tab>
+			<uui-tab label="Users">Users</uui-tab>
+		</uui-tab-group>
+		<div class="apps">
+			<uui-button look="primary" compact label="Search"><uui-icon name="icon-search"></uui-icon></uui-button>
+			<uui-button look="primary" compact label="Help"><uui-icon name="icon-help-alt"></uui-icon></uui-button>
+			<uui-button look="primary" compact label="User"><uui-avatar name="Anna Holm"></uui-avatar></uui-button>
+		</div>
+	</header>
+
+	<div class="section">
+		<nav class="section-sidebar">
+			<h3>AI</h3> <!-- mockup-ok: starter section-sidebar heading, section name changed -->
+			<uui-menu-item label="Connections">
+				<uui-icon slot="icon" name="icon-wall-plug"></uui-icon>
+			</uui-menu-item>
+			<uui-menu-item label="Profiles">
+				<uui-icon slot="icon" name="icon-equalizer"></uui-icon>
+			</uui-menu-item>
+			<uui-menu-item label="Contexts">
+				<uui-icon slot="icon" name="icon-categories"></uui-icon>
+			</uui-menu-item>
+			<uui-menu-item label="Prompts" has-children show-children>
+				<uui-icon slot="icon" name="icon-wand"></uui-icon>
+				<uui-menu-item label="Rewrite in my style" active>
+					<uui-icon slot="icon" name="icon-wand"></uui-icon>
+					<uui-action-bar slot="actions">
+						<uui-button compact label="Actions"><uui-symbol-more></uui-symbol-more></uui-button>
+					</uui-action-bar>
+				</uui-menu-item>
+				<uui-menu-item label="Meta description">
+					<uui-icon slot="icon" name="icon-wand"></uui-icon>
+				</uui-menu-item>
+			</uui-menu-item>
+			<uui-menu-item label="Guardrails">
+				<uui-icon slot="icon" name="icon-shield"></uui-icon>
+			</uui-menu-item>
+		</nav>
+
+		<main class="section-main">
+			<div class="body-layout">
+				<div class="header">
+					<div class="header-content workspace-header">
+						<uui-button compact class="back" label="Back to Prompts"><uui-icon name="icon-arrow-left"></uui-icon></uui-button>
+						<uui-input class="name" label="Name" value="Rewrite in my style">
+							<uui-input-lock slot="append" label="Alias" value="rewriteInMyStyle" auto-width locked></uui-input-lock>
+						</uui-input>
+					</div>
+					<div class="action-menu popover-anchor">
+						<uui-button compact label="Actions"><uui-symbol-more></uui-symbol-more></uui-button>
+					</div>
+					<div class="navigation">
+						<uui-tab-group class="view-tabs">
+							<uui-tab label="Settings" active><uui-icon slot="icon" name="icon-settings"></uui-icon>Settings</uui-tab>
+							<uui-tab label="Info"><uui-icon slot="icon" name="icon-info"></uui-icon>Info</uui-tab>
+						</uui-tab-group>
+					</div>
+				</div>
+
+				<div class="main">
+							<!-- Replace from here: the groups and properties being designed. -->
+							<uui-box class="group" headline="General">
+								<div class="property">
+									<div>
+										<uui-label>Description</uui-label>
+										<div class="description">Brief description of this prompt</div>
+									</div>
+									<div><uui-input label="Description" value="Rewrites the selected text in the editor's own style"></uui-input></div>
+								</div>
+								<div class="property">
+									<div>
+										<uui-label>AI Profile</uui-label>
+										<div class="description">Select a profile or leave empty to use the default Chat profile from Settings</div>
+									</div>
+									<div class="picker"><uui-button class="choose" look="placeholder" label="Choose">Choose</uui-button></div>
+								</div>
+								<div class="property">
+									<div>
+										<uui-label>Contexts</uui-label>
+										<div class="description">Predefined contexts to include when executing this prompt</div>
+									</div>
+									<div>
+										<uui-ref-list>
+											<uui-ref-node name="Nordhem brand voice" detail="nordhemBrandVoice">
+												<uui-icon slot="icon" name="icon-wand"></uui-icon>
+												<uui-action-bar slot="actions"><uui-button label="Remove"><uui-icon name="icon-trash"></uui-icon></uui-button></uui-action-bar>
+											</uui-ref-node>
+										</uui-ref-list>
+										<uui-button class="choose" look="placeholder" label="Choose">Choose</uui-button>
+									</div>
+								</div>
+								<div class="property">
+									<div>
+										<uui-label>Include Entity Context</uui-label>
+										<div class="description">When enabled, all entity properties are formatted as markdown and injected as a system message. Variable replacement ({{property}}) works regardless of this setting.</div>
+									</div>
+									<div><uui-toggle label="Include Entity Context" checked></uui-toggle></div>
+								</div>
+								<!-- New: Include Personal Context, off by default for prompts (R26). -->
+								<div class="property">
+									<div>
+										<uui-label>Include Personal Context</uui-label>
+										<div class="description">Adds the user's own AI Contexts and resources from their profile. Leave off for prompts with a fixed output format.</div>
+									</div>
+									<div><uui-toggle label="Include Personal Context" checked></uui-toggle></div>
+								</div>
+								<div class="property">
+									<div>
+										<uui-label required>Instructions</uui-label>
+										<div class="description">The prompt instructions template</div>
+									</div>
+									<div><uui-textarea label="Instructions" rows="5" value="Rewrite the following text so it reads the way I write. Keep every fact and name. Text: {{currentValue}}"></uui-textarea></div>
+								</div>
+							</uui-box>
+							<!-- Replace to here. -->
+				</div>
+
+				<div class="footer">
+					<uui-breadcrumbs>
+						<uui-breadcrumb-item href="#">Prompts</uui-breadcrumb-item>
+						<uui-breadcrumb-item last-item>Rewrite in my style</uui-breadcrumb-item>
+					</uui-breadcrumbs>
+					<div class="actions">
+						<uui-button look="primary" color="positive" label="Save">Save</uui-button>
+					</div>
+				</div>
+			</div>
+		</main>
+	</div>
+</body>
+</html>

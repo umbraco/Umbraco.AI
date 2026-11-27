@@ -1,0 +1,183 @@
+/* Shared styles for the agent-memory mockups. Every screen links this one file.
+   Append new rules; don't overwrite rules another screen uses. */
+
+/* A second state of the same page, shown at <page>.html#<id>: the default state hides when a
+   .mockup-state is targeted. */
+.mockup-state.on-target { /* mockup-ok: mockup plumbing, same idea as _mockup.css .popover-menu.on-target */
+	display: none;
+}
+.mockup-state.on-target:target { /* mockup-ok: mockup plumbing, same idea as _mockup.css .popover-menu.on-target */
+	display: block;
+}
+body:has(.mockup-state.on-target:target) .mockup-state:not(.on-target) { /* mockup-ok: mockup plumbing, same idea as _mockup.css */
+	display: none;
+}
+
+/* One row of umb-input-multiple-text-string (Starter Prompts). */
+.text-string-item { /* mockup-ok: Umbraco.Cms core/components/multiple-text-string-input/input-multiple-text-string-item.element.ts :host */
+	display: flex;
+	align-items: center;
+	margin-bottom: var(--uui-size-space-3);
+	gap: var(--uui-size-space-3);
+}
+.text-string-item uui-input { /* mockup-ok: same file, #validation-message flex: 1 */
+	flex: 1;
+}
+.text-string-item .handle { /* mockup-ok: same file, .handle */
+	opacity: 0.6;
+}
+
+/* ---- Chat memory notes + shared-chat Memory section (chat-memory-notes.html, conversation-memory.html) ---- */
+
+/* A page-wide second state: an empty <span class="mockup-anchor" id="<state>"> is the target;
+   .when-default parts hide and .when-target parts show at <page>.html#<state>. Use this when
+   one state changes several places on the page (the .mockup-state rules above swap one element). */
+body:not(:has(.mockup-anchor:target)) .when-target { /* mockup-ok: mockup plumbing, same idea as _mockup.css .popover-menu.on-target */
+	display: none;
+}
+body:has(.mockup-anchor:target) .when-default { /* mockup-ok: mockup plumbing, same idea as _mockup.css .popover-menu.on-target */
+	display: none;
+}
+
+/* The row of tool chips under an assistant message. */
+.tool-calls { /* mockup-ok: Umbraco.AI.Agent.UI chat/components/message.element.ts .tool-calls */
+	margin-top: var(--uui-size-space-2);
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--uui-size-space-2);
+}
+
+/* The default tool chip (uai-agent-tool-status). */
+.tool-status { /* mockup-ok: Umbraco.AI.Agent.UI chat/components/tool-status.element.ts .tool-status */
+	display: inline-flex;
+	align-items: center;
+	gap: var(--uui-size-space-2);
+	padding: var(--uui-size-space-2) var(--uui-size-space-3);
+	background: var(--uai-chat-surface-alt, var(--uui-color-surface-alt));
+	border-radius: var(--uui-border-radius);
+	font-size: var(--uui-type-small-size);
+	color: var(--uui-color-text);
+}
+.tool-status.complete { /* mockup-ok: tool-status.element.ts .tool-status.complete */
+	color: var(--uui-color-positive);
+}
+.tool-status .tool-name { /* mockup-ok: tool-status.element.ts .tool-name */
+	font-weight: 500;
+}
+
+/* NEW: the memory note, a custom tool renderer for `remember` / `forget`. Same box as the tool
+   chip above (padding, surface, radius, small text, 500-weight label); it only adds a second
+   line (reason) and the action buttons, and takes the full message width so each note reads as
+   its own line. */
+.memory-note { /* mockup-ok: new component; box copied from tool-status.element.ts .tool-status */
+	display: flex;
+	align-items: center;
+	gap: var(--uui-size-space-2);
+	flex-basis: 100%;
+	box-sizing: border-box;
+	padding: var(--uui-size-space-2) var(--uui-size-space-3);
+	background: var(--uai-chat-surface-alt, var(--uui-color-surface-alt));
+	border-radius: var(--uui-border-radius);
+	font-size: var(--uui-type-small-size);
+	color: var(--uui-color-text);
+	line-height: 1.5;
+}
+.memory-note > uui-icon { /* mockup-ok: new component */
+	flex: none;
+}
+.memory-note-body { /* mockup-ok: new component */
+	display: flex;
+	flex-direction: column;
+	gap: var(--uui-size-space-1);
+	min-width: 0;
+	flex: 1;
+}
+.memory-note-label { /* mockup-ok: tool-status.element.ts .tool-name weight */
+	font-weight: 500;
+}
+.memory-note-reason { /* mockup-ok: new component; text-alt as context-panel .muted */
+	color: var(--uui-color-text-alt);
+}
+.memory-note-actions { /* mockup-ok: new component; spacing as message.element.ts .message-actions */
+	display: flex;
+	flex: none;
+	gap: var(--uui-size-space-1);
+	margin: calc(var(--uui-size-space-2) * -1) calc(var(--uui-size-space-2) * -1) calc(var(--uui-size-space-2) * -1) 0;
+}
+.memory-note.held { /* mockup-ok: new component; warning outline, UUI warning token */
+	outline: 1px solid var(--uui-color-warning);
+	outline-offset: -1px;
+}
+.memory-note.held > uui-icon { /* mockup-ok: new component; UUI warning token for text on a light surface */
+	color: var(--uui-color-warning-standalone);
+}
+.memory-note.not-saved { /* mockup-ok: tool-status.element.ts .tool-status.error */
+	color: var(--uui-color-danger);
+}
+.memory-note.forgotten { /* mockup-ok: new component; text-alt as context-panel .muted */
+	color: var(--uui-color-text-alt);
+}
+
+/* Context panel parts from the real conversation-context-panel.element.ts, which the starter
+   predates ("Shared with" block, its ref list and Choose button, the muted empty line). */
+.cw-context-block-body > uui-ref-list { /* mockup-ok: conversation-context-panel.element.ts .block-body > uui-ref-list */
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	margin-bottom: var(--uui-size-space-3);
+}
+.cw-context-block-body > uui-button[look="placeholder"] { /* mockup-ok: conversation-context-panel.element.ts .block-body > uui-button[look="placeholder"] */
+	display: flex;
+	width: 100%;
+}
+.cw-context-block-body .muted { /* mockup-ok: conversation-context-panel.element.ts .muted */
+	margin: 0;
+	color: var(--uui-color-text-alt);
+	font-size: 0.9em;
+}
+.cw-context-block-body > .muted + uui-ref-list { /* mockup-ok: new Memory section; gap between note and list as the Choose button's margin */
+	margin-top: var(--uui-size-space-3);
+}
+.cw-context-block-body .instructions { /* mockup-ok: conversation-context-panel.element.ts .instructions */
+	margin: 0;
+	white-space: pre-wrap;
+}
+
+/* The read-only notice in the composer's place (recipient view of a shared chat). */
+.readonly-notice { /* mockup-ok: Umbraco.AI.Agent.UI chat/components/chat.element.ts .readonly-notice */
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--uui-size-space-2);
+	padding: var(--uui-size-space-4);
+	margin: var(--uui-size-space-4);
+	border: 1px dashed var(--uui-color-border);
+	border-radius: var(--uui-border-radius);
+	color: var(--uui-color-text-alt);
+	font-size: var(--uui-type-small-size);
+	text-align: center;
+}
+
+/* The current-user panel's stack of profile apps. */
+.profile-apps { /* mockup-ok: Umbraco.Cms user/current-user/modals/current-user/current-user-modal.element.ts #main */
+	display: flex;
+	flex-direction: column;
+	gap: var(--uui-size-space-3);
+}
+.profile-actions { /* mockup-ok: Umbraco.Cms user/current-user/profile/current-user-profile-user-profile-app.element.ts #actions */
+	display: flex;
+	flex-wrap: wrap;
+	flex-direction: row;
+	gap: var(--uui-size-space-2);
+}
+
+/* A group header row in a memory list ("About you", one per agent): the light grey surface. */
+uui-table-row.group-row { /* mockup-ok: new component; UUI surface-alt token, the light grey used for alt surfaces */
+	background: var(--uui-color-surface-alt);
+}
+
+uui-button.add-full { /* mockup-ok: copied from core resource-list.element.ts #btn-add-compact */
+	display: block;
+	width: 100%;
+}
+

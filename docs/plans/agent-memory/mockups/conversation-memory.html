@@ -1,0 +1,187 @@
+<!doctype html>
+<!--
+  agent-memory: the Memory section in a shared chat's context panel, outside any project
+  (SPEC.md "Shared chat: Memory section"). Built from docs/mockups/starters/copilot-workspace.html
+  (commit c6643b80). The "Shared with" block, its rows, the Choose button and the shared entity
+  sign copy conversation-context-panel.element.ts and conversation/manifests.ts at 731bf73e8, which
+  the starter predates. As in the real panel, "Shared with" sits first and is hidden for a
+  recipient (read-only conversation).
+
+  States: default = the owner (Anna Holm); #recipient = Sophie Berg viewing the shared chat.
+-->
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Mockup: Shared chat memory</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@umbraco-ui/uui@2/dist/themes/light.css">
+	<link rel="stylesheet" href="_mockup.css">
+	<link rel="stylesheet" href="copilot-workspace.css">
+	<link rel="stylesheet" href="agent-memory.css">
+	<script type="module" src="_mockup.js"></script>
+</head>
+<body class="uui-font uui-text">
+	<span class="mockup-anchor" id="recipient"></span>
+	<header class="app-header">
+		<span class="logo">Umbraco</span>
+		<uui-tab-group class="sections">
+			<uui-tab label="Content">Content</uui-tab>
+			<uui-tab label="Media">Media</uui-tab>
+			<uui-tab label="Copilot" active>Copilot</uui-tab>
+			<uui-tab label="Settings">Settings</uui-tab>
+		</uui-tab-group>
+		<div class="apps">
+			<uui-button class="when-default" look="primary" compact label="User"><uui-avatar name="Anna Holm"></uui-avatar></uui-button>
+			<uui-button class="when-target" look="primary" compact label="User"><uui-avatar name="Sophie Berg"></uui-avatar></uui-button>
+		</div>
+	</header>
+
+	<div class="section">
+		<nav class="section-sidebar" style="flex-basis: 300px;">
+			<div class="cw-sidebar">
+				<div class="cw-sidebar-header">
+					<uui-button-group>
+						<uui-button look="primary" color="default" label="New chat">
+							<uui-icon slot="icon" name="icon-add"></uui-icon>
+							New chat
+						</uui-button>
+						<uui-button compact look="primary" color="default" label="More new-chat options">
+							<uui-symbol-expand></uui-symbol-expand>
+						</uui-button>
+					</uui-button-group>
+					<uui-button look="default" label="New project">New project</uui-button>
+					<uui-input type="search" placeholder="Search conversations" label="Search conversations"></uui-input>
+				</div>
+				<!-- Owner (Anna): the chat sits in Recent with the blue "shared" entity sign. -->
+				<div class="cw-sidebar-groups when-default">
+					<h4 class="cw-group-label">Projects</h4>
+					<uui-menu-item label="Spring rebrand" has-children>
+						<uui-icon slot="icon" name="icon-folder"></uui-icon>
+					</uui-menu-item>
+
+					<h4 class="cw-group-label">Recent</h4>
+					<uui-menu-item label="Q1 campaign ideas" active>
+						<span slot="icon" class="entity-sign"><uui-icon name="icon-chat"></uui-icon><uui-icon class="sign blue" name="icon-share"></uui-icon></span>
+						<umb-entity-actions-dropdown slot="actions" compact label="Q1 campaign ideas">
+							<uui-symbol-more slot="label"></uui-symbol-more>
+						</umb-entity-actions-dropdown>
+					</uui-menu-item>
+					<uui-menu-item label="Alt text for the sofa range">
+						<uui-icon slot="icon" name="icon-chat"></uui-icon>
+					</uui-menu-item>
+					<uui-menu-item label="Newsletter subject lines">
+						<uui-icon slot="icon" name="icon-chat"></uui-icon>
+					</uui-menu-item>
+				</div>
+				<!-- Recipient (Sophie): the chat sits in "Shared with me" with the same sign. -->
+				<div class="cw-sidebar-groups when-target">
+					<h4 class="cw-group-label">Recent</h4>
+					<uui-menu-item label="Store opening hours page">
+						<uui-icon slot="icon" name="icon-chat"></uui-icon>
+					</uui-menu-item>
+					<uui-menu-item label="Meta descriptions for blog posts">
+						<uui-icon slot="icon" name="icon-chat"></uui-icon>
+					</uui-menu-item>
+
+					<h4 class="cw-group-label">Shared with me</h4>
+					<uui-menu-item label="Q1 campaign ideas" active>
+						<span slot="icon" class="entity-sign"><uui-icon name="icon-chat"></uui-icon><uui-icon class="sign blue" name="icon-share"></uui-icon></span>
+					</uui-menu-item>
+				</div>
+			</div>
+		</nav>
+
+		<main class="section-main">
+			<div class="cw-main-area">
+				<div class="cw-chat">
+					<div class="cw-chat-messages">
+						<div class="cw-msg user"><div class="cw-bubble">We have 250.000 DKK for the Q1 campaign. It's aimed at first-time buyers in Copenhagen. Give me three ideas, and no discount language please.</div></div>
+						<div class="cw-msg assistant">
+							<div class="cw-bubble">Three ideas for first-time buyers in Copenhagen, within 250.000 DKK:<br><br>1. "Your first room": a short video series styling one small Copenhagen flat, room by room.<br>2. A Saturday showroom event in Nørrebro with a stylist on hand.<br>3. A "starter home" guide on the site, linking to the pieces that fit a small budget and a small space.</div>
+						</div>
+						<div class="cw-msg user"><div class="cw-bubble">Let's go with the showroom event. Draft the invite text.</div></div>
+						<div class="cw-msg assistant"><div class="cw-bubble">Your first home, styled with you. Join us at the Nordhem showroom in Nørrebro on Saturday 14-02-2027, 10:00-15:00. Bring a photo of your space and our stylists will help you plan it, one room at a time.</div></div>
+					</div>
+					<div class="cw-composer when-default">
+						<uui-textarea label="Message" placeholder="Ask Copilot…" rows="1"></uui-textarea>
+						<uui-button look="primary" label="Send"><uui-icon name="icon-navigation-right"></uui-icon></uui-button>
+					</div>
+					<div class="readonly-notice when-target"><uui-icon name="icon-lock"></uui-icon>This conversation is read-only — shared by Anna Holm.</div>
+				</div>
+				<aside class="cw-context-panel">
+					<div class="header"><h3>Context</h3></div>
+					<div class="main">
+						<details class="cw-context-block when-default" open>
+							<summary><uui-icon name="icon-navigation-right"></uui-icon>Shared with</summary>
+							<div class="cw-context-block-body">
+								<uui-ref-list>
+									<uui-ref-node name="Sophie Berg" detail="Live">
+										<uui-action-bar slot="actions">
+											<uui-button label="Remove" look="secondary"><uui-icon name="icon-trash"></uui-icon></uui-button>
+										</uui-action-bar>
+									</uui-ref-node>
+								</uui-ref-list>
+								<uui-button look="placeholder" label="Choose">Choose</uui-button>
+							</div>
+						</details>
+						<!-- NEW: Memory section. Shown only once the chat has been shared (R5). -->
+						<details class="cw-context-block" open>
+							<!-- The description sits in the info icon's tooltip (native title), not under the heading. -->
+							<summary><uui-icon name="icon-navigation-right"></uui-icon>Memory<uui-icon name="icon-info" title="Facts saved in this shared chat. Everyone it's shared with sees replies that use them." label="About memory"></uui-icon></summary>
+							<div class="cw-context-block-body">
+								<!-- Owner: rows with Edit and Delete, same action bar as the "Shared with" rows. -->
+								<uui-ref-list class="when-default">
+									<uui-ref-node name="Campaign budget is 250.000 DKK" detail="Anna Holm, 20-01-2027">
+										<uui-icon slot="icon" name="icon-bookmark"></uui-icon>
+										<uui-action-bar slot="actions">
+											<uui-button label="Edit" look="secondary"><uui-icon name="icon-edit"></uui-icon></uui-button>
+											<uui-button label="Delete" look="secondary"><uui-icon name="icon-trash"></uui-icon></uui-button>
+										</uui-action-bar>
+									</uui-ref-node>
+									<uui-ref-node name="Target audience is first-time buyers in Copenhagen" detail="Anna Holm, 20-01-2027">
+										<uui-icon slot="icon" name="icon-bookmark"></uui-icon>
+										<uui-action-bar slot="actions">
+											<uui-button label="Edit" look="secondary"><uui-icon name="icon-edit"></uui-icon></uui-button>
+											<uui-button label="Delete" look="secondary"><uui-icon name="icon-trash"></uui-icon></uui-button>
+										</uui-action-bar>
+									</uui-ref-node>
+									<uui-ref-node name="Avoid discount language" detail="Anna Holm, 20-01-2027">
+										<uui-icon slot="icon" name="icon-bookmark"></uui-icon>
+										<uui-action-bar slot="actions">
+											<uui-button label="Edit" look="secondary"><uui-icon name="icon-edit"></uui-icon></uui-button>
+											<uui-button label="Delete" look="secondary"><uui-icon name="icon-trash"></uui-icon></uui-button>
+										</uui-action-bar>
+									</uui-ref-node>
+								</uui-ref-list>
+								<!-- Recipient: same rows, read-only (SPEC guess 3). -->
+								<uui-ref-list class="when-target">
+									<uui-ref-node name="Campaign budget is 250.000 DKK" detail="Anna Holm, 20-01-2027" readonly><uui-icon slot="icon" name="icon-bookmark"></uui-icon></uui-ref-node>
+									<uui-ref-node name="Target audience is first-time buyers in Copenhagen" detail="Anna Holm, 20-01-2027" readonly><uui-icon slot="icon" name="icon-bookmark"></uui-icon></uui-ref-node>
+									<uui-ref-node name="Avoid discount language" detail="Anna Holm, 20-01-2027" readonly><uui-icon slot="icon" name="icon-bookmark"></uui-icon></uui-ref-node>
+								</uui-ref-list>
+							</div>
+						</details>
+						<details class="cw-context-block" open>
+							<summary><uui-icon name="icon-navigation-right"></uui-icon>Contexts</summary>
+							<div class="cw-context-block-body">
+								<uui-ref-node name="Nordhem brand voice" detail="Context">
+									<uui-icon slot="icon" name="icon-wand"></uui-icon>
+								</uui-ref-node>
+								<uui-button class="cw-context-add when-default" look="placeholder" label="Add">+ Add</uui-button>
+							</div>
+						</details>
+						<details class="cw-context-block" open>
+							<summary><uui-icon name="icon-navigation-right"></uui-icon>Resources</summary>
+							<div class="cw-context-block-body">
+								<uui-ref-node name="Q1 media plan.xlsx" detail="Resource">
+									<uui-icon slot="icon" name="icon-document"></uui-icon>
+								</uui-ref-node>
+								<uui-button class="cw-context-add when-default" look="placeholder" label="Add">+ Add</uui-button>
+							</div>
+						</details>
+					</div>
+				</aside>
+			</div>
+		</main>
+	</div>
+</body>
+</html>

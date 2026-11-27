@@ -608,6 +608,19 @@ public class RunAgentActionTests
             .ReturnsAsync(agent);
     }
 
+    // MEM-04 AC13
+    // Pending spec: the body is the intended arrange/act/assert as comments, so this file compiles
+    // before ContextKeys.UnattendedRun exists. The builder replaces the comments with code and removes the Skip.
+    [Fact(Skip = "Pending")]
+    public Task ExecuteAsync_SetsTheUnattendedRunKey()
+    {
+        // Arrange: an agent with memory on, run under the workspace service account
+        // When: ExecuteAsync runs the Run AI Agent action
+        // Then: the runtime context passed to the agent has ContextKeys.UnattendedRun == true
+        //       (captured like ExecuteAsync_PopulatesAuditMetadataKeysOnExecutionOptions)
+        return Task.CompletedTask;
+    }
+
     private RunAgentAction CreateAction()
         => new(
             _infrastructure,

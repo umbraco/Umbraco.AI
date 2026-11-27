@@ -1,0 +1,224 @@
+<!doctype html>
+<!--
+  Agent memory: the AI Settings screen (AI > Settings) with a new "Agent Memory" box after the
+  built-in ones, added by the Agent package through the new uaiSettingsPanel manifest
+  (ARCHITECTURE "Settings extension"). Copied from the editor.html starter.
+  Mirrors Umbraco.AI settings-editor.element.ts: one workspace view (so no view tabs), headline
+  "Settings", boxes "Defaults" and "Transparency" with the uaiSettings_* labels from lang/en.ts.
+  The Image Generation, Decision and Extraction pickers only show when those capabilities are
+  enabled, so they're left out here.
+  The tree mirrors the AI section's three sidebar menus (Configuration, Monitoring, Add-ons) and
+  their menu item weights. Agents use Umbraco.AI's own icon-bot, which the mockup loader can't
+  fetch; icon-wand stands in.
+-->
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Mockup: AI Settings, Agent memory panel</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@umbraco-ui/uui@2/dist/themes/light.css">
+	<link rel="stylesheet" href="_mockup.css">
+	<link rel="stylesheet" href="agent-memory.css">
+	<script type="module" src="_mockup.js"></script>
+	<script type="module">
+		// The real element sets uui-select's options from code; same three options, Always picked.
+		// Set once the page is shown, then re-attach the element: headless Chrome otherwise keeps
+		// the native <select> in its shadow root hidden from the page's loading state.
+		await new Promise((resolve) => {
+			if (document.documentElement.dataset.mockupReady) return resolve();
+			new MutationObserver(resolve).observe(document.documentElement, { attributeFilter: ['data-mockup-ready'] });
+		});
+		const select = document.getElementById('disclosure-notice');
+		select.parentElement.append(select);
+		select.options = [
+			{ value: 'Always', name: 'Always - Always show the notice', selected: true },
+			{ value: 'Dismissible', name: 'Dismissible - Show until each user hides it (remembered in their browser)' },
+			{ value: 'Off', name: 'Off - Never show the notice' },
+		];
+		const personal = document.getElementById('personal-memory');
+		personal.parentElement.append(personal);
+		personal.options = [
+			{ value: 'Allowed', name: 'Allowed - On for everyone; each user can turn it off', selected: true },
+			{ value: 'OptIn', name: 'Opt-in - Off until each user turns it on' },
+			{ value: 'NotAllowed', name: 'Not allowed - Agents never remember things about people' },
+		];
+	</script>
+</head>
+<body class="uui-font uui-text">
+	<header class="app-header">
+		<span class="logo">Umbraco</span>
+		<uui-tab-group class="sections">
+			<uui-tab label="Content">Content</uui-tab>
+			<uui-tab label="Media">Media</uui-tab>
+			<uui-tab label="Settings">Settings</uui-tab>
+			<uui-tab label="AI" active>AI</uui-tab>
+			<uui-tab label="Copilot">Copilot</uui-tab>
+			<uui-tab label="Users">Users</uui-tab>
+		</uui-tab-group>
+		<div class="apps">
+			<uui-button look="primary" compact label="Search"><uui-icon name="icon-search"></uui-icon></uui-button>
+			<uui-button look="primary" compact label="Help"><uui-icon name="icon-help-alt"></uui-icon></uui-button>
+			<uui-button look="primary" compact label="User"><uui-avatar name="Anna Holm"></uui-avatar></uui-button>
+		</div>
+	</header>
+
+	<div class="section">
+		<nav class="section-sidebar">
+			<h3>Configuration</h3> <!-- mockup-ok: starter section-sidebar heading, one per AI sidebar menu -->
+			<uui-menu-item label="Connections">
+				<uui-icon slot="icon" name="icon-wall-plug"></uui-icon>
+			</uui-menu-item>
+			<uui-menu-item label="Profiles">
+				<uui-icon slot="icon" name="icon-equalizer"></uui-icon>
+			</uui-menu-item>
+			<uui-menu-item label="Contexts">
+				<uui-icon slot="icon" name="icon-categories"></uui-icon>
+			</uui-menu-item>
+			<uui-menu-item label="Knowledge Sets">
+				<uui-icon slot="icon" name="icon-books"></uui-icon>
+			</uui-menu-item>
+			<uui-menu-item label="Guardrails">
+				<uui-icon slot="icon" name="icon-shield"></uui-icon>
+			</uui-menu-item>
+			<uui-menu-item label="Settings" active>
+				<uui-icon slot="icon" name="icon-settings"></uui-icon>
+			</uui-menu-item>
+			<h3>Monitoring</h3> <!-- mockup-ok: starter section-sidebar heading, one per AI sidebar menu -->
+			<uui-menu-item label="Analytics">
+				<uui-icon slot="icon" name="icon-chart"></uui-icon>
+			</uui-menu-item>
+			<uui-menu-item label="Tests">
+				<uui-icon slot="icon" name="icon-lab"></uui-icon>
+			</uui-menu-item>
+			<uui-menu-item label="Logs">
+				<uui-icon slot="icon" name="icon-history"></uui-icon>
+			</uui-menu-item>
+			<h3>Add-ons</h3> <!-- mockup-ok: starter section-sidebar heading, one per AI sidebar menu -->
+			<uui-menu-item label="Prompts">
+				<uui-icon slot="icon" name="icon-command"></uui-icon>
+			</uui-menu-item>
+			<uui-menu-item label="Agents">
+				<uui-icon slot="icon" name="icon-wand"></uui-icon>
+			</uui-menu-item>
+		</nav>
+
+		<main class="section-main">
+			<div class="body-layout">
+				<div class="header">
+					<h3 class="headline">Settings</h3>
+				</div>
+
+				<div class="main">
+					<!-- Replace from here: the groups and properties being designed. -->
+					<!-- Existing box, unchanged. -->
+					<uui-box class="group" headline="Defaults">
+						<div class="property">
+							<div>
+								<uui-label>Default Chat Profile</uui-label>
+								<div class="description">The default profile to use for chat completions when no profile is specified in API calls.</div>
+							</div>
+							<div class="picker">
+								<uui-ref-list>
+									<uui-ref-node name="Default Chat" detail="default-chat" readonly>
+										<uui-icon slot="icon" name="icon-chat"></uui-icon>
+										<uui-tag slot="tag" look="secondary">claude-sonnet-4-5</uui-tag>
+										<uui-action-bar slot="actions"><uui-button label="Remove"><uui-icon name="icon-trash"></uui-icon></uui-button></uui-action-bar>
+									</uui-ref-node>
+								</uui-ref-list>
+							</div>
+						</div>
+						<div class="property">
+							<div>
+								<uui-label>Classifier Chat Profile</uui-label>
+								<div class="description">An optional profile for internal classification tasks such as agent routing. Uses a cheaper model to reduce costs. Falls back to the default chat profile if not set.</div>
+							</div>
+							<div class="picker">
+								<uui-button class="choose" look="placeholder" label="Add profile"><uui-icon name="icon-add"></uui-icon> Add</uui-button>
+							</div>
+						</div>
+						<div class="property">
+							<div>
+								<uui-label>Default Embedding Profile</uui-label>
+								<div class="description">The default profile to use for generating embeddings when no profile is specified in API calls.</div>
+							</div>
+							<div class="picker">
+								<uui-ref-list>
+									<uui-ref-node name="Default Embedding" detail="default-embedding" readonly>
+										<uui-icon slot="icon" name="icon-layers"></uui-icon>
+										<uui-tag slot="tag" look="secondary">text-embedding-3-small</uui-tag>
+										<uui-action-bar slot="actions"><uui-button label="Remove"><uui-icon name="icon-trash"></uui-icon></uui-button></uui-action-bar>
+									</uui-ref-node>
+								</uui-ref-list>
+							</div>
+						</div>
+						<div class="property">
+							<div>
+								<uui-label>Default Speech to Text Profile</uui-label>
+								<div class="description">The default profile to use for speech-to-text transcription when no profile is specified in API calls.</div>
+							</div>
+							<div class="picker">
+								<uui-ref-list>
+									<uui-ref-node name="Default Speech to Text" detail="default-speech-to-text" readonly>
+										<uui-icon slot="icon" name="icon-voice"></uui-icon>
+										<uui-tag slot="tag" look="secondary">gpt-4o-transcribe</uui-tag>
+										<uui-action-bar slot="actions"><uui-button label="Remove"><uui-icon name="icon-trash"></uui-icon></uui-button></uui-action-bar>
+									</uui-ref-node>
+								</uui-ref-list>
+							</div>
+						</div>
+					</uui-box>
+
+					<!-- Existing box, unchanged. -->
+					<uui-box class="group" headline="Transparency">
+						<div class="property">
+							<div>
+								<uui-label>AI Disclosure Notice</uui-label>
+								<div class="description">Shows a notice on chat and prompt responses saying they are AI-generated. You may be legally required to tell people when content is AI-generated, for example under the EU AI Act. Check which rules apply to you before choosing Dismissible or Off.</div>
+							</div>
+							<div><uui-select id="disclosure-notice" label="AI Disclosure Notice"></uui-select></div>
+						</div>
+					</uui-box>
+
+					<!-- New built-in box (core): the personal context kill switch, default on (R35). -->
+					<uui-box class="group" headline="Personal Context">
+						<div class="property">
+							<div>
+								<uui-label>Personal Context</uui-label>
+								<div class="description">Let users add their own AI Contexts and resources in their profile, for prompts and agents that include personal context. Turning this off stops every prompt and agent using them. Saved contexts and resources are kept.</div>
+							</div>
+							<div><uui-toggle label="Personal Context" checked></uui-toggle></div>
+						</div>
+					</uui-box>
+
+					<!-- New: a uaiSettingsPanel box from the Agent package, after the built-in ones.
+					     Key Agent.Memory.Enabled, default on (guess 6). Off = every agent behaves as Off (R1c).
+					     Two settings: the kill switch, then the personal-memory policy. -->
+					<uui-box class="group" headline="Agent Memory">
+						<div class="property">
+							<div>
+								<uui-label>Agent Memory</uui-label>
+								<div class="description">Let agents that have memory turned on remember facts between chats. Turning this off stops every agent using memory. Saved memories are kept.</div>
+							</div>
+							<div><uui-toggle label="Agent Memory" checked></uui-toggle></div>
+						</div>
+						<!-- Key Agent.Memory.PersonalMemory, default Allowed (R1e, R1f). -->
+						<div class="property">
+							<div>
+								<uui-label>Personal Memory</uui-label>
+								<div class="description">Whether agents may remember things about each person, like their preferences and role. Only agents set to "Work and person" use it. Turning it off keeps saved memories, paused.</div>
+							</div>
+							<div><uui-select id="personal-memory" label="Personal Memory"></uui-select></div>
+						</div>
+					</uui-box>
+					<!-- Replace to here. -->
+				</div>
+
+				<div class="footer">
+					<div class="actions">
+						<uui-button look="primary" color="positive" label="Save">Save</uui-button>
+					</div>
+				</div>
+			</div>
+		</main>
+	</div>
+</body>
+</html>
